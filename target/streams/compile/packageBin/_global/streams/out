@@ -1,0 +1,59 @@
+[0m[[0m[0mdebug[0m] [0m[0mPackaging /Users/meshalbinnasban/Google Drive/KCL/Code Playground/target/scala-3.6.3/code-playground_3-0.1.0-SNAPSHOT.jar ...[0m
+[0m[[0m[0mdebug[0m] [0m[0mInput file mappings:[0m
+[0m[[0m[0mdebug[0m] [0m[0m	CHAR.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/meshalbinnasban/Google Drive/KCL/Code Playground/target/scala-3.6.3/classes/CHAR.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	NTIMES.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/meshalbinnasban/Google Drive/KCL/Code Playground/target/scala-3.6.3/classes/NTIMES.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	ZERO.tasty[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/meshalbinnasban/Google Drive/KCL/Code Playground/target/scala-3.6.3/classes/ZERO.tasty[0m
+[0m[[0m[0mdebug[0m] [0m[0m	ONE$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/meshalbinnasban/Google Drive/KCL/Code Playground/target/scala-3.6.3/classes/ONE$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	CHAR$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/meshalbinnasban/Google Drive/KCL/Code Playground/target/scala-3.6.3/classes/CHAR$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	STAR$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/meshalbinnasban/Google Drive/KCL/Code Playground/target/scala-3.6.3/classes/STAR$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	ZERO$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/meshalbinnasban/Google Drive/KCL/Code Playground/target/scala-3.6.3/classes/ZERO$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	NTIMES$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/meshalbinnasban/Google Drive/KCL/Code Playground/target/scala-3.6.3/classes/NTIMES$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	NTIMES.tasty[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/meshalbinnasban/Google Drive/KCL/Code Playground/target/scala-3.6.3/classes/NTIMES.tasty[0m
+[0m[[0m[0mdebug[0m] [0m[0m	ZERO.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/meshalbinnasban/Google Drive/KCL/Code Playground/target/scala-3.6.3/classes/ZERO.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	CHAR.tasty[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/meshalbinnasban/Google Drive/KCL/Code Playground/target/scala-3.6.3/classes/CHAR.tasty[0m
+[0m[[0m[0mdebug[0m] [0m[0m	ALT$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/meshalbinnasban/Google Drive/KCL/Code Playground/target/scala-3.6.3/classes/ALT$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	ONE.tasty[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/meshalbinnasban/Google Drive/KCL/Code Playground/target/scala-3.6.3/classes/ONE.tasty[0m
+[0m[[0m[0mdebug[0m] [0m[0m	test1.tasty[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/meshalbinnasban/Google Drive/KCL/Code Playground/target/scala-3.6.3/classes/test1.tasty[0m
+[0m[[0m[0mdebug[0m] [0m[0m	ALT.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/meshalbinnasban/Google Drive/KCL/Code Playground/target/scala-3.6.3/classes/ALT.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	SEQ.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/meshalbinnasban/Google Drive/KCL/Code Playground/target/scala-3.6.3/classes/SEQ.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	STAR.tasty[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/meshalbinnasban/Google Drive/KCL/Code Playground/target/scala-3.6.3/classes/STAR.tasty[0m
+[0m[[0m[0mdebug[0m] [0m[0m	playground$package.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/meshalbinnasban/Google Drive/KCL/Code Playground/target/scala-3.6.3/classes/playground$package.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	Rexp.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/meshalbinnasban/Google Drive/KCL/Code Playground/target/scala-3.6.3/classes/Rexp.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	playground$package$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/meshalbinnasban/Google Drive/KCL/Code Playground/target/scala-3.6.3/classes/playground$package$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	SEQ$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/meshalbinnasban/Google Drive/KCL/Code Playground/target/scala-3.6.3/classes/SEQ$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	playground$package.tasty[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/meshalbinnasban/Google Drive/KCL/Code Playground/target/scala-3.6.3/classes/playground$package.tasty[0m
+[0m[[0m[0mdebug[0m] [0m[0m	Rexp.tasty[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/meshalbinnasban/Google Drive/KCL/Code Playground/target/scala-3.6.3/classes/Rexp.tasty[0m
+[0m[[0m[0mdebug[0m] [0m[0m	SEQ.tasty[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/meshalbinnasban/Google Drive/KCL/Code Playground/target/scala-3.6.3/classes/SEQ.tasty[0m
+[0m[[0m[0mdebug[0m] [0m[0m	ALT.tasty[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/meshalbinnasban/Google Drive/KCL/Code Playground/target/scala-3.6.3/classes/ALT.tasty[0m
+[0m[[0m[0mdebug[0m] [0m[0m	STAR.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/meshalbinnasban/Google Drive/KCL/Code Playground/target/scala-3.6.3/classes/STAR.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	ONE.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/meshalbinnasban/Google Drive/KCL/Code Playground/target/scala-3.6.3/classes/ONE.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	test1.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  /Users/meshalbinnasban/Google Drive/KCL/Code Playground/target/scala-3.6.3/classes/test1.class[0m
+[0m[[0m[0mdebug[0m] [0m[0mDone packaging.[0m

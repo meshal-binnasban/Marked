@@ -1,0 +1,47 @@
+2025.02.24 22:56:01 INFO  Started: Metals version 1.5.1 in folders '/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked' for client Visual Studio Code 1.97.2.
+Feb 24, 2025 10:56:01 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+INFO: Unsupported notification method: $/setTrace
+2025.02.24 22:56:02 INFO  Attempting to connect to the build server...
+2025.02.24 22:56:02 INFO  Found a Bloop server running
+2025.02.24 22:56:02 INFO  tracing is disabled for protocol BSP, to enable tracing of incoming and outgoing JSON messages create an empty file at /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/.metals/bsp.trace.json or /Users/meshalbinnasban/Library/Caches/org.scalameta.metals/bsp.trace.json
+2025.02.24 22:56:02 INFO  time: Connected to build server in 0.41s
+2025.02.24 22:56:02 INFO  Connected to Build server: Bloop v2.0.8
+Feb 24, 2025 10:56:02 PM scala.meta.internal.metals.StdReporter $anonfun$create$1
+SEVERE: Empty build targets. Expected at least one build target identifier. (full report at: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/.metals/.reports/bloop/2025-02-24/r_Empty build targets...._22-56-02-889.md)
+Feb 24, 2025 10:56:02 PM scala.meta.internal.metals.StdReporter $anonfun$create$1
+SEVERE: Empty build targets. Expected at least one build target identifier. (full report at: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/.metals/.reports/bloop/2025-02-24/r_Empty build targets...._22-56-02-889.md)
+Feb 24, 2025 10:56:03 PM scala.meta.internal.metals.StdReporter $anonfun$create$1
+SEVERE: Empty build targets. Expected at least one build target identifier. (full report at: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/.metals/.reports/bloop/2025-02-24/r_Empty build targets...._22-56-02-889.md)
+Feb 24, 2025 10:56:03 PM scala.meta.internal.metals.StdReporter $anonfun$create$1
+SEVERE: Empty build targets. Expected at least one build target identifier. (full report at: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/.metals/.reports/bloop/2025-02-24/r_Empty build targets...._22-56-02-889.md)
+Feb 24, 2025 10:56:03 PM scala.meta.internal.metals.StdReporter $anonfun$create$1
+SEVERE: Empty build targets. Expected at least one build target identifier. (full report at: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/.metals/.reports/bloop/2025-02-24/r_Empty build targets...._22-56-02-889.md)
+2025.02.24 22:56:03 INFO  time: Imported build in 0.48s
+2025.02.24 22:56:03 INFO  running doctor check
+2025.02.24 22:56:03 INFO  java targets: 
+2025.02.24 22:56:07 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/marked-v1.sc. Using presentation compiler with project's scala-library version: 3.3.4
+2025.02.24 22:56:07 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/marked-v1.sc. Using presentation compiler with project's scala-library version: 3.3.4
+2025.02.24 22:56:07 INFO  time: indexed workspace in 5.26s
+2025.02.24 22:56:08 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/marked-v1.sc
+Feb 24, 2025 10:56:10 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 2
+2025.02.24 22:56:10 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/marked-v1.sc. Using presentation compiler with project's scala-library version: 3.3.4
+2025.02.24 22:56:10 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/marked-v1.sc. Using presentation compiler with project's scala-library version: 3.3.4
+2025.02.24 22:56:10 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/marked-v1.sc. Using presentation compiler with project's scala-library version: 3.3.4
+2025.02.24 22:56:16 INFO  tracing is disabled for protocol BSP, to enable tracing of incoming and outgoing JSON messages create an empty file at /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/.metals/bsp.trace.json or /Users/meshalbinnasban/Library/Caches/org.scalameta.metals/bsp.trace.json
+2025.02.24 22:56:17 INFO  Ammonite: Starting BSP server
+
+2025.02.24 22:56:17 INFO  Connected to Ammonite Build server v3.0.0-2-6342755f
+2025.02.24 22:56:18 INFO  time: code lens generation in 8.26s
+2025.02.24 22:56:18 INFO  time: code lens generation in 8.26s
+2025.02.24 22:56:22 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/.ammonite/scala-2.13.14/amm-3.0.0-2-6342755f/marked-v1/src/ammonite/$file/marked-v1.scala. Using presentation compiler with project's scala-library version: 3.3.4
+2025.02.24 22:56:31 INFO  time: indexed workspace in 8.34s
+2025.02.24 22:56:31 INFO  compiling marked-v1.sc
+2025.02.24 22:56:37 INFO  time: compiled marked-v1.sc in 5.94s
+Feb 24, 2025 10:56:39 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+WARNING: Unsupported notification method: metals/windowStateDidChange
+Feb 24, 2025 10:56:44 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+WARNING: Unsupported notification method: metals/windowStateDidChange
+2025.02.24 22:56:47 WARN  Ammonite does not support `buildTarget/jvmRunEnvironment`, unable to fetch run environment.
+Feb 24, 2025 10:56:48 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+INFO: Unsupported notification method: $/setTrace

@@ -1,0 +1,29 @@
+[0m[[0m[31merror[0m] [0m[0m[31m[31m-- [E007] Type Mismatch Error: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/playground.scala:47:25 [0m[0m[0m
+[0m[[0m[31merror[0m] [0m[0m[31m47 |[0m  [33mval[0m [36mr1[0m = SEQ(ALT( CHAR([31m"a"[0m), CHAR([31m"b"[0m)), CHAR([31m"d"[0m))[0m
+[0m[[0m[31merror[0m] [0m[0m[31m[31m   |[0m                         ^^^[0m[0m
+[0m[[0m[31merror[0m] [0m[0m[31m   |[0m                         Found:    ([32m"a"[0m : String)[0m
+[0m[[0m[31merror[0m] [0m[0m[31m   |[0m                         Required: Char[0m
+[0m[[0m[31merror[0m] [0m[0m[31m   |[0m[0m
+[0m[[0m[31merror[0m] [0m[0m[31m   |[0m longer explanation available when compiling with `-explain`[0m
+[0m[[0m[31merror[0m] [0m[0m[31m[31m-- [E007] Type Mismatch Error: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/playground.scala:47:36 [0m[0m[0m
+[0m[[0m[31merror[0m] [0m[0m[31m47 |[0m  [33mval[0m [36mr1[0m = SEQ(ALT( CHAR([31m"a"[0m), CHAR([31m"b"[0m)), CHAR([31m"d"[0m))[0m
+[0m[[0m[31merror[0m] [0m[0m[31m[31m   |[0m                                    ^^^[0m[0m
+[0m[[0m[31merror[0m] [0m[0m[31m   |[0m                                    Found:    ([32m"b"[0m : String)[0m
+[0m[[0m[31merror[0m] [0m[0m[31m   |[0m                                    Required: Char[0m
+[0m[[0m[31merror[0m] [0m[0m[31m   |[0m[0m
+[0m[[0m[31merror[0m] [0m[0m[31m   |[0m longer explanation available when compiling with `-explain`[0m
+[0m[[0m[31merror[0m] [0m[0m[31m[31m-- [E007] Type Mismatch Error: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/playground.scala:47:48 [0m[0m[0m
+[0m[[0m[31merror[0m] [0m[0m[31m47 |[0m  [33mval[0m [36mr1[0m = SEQ(ALT( CHAR([31m"a"[0m), CHAR([31m"b"[0m)), CHAR([31m"d"[0m))[0m
+[0m[[0m[31merror[0m] [0m[0m[31m[31m   |[0m                                                ^^^[0m[0m
+[0m[[0m[31merror[0m] [0m[0m[31m   |[0m                                                Found:    ([32m"d"[0m : String)[0m
+[0m[[0m[31merror[0m] [0m[0m[31m   |[0m                                                Required: Char[0m
+[0m[[0m[31merror[0m] [0m[0m[31m   |[0m[0m
+[0m[[0m[31merror[0m] [0m[0m[31m   |[0m longer explanation available when compiling with `-explain`[0m
+[0m[[0m[31merror[0m] [0m[0m[31m[31m-- [E007] Type Mismatch Error: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/playground.scala:56:30 [0m[0m[0m
+[0m[[0m[31merror[0m] [0m[0m[31m56 |[0m  println([31ms"[0m${matcher(r1, str.toList)}[31m"[0m)[0m
+[0m[[0m[31merror[0m] [0m[0m[31m[31m   |[0m                          ^^^^^^^^^^[0m[0m
+[0m[[0m[31merror[0m] [0m[0m[31m   |[0m                          Found:    List[Char][0m
+[0m[[0m[31merror[0m] [0m[0m[31m   |[0m                          Required: String[0m
+[0m[[0m[31merror[0m] [0m[0m[31m   |[0m[0m
+[0m[[0m[31merror[0m] [0m[0m[31m   |[0m longer explanation available when compiling with `-explain`[0m
+[0m[[0m[31merror[0m] [0m[0mfour errors found[0m

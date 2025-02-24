@@ -1,0 +1,4 @@
+[debug] [code-playground-test] Classpath dependencies List()
+[debug] [code-playground-test] Dependencies from configurations List(code-playground)
+[debug] Bloop wrote the configuration of project 'code-playground-test' to '/Users/meshalbinnasban/Google Drive/KCL/Code Playground/.bloop/code-playground-test.json'
+[success] Generated .bloop/code-playground-test.json
