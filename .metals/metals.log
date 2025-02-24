@@ -76,3 +76,13 @@ Feb 24, 2025 11:00:38 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint noti
 WARNING: Unsupported notification method: metals/windowStateDidChange
 Feb 24, 2025 11:01:01 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
 WARNING: Unsupported notification method: metals/windowStateDidChange
+Feb 24, 2025 11:01:20 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+WARNING: Unsupported notification method: metals/windowStateDidChange
+Feb 24, 2025 11:01:25 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+WARNING: Unsupported notification method: metals/windowStateDidChange
+2025.02.24 23:02:03 WARN  Ammonite does not support `buildTarget/jvmRunEnvironment`, unable to fetch run environment.
+2025.02.24 23:02:17 WARN  Ammonite does not support `buildTarget/jvmRunEnvironment`, unable to fetch run environment.
+2025.02.24 23:02:33 WARN  Ammonite does not support `buildTarget/jvmRunEnvironment`, unable to fetch run environment.
+2025.02.24 23:02:58 WARN  Ammonite does not support `buildTarget/jvmRunEnvironment`, unable to fetch run environment.
+2025.02.24 23:03:08 WARN  Ammonite does not support `buildTarget/jvmRunEnvironment`, unable to fetch run environment.
+2025.02.24 23:03:15 WARN  Ammonite does not support `buildTarget/jvmRunEnvironment`, unable to fetch run environment.
