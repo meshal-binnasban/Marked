@@ -1,4 +1,4 @@
-[debug] [code-playground-test] Classpath dependencies List()
-[debug] [code-playground-test] Dependencies from configurations List(code-playground)
-[debug] Bloop wrote the configuration of project 'code-playground-test' to '/Users/meshalbinnasban/Google Drive/KCL/Code Playground/.bloop/code-playground-test.json'
-[success] Generated .bloop/code-playground-test.json
+[0m[[0m[0mdebug[0m] [0m[0m[marked-test] Classpath dependencies List()[0m
+[0m[[0m[0mdebug[0m] [0m[0m[marked-test] Dependencies from configurations List(marked)[0m
+[0m[[0m[0mdebug[0m] [0m[0mBloop wrote the configuration of project 'marked-test' to '/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/.bloop/marked-test.json'[0m
+[0m[[0m[32msuccess[0m] [0m[0mGenerated .bloop/marked-test.json[0m
