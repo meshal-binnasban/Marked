@@ -7783,3 +7783,35 @@ java.nio.file.NoSuchFileException: /Users/meshalbinnasban/Google Drive/KCL/Code 
 exception caught when loading class $: java.lang.AssertionError: NoDenotation.owner
 2025.02.25 17:37:29 WARN  Ammonite does not support `buildTarget/jvmRunEnvironment`, unable to fetch run environment.
 2025.02.25 17:37:29 WARN  Ammonite does not support `buildTarget/jvmRunEnvironment`, unable to fetch run environment.
+2025.02.25 23:15:21 INFO  Started: Metals version 1.5.1 in folders '/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked' for client Visual Studio Code 1.97.2.
+2025.02.25 23:15:22 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/marked-Weightedv2.sc. Using presentation compiler with project's scala-library version: 3.3.4
+Feb 25, 2025 11:15:25 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+INFO: Unsupported notification method: $/setTrace
+2025.02.25 23:15:25 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/marked-Weightedv2.sc. Using presentation compiler with project's scala-library version: 3.3.4
+2025.02.25 23:15:26 INFO  Attempting to connect to the build server...
+2025.02.25 23:15:26 INFO  Found a Bloop server running
+2025.02.25 23:15:26 INFO  tracing is disabled for protocol BSP, to enable tracing of incoming and outgoing JSON messages create an empty file at /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/.metals/bsp.trace.json or /Users/meshalbinnasban/Library/Caches/org.scalameta.metals/bsp.trace.json
+2025.02.25 23:15:26 INFO  time: Connected to build server in 0.85s
+2025.02.25 23:15:26 INFO  Connected to Build server: Bloop v2.0.8
+2025.02.25 23:15:27 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/marked-v1.sc. Using presentation compiler with project's scala-library version: 3.3.4
+2025.02.25 23:15:27 INFO  time: Imported build in 0.26s
+2025.02.25 23:15:27 INFO  running doctor check
+2025.02.25 23:15:27 INFO  java targets: marked, marked-test
+2025.02.25 23:15:29 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/marked-v1.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.02.25 23:15:30 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/marked-v1.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.02.25 23:15:37 INFO  time: indexed workspace in 10s
+2025.02.25 23:15:38 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/marked-v1.sc
+2025.02.25 23:15:37 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/marked-Weightedv2.sc
+2025.02.25 23:15:38 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/marked-v1.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.02.25 23:15:46 INFO  tracing is disabled for protocol BSP, to enable tracing of incoming and outgoing JSON messages create an empty file at /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/.metals/bsp.trace.json or /Users/meshalbinnasban/Library/Caches/org.scalameta.metals/bsp.trace.json
+2025.02.25 23:15:46 INFO  tracing is disabled for protocol BSP, to enable tracing of incoming and outgoing JSON messages create an empty file at /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/.metals/bsp.trace.json or /Users/meshalbinnasban/Library/Caches/org.scalameta.metals/bsp.trace.json
+2025.02.25 23:15:46 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/marked-v1.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.02.25 23:15:46 INFO  Ammonite: Starting BSP server
+
+2025.02.25 23:15:46 INFO  Ammonite: Starting BSP server
+
+2025.02.25 23:15:47 INFO  Connected to Ammonite Build server v3.0.0-2-6342755f
+2025.02.25 23:15:47 INFO  Connected to Ammonite Build server v3.0.0-2-6342755f
+2025.02.25 23:15:48 INFO  time: code lens generation in 10s
+2025.02.25 23:15:48 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/marked-Weightedv2.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.02.25 23:15:48 INFO  time: code lens generation in 9.76s
