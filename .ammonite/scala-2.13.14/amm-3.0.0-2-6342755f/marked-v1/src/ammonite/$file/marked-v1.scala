@@ -48,20 +48,13 @@ object `marked-v1`{
   case STAR(r: Rexp)
   case NTIMES(r: Rexp, n: Int) // from re4.sc
 }
-
 import Rexp._
+
+
+
 
 // from re1.sc
 def OPT(r: Rexp) = ALT(r, ONE)
-
-
-/* from re1.sc
-def NTIMES(r: Rexp, n: Int) : Rexp = n match {
-  case 0 => ONE
-  case 1 => r
-  case n => SEQ(r, NTIMES(r, n - 1))
-}
-*/
 
 def shift(mark: Boolean,r: Rexp,c: Char ): Rexp = r match {
     case ZERO => ZERO
@@ -73,7 +66,6 @@ def shift(mark: Boolean,r: Rexp,c: Char ): Rexp = r match {
     case NTIMES(r, n) => 
       if(n==0) ONE 
       else SEQ(shift(mark || fin(r), r,c), NTIMES(r,n-1)) 
-
 }
 
 def nullable(r: Rexp) : Boolean = r match {
@@ -108,11 +100,9 @@ def test1() = {
 //matcher(r, "abc".toList)
 //matcher(r, "abcccccccccccccccccc".toList)
 
-
 val r1=SEQ(NTIMES(OPT(CHAR('a')), 10), NTIMES(CHAR('a'), 10))
 println("testing new ntimes")
-matcher(r1, "aaaaaaaaaaaaaaaaaaab".toList)
-
+matcher(r1, "aaaaaaaaaaaaaa".toList)
 
 //val r= NTIMES(CHAR('b'),2)
 //matcher(r, "bbc".toList)
@@ -133,8 +123,6 @@ def size(r: Rexp) : Int = r match {
     
 }
 
-
-
 def EVIL1(n: Int) = 
   SEQ(NTIMES(OPT(CHAR('a')), n), NTIMES(CHAR('a'), n))
 
@@ -153,7 +141,6 @@ def test2() = {
     println(f"$i: ${time_needed(2, matcher(EVIL1(i), ("a" * i).toList))}%.5f")
   }
 }
-
 
 //@arg(doc = "Test (a*)* b")
 @main
