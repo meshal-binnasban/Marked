@@ -9,9 +9,6 @@ enum Rexp {
 }
 import Rexp._
 
-
-
-
 // from re1.sc
 def OPT(r: Rexp) = ALT(r, ONE)
 
@@ -47,10 +44,12 @@ def fin(r: Rexp) : Boolean = r match {
   case NTIMES(r, i) =>  fin(r)// ? if (i == 0) false else
 }
 
-def matcher(r: Rexp , s: List[Char]) : Boolean = s match {
-case Nil => nullable(r)
-case c :: s => fin(s.foldLeft(shift(true, r, c)) { (acc, c) =>
-  shift(false, acc, c) })
+def matcher(r: Rexp , s: String) : Boolean = s.toList match {
+  case Nil => nullable(r)
+//case c :: cs => fin(cs.foldLeft(shift(true, r, c)) { (acc, c) =>
+//  shift(false, acc, c) })
+  case c :: cs => fin(cs.foldLeft(shift(true, r, c))(shift(false, _, _)))
+
 }
 
 @main
@@ -61,7 +60,7 @@ def test1() = {
 
 val r1=SEQ(NTIMES(OPT(CHAR('a')), 10), NTIMES(CHAR('a'), 10))
 println("testing new ntimes")
-matcher(r1, "aaaaaaaaaaaaaa".toList)
+matcher(r1, "aaaaaaaaaaaaaab")
 
 //val r= NTIMES(CHAR('b'),2)
 //matcher(r, "bbc".toList)
@@ -97,7 +96,7 @@ def time_needed[T](i: Int, code: => T) = {
 @main
 def test2() = {
   for (i <- 0 to 8000 by 1000) {
-    println(f"$i: ${time_needed(2, matcher(EVIL1(i), ("a" * i).toList))}%.5f")
+    println(f"$i: ${time_needed(2, matcher(EVIL1(i), ("a" * i)))}%.5f")
   }
 }
 
@@ -105,7 +104,7 @@ def test2() = {
 @main
 def test3() = {
   for (i <- 0 to 7000000 by 500000) {
-    println(f"$i: ${time_needed(2, matcher(EVIL2, ("a" * i).toList))}%.5f")
+    println(f"$i: ${time_needed(2, matcher(EVIL2, ("a" * i)))}%.5f")
   }
 } 
 

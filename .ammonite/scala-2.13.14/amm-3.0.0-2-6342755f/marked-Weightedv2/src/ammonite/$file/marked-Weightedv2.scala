@@ -39,32 +39,55 @@ import _root_.ammonite.repl.ReplBridge.value.{
 
 
 object `marked-Weightedv2`{
-/*<script>*//*
+/*<script>*/
 enum Rexp {
   case ZERO
   case ONE 
-  case CHAR(c: Char , marked:Boolean = false)
+  case CHAR(c: Char )
   case ALT(r1: Rexp, r2: Rexp )
   case SEQ(r1: Rexp, r2: Rexp)
   case STAR(r: Rexp)
-  case NTIMES(r: Rexp, n: Int) // from re4.sc
+//  case NTIMES(r: Rexp, n: Int) // from re4.sc
 }
 import Rexp._
 
-*/
-enum Rexp[C, S] {
-  case ZERO extends Rexp[Nothing, Nothing]
-  case ONE extends Rexp[Nothing, Nothing]
-  case CHAR(c:C,f: C => S) 
-  case ALT(r1: Rexp[C, S], r2: Rexp[C, S])
-  case SEQ(r1: Rexp[C, S], r2: Rexp[C, S])
-  case STAR(r: Rexp[C, S])
-  case NTIMES(r: Rexp[C, S], n: Int)
+enum Rexpw[C, S]{
+  case ZEROw extends Rexpw[Nothing, Nothing]
+  case ONEw extends Rexpw[Nothing, Nothing]
+  case CHARw(f: C => S , val finv:S) 
+  case ALTw(r1: Rexpw[C, S], r2: Rexpw[C, S])
+  case SEQw(r1: Rexpw[C, S], r2: Rexpw[C, S])
+  case STARw(r: Rexpw[C, S])
+ // case NTIMESw(r: Rexpw[C, S], n: Int)
 }
-def CHARb[C,S](c: Char)(using semiring: Semiring[S]): Rexp[Char, S] =
-  Rexp.CHAR(c, x => if (x == c ) semiring.one else semiring.zero)
+import Rexpw._
 
-import Rexp._
+def CHARb[S](c: Char)(using semiring: Semiring[S]): Rexpw[Char, S] =
+  CHARw(x => if (x == c ) semiring.one else semiring.zero , semiring.zero)
+
+def CHARi[S: SemiringI](c: Char): Rexpw[(Int, Char), S] = {
+    val sri = summon[SemiringI[S]]
+    val sr = summon[Semiring[S]]
+
+    def weight(t: (Int, Char)): S = {
+      val (pos, x) = t
+      if (x == c) sri.index(pos)
+      else sr.zero
+    }
+    CHARw(weight,sr.zero)
+  }
+
+
+
+def weighted[S](r: Rexp)(using semiring: Semiring[S]): Rexpw[Char, S]  = r match {
+      case ZERO      => ZEROw.asInstanceOf[Rexpw[Char,S]]
+      case ONE       => ONEw.asInstanceOf[Rexpw[Char,S]]
+      case CHAR(c)    => CHARb(c)
+      case ALT(r1,r2)  => ALTw(weighted(r1), weighted(r2))
+      case SEQ(r1,r2)  => SEQw(weighted(r1), weighted(r2))
+      case STAR(r1)    => STARw(weighted(r1))
+}
+
 
 trait Semiring[S] {
   def zero: S   // Additive identity
@@ -72,45 +95,59 @@ trait Semiring[S] {
   def plus(a: S, b: S): S  // ⊕ Addition
   def times(a: S, b: S): S // ⊗ Multiplication
 }
-
 given booleanSemiring: Semiring[Boolean] with {
   def zero: Boolean = false
   def one: Boolean = true
   def plus(a: Boolean, b: Boolean): Boolean = a || b
   def times(a: Boolean, b: Boolean): Boolean = a && b
 }
+
+given semiringInt: Semiring[Int] with {
+    def zero = 0
+    def one = 1
+    def plus(a: Int, b: Int): Int = a + b
+    def times(a: Int, b: Int): Int = a * b
+  }
+
+trait SemiringI[S] extends Semiring[S] {
+    def index(i: Int): S
+  }
+
+
+
 // maybe change to old? since this is not related to counting for example?
-def nullable[C, S](r: Rexp[C, S])(using semiring: Semiring[S]): S = r match {
-  case ZERO => semiring.zero
-  case ONE => semiring.one
-  case CHAR(_,_) => semiring.zero
-  case ALT(r1, r2) => semiring.plus(nullable(r1), nullable(r2))
-  case SEQ(r1, r2) => semiring.times(nullable(r1), nullable(r2))
-  case STAR(_) => semiring.one
-  case NTIMES(r, i) => if (i == 0) semiring.one else nullable(r)
+def nullable[C, S](r: Rexpw[C, S])(using semiring: Semiring[S]): S = r match {
+  case ZEROw => semiring.zero
+  case ONEw => semiring.one
+  case CHARw(_,finv) => semiring.zero
+  case ALTw(r1, r2) => semiring.plus(nullable(r1), nullable(r2))
+  case SEQw(r1, r2) => semiring.times(nullable(r1), nullable(r2))
+  case STARw(_) => semiring.one
+//  case NTIMESw(r, i) => if (i == 0) semiring.one else nullable(r)
 }
+
 /*
-def nullable[C,S](r: Rexp[C,S]) : Boolean = r match {
-  case ZERO => false
-  case ONE => true
-  case CHAR(_) => false
-  case ALT(r1, r2) => nullable(r1) || nullable(r2)
-  case SEQ(r1, r2) => nullable(r1) && nullable(r2)
-  case STAR(_) => true
-  case NTIMES(r, i) => if (i == 0) true else nullable(r) //?
+def nullable[C,S](r: Rexpw[C,S]) : Boolean = r match {
+  case ZEROw => false
+  case ONEw => true
+  case CHARw(_) => false
+  case ALTw(r1, r2) => nullable(r1) || nullable(r2)
+  case SEQw(r1, r2) => nullable(r1) && nullable(r2)
+  case STARw(_) => true
+  case NTIMESw(r, i) => if (i == 0) true else nullable(r) //?
 }
 */
 // from re1.sc
 //def OPT(r: Rexp[C,S]) = ALT(r, ONE)
-def fin[C, S](r: Rexp[C, S])(using semiring: Semiring[S]): S = r match {
-  case ZERO => semiring.zero
-  case ONE => semiring.zero
-  case CHAR(c,f) => f(c) // ?????
-  case ALT(r1, r2) => semiring.plus(fin(r1),fin(r2))
-  case SEQ(r1, r2) => 
+def fin[C, S](r: Rexpw[C, S])(using semiring: Semiring[S]): S = r match {
+  case ZEROw => semiring.zero
+  case ONEw => semiring.zero
+  case CHARw(f,finv) => finv //???? or f(_) but!!
+  case ALTw(r1, r2) => semiring.plus(fin(r1),fin(r2))
+  case SEQw(r1, r2) => 
     semiring.plus(semiring.times(fin(r1), nullable(r2)), fin(r2))
-  case STAR(r) => fin(r)
-  case NTIMES(r, i) =>  fin(r)// ? if (i == 0) false else
+  case STARw(r) => fin(r)
+//  case NTIMESw(r, i) =>  fin(r)// ? if (i == 0) false else
 }
 /*
 def fin(r: Rexp) : Boolean = r match {
@@ -127,16 +164,17 @@ def fin(r: Rexp) : Boolean = r match {
 //code for shift with
 
 //def shift(mark: Boolean,r: Rexp,c: Char ): Rexp = r match {
-def shift[C,S](mark: S, r: Rexp[C,S], c: Char)(using semiring: Semiring[S]): Rexp[C,S] = r match {
-    case ZERO => ZERO
-    case ONE=> ONE
-    case CHAR(ch, f) => CHAR(ch, c => semiring.times(mark, f(c)))
-    case ALT(r1, r2) => ALT(shift(mark,r1,c),shift(mark,r2,c))
-    case SEQ(r1,r2) => 
-      SEQ (shift(mark,r1,c), 
+def shift[C,S](mark: S, r: Rexpw[C,S], c: C)(using semiring: Semiring[S]): Rexpw[C,S] = r match {
+    case ZEROw => ZEROw
+    case ONEw=> ONEw
+    case CHARw(f,finv) =>  CHARw(f,semiring.times(mark, f(c))) // must add final variable for it to change when called in final function or?
+    //in article: shiftw m (SYMw f) c = (symw f) {finalw = m ⊗f c}
+    case ALTw(r1, r2) => ALTw(shift(mark,r1,c),shift(mark,r2,c))
+    case SEQw(r1,r2) => 
+      SEQw(shift(mark,r1,c), 
           shift( semiring.plus
                               (semiring.times(mark , nullable(r1))  , fin(r1)) ,  r2,c))
-    case STAR(r) => STAR(shift(semiring.plus(mark , fin(r)), r,c))
+    case STARw(r) => STARw(shift(semiring.plus(mark , fin(r)), r,c))
    
    /*
     case NTIMES(r, n) => 
@@ -149,27 +187,30 @@ def shift[C,S](mark: S, r: Rexp[C,S], c: Char)(using semiring: Semiring[S]): Rex
 
 
 
-def matcher(r: Rexp , s: List[Char]) : Boolean = s match {
+def matcher[C, S](r: Rexpw[C, S], s: List[C])(using semiring: Semiring[S]): S = s match {
 case Nil => nullable(r)
-case c :: s => fin(s.foldLeft(shift(true, r, c)) { (acc, c) =>
-  shift(false, acc, c) })
+case c :: cs => fin(cs.foldLeft(shift(semiring.one, r, c))(shift(semiring.zero, _, _)))
+
+//case c :: s => fin(s.foldLeft(shift(true, weighted(r), c)) { (acc, c) =>
+//  shift(false, acc, c) })
 }
 
 @main
 def test1() = {
-//val r = SEQ(SEQ(CHAR('a'), CHAR('b')) , STAR(CHAR('c')))
+val r = STAR(SEQ(SEQ(CHAR('a'), CHAR('b')) , STAR(CHAR('c'))) )
 //matcher(r, "abc".toList)
 //matcher(r, "abcccccccccccccccccc".toList)
 
-val r1=SEQ(NTIMES(OPT(CHAR('a')), 10), NTIMES(CHAR('a'), 10))
-println("testing new ntimes")
-matcher(r1, "aaaaaaaaaaaaaa".toList)
+val rw=weighted(r)(using booleanSemiring)
+println("testing new weighted Marked")
+matcher(rw, "abcabcd".toList)(using booleanSemiring)
 
 //val r= NTIMES(CHAR('b'),2)
 //matcher(r, "bbc".toList)
 
 }
 
+/*
 def size(r: Rexp) : Int = r match {
   case ZERO => 1
   case ONE => 1
@@ -180,8 +221,7 @@ def size(r: Rexp) : Int = r match {
   case NTIMES(r, _) => 
     val x=1 + size(r)
     println("in size function: "+x)
-    x
-    
+    x 
 }
 
 def EVIL1(n: Int) = 
@@ -216,7 +256,7 @@ def test3() = {
 def all() = { test2(); test3() } 
 
 
-
+*/
 
 
 /*</script>*/ /*<generated>*/
