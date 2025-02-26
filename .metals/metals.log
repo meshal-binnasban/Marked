@@ -28686,3 +28686,53 @@ java.lang.AssertionError: assertion failed: duplicate module class chaining$#612
 2025.02.26 16:23:23 WARN  Ammonite does not support `buildTarget/jvmRunEnvironment`, unable to fetch run environment.
 2025.02.26 16:23:24 WARN  Ammonite does not support `buildTarget/jvmRunEnvironment`, unable to fetch run environment.
 2025.02.26 16:23:55 WARN  Ammonite does not support `buildTarget/jvmRunEnvironment`, unable to fetch run environment.
+Feb 26, 2025 4:24:38 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+WARNING: Unsupported notification method: metals/windowStateDidChange
+Feb 26, 2025 4:25:42 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+WARNING: Unsupported notification method: metals/windowStateDidChange
+Feb 26, 2025 4:26:30 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+WARNING: Unsupported notification method: metals/windowStateDidChange
+Feb 26, 2025 4:26:31 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+WARNING: Unsupported notification method: metals/windowStateDidChange
+2025.02.26 16:26:32 WARN  Ammonite does not support `buildTarget/jvmRunEnvironment`, unable to fetch run environment.
+2025.02.26 16:26:34 WARN  Ammonite does not support `buildTarget/jvmRunEnvironment`, unable to fetch run environment.
+2025.02.26 16:26:34 WARN  Ammonite does not support `buildTarget/jvmRunEnvironment`, unable to fetch run environment.
+Feb 26, 2025 4:26:43 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+WARNING: Unsupported notification method: metals/windowStateDidChange
+Feb 26, 2025 4:27:41 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+WARNING: Unsupported notification method: metals/windowStateDidChange
+Feb 26, 2025 4:27:54 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+WARNING: Unsupported notification method: metals/windowStateDidChange
+2025.02.26 16:27:55 WARN  Ammonite does not support `buildTarget/jvmRunEnvironment`, unable to fetch run environment.
+Feb 26, 2025 4:27:56 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+WARNING: Unsupported notification method: metals/windowStateDidChange
+Feb 26, 2025 4:27:58 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+WARNING: Unsupported notification method: metals/windowStateDidChange
+2025.02.26 16:27:59 WARN  Ammonite does not support `buildTarget/jvmRunEnvironment`, unable to fetch run environment.
+Feb 26, 2025 4:27:59 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+WARNING: Unsupported notification method: metals/windowStateDidChange
+Feb 26, 2025 4:28:26 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+WARNING: Unsupported notification method: metals/windowStateDidChange
+2025.02.26 16:28:26 WARN  Ammonite does not support `buildTarget/jvmRunEnvironment`, unable to fetch run environment.
+Feb 26, 2025 4:28:27 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+WARNING: Unsupported notification method: metals/windowStateDidChange
+Feb 26, 2025 4:29:11 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+WARNING: Unsupported notification method: metals/windowStateDidChange
+Feb 26, 2025 4:29:13 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+WARNING: Unsupported notification method: metals/windowStateDidChange
+2025.02.26 16:29:14 INFO  Cancelling compilation on Ammonite server
+2025.02.26 16:29:14 INFO  Ammonite: Feb 26, 2025 4:29:14 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 489
+
+2025.02.26 16:29:15 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/experiments.sc
+2025.02.26 16:29:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/experiments.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.02.26 16:29:15 INFO  time: Imported build in 0.12s
+2025.02.26 16:29:18 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/marked-Weightedv2.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.02.26 16:29:18 INFO  running doctor check
+2025.02.26 16:29:18 INFO  java targets: marked, marked-test
+2025.02.26 16:29:19 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/marked-Weightedv2.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.02.26 16:29:19 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/marked-Weightedv2.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.02.26 16:29:18 INFO  time: code lens generation in 3.64s
+2025.02.26 16:29:20 INFO  time: indexed workspace in 5.87s
+2025.02.26 16:29:21 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/marked-Weightedv2.sc
+2025.02.26 16:29:21 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/marked-Weightedv2.sc. Using presentation compiler with project's scala-library version: 3.6.3
