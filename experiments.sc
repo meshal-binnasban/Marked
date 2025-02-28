@@ -142,10 +142,6 @@ def shift[C,S](mark: S, r: Rexpw[C,S], c: C)(using semiring: Semiring[S]): Rexpw
       */
 }
 
-
-
-
-
 def matcher[C, S](r: Rexpw[C, S], s: List[C])(using semiring: Semiring[S]): S = s match {
 case Nil => nullable(r)
 case c :: cs => fin(cs.foldLeft(shift(semiring.one, r, c))(shift(semiring.zero, _, _)))
@@ -157,12 +153,10 @@ case c :: cs => fin(cs.foldLeft(shift(semiring.one, r, c))(shift(semiring.zero, 
 @main
 def test1() = {
 val r = STAR(SEQ(SEQ(CHAR('a'), CHAR('b')) , STAR(CHAR('c'))) )
-//matcher(r, "abc".toList)
-//matcher(r, "abcccccccccccccccccc".toList)
-
+println(r)
 val rw=weighted(r)(using booleanSemiring)
 println("testing new weighted Marked")
-matcher(rw, "abcabcd".toList)(using booleanSemiring)
+println(matcher(rw, "abcabcd".toList)(using booleanSemiring))
 
 //val r= NTIMES(CHAR('b'),2)
 //matcher(r, "bbc".toList)
