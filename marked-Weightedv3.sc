@@ -1,5 +1,6 @@
 import scala.compiletime.ops.boolean
 import scala.math.min
+import scala.language.implicitConversions
 
 enum Rexp {
   case ZERO
@@ -133,13 +134,6 @@ sealed trait LeftlongT
 case object NoLeftLong extends LeftlongT
 case class LeftLong(range: RangeT) extends LeftlongT
 
-/*
-LeftLong x ⊕LeftLong y= LeftLong (leftlong x y)
-where leftlong...
-leftlong (Range i j) (Range k l)
-|i <k ∨i= I k ∧j l= Range i j
-|otherwise= Range k l
-*/
 given semiringLeftlong: Semiring[LeftlongT] with {
   def zero =  NoLeftLong 
   def one = LeftLong(NoRange) 
@@ -166,7 +160,6 @@ given semiringLeftlong: Semiring[LeftlongT] with {
             if(i<k || (i == k && j >= l)) Range(i,j) else Range(k,l) 
         }
     }
-
    /* 
 p.8: we pick the start position of the first part and the end position of the second part
 LeftLong x ⊗LeftLong y= LeftLong (range x y)
@@ -175,14 +168,10 @@ where range... range (Range i ) (Range j) = Range i j */
         case (NoRange, NoRange) => NoRange
         case (NoRange, range) => range
         case (range, NoRange) => range
-        case (Range(i,_), Range(_,j)) => Range(i,j)
+        case (Range(i,_), Range(_,j)) => 
+            Range(i,j)
         }
     }
-
-   
-  
-
-
 }
 //instance Semiringi LeftLong where index i= LeftLong (Range i i)
 given semiringILeftlong: SemiringI[LeftlongT] with {
@@ -259,20 +248,22 @@ println(matcher(r, s.toList)(using booleanSemiring))
 def test1() = {
     //booleanSemiring
     //semiringILeftmost
-    //semiringILeftLong
+    //semiringILeftlong
    
-    //val reg=weighted(SEQ(STAR(CHAR('a')),CHAR('b'))) (using  semiringILeftlong)
-    //val s="here aaab is test aaaaab"
-    //submatcher(reg,s.toList)
+    val aStarB: Rexp = "a".% ~"b"
+    println(string(aStarB))
+    val reg=weighted(aStarB) (using  semiringILeftlong)
+    val s="aab aaab b"
+    println(submatcher(reg,s.toList))
+
+  /* article test
    val a= CHAR('a')
    val ab=STAR(ALT(a, CHAR('b')))
    val aaba= SEQ(a, SEQ( ab,a ) )
    val reg=weighted(aaba) (using  semiringILeftlong)
    val s="bababa"
    submatcher(reg,s.toList)
-
-
-
+*/
 }
 
 /* no NTIMES/OPT Constructors so far
@@ -311,3 +302,31 @@ def test3() = {
 @main
 def all() = { test2(); test3() } 
 
+
+
+
+def charlist2rexp(s : List[Char]): Rexp = s match {
+  case Nil => ONE
+  case c::Nil => CHAR(c)
+  case c::s => SEQ(CHAR(c), charlist2rexp(s))
+}
+
+// strings are coerced into Rexps
+given Conversion[String, Rexp] = s => charlist2rexp(s.toList)
+//val ABCD : Rexp = "abcd"
+
+extension (r: Rexp) {
+  def | (s: Rexp) = ALT(r, s)
+  def % = STAR(r)
+  def ~ (s: Rexp) = SEQ(r, s)
+}
+
+def string(r: Rexp) : String = r match {
+  case ZERO => "0"
+  case ONE => "1"
+  case CHAR(c) => c.toString 
+  case ALT(r1, r2) => s"(${string(r1)} + ${string(r2)})"
+  case SEQ(CHAR(c), CHAR(d)) => s"${c}${d}"
+  case SEQ(r1, r2) => s"(${string(r1)} ~ ${string(r2)})"
+  case STAR(r) => s"(${string(r)})*"
+}

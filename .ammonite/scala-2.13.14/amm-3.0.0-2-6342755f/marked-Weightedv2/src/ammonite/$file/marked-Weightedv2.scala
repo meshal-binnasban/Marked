@@ -125,11 +125,17 @@ given semiringInt: Semiring[Int] with {
     def zero = 0
     def one = 1
     def plus(a: Int, b: Int): Int = a + b
-    def times(a: Int, b: Int): Int = a * b
+    def times(a: Int, b: Int): Int =  a * b
   }
 trait SemiringI[S] extends Semiring[S] {
     def index(i: Int): S
   }
+
+given semiringIntI: SemiringI[Int] with {
+    export semiringInt.*// Inherit all `Semiring` operations
+    def index(i: Int): Int = i 
+}
+
 
 //data Start= NoStart |Start Int
 sealed trait StartT
@@ -208,6 +214,7 @@ def submatcher[C, S](r: REGW[(Int, C), S], s: List[C])(using semiring: Semiring[
     matcher(seqw(arb, seqw(r, arb)), (s.indices zip s).toList)
   }
 
+  
 
 def shift[C, S](mark: S, re: REw[C, S], c: C)(using semiring: Semiring[S]): REGW[C, S] = {
     re match {
@@ -222,15 +229,17 @@ def shift[C, S](mark: S, re: REw[C, S], c: C)(using semiring: Semiring[S]): REGW
     }
   }
 
-// not sure if any is ok to use but it works
 def weighted[S](r: Rexp)(using semiring: Semiring[S]): REGW[Char,S] = r match {
   case ZERO      => zerow//[C, S]
   case ONE       => onew//[C, S]
   case CHAR(c)   => charw(x => if (x == c) semiring.one else semiring.zero)
-    //semiring match {
-      //  case si: SemiringI[S] => chari(c)(using si).asInstanceOf[REGW[C, S]]
-        //case _: Semiring[S] => charw(x => if (x == c) semiring.one else semiring.zero)
-   // }
+    
+  /*
+    semiring match {
+        case si: SemiringI[S] => chari(c)(using si).asInstanceOf[REGW[C, S]]
+        case _: Semiring[S] => charw(x => if (x == c) semiring.one else semiring.zero)
+    }
+   */ 
   case ALT(r1, r2)  => altw(weighted(r1), weighted(r2))
   case SEQ(r1, r2)  => seqw(weighted(r1), weighted(r2))
   case STAR(r1)     => starw(weighted(r1))
@@ -240,37 +249,39 @@ def weighted[S](r: Rexp)(using semiring: Semiring[S]): REGW[Char,S] = r match {
 @main
 def test0() = {
 
-val a = chari('a')
+val a = weighted(CHAR('a')) (using booleanSemiring)
 val aStar = starw(a)
 
-val b = chari('b')
+val b = weighted(CHAR('b')) (using booleanSemiring)
 val bStar=starw(b)
 
-val r= seqw(altw(a,aStar),b)
-println(submatcher(r, "hello athisbb isabb test of left most with ab".toList)(using semiringILeftmost))
+val r= seqw(aStar,b)
+val s ="hello athisbb isabb test of left most with ab"
+println(matcher(r, s.toList)(using booleanSemiring))
 
 //val r2 = weighted ( STAR(ALT(CHAR('a'), CHAR('b'))))(using semiringILeftmost)
-val r2 = starw(altw(chari('a'),chari('b')))
-println(submatcher(r2, "hello ab test abab".toList)(using semiringILeftmost))
+//println(submatcher(r2, "hello ab test abab".toList)(using semiringILeftmost))
 
 }
 
 @main
 def test1() = {
+/*
+val a = chari('a')(using semiringILeftmost)
+val b = chari('b')(using semiringILeftmost)
 
-val a = charw(_ == 'a')
-val b= charw(_ == 'b')
-val reg=seqw(a,b)
-println("testing new implementation")
-println(matcher(reg, "ab".toList))
+val reg=seqw(a,b)(using semiringILeftmost)
+val s= "abab"
 
-// not working for semiringLeftmost due to issues in weighted when handling charw or chari (type issues) 
-//val r = weighted ( STAR(ALT(CHAR('a'), CHAR('b')))) (using semiringILeftmost)
-val r= starw(altw(chari('a'),chari('b')))
+submatcher(reg,s.toList)(using semiringILeftmost)
+*/
 
-val s= "ababababababababa"
-matcher(r, (s.indices zip s).toList)
-println(matcher(r, (s.indices zip s).toList))
+    val a=chari('a')(using semiringILeftmost)
+    val aStar=starw(a)
+    val s="here aaaa is test aaaaa"
+    println(submatcher(aStar,s.toList))
+   
+    
 
 }
 

@@ -1,5 +1,5 @@
 
-ë¸	marked-Weightedv2.scÿLimport scala.compiletime.ops.boolean
+‰Ú	marked-Weightedv2.scﬁLimport scala.compiletime.ops.boolean
 import scala.math.min
 
 enum Rexp {
@@ -85,11 +85,17 @@ given semiringInt: Semiring[Int] with {
     def zero = 0
     def one = 1
     def plus(a: Int, b: Int): Int = a + b
-    def times(a: Int, b: Int): Int = a * b
+    def times(a: Int, b: Int): Int =  a * b
   }
 trait SemiringI[S] extends Semiring[S] {
     def index(i: Int): S
   }
+
+given semiringIntI: SemiringI[Int] with {
+    export semiringInt.*// Inherit all `Semiring` operations
+    def index(i: Int): Int = i 
+}
+
 
 //data Start= NoStart |Start Int
 sealed trait StartT
@@ -168,6 +174,7 @@ def submatcher[C, S](r: REGW[(Int, C), S], s: List[C])(using semiring: Semiring[
     matcher(seqw(arb, seqw(r, arb)), (s.indices zip s).toList)
   }
 
+  
 
 def shift[C, S](mark: S, re: REw[C, S], c: C)(using semiring: Semiring[S]): REGW[C, S] = {
     re match {
@@ -182,15 +189,17 @@ def shift[C, S](mark: S, re: REw[C, S], c: C)(using semiring: Semiring[S]): REGW
     }
   }
 
-// not sure if any is ok to use but it works
 def weighted[S](r: Rexp)(using semiring: Semiring[S]): REGW[Char,S] = r match {
   case ZERO      => zerow//[C, S]
   case ONE       => onew//[C, S]
   case CHAR(c)   => charw(x => if (x == c) semiring.one else semiring.zero)
-    //semiring match {
-      //  case si: SemiringI[S] => chari(c)(using si).asInstanceOf[REGW[C, S]]
-        //case _: Semiring[S] => charw(x => if (x == c) semiring.one else semiring.zero)
-   // }
+    
+  /*
+    semiring match {
+        case si: SemiringI[S] => chari(c)(using si).asInstanceOf[REGW[C, S]]
+        case _: Semiring[S] => charw(x => if (x == c) semiring.one else semiring.zero)
+    }
+   */ 
   case ALT(r1, r2)  => altw(weighted(r1), weighted(r2))
   case SEQ(r1, r2)  => seqw(weighted(r1), weighted(r2))
   case STAR(r1)     => starw(weighted(r1))
@@ -200,37 +209,39 @@ def weighted[S](r: Rexp)(using semiring: Semiring[S]): REGW[Char,S] = r match {
 @main
 def test0() = {
 
-val a = chari('a')
+val a = weighted(CHAR('a')) (using booleanSemiring)
 val aStar = starw(a)
 
-val b = chari('b')
+val b = weighted(CHAR('b')) (using booleanSemiring)
 val bStar=starw(b)
 
-val r= seqw(altw(a,aStar),b)
-println(submatcher(r, "hello athisbb isabb test of left most with ab".toList)(using semiringILeftmost))
+val r= seqw(aStar,b)
+val s ="hello athisbb isabb test of left most with ab"
+println(matcher(r, s.toList)(using booleanSemiring))
 
 //val r2 = weighted ( STAR(ALT(CHAR('a'), CHAR('b'))))(using semiringILeftmost)
-val r2 = starw(altw(chari('a'),chari('b')))
-println(submatcher(r2, "hello ab test abab".toList)(using semiringILeftmost))
+//println(submatcher(r2, "hello ab test abab".toList)(using semiringILeftmost))
 
 }
 
 @main
 def test1() = {
+/*
+val a = chari('a')(using semiringILeftmost)
+val b = chari('b')(using semiringILeftmost)
 
-val a = charw(_ == 'a')
-val b= charw(_ == 'b')
-val reg=seqw(a,b)
-println("testing new implementation")
-println(matcher(reg, "ab".toList))
+val reg=seqw(a,b)(using semiringILeftmost)
+val s= "abab"
 
-// not working for semiringLeftmost due to issues in weighted when handling charw or chari (type issues) 
-//val r = weighted ( STAR(ALT(CHAR('a'), CHAR('b')))) (using semiringILeftmost)
-val r= starw(altw(chari('a'),chari('b')))
+submatcher(reg,s.toList)(using semiringILeftmost)
+*/
 
-val s= "ababababababababa"
-matcher(r, (s.indices zip s).toList)
-println(matcher(r, (s.indices zip s).toList))
+    val a=chari('a')(using semiringILeftmost)
+    val aStar=starw(a)
+    val s="here aaaa is test aaaaa"
+    println(submatcher(aStar,s.toList))
+   
+    
 
 }
 
@@ -1444,7 +1455,51 @@ scala/Int#*¡
 0ammonite/$file/`marked-Weightedv2`.SemiringI#[S]java/lang/Object#fd,ammonite/$file/`marked-Weightedv2`.Semiring#420ammonite/$file/`marked-Weightedv2`.SemiringI#[S]ge-ammonite/$file/`marked-Weightedv2`.SemiringI#420ammonite/$file/`marked-Weightedv2`.SemiringI#[S]"£
 0ammonite/$file/`marked-Weightedv2`.SemiringI#[S]
 8ammonite/$file/`marked-Weightedv2`.SemiringI#`<init>`().
-5ammonite/$file/`marked-Weightedv2`.SemiringI#index().í: *É
+5ammonite/$file/`marked-Weightedv2`.SemiringI#index().í: *ó
+6ammonite/$file/`marked-Weightedv2`.semiringIntI.one(). *oneÄä"
+j
+
+scala/Int#í: ö2ammonite/$file/`marked-Weightedv2`.Semiring#one().*ö
+7ammonite/$file/`marked-Weightedv2`.semiringIntI.zero(). *zeroÄä"
+j
+
+scala/Int#í: ö3ammonite/$file/`marked-Weightedv2`.Semiring#zero().*Y
+:ammonite/$file/`marked-Weightedv2`.semiringIntI.plus().(a)*aÄä"
+
+scala/Int#*Y
+:ammonite/$file/`marked-Weightedv2`.semiringIntI.plus().(b)*bÄä"
+
+scala/Int#*í
+7ammonite/$file/`marked-Weightedv2`.semiringIntI.plus(). *plusÄäçäx
+:ammonite/$file/`marked-Weightedv2`.semiringIntI.plus().(a)
+:ammonite/$file/`marked-Weightedv2`.semiringIntI.plus().(b)
+scala/Int#í: ö3ammonite/$file/`marked-Weightedv2`.Semiring#plus().*Z
+;ammonite/$file/`marked-Weightedv2`.semiringIntI.times().(a)*aÄä"
+
+scala/Int#*Z
+;ammonite/$file/`marked-Weightedv2`.semiringIntI.times().(b)*bÄä"
+
+scala/Int#*ó
+8ammonite/$file/`marked-Weightedv2`.semiringIntI.times(). *timesÄäèåz
+;ammonite/$file/`marked-Weightedv2`.semiringIntI.times().(a)
+;ammonite/$file/`marked-Weightedv2`.semiringIntI.times().(b)
+scala/Int#í: ö4ammonite/$file/`marked-Weightedv2`.Semiring#times().*Z
+;ammonite/$file/`marked-Weightedv2`.semiringIntI.index().(i)*iÄä"
+
+scala/Int#*◊
+8ammonite/$file/`marked-Weightedv2`.semiringIntI.index().*indexÄäQO=
+;ammonite/$file/`marked-Weightedv2`.semiringIntI.index().(i)
+scala/Int#í: ö5ammonite/$file/`marked-Weightedv2`.SemiringI#index().*ƒ
+0ammonite/$file/`marked-Weightedv2`.semiringIntI.
+ ®Ä*semiringIntIÄäÚ
+Ôjava/lang/Object#A?-ammonite/$file/`marked-Weightedv2`.SemiringI#
+scala/Int#5¢20ammonite/$file/`marked-Weightedv2`.semiringIntI."€
+;ammonite/$file/`marked-Weightedv2`.semiringIntI.`<init>`().
+8ammonite/$file/`marked-Weightedv2`.semiringIntI.index().
+6ammonite/$file/`marked-Weightedv2`.semiringIntI.one().
+7ammonite/$file/`marked-Weightedv2`.semiringIntI.zero().
+7ammonite/$file/`marked-Weightedv2`.semiringIntI.plus().
+8ammonite/$file/`marked-Weightedv2`.semiringIntI.times().í: *É
 5ammonite/$file/`marked-Weightedv2`.StartT#`<init>`(). Ä@*<init>Ää42 .,*ammonite/$file/`marked-Weightedv2`.StartT#í: *«
 *ammonite/$file/`marked-Weightedv2`.StartT# *StartTÄäÉ
 Äjava/lang/Object#.,*ammonite/$file/`marked-Weightedv2`.StartT#"7
@@ -1624,13 +1679,13 @@ scala/Int#*û
 ;ammonite/$file/`marked-Weightedv2`.semiringLeftmost.plus().
 <ammonite/$file/`marked-Weightedv2`.semiringLeftmost.times().
 <ammonite/$file/`marked-Weightedv2`.semiringLeftmost.start().
-?ammonite/$file/`marked-Weightedv2`.semiringLeftmost.leftmost().í: *¬
-<ammonite/$file/`marked-Weightedv2`.semiringILeftmost.zero(). *zeroÄä9"7
-5j3
-1/-ammonite/$file/`marked-Weightedv2`.LeftmostT#í: ö3ammonite/$file/`marked-Weightedv2`.Semiring#zero().*ø
+?ammonite/$file/`marked-Weightedv2`.semiringLeftmost.leftmost().í: *ø
 ;ammonite/$file/`marked-Weightedv2`.semiringILeftmost.one(). *oneÄä9"7
 5j3
-1/-ammonite/$file/`marked-Weightedv2`.LeftmostT#í: ö2ammonite/$file/`marked-Weightedv2`.Semiring#one().*Å
+1/-ammonite/$file/`marked-Weightedv2`.LeftmostT#í: ö2ammonite/$file/`marked-Weightedv2`.Semiring#one().*¬
+<ammonite/$file/`marked-Weightedv2`.semiringILeftmost.zero(). *zeroÄä9"7
+5j3
+1/-ammonite/$file/`marked-Weightedv2`.LeftmostT#í: ö3ammonite/$file/`marked-Weightedv2`.Semiring#zero().*Å
 ?ammonite/$file/`marked-Weightedv2`.semiringILeftmost.plus().(a)*aÄä5"3
 1/-ammonite/$file/`marked-Weightedv2`.LeftmostT#*Å
 ?ammonite/$file/`marked-Weightedv2`.semiringILeftmost.plus().(b)*bÄä5"3
@@ -1669,8 +1724,8 @@ scala/Int#*Ñ
 ∂java/lang/Object#db-ammonite/$file/`marked-Weightedv2`.SemiringI#1/-ammonite/$file/`marked-Weightedv2`.LeftmostT#:¢75ammonite/$file/`marked-Weightedv2`.semiringILeftmost."˙
 @ammonite/$file/`marked-Weightedv2`.semiringILeftmost.`<init>`().
 =ammonite/$file/`marked-Weightedv2`.semiringILeftmost.index().
-<ammonite/$file/`marked-Weightedv2`.semiringILeftmost.zero().
 ;ammonite/$file/`marked-Weightedv2`.semiringILeftmost.one().
+<ammonite/$file/`marked-Weightedv2`.semiringILeftmost.zero().
 <ammonite/$file/`marked-Weightedv2`.semiringILeftmost.plus().
 =ammonite/$file/`marked-Weightedv2`.semiringILeftmost.times().
 =ammonite/$file/`marked-Weightedv2`.semiringILeftmost.start().
@@ -1780,40 +1835,28 @@ ge,ammonite/$file/`marked-Weightedv2`.Semiring#531ammonite/$file/`marked-We
 3
 1ammonite/$file/`marked-Weightedv2`.weighted().[S]3
 1ammonite/$file/`marked-Weightedv2`.weighted().(r):
-8ammonite/$file/`marked-Weightedv2`.weighted().(semiring)tr(ammonite/$file/`marked-Weightedv2`.REGW#scala/Char#531ammonite/$file/`marked-Weightedv2`.weighted().[S]í: *≤
-local36 Ä*aÄäö"ó
-îë(ammonite/$file/`marked-Weightedv2`.REGW#20scala/Tuple2#
-scala/Int#scala/Char#1/-ammonite/$file/`marked-Weightedv2`.LeftmostT#*∂
-local37 Ä*aStarÄäö"ó
-îë(ammonite/$file/`marked-Weightedv2`.REGW#20scala/Tuple2#
-scala/Int#scala/Char#1/-ammonite/$file/`marked-Weightedv2`.LeftmostT#*≤
-local38 Ä*bÄäö"ó
-îë(ammonite/$file/`marked-Weightedv2`.REGW#20scala/Tuple2#
-scala/Int#scala/Char#1/-ammonite/$file/`marked-Weightedv2`.LeftmostT#*∂
-local39 Ä*bStarÄäö"ó
-îë(ammonite/$file/`marked-Weightedv2`.REGW#20scala/Tuple2#
-scala/Int#scala/Char#1/-ammonite/$file/`marked-Weightedv2`.LeftmostT#*≤
-local40 Ä*rÄäö"ó
-îë(ammonite/$file/`marked-Weightedv2`.REGW#20scala/Tuple2#
-scala/Int#scala/Char#1/-ammonite/$file/`marked-Weightedv2`.LeftmostT#*≥
-local41 Ä*r2Ääö"ó
-îë(ammonite/$file/`marked-Weightedv2`.REGW#20scala/Tuple2#
-scala/Int#scala/Char#1/-ammonite/$file/`marked-Weightedv2`.LeftmostT#*l
+8ammonite/$file/`marked-Weightedv2`.weighted().(semiring)tr(ammonite/$file/`marked-Weightedv2`.REGW#scala/Char#531ammonite/$file/`marked-Weightedv2`.weighted().[S]í: *l
+local36 Ä*aÄäU"S
+QO(ammonite/$file/`marked-Weightedv2`.REGW#scala/Char#scala/Boolean#*p
+local37 Ä*aStarÄäU"S
+QO(ammonite/$file/`marked-Weightedv2`.REGW#scala/Char#scala/Boolean#*l
+local38 Ä*bÄäU"S
+QO(ammonite/$file/`marked-Weightedv2`.REGW#scala/Char#scala/Boolean#*p
+local39 Ä*bStarÄäU"S
+QO(ammonite/$file/`marked-Weightedv2`.REGW#scala/Char#scala/Boolean#*l
+local40 Ä*rÄäU"S
+QO(ammonite/$file/`marked-Weightedv2`.REGW#scala/Char#scala/Boolean#*0
+local41 Ä*sÄä"
+java/lang/String#*l
 +ammonite/$file/`marked-Weightedv2`.test0().*test0j
-mainargs/main#Ää scala/Unit#í: *k
-local42 Ä*aÄäT"R
-PN(ammonite/$file/`marked-Weightedv2`.REGW#
-scala/Any#scala/Boolean#*k
-local43 Ä*bÄäT"R
-PN(ammonite/$file/`marked-Weightedv2`.REGW#
-scala/Any#scala/Boolean#*m
-local44 Ä*regÄäT"R
-PN(ammonite/$file/`marked-Weightedv2`.REGW#
-scala/Any#scala/Boolean#*≤
-local45 Ä*rÄäö"ó
+mainargs/main#Ää scala/Unit#í: *≤
+local42 Ä*aÄäö"ó
+îë(ammonite/$file/`marked-Weightedv2`.REGW#20scala/Tuple2#
+scala/Int#scala/Char#1/-ammonite/$file/`marked-Weightedv2`.LeftmostT#*∂
+local43 Ä*aStarÄäö"ó
 îë(ammonite/$file/`marked-Weightedv2`.REGW#20scala/Tuple2#
 scala/Int#scala/Char#1/-ammonite/$file/`marked-Weightedv2`.LeftmostT#*0
-local46 Ä*sÄä"
+local44 Ä*sÄä"
 java/lang/String#*l
 +ammonite/$file/`marked-Weightedv2`.test1().*test1j
 mainargs/main#Ää scala/Unit#í: *r
@@ -1827,12 +1870,12 @@ scala/Int#*á
 7ammonite/$file/`marked-Weightedv2`.time_needed().(code)*codeÄä@">
 <j:
 864ammonite/$file/`marked-Weightedv2`.time_needed().[T]*.
-local47 Ä*startÄä"
+local45 Ä*startÄä"
 scala/Long#*&
-local48*jÄä"
+local46*jÄä"
 
 scala/Int#*,
-local49 Ä*endÄä"
+local47 Ä*endÄä"
 scala/Long#*ç
 1ammonite/$file/`marked-Weightedv2`.time_needed().*time_neededÄäøº
 6
@@ -1841,7 +1884,7 @@ scala/Int#*,
 7ammonite/$file/`marked-Weightedv2`.time_needed().(code)scala/Double#í: *l
 +ammonite/$file/`marked-Weightedv2`.test2().*test2j
 mainargs/main#Ää scala/Unit#í: *&
-local50*iÄä"
+local48*iÄä"
 
 scala/Int#*l
 +ammonite/$file/`marked-Weightedv2`.test3().*test3j
@@ -1851,10 +1894,10 @@ scala/Int#*l
 +ammonite/$file/`marked-Weightedv2`.$main().*$mainÄä>< 86scala/collection/Iterator#scala/Predef.String#í: *|
 .ammonite/$file/`marked-Weightedv2`.toString().*toStringÄä"
 j
-java/lang/String#í: öscala/Any#toString().*∑
+java/lang/String#í: öscala/Any#toString().*õ
 #ammonite/$file/`marked-Weightedv2`.
- *marked-Weightedv2ÄäÔ
-Ïjava/lang/Object#(¢%#ammonite/$file/`marked-Weightedv2`."®
+ *marked-Weightedv2Ää”
+–java/lang/Object#(¢%#ammonite/$file/`marked-Weightedv2`."å
 .ammonite/$file/`marked-Weightedv2`.`<init>`().
 (ammonite/$file/`marked-Weightedv2`.Rexp#
 (ammonite/$file/`marked-Weightedv2`.Rexp.
@@ -1895,6 +1938,8 @@ scala/Int#*l
 /ammonite/$file/`marked-Weightedv2`.semiringInt.
 /ammonite/$file/`marked-Weightedv2`.semiringInt.
 -ammonite/$file/`marked-Weightedv2`.SemiringI#
+0ammonite/$file/`marked-Weightedv2`.semiringIntI.
+0ammonite/$file/`marked-Weightedv2`.semiringIntI.
 *ammonite/$file/`marked-Weightedv2`.StartT#
 +ammonite/$file/`marked-Weightedv2`.NoStart.
 +ammonite/$file/`marked-Weightedv2`.NoStart.
@@ -2307,9 +2352,9 @@ scala/Int#2H
 VV :ammonite/$file/`marked-Weightedv2`.semiringInt.times().(b)2
 VV "
 scala/Int#2H
-V%V &:ammonite/$file/`marked-Weightedv2`.semiringInt.times().(a)2 
-V'V (scala/Int#`*`(+3).2H
-V)V *:ammonite/$file/`marked-Weightedv2`.semiringInt.times().(b)2E
+V&V ':ammonite/$file/`marked-Weightedv2`.semiringInt.times().(a)2 
+V(V )scala/Int#`*`(+3).2H
+V*V +:ammonite/$file/`marked-Weightedv2`.semiringInt.times().(b)2E
 VV 7ammonite/$file/`marked-Weightedv2`.semiringInt.times().2=
 RR /ammonite/$file/`marked-Weightedv2`.semiringInt.2:
 XX #,ammonite/$file/`marked-Weightedv2`.Semiring#2>
@@ -2321,884 +2366,858 @@ scala/Int#2F
 YY 0ammonite/$file/`marked-Weightedv2`.SemiringI#[S]2C
 YY 5ammonite/$file/`marked-Weightedv2`.SemiringI#index().2F
 XX 8ammonite/$file/`marked-Weightedv2`.SemiringI#`<init>`().2;
-XX -ammonite/$file/`marked-Weightedv2`.SemiringI#2?
-]]5ammonite/$file/`marked-Weightedv2`.StartT#`<init>`().28
-]] *ammonite/$file/`marked-Weightedv2`.StartT#28
-^^ "*ammonite/$file/`marked-Weightedv2`.StartT#29
-^^ +ammonite/$file/`marked-Weightedv2`.NoStart.28
-_#_ )*ammonite/$file/`marked-Weightedv2`.StartT#2
-__ 
+XX -ammonite/$file/`marked-Weightedv2`.SemiringI#2;
+\\ -ammonite/$file/`marked-Weightedv2`.SemiringI#2
+\\ !
+scala/Int#2=
+]] /ammonite/$file/`marked-Weightedv2`.semiringInt.2
+^^ 
+scala/Int#2I
+^^ ;ammonite/$file/`marked-Weightedv2`.semiringIntI.index().(i)2
+^^ 
+scala/Int#2I
+^^ ;ammonite/$file/`marked-Weightedv2`.semiringIntI.index().(i)2F
+^^ 8ammonite/$file/`marked-Weightedv2`.semiringIntI.index().2>
+\\ 0ammonite/$file/`marked-Weightedv2`.semiringIntI.2?
+cc5ammonite/$file/`marked-Weightedv2`.StartT#`<init>`().28
+cc *ammonite/$file/`marked-Weightedv2`.StartT#28
+dd "*ammonite/$file/`marked-Weightedv2`.StartT#29
+dd +ammonite/$file/`marked-Weightedv2`.NoStart.28
+e#e )*ammonite/$file/`marked-Weightedv2`.StartT#2
+ee 
 scala/Int#2;
-__ -ammonite/$file/`marked-Weightedv2`.Start#pos.2B
-__ 4ammonite/$file/`marked-Weightedv2`.Start#`<init>`().27
-__ )ammonite/$file/`marked-Weightedv2`.Start#2B
-bb8ammonite/$file/`marked-Weightedv2`.LeftmostT#`<init>`().2;
-bb -ammonite/$file/`marked-Weightedv2`.LeftmostT#2;
-cc $-ammonite/$file/`marked-Weightedv2`.LeftmostT#28
-cc *ammonite/$file/`marked-Weightedv2`.NoLeft.2;
-d'd 0-ammonite/$file/`marked-Weightedv2`.LeftmostT#28
-dd *ammonite/$file/`marked-Weightedv2`.StartT#2<
-dd .ammonite/$file/`marked-Weightedv2`.Leftmost#s.2E
-dd 7ammonite/$file/`marked-Weightedv2`.Leftmost#`<init>`().2:
-dd ,ammonite/$file/`marked-Weightedv2`.Leftmost#2:
-{{  ,ammonite/$file/`marked-Weightedv2`.Semiring#2;
-{!{ *-ammonite/$file/`marked-Weightedv2`.LeftmostT#28
-|| *ammonite/$file/`marked-Weightedv2`.NoLeft.2I
-|| 
-;ammonite/$file/`marked-Weightedv2`.semiringLeftmost.zero().2:
-}} ,ammonite/$file/`marked-Weightedv2`.Leftmost.29
-}} +ammonite/$file/`marked-Weightedv2`.NoStart.2H
-}} 	:ammonite/$file/`marked-Weightedv2`.semiringLeftmost.one().2;
- -ammonite/$file/`marked-Weightedv2`.LeftmostT#2L
- >ammonite/$file/`marked-Weightedv2`.semiringLeftmost.plus().(a)2;
- %-ammonite/$file/`marked-Weightedv2`.LeftmostT#2L
- >ammonite/$file/`marked-Weightedv2`.semiringLeftmost.plus().(b)2;
-( 1-ammonite/$file/`marked-Weightedv2`.LeftmostT#2L
-5 6>ammonite/$file/`marked-Weightedv2`.semiringLeftmost.plus().(a)2L
-7 8>ammonite/$file/`marked-Weightedv2`.semiringLeftmost.plus().(b)2:
+ee -ammonite/$file/`marked-Weightedv2`.Start#pos.2B
+ee 4ammonite/$file/`marked-Weightedv2`.Start#`<init>`().27
+ee )ammonite/$file/`marked-Weightedv2`.Start#2B
+hh8ammonite/$file/`marked-Weightedv2`.LeftmostT#`<init>`().2;
+hh -ammonite/$file/`marked-Weightedv2`.LeftmostT#2;
+ii $-ammonite/$file/`marked-Weightedv2`.LeftmostT#28
+ii *ammonite/$file/`marked-Weightedv2`.NoLeft.2;
+j'j 0-ammonite/$file/`marked-Weightedv2`.LeftmostT#28
+jj *ammonite/$file/`marked-Weightedv2`.StartT#2<
+jj .ammonite/$file/`marked-Weightedv2`.Leftmost#s.2E
+jj 7ammonite/$file/`marked-Weightedv2`.Leftmost#`<init>`().2:
+jj ,ammonite/$file/`marked-Weightedv2`.Leftmost#2<
 
-Ä
-Ä *ammonite/$file/`marked-Weightedv2`.NoLeft.2
+ÅÅ  ,ammonite/$file/`marked-Weightedv2`.Semiring#2=
 
-ÄÄ local52
+Å!Å *-ammonite/$file/`marked-Weightedv2`.LeftmostT#2:
 
-ÄÄ local52
+ÇÇ *ammonite/$file/`marked-Weightedv2`.NoLeft.2K
 
-Å
-Å local62:
+ÇÇ 
+;ammonite/$file/`marked-Weightedv2`.semiringLeftmost.zero().2<
 
-ÅÅ *ammonite/$file/`marked-Weightedv2`.NoLeft.2
+ÉÉ ,ammonite/$file/`marked-Weightedv2`.Leftmost.2;
 
-ÅÅ local62<
+ÉÉ +ammonite/$file/`marked-Weightedv2`.NoStart.2J
 
-Ç
-Ç ,ammonite/$file/`marked-Weightedv2`.Leftmost.2
+ÉÉ 	:ammonite/$file/`marked-Weightedv2`.semiringLeftmost.one().2=
 
-ÇÇ local72<
+ÖÖ -ammonite/$file/`marked-Weightedv2`.LeftmostT#2N
 
-ÇÇ ,ammonite/$file/`marked-Weightedv2`.Leftmost.2
+ÖÖ >ammonite/$file/`marked-Weightedv2`.semiringLeftmost.plus().(a)2=
 
-Ç Ç !local82<
+ÖÖ %-ammonite/$file/`marked-Weightedv2`.LeftmostT#2N
 
-Ç'Ç /,ammonite/$file/`marked-Weightedv2`.Leftmost.2O
+ÖÖ >ammonite/$file/`marked-Weightedv2`.semiringLeftmost.plus().(b)2=
 
-Ç0Ç 8?ammonite/$file/`marked-Weightedv2`.semiringLeftmost.leftmost().2
+Ö(Ö 1-ammonite/$file/`marked-Weightedv2`.LeftmostT#2N
 
-Ç9Ç :local72
+Ö5Ö 6>ammonite/$file/`marked-Weightedv2`.semiringLeftmost.plus().(a)2N
 
-Ç<Ç =local82I
- 
+Ö7Ö 8>ammonite/$file/`marked-Weightedv2`.semiringLeftmost.plus().(b)2:
+
+Ü
+Ü *ammonite/$file/`marked-Weightedv2`.NoLeft.2
+
+ÜÜ local52
+
+ÜÜ local52
+
+á
+á local62:
+
+áá *ammonite/$file/`marked-Weightedv2`.NoLeft.2
+
+áá local62<
+
+à
+à ,ammonite/$file/`marked-Weightedv2`.Leftmost.2
+
+àà local72<
+
+àà ,ammonite/$file/`marked-Weightedv2`.Leftmost.2
+
+à à !local82<
+
+à'à /,ammonite/$file/`marked-Weightedv2`.Leftmost.2O
+
+à0à 8?ammonite/$file/`marked-Weightedv2`.semiringLeftmost.leftmost().2
+
+à9à :local72
+
+à<à =local82K
+
+ÖÖ 
 ;ammonite/$file/`marked-Weightedv2`.semiringLeftmost.plus().2=
 
-ÑÑ -ammonite/$file/`marked-Weightedv2`.LeftmostT#2O
+ää -ammonite/$file/`marked-Weightedv2`.LeftmostT#2O
 
-ÑÑ ?ammonite/$file/`marked-Weightedv2`.semiringLeftmost.times().(a)2=
+ää ?ammonite/$file/`marked-Weightedv2`.semiringLeftmost.times().(a)2=
 
-ÑÑ &-ammonite/$file/`marked-Weightedv2`.LeftmostT#2O
+ää &-ammonite/$file/`marked-Weightedv2`.LeftmostT#2O
 
-ÑÑ ?ammonite/$file/`marked-Weightedv2`.semiringLeftmost.times().(b)2=
+ää ?ammonite/$file/`marked-Weightedv2`.semiringLeftmost.times().(b)2=
 
-Ñ)Ñ 2-ammonite/$file/`marked-Weightedv2`.LeftmostT#2O
+ä)ä 2-ammonite/$file/`marked-Weightedv2`.LeftmostT#2O
 
-Ñ6Ñ 7?ammonite/$file/`marked-Weightedv2`.semiringLeftmost.times().(a)2O
+ä6ä 7?ammonite/$file/`marked-Weightedv2`.semiringLeftmost.times().(a)2O
 
-Ñ8Ñ 9?ammonite/$file/`marked-Weightedv2`.semiringLeftmost.times().(b)2:
+ä8ä 9?ammonite/$file/`marked-Weightedv2`.semiringLeftmost.times().(b)2:
 
-ÖÖ *ammonite/$file/`marked-Weightedv2`.NoLeft.2:
+ãã *ammonite/$file/`marked-Weightedv2`.NoLeft.2:
 
-ÖÖ "*ammonite/$file/`marked-Weightedv2`.NoLeft.2:
+ãã "*ammonite/$file/`marked-Weightedv2`.NoLeft.2:
 
-ÜÜ *ammonite/$file/`marked-Weightedv2`.NoLeft.2:
+åå *ammonite/$file/`marked-Weightedv2`.NoLeft.2:
 
-ÜÜ "*ammonite/$file/`marked-Weightedv2`.NoLeft.2<
+åå "*ammonite/$file/`marked-Weightedv2`.NoLeft.2<
 
-áá ,ammonite/$file/`marked-Weightedv2`.Leftmost.2
+çç ,ammonite/$file/`marked-Weightedv2`.Leftmost.2
 
-áá local92<
+çç local92<
 
-áá #,ammonite/$file/`marked-Weightedv2`.Leftmost.2
+çç #,ammonite/$file/`marked-Weightedv2`.Leftmost.2
 
-á$á %local102<
+ç$ç %local102<
 
-á,á 4,ammonite/$file/`marked-Weightedv2`.Leftmost.2L
+ç,ç 4,ammonite/$file/`marked-Weightedv2`.Leftmost.2L
 
-á5á :<ammonite/$file/`marked-Weightedv2`.semiringLeftmost.start().2
+ç5ç :<ammonite/$file/`marked-Weightedv2`.semiringLeftmost.start().2
 
-á;á <local92
+ç;ç <local92
 
-á>á ?local102L
+ç>ç ?local102L
 
-ÑÑ <ammonite/$file/`marked-Weightedv2`.semiringLeftmost.times().2:
+ää <ammonite/$file/`marked-Weightedv2`.semiringLeftmost.times().2:
 
-ää *ammonite/$file/`marked-Weightedv2`.StartT#2O
+êê *ammonite/$file/`marked-Weightedv2`.StartT#2O
 
-ää ?ammonite/$file/`marked-Weightedv2`.semiringLeftmost.start().(i)2:
+êê ?ammonite/$file/`marked-Weightedv2`.semiringLeftmost.start().(i)2:
 
-ää *ammonite/$file/`marked-Weightedv2`.StartT#2O
+êê *ammonite/$file/`marked-Weightedv2`.StartT#2O
 
-ää ?ammonite/$file/`marked-Weightedv2`.semiringLeftmost.start().(j)2:
+êê ?ammonite/$file/`marked-Weightedv2`.semiringLeftmost.start().(j)2:
 
-ä!ä '*ammonite/$file/`marked-Weightedv2`.StartT#2O
+ê!ê '*ammonite/$file/`marked-Weightedv2`.StartT#2O
 
-ä+ä ,?ammonite/$file/`marked-Weightedv2`.semiringLeftmost.start().(i)2O
+ê+ê ,?ammonite/$file/`marked-Weightedv2`.semiringLeftmost.start().(i)2O
 
-ä-ä .?ammonite/$file/`marked-Weightedv2`.semiringLeftmost.start().(j)2;
+ê-ê .?ammonite/$file/`marked-Weightedv2`.semiringLeftmost.start().(j)2;
 
-ãã +ammonite/$file/`marked-Weightedv2`.NoStart.2
+ëë +ammonite/$file/`marked-Weightedv2`.NoStart.2
 
-ãã local112
+ëë local112
 
-ãã local112
+ëë local112
 
-åå local122
+íí local122
 
-åå local122L
+íí local122L
 
-ää <ammonite/$file/`marked-Weightedv2`.semiringLeftmost.start().2:
+êê <ammonite/$file/`marked-Weightedv2`.semiringLeftmost.start().2:
 
-èè *ammonite/$file/`marked-Weightedv2`.StartT#2R
+ïï *ammonite/$file/`marked-Weightedv2`.StartT#2R
 
-èè Bammonite/$file/`marked-Weightedv2`.semiringLeftmost.leftmost().(i)2:
+ïï Bammonite/$file/`marked-Weightedv2`.semiringLeftmost.leftmost().(i)2:
 
-èè !*ammonite/$file/`marked-Weightedv2`.StartT#2R
+ïï !*ammonite/$file/`marked-Weightedv2`.StartT#2R
 
-èè Bammonite/$file/`marked-Weightedv2`.semiringLeftmost.leftmost().(j)2:
+ïï Bammonite/$file/`marked-Weightedv2`.semiringLeftmost.leftmost().(j)2:
 
-è$è **ammonite/$file/`marked-Weightedv2`.StartT#2R
+ï$ï **ammonite/$file/`marked-Weightedv2`.StartT#2R
 
-è.è /Bammonite/$file/`marked-Weightedv2`.semiringLeftmost.leftmost().(i)2R
+ï.ï /Bammonite/$file/`marked-Weightedv2`.semiringLeftmost.leftmost().(i)2R
 
-è0è 1Bammonite/$file/`marked-Weightedv2`.semiringLeftmost.leftmost().(j)2;
+ï0ï 1Bammonite/$file/`marked-Weightedv2`.semiringLeftmost.leftmost().(j)2;
 
-êê +ammonite/$file/`marked-Weightedv2`.NoStart.2;
+ññ +ammonite/$file/`marked-Weightedv2`.NoStart.2;
 
-êê +ammonite/$file/`marked-Weightedv2`.NoStart.2;
+ññ +ammonite/$file/`marked-Weightedv2`.NoStart.2;
 
-ê#ê *+ammonite/$file/`marked-Weightedv2`.NoStart.2;
+ñ#ñ *+ammonite/$file/`marked-Weightedv2`.NoStart.2;
 
-ëë +ammonite/$file/`marked-Weightedv2`.NoStart.29
+óó +ammonite/$file/`marked-Weightedv2`.NoStart.29
 
-ëë )ammonite/$file/`marked-Weightedv2`.Start.2
+óó )ammonite/$file/`marked-Weightedv2`.Start.2
 
-ëë local1329
+óó local1329
 
-ë$ë ))ammonite/$file/`marked-Weightedv2`.Start.2
+ó$ó ))ammonite/$file/`marked-Weightedv2`.Start.2
 
-ë*ë +local1329
+ó*ó +local1329
 
-íí )ammonite/$file/`marked-Weightedv2`.Start.2
+òò )ammonite/$file/`marked-Weightedv2`.Start.2
 
-íí local142;
+òò local142;
 
-íí +ammonite/$file/`marked-Weightedv2`.NoStart.29
+òò +ammonite/$file/`marked-Weightedv2`.NoStart.29
 
-í$í ))ammonite/$file/`marked-Weightedv2`.Start.2
+ò$ò ))ammonite/$file/`marked-Weightedv2`.Start.2
 
-í*í +local1429
+ò*ò +local1429
 
-ìì )ammonite/$file/`marked-Weightedv2`.Start.2
+ôô )ammonite/$file/`marked-Weightedv2`.Start.2
 
-ìì local1529
+ôô local1529
 
-ìì )ammonite/$file/`marked-Weightedv2`.Start.2
+ôô )ammonite/$file/`marked-Weightedv2`.Start.2
 
-ìì local1629
+ôô local1629
 
-ì%ì *)ammonite/$file/`marked-Weightedv2`.Start.2)
+ô%ô *)ammonite/$file/`marked-Weightedv2`.Start.2)
 
-ì+ì .scala/math/package.min().2
+ô+ô .scala/math/package.min().2
 
-ì/ì 0local152
+ô/ô 0local152
 
-ì2ì 3local162O
+ô2ô 3local162O
 
-èè ?ammonite/$file/`marked-Weightedv2`.semiringLeftmost.leftmost().2B
-{{ 4ammonite/$file/`marked-Weightedv2`.semiringLeftmost.2=
+ïï ?ammonite/$file/`marked-Weightedv2`.semiringLeftmost.leftmost().2D
 
-ññ "-ammonite/$file/`marked-Weightedv2`.SemiringI#2=
+ÅÅ 4ammonite/$file/`marked-Weightedv2`.semiringLeftmost.2=
 
-ñ#ñ ,-ammonite/$file/`marked-Weightedv2`.LeftmostT#2D
+úú "-ammonite/$file/`marked-Weightedv2`.SemiringI#2=
 
-óó 4ammonite/$file/`marked-Weightedv2`.semiringLeftmost.2
+ú#ú ,-ammonite/$file/`marked-Weightedv2`.LeftmostT#2D
 
-òò 
+ùù 4ammonite/$file/`marked-Weightedv2`.semiringLeftmost.2
+
+ûû 
 scala/Int#2P
 
-òò @ammonite/$file/`marked-Weightedv2`.semiringILeftmost.index().(i)2=
+ûû @ammonite/$file/`marked-Weightedv2`.semiringILeftmost.index().(i)2=
 
-òò  -ammonite/$file/`marked-Weightedv2`.LeftmostT#2<
+ûû  -ammonite/$file/`marked-Weightedv2`.LeftmostT#2<
 
-ò#ò +,ammonite/$file/`marked-Weightedv2`.Leftmost.29
+û#û +,ammonite/$file/`marked-Weightedv2`.Leftmost.29
 
-ò,ò 1)ammonite/$file/`marked-Weightedv2`.Start.2P
+û,û 1)ammonite/$file/`marked-Weightedv2`.Start.2P
 
-ò2ò 3@ammonite/$file/`marked-Weightedv2`.semiringILeftmost.index().(i)2M
+û2û 3@ammonite/$file/`marked-Weightedv2`.semiringILeftmost.index().(i)2M
 
-òò =ammonite/$file/`marked-Weightedv2`.semiringILeftmost.index().2E
+ûû =ammonite/$file/`marked-Weightedv2`.semiringILeftmost.index().2E
 
-ññ 5ammonite/$file/`marked-Weightedv2`.semiringILeftmost.2@
+úú 5ammonite/$file/`marked-Weightedv2`.semiringILeftmost.2@
 
-õõ 0ammonite/$file/`marked-Weightedv2`.matcher().[C]2@
+°° 0ammonite/$file/`marked-Weightedv2`.matcher().[C]2@
 
-õõ 0ammonite/$file/`marked-Weightedv2`.matcher().[S]28
+°° 0ammonite/$file/`marked-Weightedv2`.matcher().[S]28
 
-õõ (ammonite/$file/`marked-Weightedv2`.REGW#2@
+°° (ammonite/$file/`marked-Weightedv2`.REGW#2@
 
-õõ 0ammonite/$file/`marked-Weightedv2`.matcher().[C]2@
+°° 0ammonite/$file/`marked-Weightedv2`.matcher().[C]2@
 
-õõ 0ammonite/$file/`marked-Weightedv2`.matcher().[S]2@
+°° 0ammonite/$file/`marked-Weightedv2`.matcher().[S]2@
 
-õõ 0ammonite/$file/`marked-Weightedv2`.matcher().(r)2#
+°° 0ammonite/$file/`marked-Weightedv2`.matcher().(r)2#
 
-õ$õ (scala/package.List#2@
+°$° (scala/package.List#2@
 
-õ)õ *0ammonite/$file/`marked-Weightedv2`.matcher().[C]2@
+°)° *0ammonite/$file/`marked-Weightedv2`.matcher().[C]2@
 
-õ!õ "0ammonite/$file/`marked-Weightedv2`.matcher().(s)2<
+°!° "0ammonite/$file/`marked-Weightedv2`.matcher().(s)2<
 
-õ=õ E,ammonite/$file/`marked-Weightedv2`.Semiring#2@
+°=° E,ammonite/$file/`marked-Weightedv2`.Semiring#2@
 
-õFõ G0ammonite/$file/`marked-Weightedv2`.matcher().[S]2G
+°F° G0ammonite/$file/`marked-Weightedv2`.matcher().[S]2G
 
-õ3õ ;7ammonite/$file/`marked-Weightedv2`.matcher().(semiring)2@
+°3° ;7ammonite/$file/`marked-Weightedv2`.matcher().(semiring)2@
 
-õKõ L0ammonite/$file/`marked-Weightedv2`.matcher().[S]2@
+°K° L0ammonite/$file/`marked-Weightedv2`.matcher().[S]2@
 
-úú 0ammonite/$file/`marked-Weightedv2`.matcher().(s)2"
+¢¢ 0ammonite/$file/`marked-Weightedv2`.matcher().(s)2"
 
-ùù scala/package.Nil.2@
+££ scala/package.Nil.2@
 
-ùù 0ammonite/$file/`marked-Weightedv2`.matcher().(r)2?
+££ 0ammonite/$file/`marked-Weightedv2`.matcher().(r)2?
 
-ùù /ammonite/$file/`marked-Weightedv2`.REGW#emptyw.2#
+££ /ammonite/$file/`marked-Weightedv2`.REGW#emptyw.2#
 
-ûû scala/package.`::`.2
+§§ scala/package.`::`.2
 
-ûû local172
+§§ local172
 
-ûû local182
+§§ local182
 
-ûû  local1829
+§§  local1829
 
-û!û ))scala/collection/LinearSeqOps#foldLeft().2;
+§!§ ))scala/collection/LinearSeqOps#foldLeft().2;
 
-û*û /+ammonite/$file/`marked-Weightedv2`.shift().2G
+§*§ /+ammonite/$file/`marked-Weightedv2`.shift().2G
 
-û0û 87ammonite/$file/`marked-Weightedv2`.matcher().(semiring)2B
+§0§ 87ammonite/$file/`marked-Weightedv2`.matcher().(semiring)2B
 
-û9û <2ammonite/$file/`marked-Weightedv2`.Semiring#one().2@
+§9§ <2ammonite/$file/`marked-Weightedv2`.Semiring#one().2@
 
-û>û ?0ammonite/$file/`marked-Weightedv2`.matcher().(r)2;
+§>§ ?0ammonite/$file/`marked-Weightedv2`.matcher().(r)2;
 
-û@û B+ammonite/$file/`marked-Weightedv2`.REGW#re.2
+§@§ B+ammonite/$file/`marked-Weightedv2`.REGW#re.2
 
-ûDû Elocal172
+§D§ Elocal172
 
-ü
-ü local192
+•
+• local192
 
-üü local202;
+•• local202;
 
-üü +ammonite/$file/`marked-Weightedv2`.shift().2G
+•• +ammonite/$file/`marked-Weightedv2`.shift().2G
 
-üü !7ammonite/$file/`marked-Weightedv2`.matcher().(semiring)2C
+•• !7ammonite/$file/`marked-Weightedv2`.matcher().(semiring)2C
 
-ü"ü &3ammonite/$file/`marked-Weightedv2`.Semiring#zero().2
+•"• &3ammonite/$file/`marked-Weightedv2`.Semiring#zero().2
 
-ü(ü )local192;
+•(• )local192;
 
-ü*ü ,+ammonite/$file/`marked-Weightedv2`.REGW#re.2
+•*• ,+ammonite/$file/`marked-Weightedv2`.REGW#re.2
 
-ü.ü /local202
+•.• /local202
 
-ûû local212
+§§ local212
 
-†† 	local212?
+¶¶ 	local212?
 
-†
-† /ammonite/$file/`marked-Weightedv2`.REGW#finalw.2=
+¶
+¶ /ammonite/$file/`marked-Weightedv2`.REGW#finalw.2=
 
-õõ -ammonite/$file/`marked-Weightedv2`.matcher().2C
+°° -ammonite/$file/`marked-Weightedv2`.matcher().2C
 
-§§ 3ammonite/$file/`marked-Weightedv2`.submatcher().[C]2C
+™™ 3ammonite/$file/`marked-Weightedv2`.submatcher().[C]2C
 
-§§ 3ammonite/$file/`marked-Weightedv2`.submatcher().[S]28
+™™ 3ammonite/$file/`marked-Weightedv2`.submatcher().[S]28
 
-§§ (ammonite/$file/`marked-Weightedv2`.REGW#2
+™™ (ammonite/$file/`marked-Weightedv2`.REGW#2
 
-§§ !
+™™ !
 scala/Int#2C
 
-§#§ $3ammonite/$file/`marked-Weightedv2`.submatcher().[C]2C
+™#™ $3ammonite/$file/`marked-Weightedv2`.submatcher().[C]2C
 
-§'§ (3ammonite/$file/`marked-Weightedv2`.submatcher().[S]2C
+™'™ (3ammonite/$file/`marked-Weightedv2`.submatcher().[S]2C
 
-§§ 3ammonite/$file/`marked-Weightedv2`.submatcher().(r)2#
+™™ 3ammonite/$file/`marked-Weightedv2`.submatcher().(r)2#
 
-§.§ 2scala/package.List#2C
+™.™ 2scala/package.List#2C
 
-§3§ 43ammonite/$file/`marked-Weightedv2`.submatcher().[C]2C
+™3™ 43ammonite/$file/`marked-Weightedv2`.submatcher().[C]2C
 
-§+§ ,3ammonite/$file/`marked-Weightedv2`.submatcher().(s)2<
+™+™ ,3ammonite/$file/`marked-Weightedv2`.submatcher().(s)2<
 
-§G§ O,ammonite/$file/`marked-Weightedv2`.Semiring#2C
+™G™ O,ammonite/$file/`marked-Weightedv2`.Semiring#2C
 
-§P§ Q3ammonite/$file/`marked-Weightedv2`.submatcher().[S]2J
+™P™ Q3ammonite/$file/`marked-Weightedv2`.submatcher().[S]2J
 
-§=§ E:ammonite/$file/`marked-Weightedv2`.submatcher().(semiring)2C
+™=™ E:ammonite/$file/`marked-Weightedv2`.submatcher().(semiring)2C
 
-§U§ V3ammonite/$file/`marked-Weightedv2`.submatcher().[S]28
+™U™ V3ammonite/$file/`marked-Weightedv2`.submatcher().[S]28
 
-•• (ammonite/$file/`marked-Weightedv2`.REGW#2
+´´ (ammonite/$file/`marked-Weightedv2`.REGW#2
 
-•• 
+´´ 
 scala/Int#2C
 
-•• 3ammonite/$file/`marked-Weightedv2`.submatcher().[C]2C
+´´ 3ammonite/$file/`marked-Weightedv2`.submatcher().[C]2C
 
-•• 3ammonite/$file/`marked-Weightedv2`.submatcher().[S]2;
+´´ 3ammonite/$file/`marked-Weightedv2`.submatcher().[S]2;
 
-•!• &+ammonite/$file/`marked-Weightedv2`.starw().2;
+´!´ &+ammonite/$file/`marked-Weightedv2`.starw().2;
 
-•'• ,+ammonite/$file/`marked-Weightedv2`.charw().2J
+´'´ ,+ammonite/$file/`marked-Weightedv2`.charw().2J
 
-•2• ::ammonite/$file/`marked-Weightedv2`.submatcher().(semiring)2B
+´2´ ::ammonite/$file/`marked-Weightedv2`.submatcher().(semiring)2B
 
-•;• >2ammonite/$file/`marked-Weightedv2`.Semiring#one().2
+´;´ >2ammonite/$file/`marked-Weightedv2`.Semiring#one().2
 
-•• local222=
+´´ local222=
 
-¶¶ -ammonite/$file/`marked-Weightedv2`.matcher().2:
+¨¨ -ammonite/$file/`marked-Weightedv2`.matcher().2:
 
-¶¶ *ammonite/$file/`marked-Weightedv2`.seqw().2
+¨¨ *ammonite/$file/`marked-Weightedv2`.seqw().2
 
-¶¶ local222:
+¨¨ local222:
 
-¶¶ *ammonite/$file/`marked-Weightedv2`.seqw().2C
+¨¨ *ammonite/$file/`marked-Weightedv2`.seqw().2C
 
-¶¶ 3ammonite/$file/`marked-Weightedv2`.submatcher().(r)2
+¨¨ 3ammonite/$file/`marked-Weightedv2`.submatcher().(r)2
 
-¶¶ !local222C
+¨¨ !local222C
 
-¶&¶ '3ammonite/$file/`marked-Weightedv2`.submatcher().(s)22
+¨&¨ '3ammonite/$file/`marked-Weightedv2`.submatcher().(s)22
 
-¶(¶ /"scala/collection/SeqOps#indices().2B
+¨(¨ /"scala/collection/SeqOps#indices().2B
 
-¶0¶ 32scala/collection/StrictOptimizedIterableOps#zip().2C
+¨0¨ 32scala/collection/StrictOptimizedIterableOps#zip().2C
 
-¶4¶ 53ammonite/$file/`marked-Weightedv2`.submatcher().(s)2:
+¨4¨ 53ammonite/$file/`marked-Weightedv2`.submatcher().(s)2:
 
-¶7¶ =*scala/collection/IterableOnceOps#toList().2@
+¨7¨ =*scala/collection/IterableOnceOps#toList().2@
 
-§§ 0ammonite/$file/`marked-Weightedv2`.submatcher().2>
+™™ 0ammonite/$file/`marked-Weightedv2`.submatcher().2>
 
-™
-™ .ammonite/$file/`marked-Weightedv2`.shift().[C]2>
+±
+± .ammonite/$file/`marked-Weightedv2`.shift().[C]2>
 
-™™ .ammonite/$file/`marked-Weightedv2`.shift().[S]2>
+±± .ammonite/$file/`marked-Weightedv2`.shift().[S]2>
 
-™™ .ammonite/$file/`marked-Weightedv2`.shift().[S]2A
+±± .ammonite/$file/`marked-Weightedv2`.shift().[S]2A
 
-™™ 1ammonite/$file/`marked-Weightedv2`.shift().(mark)27
+±± 1ammonite/$file/`marked-Weightedv2`.shift().(mark)27
 
-™™  'ammonite/$file/`marked-Weightedv2`.REw#2>
+±±  'ammonite/$file/`marked-Weightedv2`.REw#2>
 
-™!™ ".ammonite/$file/`marked-Weightedv2`.shift().[C]2>
+±!± ".ammonite/$file/`marked-Weightedv2`.shift().[C]2>
 
-™$™ %.ammonite/$file/`marked-Weightedv2`.shift().[S]2?
+±$± %.ammonite/$file/`marked-Weightedv2`.shift().[S]2?
 
-™™ /ammonite/$file/`marked-Weightedv2`.shift().(re)2>
+±± /ammonite/$file/`marked-Weightedv2`.shift().(re)2>
 
-™+™ ,.ammonite/$file/`marked-Weightedv2`.shift().[C]2>
+±+± ,.ammonite/$file/`marked-Weightedv2`.shift().[C]2>
 
-™(™ ).ammonite/$file/`marked-Weightedv2`.shift().(c)2<
+±(± ).ammonite/$file/`marked-Weightedv2`.shift().(c)2<
 
-™>™ F,ammonite/$file/`marked-Weightedv2`.Semiring#2>
+±>± F,ammonite/$file/`marked-Weightedv2`.Semiring#2>
 
-™G™ H.ammonite/$file/`marked-Weightedv2`.shift().[S]2E
+±G± H.ammonite/$file/`marked-Weightedv2`.shift().[S]2E
 
-™4™ <5ammonite/$file/`marked-Weightedv2`.shift().(semiring)28
+±4± <5ammonite/$file/`marked-Weightedv2`.shift().(semiring)28
 
-™L™ P(ammonite/$file/`marked-Weightedv2`.REGW#2>
+±L± P(ammonite/$file/`marked-Weightedv2`.REGW#2>
 
-™Q™ R.ammonite/$file/`marked-Weightedv2`.shift().[C]2>
+±Q± R.ammonite/$file/`marked-Weightedv2`.shift().[C]2>
 
-™T™ U.ammonite/$file/`marked-Weightedv2`.shift().[S]2?
+±T± U.ammonite/$file/`marked-Weightedv2`.shift().[S]2?
 
-´´ /ammonite/$file/`marked-Weightedv2`.shift().(re)29
+≤≤ /ammonite/$file/`marked-Weightedv2`.shift().(re)29
 
-¨¨ )ammonite/$file/`marked-Weightedv2`.ZEROw.2;
+≥≥ )ammonite/$file/`marked-Weightedv2`.ZEROw.2;
 
-¨¨ +ammonite/$file/`marked-Weightedv2`.zerow().2>
+≥≥ +ammonite/$file/`marked-Weightedv2`.zerow().2>
 
-¨¨ .ammonite/$file/`marked-Weightedv2`.shift().[C]2>
+≥≥ .ammonite/$file/`marked-Weightedv2`.shift().[C]2>
 
-¨¨  .ammonite/$file/`marked-Weightedv2`.shift().[S]28
+≥≥  .ammonite/$file/`marked-Weightedv2`.shift().[S]28
 
-≠≠ (ammonite/$file/`marked-Weightedv2`.ONEw.2:
+¥¥ (ammonite/$file/`marked-Weightedv2`.ONEw.2:
 
-≠≠ *ammonite/$file/`marked-Weightedv2`.onew().2>
+¥¥ *ammonite/$file/`marked-Weightedv2`.onew().2>
 
-≠≠ .ammonite/$file/`marked-Weightedv2`.shift().[C]2>
+¥¥ .ammonite/$file/`marked-Weightedv2`.shift().[C]2>
 
-≠≠ .ammonite/$file/`marked-Weightedv2`.shift().[S]29
+¥¥ .ammonite/$file/`marked-Weightedv2`.shift().[S]29
 
-ÆÆ )ammonite/$file/`marked-Weightedv2`.CHARw.2
+µµ )ammonite/$file/`marked-Weightedv2`.CHARw.2
 
-ÆÆ local2328
+µµ local2328
 
-ÆÆ (ammonite/$file/`marked-Weightedv2`.REGW.2E
+µµ (ammonite/$file/`marked-Weightedv2`.REGW.2E
 
-ÆÆ $5ammonite/$file/`marked-Weightedv2`.shift().(semiring)2C
+µµ $5ammonite/$file/`marked-Weightedv2`.shift().(semiring)2C
 
-Æ%Æ )3ammonite/$file/`marked-Weightedv2`.Semiring#zero().2E
+µ%µ )3ammonite/$file/`marked-Weightedv2`.Semiring#zero().2E
 
-Æ+Æ 35ammonite/$file/`marked-Weightedv2`.shift().(semiring)2D
+µ+µ 35ammonite/$file/`marked-Weightedv2`.shift().(semiring)2D
 
-Æ4Æ 94ammonite/$file/`marked-Weightedv2`.Semiring#times().2A
+µ4µ 94ammonite/$file/`marked-Weightedv2`.Semiring#times().2A
 
-Æ:Æ >1ammonite/$file/`marked-Weightedv2`.shift().(mark)2
+µ:µ >1ammonite/$file/`marked-Weightedv2`.shift().(mark)2
 
-Æ@Æ Alocal232>
+µ@µ Alocal232>
 
-ÆBÆ C.ammonite/$file/`marked-Weightedv2`.shift().(c)29
+µBµ C.ammonite/$file/`marked-Weightedv2`.shift().(c)29
 
-ÆGÆ L)ammonite/$file/`marked-Weightedv2`.CHARw.2
+µGµ L)ammonite/$file/`marked-Weightedv2`.CHARw.2
 
-ÆMÆ Nlocal2328
+µMµ Nlocal2328
 
-ØØ (ammonite/$file/`marked-Weightedv2`.ALTw.2
+∂∂ (ammonite/$file/`marked-Weightedv2`.ALTw.2
 
-ØØ local242
+∂∂ local242
 
-ØØ local252:
+∂∂ local252:
 
-ØØ *ammonite/$file/`marked-Weightedv2`.altw().2;
+∂∂ *ammonite/$file/`marked-Weightedv2`.altw().2;
 
-Ø Ø %+ammonite/$file/`marked-Weightedv2`.shift().2A
+∂ ∂ %+ammonite/$file/`marked-Weightedv2`.shift().2A
 
-Ø&Ø *1ammonite/$file/`marked-Weightedv2`.shift().(mark)2
+∂&∂ *1ammonite/$file/`marked-Weightedv2`.shift().(mark)2
 
-Ø,Ø .local242;
+∂,∂ .local242;
 
-Ø/Ø 1+ammonite/$file/`marked-Weightedv2`.REGW#re.2>
+∂/∂ 1+ammonite/$file/`marked-Weightedv2`.REGW#re.2>
 
-Ø3Ø 4.ammonite/$file/`marked-Weightedv2`.shift().(c)2;
+∂3∂ 4.ammonite/$file/`marked-Weightedv2`.shift().(c)2;
 
-Ø7Ø <+ammonite/$file/`marked-Weightedv2`.shift().2A
+∂7∂ <+ammonite/$file/`marked-Weightedv2`.shift().2A
 
-Ø=Ø A1ammonite/$file/`marked-Weightedv2`.shift().(mark)2
+∂=∂ A1ammonite/$file/`marked-Weightedv2`.shift().(mark)2
 
-ØCØ Elocal252;
+∂C∂ Elocal252;
 
-ØFØ H+ammonite/$file/`marked-Weightedv2`.REGW#re.2>
+∂F∂ H+ammonite/$file/`marked-Weightedv2`.REGW#re.2>
 
-ØJØ K.ammonite/$file/`marked-Weightedv2`.shift().(c)28
+∂J∂ K.ammonite/$file/`marked-Weightedv2`.shift().(c)28
 
-∞∞ (ammonite/$file/`marked-Weightedv2`.SEQw.2
+∑∑ (ammonite/$file/`marked-Weightedv2`.SEQw.2
 
-∞∞ local262
+∑∑ local262
 
-∞∞ local272:
+∑∑ local272:
 
-∞∞ *ammonite/$file/`marked-Weightedv2`.seqw().2;
+∑∑ *ammonite/$file/`marked-Weightedv2`.seqw().2;
 
-∞ ∞ %+ammonite/$file/`marked-Weightedv2`.shift().2A
+∑ ∑ %+ammonite/$file/`marked-Weightedv2`.shift().2A
 
-∞&∞ *1ammonite/$file/`marked-Weightedv2`.shift().(mark)2
+∑&∑ *1ammonite/$file/`marked-Weightedv2`.shift().(mark)2
 
-∞,∞ .local262;
+∑,∑ .local262;
 
-∞/∞ 1+ammonite/$file/`marked-Weightedv2`.REGW#re.2>
+∑/∑ 1+ammonite/$file/`marked-Weightedv2`.REGW#re.2>
 
-∞3∞ 4.ammonite/$file/`marked-Weightedv2`.shift().(c)2;
+∑3∑ 4.ammonite/$file/`marked-Weightedv2`.shift().(c)2;
 
-±± +ammonite/$file/`marked-Weightedv2`.shift().2E
+∏∏ +ammonite/$file/`marked-Weightedv2`.shift().2E
 
-±± 5ammonite/$file/`marked-Weightedv2`.shift().(semiring)2C
+∏∏ 5ammonite/$file/`marked-Weightedv2`.shift().(semiring)2C
 
-±± 3ammonite/$file/`marked-Weightedv2`.Semiring#plus().2E
+∏∏ 3ammonite/$file/`marked-Weightedv2`.Semiring#plus().2E
 
-±± %5ammonite/$file/`marked-Weightedv2`.shift().(semiring)2D
+∏∏ %5ammonite/$file/`marked-Weightedv2`.shift().(semiring)2D
 
-±&± +4ammonite/$file/`marked-Weightedv2`.Semiring#times().2A
+∏&∏ +4ammonite/$file/`marked-Weightedv2`.Semiring#times().2A
 
-±,± 01ammonite/$file/`marked-Weightedv2`.shift().(mark)2
+∏,∏ 01ammonite/$file/`marked-Weightedv2`.shift().(mark)2
 
-±2± 4local262?
+∏2∏ 4local262?
 
-±5± ;/ammonite/$file/`marked-Weightedv2`.REGW#emptyw.2
+∏5∏ ;/ammonite/$file/`marked-Weightedv2`.REGW#emptyw.2
 
-≤$≤ &local262?
+π$π &local262?
 
-≤'≤ -/ammonite/$file/`marked-Weightedv2`.REGW#finalw.2
+π'π -/ammonite/$file/`marked-Weightedv2`.REGW#finalw.2
 
-≤0≤ 2local272;
+π0π 2local272;
 
-≤3≤ 5+ammonite/$file/`marked-Weightedv2`.REGW#re.2>
+π3π 5+ammonite/$file/`marked-Weightedv2`.REGW#re.2>
 
-≤7≤ 8.ammonite/$file/`marked-Weightedv2`.shift().(c)29
+π7π 8.ammonite/$file/`marked-Weightedv2`.shift().(c)29
 
-≥≥ )ammonite/$file/`marked-Weightedv2`.STARw.2
+∫∫ )ammonite/$file/`marked-Weightedv2`.STARw.2
 
-≥≥ local282;
+∫∫ local282;
 
-≥≥ +ammonite/$file/`marked-Weightedv2`.starw().2;
+∫∫ +ammonite/$file/`marked-Weightedv2`.starw().2;
 
-≥≥ "+ammonite/$file/`marked-Weightedv2`.shift().2E
+∫∫ "+ammonite/$file/`marked-Weightedv2`.shift().2E
 
-≥#≥ +5ammonite/$file/`marked-Weightedv2`.shift().(semiring)2C
+∫#∫ +5ammonite/$file/`marked-Weightedv2`.shift().(semiring)2C
 
-≥,≥ 03ammonite/$file/`marked-Weightedv2`.Semiring#plus().2A
+∫,∫ 03ammonite/$file/`marked-Weightedv2`.Semiring#plus().2A
 
-≥1≥ 51ammonite/$file/`marked-Weightedv2`.shift().(mark)2
+∫1∫ 51ammonite/$file/`marked-Weightedv2`.shift().(mark)2
 
-≥7≥ 8local282?
+∫7∫ 8local282?
 
-≥9≥ ?/ammonite/$file/`marked-Weightedv2`.REGW#finalw.2
+∫9∫ ?/ammonite/$file/`marked-Weightedv2`.REGW#finalw.2
 
-≥B≥ Clocal282;
+∫B∫ Clocal282;
 
-≥D≥ F+ammonite/$file/`marked-Weightedv2`.REGW#re.2>
+∫D∫ F+ammonite/$file/`marked-Weightedv2`.REGW#re.2>
 
-≥H≥ I.ammonite/$file/`marked-Weightedv2`.shift().(c)2;
+∫H∫ I.ammonite/$file/`marked-Weightedv2`.shift().(c)2;
 
-™™ 	+ammonite/$file/`marked-Weightedv2`.shift().2A
+±± 	+ammonite/$file/`marked-Weightedv2`.shift().2A
 
-∏∏ 1ammonite/$file/`marked-Weightedv2`.weighted().[S]28
+ææ 1ammonite/$file/`marked-Weightedv2`.weighted().[S]28
 
-∏∏ (ammonite/$file/`marked-Weightedv2`.Rexp#2A
+ææ (ammonite/$file/`marked-Weightedv2`.Rexp#2A
 
-∏∏ 1ammonite/$file/`marked-Weightedv2`.weighted().(r)2<
+ææ 1ammonite/$file/`marked-Weightedv2`.weighted().(r)2<
 
-∏)∏ 1,ammonite/$file/`marked-Weightedv2`.Semiring#2A
+æ)æ 1,ammonite/$file/`marked-Weightedv2`.Semiring#2A
 
-∏2∏ 31ammonite/$file/`marked-Weightedv2`.weighted().[S]2H
+æ2æ 31ammonite/$file/`marked-Weightedv2`.weighted().[S]2H
 
-∏∏ '8ammonite/$file/`marked-Weightedv2`.weighted().(semiring)28
+ææ '8ammonite/$file/`marked-Weightedv2`.weighted().(semiring)28
 
-∏7∏ ;(ammonite/$file/`marked-Weightedv2`.REGW#2
+æ7æ ;(ammonite/$file/`marked-Weightedv2`.REGW#2
 
-∏<∏ @scala/Char#2A
+æ<æ @scala/Char#2A
 
-∏A∏ B1ammonite/$file/`marked-Weightedv2`.weighted().[S]2A
+æAæ B1ammonite/$file/`marked-Weightedv2`.weighted().[S]2A
 
-∏F∏ G1ammonite/$file/`marked-Weightedv2`.weighted().(r)2=
+æFæ G1ammonite/$file/`marked-Weightedv2`.weighted().(r)2=
 
-ππ -ammonite/$file/`marked-Weightedv2`.Rexp.ZERO.2;
+øø -ammonite/$file/`marked-Weightedv2`.Rexp.ZERO.2;
 
-ππ +ammonite/$file/`marked-Weightedv2`.zerow().2<
-
-∫∫ 
-,ammonite/$file/`marked-Weightedv2`.Rexp.ONE.2:
-
-∫∫ *ammonite/$file/`marked-Weightedv2`.onew().2=
-
-ªª -ammonite/$file/`marked-Weightedv2`.Rexp.CHAR.2
-
-ªª local292;
-
-ªª +ammonite/$file/`marked-Weightedv2`.charw().2
-
-ªª local302
-
-ª#ª $local302$
-
-ª%ª 'scala/Char#`==`(+2).2
-
-ª(ª )local292H
-
-ª+ª 38ammonite/$file/`marked-Weightedv2`.weighted().(semiring)2B
-
-ª4ª 72ammonite/$file/`marked-Weightedv2`.Semiring#one().2H
-
-ª=ª E8ammonite/$file/`marked-Weightedv2`.weighted().(semiring)2C
-
-ªFª J3ammonite/$file/`marked-Weightedv2`.Semiring#zero().2<
+øø +ammonite/$file/`marked-Weightedv2`.zerow().2<
 
 ¿¿ 
+,ammonite/$file/`marked-Weightedv2`.Rexp.ONE.2:
+
+¿¿ *ammonite/$file/`marked-Weightedv2`.onew().2=
+
+¡¡ -ammonite/$file/`marked-Weightedv2`.Rexp.CHAR.2
+
+¡¡ local292;
+
+¡¡ +ammonite/$file/`marked-Weightedv2`.charw().2
+
+¡¡ local302
+
+¡#¡ $local302$
+
+¡%¡ 'scala/Char#`==`(+2).2
+
+¡(¡ )local292H
+
+¡+¡ 38ammonite/$file/`marked-Weightedv2`.weighted().(semiring)2B
+
+¡4¡ 72ammonite/$file/`marked-Weightedv2`.Semiring#one().2H
+
+¡=¡ E8ammonite/$file/`marked-Weightedv2`.weighted().(semiring)2C
+
+¡F¡ J3ammonite/$file/`marked-Weightedv2`.Semiring#zero().2<
+
+…… 
 ,ammonite/$file/`marked-Weightedv2`.Rexp.ALT.2
 
-¿¿ local312
+…… local312
 
-¿¿ local322:
+…… local322:
 
-¿¿ *ammonite/$file/`marked-Weightedv2`.altw().2>
+…… *ammonite/$file/`marked-Weightedv2`.altw().2>
 
-¿¿ $.ammonite/$file/`marked-Weightedv2`.weighted().2
+…… $.ammonite/$file/`marked-Weightedv2`.weighted().2
 
-¿%¿ 'local312>
+…%… 'local312>
 
-¿*¿ 2.ammonite/$file/`marked-Weightedv2`.weighted().2
+…*… 2.ammonite/$file/`marked-Weightedv2`.weighted().2
 
-¿3¿ 5local322<
+…3… 5local322<
 
-¡¡ 
+   
 ,ammonite/$file/`marked-Weightedv2`.Rexp.SEQ.2
 
-¡¡ local332
+   local332
 
-¡¡ local342:
+   local342:
 
-¡¡ *ammonite/$file/`marked-Weightedv2`.seqw().2>
+   *ammonite/$file/`marked-Weightedv2`.seqw().2>
 
-¡¡ $.ammonite/$file/`marked-Weightedv2`.weighted().2
+   $.ammonite/$file/`marked-Weightedv2`.weighted().2
 
-¡%¡ 'local332>
+ %  'local332>
 
-¡*¡ 2.ammonite/$file/`marked-Weightedv2`.weighted().2
+ *  2.ammonite/$file/`marked-Weightedv2`.weighted().2
 
-¡3¡ 5local342=
+ 3  5local342=
 
-¬¬ -ammonite/$file/`marked-Weightedv2`.Rexp.STAR.2
+ÀÀ -ammonite/$file/`marked-Weightedv2`.Rexp.STAR.2
 
-¬¬ local352;
+ÀÀ local352;
 
-¬¬ +ammonite/$file/`marked-Weightedv2`.starw().2>
+ÀÀ +ammonite/$file/`marked-Weightedv2`.starw().2>
 
-¬¬ %.ammonite/$file/`marked-Weightedv2`.weighted().2
+ÀÀ %.ammonite/$file/`marked-Weightedv2`.weighted().2
 
-¬&¬ (local352>
+À&À (local352>
 
-∏∏ .ammonite/$file/`marked-Weightedv2`.weighted().2
+ææ .ammonite/$file/`marked-Weightedv2`.weighted().2
 
-∆∆ mainargs/main#2;
+œœ mainargs/main#2>
 
-…… +ammonite/$file/`marked-Weightedv2`.chari().2
+““ .ammonite/$file/`marked-Weightedv2`.weighted().2=
 
-…… local362;
+““ -ammonite/$file/`marked-Weightedv2`.Rexp.CHAR.2C
 
-   +ammonite/$file/`marked-Weightedv2`.starw().2
+“#“ 23ammonite/$file/`marked-Weightedv2`.booleanSemiring.2
 
-   local362
+““ local362;
 
-   	local372;
+”” +ammonite/$file/`marked-Weightedv2`.starw().2
 
-ÃÃ +ammonite/$file/`marked-Weightedv2`.chari().2
+”” local362
 
-ÃÃ local382;
+”” 	local372>
 
-Õ
-Õ +ammonite/$file/`marked-Weightedv2`.starw().2
+’’ .ammonite/$file/`marked-Weightedv2`.weighted().2=
 
-ÕÕ local382
+’’ -ammonite/$file/`marked-Weightedv2`.Rexp.CHAR.2C
 
-ÕÕ 	local392:
+’#’ 23ammonite/$file/`marked-Weightedv2`.booleanSemiring.2
 
-œœ *ammonite/$file/`marked-Weightedv2`.seqw().2:
+’’ local382;
 
-œœ *ammonite/$file/`marked-Weightedv2`.altw().2
+÷
+÷ +ammonite/$file/`marked-Weightedv2`.starw().2
 
-œœ local362
+÷÷ local382
 
-œœ local372
+÷÷ 	local392:
 
-œœ local382
+ÿÿ *ammonite/$file/`marked-Weightedv2`.seqw().2
 
-œœ local402'
-–– scala/Predef.println(+1).2@
+ÿÿ local372
 
-–– 0ammonite/$file/`marked-Weightedv2`.submatcher().2
+ÿÿ local382
 
-–– local402:
+ÿÿ local402
 
-–F– L*scala/collection/IterableOnceOps#toList().2E
+ŸŸ local412'
+⁄⁄ scala/Predef.println(+1).2=
 
-–T– e5ammonite/$file/`marked-Weightedv2`.semiringILeftmost.2;
+⁄⁄ -ammonite/$file/`marked-Weightedv2`.matcher().2
 
-”	” +ammonite/$file/`marked-Weightedv2`.starw().2:
+⁄⁄ local402
 
-”” *ammonite/$file/`marked-Weightedv2`.altw().2;
+⁄⁄ local412:
 
-”” +ammonite/$file/`marked-Weightedv2`.chari().2;
+⁄⁄ *scala/collection/IterableOnceOps#toList().2C
 
-”” $+ammonite/$file/`marked-Weightedv2`.chari().2
+⁄#⁄ 23ammonite/$file/`marked-Weightedv2`.booleanSemiring.2;
 
-”” local412'
-‘‘ scala/Predef.println(+1).2@
+–– 	+ammonite/$file/`marked-Weightedv2`.test0().2
 
-‘‘ 0ammonite/$file/`marked-Weightedv2`.submatcher().2
+·· mainargs/main#2;
 
-‘‘ local412:
+Ì
+Ì +ammonite/$file/`marked-Weightedv2`.chari().2E
 
-‘,‘ 2*scala/collection/IterableOnceOps#toList().2E
+ÌÌ ,5ammonite/$file/`marked-Weightedv2`.semiringILeftmost.2
 
-‘:‘ K5ammonite/$file/`marked-Weightedv2`.semiringILeftmost.2;
+ÌÌ 	local422;
 
-«« 	+ammonite/$file/`marked-Weightedv2`.test0().2
+ÓÓ +ammonite/$file/`marked-Weightedv2`.starw().2
 
-ÿÿ mainargs/main#2;
+ÓÓ local422
 
-€€ +ammonite/$file/`marked-Weightedv2`.charw().2!
+ÓÓ local432
 
-€€ scala/Any#`==`().2
+ÔÔ 	local442)
 
-€€ local422;
+ scala/Predef.println(+1).2@
 
-‹‹ +ammonite/$file/`marked-Weightedv2`.charw().2!
+ 0ammonite/$file/`marked-Weightedv2`.submatcher().2
 
-‹‹ scala/Any#`==`().2
+ local432
 
-‹‹ local432:
+ local442:
 
-›› *ammonite/$file/`marked-Weightedv2`.seqw().2
+ %*scala/collection/IterableOnceOps#toList().2;
 
-›› local422
+‚‚ 	+ammonite/$file/`marked-Weightedv2`.test1().2<
 
-›› local432
+˚˚ ,ammonite/$file/`marked-Weightedv2`.Rexp.SEQ.2=
 
-›› local442'
-ﬁﬁ scala/Predef.println(+1).2'
-ﬂﬂ scala/Predef.println(+1).2=
+˚˚ -ammonite/$file/`marked-Weightedv2`.Rexp.STAR.2=
 
-ﬂﬂ -ammonite/$file/`marked-Weightedv2`.matcher().2
+˚˚ -ammonite/$file/`marked-Weightedv2`.Rexp.STAR.2=
 
-ﬂﬂ local442:
+˚˚ -ammonite/$file/`marked-Weightedv2`.Rexp.CHAR.2=
 
-ﬂﬂ  *scala/collection/IterableOnceOps#toList().2;
+˚'˚ +-ammonite/$file/`marked-Weightedv2`.Rexp.CHAR.29
 
-„„ +ammonite/$file/`marked-Weightedv2`.starw().2:
+˚˚ 	)ammonite/$file/`marked-Weightedv2`.EVIL2.2D
 
-„„ *ammonite/$file/`marked-Weightedv2`.altw().2;
+˝˝ 4ammonite/$file/`marked-Weightedv2`.time_needed().[T]2
 
-„„ +ammonite/$file/`marked-Weightedv2`.chari().2;
-
-„„ "+ammonite/$file/`marked-Weightedv2`.chari().2
-
-„„ local452
-
-ÂÂ local462;
-ÊÊ -ammonite/$file/`marked-Weightedv2`.matcher().2
-
-ÊÊ 	local452
-
-ÊÊ local4625
-
-ÊÊ %scala/collection/StringOps#indices().2B
-
-ÊÊ 2scala/collection/StrictOptimizedIterableOps#zip().2
-
-ÊÊ local462:
-
-ÊÊ #*scala/collection/IterableOnceOps#toList().2'
-ÁÁ scala/Predef.println(+1).2=
-
-ÁÁ -ammonite/$file/`marked-Weightedv2`.matcher().2
-
-ÁÁ local452
-
-ÁÁ local4625
-
-ÁÁ %scala/collection/StringOps#indices().2B
-
-ÁÁ !2scala/collection/StrictOptimizedIterableOps#zip().2
-
-Á"Á #local462:
-
-Á%Á +*scala/collection/IterableOnceOps#toList().2;
-
-ŸŸ 	+ammonite/$file/`marked-Weightedv2`.test1().2<
-
- ,ammonite/$file/`marked-Weightedv2`.Rexp.SEQ.2=
-
- -ammonite/$file/`marked-Weightedv2`.Rexp.STAR.2=
-
- -ammonite/$file/`marked-Weightedv2`.Rexp.STAR.2=
-
- -ammonite/$file/`marked-Weightedv2`.Rexp.CHAR.2=
-
-' +-ammonite/$file/`marked-Weightedv2`.Rexp.CHAR.29
-
- 	)ammonite/$file/`marked-Weightedv2`.EVIL2.2D
-
-ÚÚ 4ammonite/$file/`marked-Weightedv2`.time_needed().[T]2
-
-ÚÚ 
+˝˝ 
 scala/Int#2D
 
-ÚÚ 4ammonite/$file/`marked-Weightedv2`.time_needed().(i)2D
+˝˝ 4ammonite/$file/`marked-Weightedv2`.time_needed().(i)2D
 
-Ú$Ú %4ammonite/$file/`marked-Weightedv2`.time_needed().[T]2G
+˝$˝ %4ammonite/$file/`marked-Weightedv2`.time_needed().[T]2G
 
-ÚÚ 7ammonite/$file/`marked-Weightedv2`.time_needed().(code)2!
+˝˝ 7ammonite/$file/`marked-Weightedv2`.time_needed().(code)2!
 
-ÛÛ java/lang/System#2,
+˛˛ java/lang/System#2,
 
-ÛÛ java/lang/System#nanoTime().2
+˛˛ java/lang/System#nanoTime().2
 
-ÛÛ local472+
+˛˛ local452+
 
-ÙÙ scala/runtime/RichInt#to().2D
+ˇˇ scala/runtime/RichInt#to().2D
 
-ÙÙ 4ammonite/$file/`marked-Weightedv2`.time_needed().(i)2
+ˇˇ 4ammonite/$file/`marked-Weightedv2`.time_needed().(i)2
 
-ÙÙ local482G
+ˇˇ local462G
 
-ÙÙ 7ammonite/$file/`marked-Weightedv2`.time_needed().(code)2!
+ˇˇ 7ammonite/$file/`marked-Weightedv2`.time_needed().(code)2!
 
-ıı java/lang/System#2,
+ÄÄ java/lang/System#2,
 
-ıı java/lang/System#nanoTime().2
+ÄÄ java/lang/System#nanoTime().2
 
-ıı 	local492
+ÄÄ 	local472
 
-ˆˆ local492#
+ÅÅ local472#
 
-ˆˆ scala/Long#`-`(+4).2
+ÅÅ scala/Long#`-`(+4).2
 
-ˆ	ˆ local472#
+Å	Å local452#
 
-ˆˆ scala/Long#`/`(+6).2D
+ÅÅ scala/Long#`/`(+6).2D
 
-ˆˆ 4ammonite/$file/`marked-Weightedv2`.time_needed().(i)2"
+ÅÅ 4ammonite/$file/`marked-Weightedv2`.time_needed().(i)2"
 
-ˆˆ scala/Int#`*`(+6).2A
+ÅÅ scala/Int#`*`(+6).2A
 
-ÚÚ 1ammonite/$file/`marked-Weightedv2`.time_needed().2
+˝˝ 1ammonite/$file/`marked-Weightedv2`.time_needed().2
 
-˘˘ mainargs/main#2;
+ÑÑ mainargs/main#2;
 
-˙˙ 	+ammonite/$file/`marked-Weightedv2`.test2().2
+ÖÖ 	+ammonite/$file/`marked-Weightedv2`.test2().2
 
-ÑÑ mainargs/main#2+
+èè mainargs/main#2+
 
-ÜÜ scala/runtime/RichInt#to().26
+ëë scala/runtime/RichInt#to().26
 
-ÜÜ &scala/collection/immutable/Range#by().2
+ëë &scala/collection/immutable/Range#by().2
 
-ÜÜ local502)
+ëë local482)
 
-áá scala/Predef.println(+1).2(
+íí scala/Predef.println(+1).2(
 
-áá scala/StringContext#f().2
+íí scala/StringContext#f().2
 
-áá local502A
+íí local482A
 
-áá 1ammonite/$file/`marked-Weightedv2`.time_needed().2=
+íí 1ammonite/$file/`marked-Weightedv2`.time_needed().2=
 
-á#á *-ammonite/$file/`marked-Weightedv2`.matcher().2>
+í#í *-ammonite/$file/`marked-Weightedv2`.matcher().2>
 
-á+á 3.ammonite/$file/`marked-Weightedv2`.weighted().29
+í+í 3.ammonite/$file/`marked-Weightedv2`.weighted().29
 
-á4á 9)ammonite/$file/`marked-Weightedv2`.EVIL2.2C
+í4í 9)ammonite/$file/`marked-Weightedv2`.EVIL2.2C
 
-áAá P3ammonite/$file/`marked-Weightedv2`.booleanSemiring.21
+íAí P3ammonite/$file/`marked-Weightedv2`.booleanSemiring.21
 
-áXá Y!scala/collection/StringOps#`*`().2
+íXí Y!scala/collection/StringOps#`*`().2
 
-áZá [local502:
+íZí [local482:
 
-á]á c*scala/collection/IterableOnceOps#toList().2;
+í]í c*scala/collection/IterableOnceOps#toList().2;
 
-ÖÖ 	+ammonite/$file/`marked-Weightedv2`.test3().2
+êê 	+ammonite/$file/`marked-Weightedv2`.test3().2
 
-åå mainargs/main#2;
+óó mainargs/main#2;
 
-çç +ammonite/$file/`marked-Weightedv2`.test2().2;
+òò +ammonite/$file/`marked-Weightedv2`.test2().2;
 
-çç +ammonite/$file/`marked-Weightedv2`.test3().29
+òò +ammonite/$file/`marked-Weightedv2`.test3().29
 
-çç )ammonite/$file/`marked-Weightedv2`.all().PZ 6d2f1a848a56a37e76c0a4403fb3040fbW
+òò )ammonite/$file/`marked-Weightedv2`.all().PZ 4c4da922f87845137f7ddccfb2091f26bW
 .. K
 I
 2
@@ -3206,503 +3225,342 @@ I
 .. 97
 5ammonite/$file/`marked-Weightedv2`.chari().(semiring)bæ
 
-ûû )ØB¨
+§§ )ØB¨
 2
 
-ûû )ôñ(ammonite/$file/`marked-Weightedv2`.REGW#420ammonite/$file/`marked-Weightedv2`.matcher().[C]420ammonite/$file/`marked-Weightedv2`.matcher().[S]b]
+§§ )ôñ(ammonite/$file/`marked-Weightedv2`.REGW#420ammonite/$file/`marked-Weightedv2`.matcher().[C]420ammonite/$file/`marked-Weightedv2`.matcher().[S]b]
 
-û*û FO
+§*§ FO
 M
 2
 
-û*û F;9
+§*§ F;9
 7ammonite/$file/`marked-Weightedv2`.matcher().(semiring)b]
 
-üü 0O
+•• 0O
 M
 2
 
-üü 0;9
+•• 0;9
 7ammonite/$file/`marked-Weightedv2`.matcher().(semiring)b`
 
-•'• ?R
+´'´ ?R
 P
 2
 
-•'• ?><
+´'´ ?><
 :ammonite/$file/`marked-Weightedv2`.submatcher().(semiring)b`
 
-•!• @R
+´!´ @R
 P
 2
 
-•!• @><
+´!´ @><
 :ammonite/$file/`marked-Weightedv2`.submatcher().(semiring)b`
 
-¶¶ "R
+¨¨ "R
 P
 2
 
-¶¶ "><
+¨¨ "><
 :ammonite/$file/`marked-Weightedv2`.submatcher().(semiring)b`
 
-¶¶ #R
+¨¨ #R
 P
 2
 
-¶¶ #><
+¨¨ #><
 :ammonite/$file/`marked-Weightedv2`.submatcher().(semiring)b`
 
-¶¶ >R
+¨¨ >R
 P
 2
 
-¶¶ >><
+¨¨ >><
 :ammonite/$file/`marked-Weightedv2`.submatcher().(semiring)b[
 
-¨¨ !M
+≥≥ !M
 K
 2
 
-¨¨ !97
+≥≥ !97
 5ammonite/$file/`marked-Weightedv2`.shift().(semiring)b[
 
-≠≠ M
+¥¥ M
 K
 2
 
-≠≠ 97
+¥¥ 97
 5ammonite/$file/`marked-Weightedv2`.shift().(semiring)b[
 
-Ø Ø 5M
+∂ ∂ 5M
 K
 2
 
-Ø Ø 597
+∂ ∂ 597
 5ammonite/$file/`marked-Weightedv2`.shift().(semiring)b[
 
-Ø7Ø LM
+∂7∂ LM
 K
 2
 
-Ø7Ø L97
+∂7∂ L97
 5ammonite/$file/`marked-Weightedv2`.shift().(semiring)b[
 
-ØØ MM
+∂∂ MM
 K
 2
 
-ØØ M97
+∂∂ M97
 5ammonite/$file/`marked-Weightedv2`.shift().(semiring)b[
 
-∞ ∞ 5M
+∑ ∑ 5M
 K
 2
 
-∞ ∞ 597
+∑ ∑ 597
 5ammonite/$file/`marked-Weightedv2`.shift().(semiring)b[
 
-±≤ 9M
+∏π 9M
 K
 2
 
-±≤ 997
+∏π 997
 5ammonite/$file/`marked-Weightedv2`.shift().(semiring)b[
 
-∞≤ :M
+∑π :M
 K
 2
 
-∞≤ :97
+∑π :97
 5ammonite/$file/`marked-Weightedv2`.shift().(semiring)b[
 
-≥≥ JM
+∫∫ JM
 K
 2
 
-≥≥ J97
+∫∫ J97
 5ammonite/$file/`marked-Weightedv2`.shift().(semiring)b[
 
-≥≥ KM
+∫∫ KM
 K
 2
 
-≥≥ K97
+∫∫ K97
 5ammonite/$file/`marked-Weightedv2`.shift().(semiring)b^
 
-ππ P
+øø P
 N
 2
 
-ππ <:
+øø <:
 8ammonite/$file/`marked-Weightedv2`.weighted().(semiring)b^
 
-∫∫ P
+¿¿ P
 N
 2
 
-∫∫ <:
+¿¿ <:
 8ammonite/$file/`marked-Weightedv2`.weighted().(semiring)b^
 
-ªª KP
+¡¡ KP
 N
 2
 
-ªª K<:
+¡¡ K<:
 8ammonite/$file/`marked-Weightedv2`.weighted().(semiring)b^
 
-¿¿ (P
+…… (P
 N
 2
 
-¿¿ (<:
+…… (<:
 8ammonite/$file/`marked-Weightedv2`.weighted().(semiring)b^
 
-¿*¿ 6P
+…*… 6P
 N
 2
 
-¿*¿ 6<:
+…*… 6<:
 8ammonite/$file/`marked-Weightedv2`.weighted().(semiring)b^
 
-¿¿ 7P
+…… 7P
 N
 2
 
-¿¿ 7<:
+…… 7<:
 8ammonite/$file/`marked-Weightedv2`.weighted().(semiring)b^
 
-¡¡ (P
+   (P
 N
 2
 
-¡¡ (<:
+   (<:
 8ammonite/$file/`marked-Weightedv2`.weighted().(semiring)b^
 
-¡*¡ 6P
+ *  6P
 N
 2
 
-¡*¡ 6<:
+ *  6<:
 8ammonite/$file/`marked-Weightedv2`.weighted().(semiring)b^
 
-¡¡ 7P
+   7P
 N
 2
 
-¡¡ 7<:
+   7<:
 8ammonite/$file/`marked-Weightedv2`.weighted().(semiring)b^
 
-¬¬ )P
+ÀÀ )P
 N
 2
 
-¬¬ )<:
+ÀÀ )<:
 8ammonite/$file/`marked-Weightedv2`.weighted().(semiring)b^
 
-¬¬ *P
+ÀÀ *P
 N
 2
 
-¬¬ *<:
-8ammonite/$file/`marked-Weightedv2`.weighted().(semiring)b[
+ÀÀ *<:
+8ammonite/$file/`marked-Weightedv2`.weighted().(semiring)b4
 
-…… M
+““ &B$
+2
+
+““ scala/Boolean#bE
+
+”” 7B5
+2
+
+”” scala/Char#scala/Boolean#bY
+
+”” K
+I
+2
+
+”” 75
+3ammonite/$file/`marked-Weightedv2`.booleanSemiring.b4
+
+’’ &B$
+2
+
+’’ scala/Boolean#bE
+
+÷
+÷ 7B5
+2
+
+÷
+÷ scala/Char#scala/Boolean#bY
+
+÷
+÷ K
+I
+2
+
+÷
+÷ 75
+3ammonite/$file/`marked-Weightedv2`.booleanSemiring.bE
+
+ÿÿ 7B5
+2
+
+ÿÿ scala/Char#scala/Boolean#bY
+
+ÿÿ K
+I
+2
+
+ÿÿ 75
+3ammonite/$file/`marked-Weightedv2`.booleanSemiring.bE
+
+⁄⁄ 7B5
+2
+
+⁄⁄ scala/Char#scala/Boolean#bN
+
+⁄⁄ @
+>
+,*
+(scala/LowPriorityImplicits#wrapString().2
+
+⁄⁄ b[
+
+ÓÓ M
 K
 2
 
-…… 97
-5ammonite/$file/`marked-Weightedv2`.semiringILeftmost.b[
-
-   M
-K
-2
-
-   97
-5ammonite/$file/`marked-Weightedv2`.semiringILeftmost.b[
-
-ÃÃ M
-K
-2
-
-ÃÃ 97
-5ammonite/$file/`marked-Weightedv2`.semiringILeftmost.b[
-
-Õ
-Õ M
-K
-2
-
-Õ
-Õ 97
-5ammonite/$file/`marked-Weightedv2`.semiringILeftmost.b[
-
-œœ M
-K
-2
-
-œœ 97
-5ammonite/$file/`marked-Weightedv2`.semiringILeftmost.b[
-
-œœ M
-K
-2
-
-œœ 97
+ÓÓ 97
 5ammonite/$file/`marked-Weightedv2`.semiringILeftmost.bN
 
-–– E@
+ @
 >
 ,*
 (scala/LowPriorityImplicits#wrapString().2
 
-–– Eb[
+ b[
 
-”” M
+ &M
 K
 2
 
-”” 97
-5ammonite/$file/`marked-Weightedv2`.semiringILeftmost.b[
-
-”” )M
-K
-2
-
-”” )97
-5ammonite/$file/`marked-Weightedv2`.semiringILeftmost.b[
-
-”” *M
-K
-2
-
-”” *97
-5ammonite/$file/`marked-Weightedv2`.semiringILeftmost.b[
-
-”	” +M
-K
-2
-
-”	” +97
+ &97
 5ammonite/$file/`marked-Weightedv2`.semiringILeftmost.bN
 
-‘‘ +@
->
-,*
-(scala/LowPriorityImplicits#wrapString().2
-
-‘‘ +bD
-
-€€ 6B4
-2
-
-€€ 
-scala/Any#scala/Boolean#bY
-
-€€ K
-I
-2
-
-€€ 75
-3ammonite/$file/`marked-Weightedv2`.booleanSemiring.bD
-
-‹‹ 6B4
-2
-
-‹‹ 
-scala/Any#scala/Boolean#bY
-
-‹‹ K
-I
-2
-
-‹‹ 75
-3ammonite/$file/`marked-Weightedv2`.booleanSemiring.bD
-
-›› 6B4
-2
-
-›› 
-scala/Any#scala/Boolean#bY
-
-›› K
-I
-2
-
-›› 75
-3ammonite/$file/`marked-Weightedv2`.booleanSemiring.bD
-
-ﬂﬂ 6B4
-2
-
-ﬂﬂ 
-scala/Any#scala/Boolean#bN
-
-ﬂﬂ @
->
-,*
-(scala/LowPriorityImplicits#wrapString().2
-
-ﬂﬂ bY
-
-ﬂﬂ !K
-I
-2
-
-ﬂﬂ !75
-3ammonite/$file/`marked-Weightedv2`.booleanSemiring.b[
-
-„„ M
-K
-2
-
-„„ 97
-5ammonite/$file/`marked-Weightedv2`.semiringILeftmost.b[
-
-„„ 'M
-K
-2
-
-„„ '97
-5ammonite/$file/`marked-Weightedv2`.semiringILeftmost.b[
-
-„„ (M
-K
-2
-
-„„ (97
-5ammonite/$file/`marked-Weightedv2`.semiringILeftmost.b[
-
-„„ )M
-K
-2
-
-„„ )97
-5ammonite/$file/`marked-Weightedv2`.semiringILeftmost.b1
-
-ÊÊ #B!
-2
-
-ÊÊ scala/Char#bC
-
-ÊÊ 5
-3
-!
-scala/Predef.augmentString().2
-
-ÊÊ b_
-
-ÊÊ Q
-O
-2
-
-ÊÊ =
-;
-,*
-(scala/LowPriorityImplicits#wrapString().	
-local46bN
-
-ÊÊ @
->
-,*
-(scala/LowPriorityImplicits#wrapString().2
-
-ÊÊ bW
-ÊÊ $K
-I
-2
-
-ÊÊ $97
-5ammonite/$file/`marked-Weightedv2`.semiringILeftmost.b1
-
-ÁÁ !#B!
-2
-
-ÁÁ !scala/Char#bC
-
-ÁÁ 5
-3
-!
-scala/Predef.augmentString().2
-
-ÁÁ b_
-
-ÁÁ #Q
-O
-2
-
-ÁÁ !=
-;
-,*
-(scala/LowPriorityImplicits#wrapString().	
-local46bN
-
-Á"Á #@
->
-,*
-(scala/LowPriorityImplicits#wrapString().2
-
-Á"Á #b[
-
-ÁÁ ,M
-K
-2
-
-ÁÁ ,97
-5ammonite/$file/`marked-Weightedv2`.semiringILeftmost.bN
-
-ÙÙ @
+ˇˇ @
 >
 ,*
 (scala/LowPriorityImplicits#intWrapper().2
 
-ÙÙ bN
+ˇˇ bN
 
-ÜÜ @
+ëë @
 >
 ,*
 (scala/LowPriorityImplicits#intWrapper().2
 
-ÜÜ b0
+ëë b0
 
-áá k"B 
+íí k"B 
 2
 
-áá k
+íí k
 scala/Any#b4
 
-áá &B$
+íí &B$
 2
 
-áá scala/Boolean#bE
+íí scala/Boolean#bE
 
-á#á *7B5
+í#í *7B5
 2
 
-á#á *scala/Char#scala/Boolean#b4
+í#í *scala/Char#scala/Boolean#b4
 
-á+á 3&B$
+í+í 3&B$
 2
 
-á+á 3scala/Boolean#bN
+í+í 3scala/Boolean#bN
 
-áTá [@
+íTí [@
 >
 ,*
 (scala/LowPriorityImplicits#wrapString().2
 
-áTá [bC
+íTí [bC
 
-áTá W5
+íTí W5
 3
 !
 scala/Predef.augmentString().2
 
-áTá WbY
+íTí WbY
 
-á#á dK
+í#í dK
 I
 2
 
-á#á d75
+í#í d75
 3ammonite/$file/`marked-Weightedv2`.booleanSemiring.
