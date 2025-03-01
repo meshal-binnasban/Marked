@@ -225,7 +225,7 @@ println(matcher(r, s.toList)(using booleanSemiring))
 
 @main
 def test1() = {
-
+/*
 val a = chari('a')(using semiringILeftmost)
 val b = chari('b')(using semiringILeftmost)
 
@@ -233,6 +233,15 @@ val reg=seqw(a,b)(using semiringILeftmost)
 val s= "abab"
 
 submatcher(reg,s.toList)(using semiringILeftmost)
+*/
+
+    val a=chari('a')(using semiringILeftmost)
+    val aStar=starw(a)
+    val s="here aaaa is test aaaaa"
+    println(submatcher(aStar,s.toList))
+   
+    
+
 }
 
 /* no NTIMES/OPT Constructors so far
