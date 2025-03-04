@@ -120,16 +120,7 @@ def matcher[C,S](r: REG[C,S], s: List[C])(using semiring: SemiringI[S]) : S =
   if (s == Nil) nullable(r) 
     else fin(mat(r, s))
 
-/*
-def matcher[C, S](r: REG[C, S], s: List[C])(using semiring: SemiringI[S]): S = {
-    s match {
-      case Nil => fin(r)
-      case c :: cs => val  x =cs.foldLeft(shift(semiring.one, r.re, c))
-        ((r, c) => shift(semiring.zero, r.re, c))
-        x.finalw
-    }
-}
-*/
+
 
 def submatcher[C, S](r: REG[C, S], s: List[C])(using semiring: SemiringI[S]): S = {
     val arb :REG[C,S] = intern(STAR(CHAR(_ => semiring.one)))
