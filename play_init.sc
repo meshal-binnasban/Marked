@@ -41,8 +41,6 @@ extension (r: Rexp) {
   def ~ (s: Rexp) = SEQ(r, s)
 }
 
-
-
 // marked regular expressions
 enum REG {
   case BZERO
@@ -169,9 +167,9 @@ def pps(es: REG*) = indent(es.map(pp))
 @main
 def test1() = {
   println("=====Test====")
-  val br1 = SEQ(ALT("a", "ab"), ALT("bc", "c"))
+  val br1 = SEQ("a", SEQ("b", "c"))
   val br2 = intern2(br1)
-  val s = "abcd".toList
+  val s = "abc".toList
   println("=intern=")
   println(pp(br2) ++ "\n")
   println("=string=")
@@ -185,8 +183,9 @@ def test1() = {
   println(s"=shift ${s(2)}=")
   println(pp(mat(br2, s.take(3))))
 
-  println(s"=shift ${s(3)}=")
-  println(pp(mat(br2, s.take(4))))
+  println(matcher(br2,s))
+  //println(s"=shift ${s(3)}=")
+  //println(pp(mat(br2, s.take(4))))
 }
 
 @main

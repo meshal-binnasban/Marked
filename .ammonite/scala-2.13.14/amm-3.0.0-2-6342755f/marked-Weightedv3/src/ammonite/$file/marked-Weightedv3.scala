@@ -291,20 +291,21 @@ def test1() = {
     //semiringILeftmost
     //semiringILeftlong
    
-    val aStarB: Rexp = "a".% ~"b"
-    println(string(aStarB))
-    val reg=weighted(aStarB) (using  semiringILeftlong)
-    val s="aab aaab b"
-    println(submatcher(reg,s.toList))
+   // val aStarB: Rexp = "a".% ~"b"
+   // println(string(aStarB))
+   // val reg=weighted(aStarB) (using  semiringILeftlong)
+    //val s="aab aaab b"
+    //println(submatcher(reg,s.toList))
 
-  /* article test
-   val a= CHAR('a')
-   val ab=STAR(ALT(a, CHAR('b')))
-   val aaba= SEQ(a, SEQ( ab,a ) )
-   val reg=weighted(aaba) (using  semiringILeftlong)
-   val s="bababa"
+  
+   val x= CHAR('x')
+   val y= CHAR('y')
+   val xpy= x | y
+   val xy=x~y
+   val reg= weighted(STAR(xpy | xy))(using  semiringILeftlong)
+   val s="xy"
    submatcher(reg,s.toList)
-*/
+
 }
 
 /* no NTIMES/OPT Constructors so far
@@ -342,9 +343,6 @@ def test3() = {
 //@arg(doc = "All tests.")
 @main
 def all() = { test2(); test3() } 
-
-
-
 
 def charlist2rexp(s : List[Char]): Rexp = s match {
   case Nil => ONE

@@ -188,17 +188,15 @@ def shift[C, S](mark: S, re: REw[C, S], c: C)(using semiring: Semiring[S]): REGW
     }
   }
 
-def weighted[S](r: Rexp)(using semiring: Semiring[S]): REGW[Char,S] = r match {
+def weighted[C,S](r: Rexp)(using semiring: Semiring[S]): REGW[C,S] = r match {
   case ZERO      => zerow//[C, S]
   case ONE       => onew//[C, S]
-  case CHAR(c)   => charw(x => if (x == c) semiring.one else semiring.zero)
-    
-  /*
+  case CHAR(c)   => 
     semiring match {
-        case si: SemiringI[S] => chari(c)(using si).asInstanceOf[REGW[C, S]]
+        case si: SemiringI[S] => chari(c)(using si)
         case _: Semiring[S] => charw(x => if (x == c) semiring.one else semiring.zero)
     }
-   */ 
+   
   case ALT(r1, r2)  => altw(weighted(r1), weighted(r2))
   case SEQ(r1, r2)  => seqw(weighted(r1), weighted(r2))
   case STAR(r1)     => starw(weighted(r1))
@@ -208,15 +206,15 @@ def weighted[S](r: Rexp)(using semiring: Semiring[S]): REGW[Char,S] = r match {
 @main
 def test0() = {
 
-val a = weighted(CHAR('a')) (using booleanSemiring)
+val a = weighted(CHAR('a')) (using semiringILeftmost)
 val aStar = starw(a)
 
-val b = weighted(CHAR('b')) (using booleanSemiring)
+val b = weighted(CHAR('b')) (using semiringILeftmost)
 val bStar=starw(b)
 
 val r= seqw(aStar,b)
 val s ="hello athisbb isabb test of left most with ab"
-println(matcher(r, s.toList)(using booleanSemiring))
+println(matcher(r, s.toList)(using semiringILeftmost))
 
 //val r2 = weighted ( STAR(ALT(CHAR('a'), CHAR('b'))))(using semiringILeftmost)
 //println(submatcher(r2, "hello ab test abab".toList)(using semiringILeftmost))
