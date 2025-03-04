@@ -120,14 +120,11 @@ def matcher[C,S](r: REG[C,S], s: List[C])(using semiring: SemiringI[S]) : S =
   if (s == Nil) nullable(r) 
     else fin(mat(r, s))
 
-
-
 def submatcher[C, S](r: REG[C, S], s: List[C])(using semiring: SemiringI[S]): S = {
     val arb :REG[C,S] = intern(STAR(CHAR(_ => semiring.one)))
     val reg=BINIT(BSEQ(arb, BSEQ(r,arb)))
     matcher(reg, s)  
 }
-
 
 // internalises a regular expression into a marked
 // regular expression
@@ -139,7 +136,6 @@ def intern[C,S](r: Rexp[C,S])(using semiring: SemiringI[S]) : REG[C,S] = r match
   case SEQ(r1, r2) => BSEQ(intern(r1), intern(r2))
   case STAR(r) => BSTAR(intern(r))
 }
-
 // make sure the outermost REG is marked
 def intern2[C,S](r: Rexp[C,S])(using semiring: SemiringI[S]) : REG[C,S] = BINIT(intern(r))
 
@@ -172,7 +168,6 @@ def test2() = {
 
 
     val reg= intern(rexp)
-
 
     println("submatcher : reg2 ")
     println(submatcher(reg, str))
