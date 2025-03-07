@@ -9,6 +9,7 @@ enum Rexp[C, S] {
   case ALT(r1: Rexp[C, S], r2: Rexp[C, S])
   case SEQ(r1: Rexp[C, S], r2: Rexp[C, S])
   case STAR(r: Rexp[C, S])
+  case NTIMES(r: Rexp[C, S], n:Int)
 }
 
 import Rexp._
@@ -22,9 +23,12 @@ enum REG[C,S] {
   case BALT(r1: REG[C,S], r2: REG[C,S])
   case BSEQ(r1: REG[C,S], r2: REG[C,S])
   case BSTAR(r: REG[C,S])
+  case BNTIMES(r: REG[C,S] , n:Int)
   case BINIT(r: REG[C,S])
 }
 import REG._
+//BNTIMES() repeat with limit n, check if n+1 then stop?
+
 
 def nullable[C,S](r: REG[C,S])(using semiring: SemiringI[S]) : S = r match {
   case BZERO() => semiring.zero
@@ -33,6 +37,7 @@ def nullable[C,S](r: REG[C,S])(using semiring: SemiringI[S]) : S = r match {
   case BALT(r1, r2) => semiring.plus(nullable(r1),nullable(r2))
   case BSEQ(r1, r2) => semiring.times(nullable(r1),nullable(r2))
   case BSTAR(r) => semiring.one
+  case BNTIMES(r, n) => if (n == 0) semiring.one else nullable(r)
   case BINIT(r) => nullable(r)
 }
 
@@ -43,18 +48,21 @@ def fin[C,S](r: REG[C,S])(using semiring: SemiringI[S]) : S = r match {
   case BALT(r1, r2) => semiring.plus( fin(r1) , fin(r2) )
   case BSEQ(r1, r2) => semiring.plus(semiring.times(fin(r1),nullable(r2)),fin(r2))
   case BSTAR(r) => fin(r)
+  case BNTIMES(r, n) => if(n==0) semiring.zero else fin(r) // ? or just fin(r)
 }
 
 def shift[C,S](mark: S, re: REG[C,S], c: C)(using semiring: SemiringI[S]): REG[C,S] = {
     re match {
-      case BZERO() => BZERO() //re
-      case BONE() => BONE() //re
+      case BZERO() => BZERO() // or just re 
+      case BONE() => BONE() // or just re 
       case BCHAR(b,f) => BCHAR(semiring.times(mark, f(c)), f) 
       case BALT(r1, r2) => BALT(shift(mark, r1, c), shift(mark, r2, c))
       case BSEQ(r1, r2) => 
         BSEQ(shift(mark, r1, c),
              shift(semiring.plus(semiring.times(mark, nullable(r1)), fin(r1)), r2, c))
       case BSTAR(r) => BSTAR(shift(semiring.plus(mark, fin(r)), r, c))
+      case BNTIMES(r, n) => if(n==0) BONE()  
+                        else BSEQ(shift(semiring.plus(mark,fin(r)), r,c), BNTIMES(r,n-1)) 
       case BINIT(r) => shift(semiring.one, r, c)
     }
   }
@@ -148,6 +156,7 @@ def intern[C,S](r: Rexp[C,S])(using semiring: SemiringI[S]) : REG[C,S] = r match
   case ALT(r1, r2) => BALT(intern(r1), intern(r2))
   case SEQ(r1, r2) => BSEQ(intern(r1), intern(r2))
   case STAR(r) => BSTAR(intern(r))
+  case NTIMES(r, n) => BNTIMES(intern(r),n)
 }
 // make sure the outermost REG is marked
 def intern2[C,S](r: Rexp[C,S])(using semiring: SemiringI[S]) : REG[C,S] = BINIT(intern(r))
@@ -159,7 +168,7 @@ def helperft[S](c: Char)(using semiring: SemiringI[S]): ((Char, Int)) => S =
   (x: Char, pos: Int) => if (x == c) semiring.index(pos) else semiring.zero
  
 @main
-def test1() = {
+def test0() = {
     val br1 = SEQ(CHAR(helperf('a')), SEQ(CHAR(helperf('b')), CHAR(helperf('c'))))
     val br2 = intern2(br1)
     val s = "abc".toList
@@ -168,14 +177,14 @@ def test1() = {
 }
 
 @main
-def test2() = {
+def test01() = {
 
     val a = CHAR(helperft('a'))
     val b = CHAR(helperft('b'))
-    val rexp =STAR(SEQ(a, b))
-
+    val rexp =NTIMES(SEQ(a, b) , 0)
     val regInit=intern2(rexp)
-    val str = "xxababab abababababab".toList.zipWithIndex
+
+    val str = "ab abab".toList.zipWithIndex
     println("matcher : reg2 ")
     println(matcher(regInit, str))
 
@@ -187,12 +196,11 @@ def test2() = {
 }
 
 
-/* no NTIMES/OPT Constructors so far
+
 def EVIL1(n: Int) = 
-  SEQ(NTIMES(OPT(CHAR('a')), n), NTIMES(CHAR('a'), n))
+  SEQ(NTIMES(OPT(CHAR(helperft('a'))), n), NTIMES(CHAR(helperft('a')), n))
 
-
-val EVIL2 = SEQ(STAR(STAR(CHAR('a'))), CHAR('b'))
+val EVIL2 = SEQ(STAR(STAR(CHAR(helperft('a')))), CHAR(helperft('b')))
 
 def time_needed[T](i: Int, code: => T) = {
   val start = System.nanoTime()
@@ -200,28 +208,23 @@ def time_needed[T](i: Int, code: => T) = {
   val end = System.nanoTime()
   (end - start) / (i * 1.0e9)
 }
-*/
 
-/*
-//no NTIMES/OPT Constructors so far
+//@arg(doc = "Test (a?{n}) (a{n})")
+@main
+def test1() = {
   for (i <- 0 to 8000 by 1000) {
-    println(f"$i: ${time_needed(2, matcher(weighted(EVIL1(i))(using booleanSemiring), ("a" * i).toList))}%.5f")
+    println(f"$i: ${time_needed(2, matcher(intern2(EVIL1(i)), ("a" * i ).toList.zipWithIndex))}%.5f")
   }
-*/
+}
 
-//@arg(doc = "Test (a*)* b")
 @main
-def test3() = {
- /*
-  for (i <- 0 to 7000000 by 500000) {
-    println(f"$i: ${time_needed(2, matcher(weighted(EVIL2), ("a" * i).toList))}%.5f")
+def test2() = {
+  for (i <- 0 to 5500000 by 500000) {
+    println(f"$i: ${time_needed(2, matcher(intern2(EVIL2), ("a" * i).toList.zipWithIndex))}%.5f")
   }
-    */
 } 
-
-//@arg(doc = "All tests.")
 @main
-def all() = { test2(); test3() } 
+def all() = { test1(); test2() } 
 
 /*
 def charlist2rexp(s : List[Char]): Rexp = s match {
