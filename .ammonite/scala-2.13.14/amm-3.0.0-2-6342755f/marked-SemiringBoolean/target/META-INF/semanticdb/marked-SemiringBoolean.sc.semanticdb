@@ -1,5 +1,5 @@
 
-Å¯marked-SemiringBoolean.scŒHimport scala.compiletime.ops.boolean
+™¶marked-SemiringBoolean.scøDimport scala.compiletime.ops.boolean
 import scala.math.min
 import scala.language.implicitConversions
 
@@ -50,7 +50,7 @@ def nullable[C,S](r: REG[C,S])(using semiring: Semiring[S]) : S = r match {
   case BALT(r1, r2) => semiring.plus(nullable(r1),nullable(r2))
   case BSEQ(r1, r2) => semiring.times(nullable(r1),nullable(r2))
   case BSTAR(r) => semiring.one
-  case BNTIMES(r, n , current) => if (n == 0) semiring.one else nullable(r)
+  case BNTIMES(r, n , current) => if (n == 0) semiring.one else nullable(r) // include current?
   case BINIT(r) => nullable(r)
 }
 
@@ -59,15 +59,12 @@ def fin[C,S](r: REG[C,S])(using semiring: Semiring[S]) : S = r match {
   case BONE() => semiring.zero
   case BCHAR(b,_) => b
   case BALT(r1, r2) => semiring.plus( fin(r1) , fin(r2) )
-  case BSEQ(r1, r2) => semiring.plus(semiring.times(fin(r1),nullable(r2)),fin(r2))
+  case BSEQ(r1, r2) =>semiring.plus(semiring.times(fin(r1),nullable(r2)),fin(r2))
   case BSTAR(r) => fin(r)
-  case BNTIMES(r, n, current) =>if (nullable(r) == semiring.one){
-    semiring.one
-    } else if (current == n) {
-    fin(r) 
-    } else{ 
-    semiring.zero
-    }
+  case BNTIMES(r, n, current) => 
+    if (n == 0) nullable(r)  
+    else if(current == n) fin(r) //fin(r)//|| (nullable(r) == semiring.one) && current<n
+    else semiring.zero  
 }
 def shift[C,S](mark: S, re: REG[C,S], c: C)(using semiring: Semiring[S]): REG[C,S] = {
     re match {
@@ -79,76 +76,13 @@ def shift[C,S](mark: S, re: REG[C,S], c: C)(using semiring: Semiring[S]): REG[C,
         BSEQ(shift(mark, r1, c),
              shift(semiring.plus(semiring.times(mark, nullable(r1)), fin(r1)), r2, c))
       case BSTAR(r) => BSTAR(shift(semiring.plus(mark, fin(r)), r, c))
-      case BNTIMES(r, n , current) => 
-           if (n == 0) {
-            BONE()
-            } else { 
-                if (current < n) {
-                    val rr = shift(semiring.plus(mark, fin(r)), r, c)
-                    //|| nullable(r) == semiring.one
-                    if (fin(r) == semiring.one ) {
-                        BNTIMES(rr, n, current + 1)
-                    } else {
-                        BNTIMES(rr, n, current)
-                    }
-                } else {
-                    BNTIMES(r, n, current) // Maintain the correct state
-                }
-            }
-       
-       /*
-        if (n == 0) {
-            BONE()
-        } else { 
-            if(current < n){
-            val rr = shift(semiring.plus(mark, fin(r)), r, c)
-                if (fin(r) == semiring.one) {
-                    BNTIMES(rr, n, current + 1)
-                } else {
-                    BNTIMES(rr, n, current)
-                }
-        }
-        else {
-            if(current == n){
-                re
-            }else BZERO()
-            
-        }
-        }
-     */   
-      /*  
-        if (current >= n) {
-            BONE()
-        } else {
-            val rr = shift(semiring.plus(mark, fin(r)), r, c)
-            if (fin(rr) == semiring.one) {
-                BNTIMES(rr, n, current + 1)
-            } else {
-                BNTIMES(rr, n, current)
-            }
-        }
-         */
-       /* 
-        if(n==0){
-            BONE()
-        }
-        else
-        { 
-            if(current < n+1){
-                val rr=shift(semiring.plus(mark,fin(r)),r,c)
-                if(fin(rr) == semiring.one){
-                    val x=BNTIMES(rr,n,current+1)
-                    println(s"this is x $x")
-                    x
-                }else
-                    BNTIMES(rr,n,current)
-                }
-                else
-                {
-                    re
-                }
-        }
-        */ 
+      case BNTIMES(r, n , current) => {
+                    val rr=shift(semiring.plus(mark, fin(r)), r, c)
+                    if(fin(rr) == semiring.one)
+                    BNTIMES(rr, n , current+1)
+                    else
+                        BNTIMES(rr , n , current)
+      }
       case BINIT(r) => shift(semiring.one, r, c)
     }
   }
@@ -208,6 +142,18 @@ def helperf[S](c: Char)(using semiring: Semiring[S]): Char => S =
 def helperft[S](c: Char)(using semiring: Semiring[S]): ((Char, Int)) => S = 
   (x: Char, pos: Int) => if (x == c) semiring.index(pos) else semiring.zero
  */
+def stripMarks[C,S](re: REG[C,S])(using semiring: Semiring[S]): REG[C,S] =
+  re match {
+    case BZERO()               => BZERO()
+    case BONE()                => BONE()
+    case BCHAR(_, f)           => BCHAR(semiring.zero, f)
+    case BALT(r1, r2)          => BALT(stripMarks(r1), stripMarks(r2))
+    case BSEQ(r1, r2)          => BSEQ(stripMarks(r1), stripMarks(r2))
+    case BSTAR(r)              => BSTAR(stripMarks(r))
+    case BNTIMES(r, n,current)         => BNTIMES(stripMarks(r), n,current)
+    case BINIT(r)              => BINIT(stripMarks(r))
+  }
+
 
 @main
 def test0() = {
@@ -226,37 +172,55 @@ def myNtimes[C, S](r: REG[C, S]): REG[C, S] = r match {
 
 @main
 def test01() = {
-   val n=1
+
+    val n=1
     val a = CHAR(helperf('a'))
     val b = CHAR(helperf('b'))
-    val rexp =NTIMES(SEQ(a,b), n)
+    val rexp =SEQ(NTIMES(ALT(a,ONE()), n) , NTIMES(a,n))
+   // val rexp = NTIMES(a,n)
 
-    val testSequences=BINIT(myNtimes(intern(rexp)))
-    val regInit=intern2(rexp)
-    val str = "abab".toList
-    println(s"input is  : str= $str and n is $n")
-   // println(s"matcher : testmyNTIMES= $testmyNTIMES")
-    println(matcher(testSequences, str))
+    val rexpInit=intern2(rexp)
+
+    val testSeq=SEQ(SEQ(ALT(a,ONE()),ALT(a,ONE())), SEQ(a,a))
+    val tesSeqInit=intern2(testSeq)
+
+    
+    val str = "aa".toList
+
+    println(s"input is: str= $str and n is $n \n")
+    println(s"1- Using the constructor NTIMES \n \n $rexpInit \n")
+    println(matcher(rexpInit, str))
+
+    println(s"\n2- Using the constructor SEQs \n \n $tesSeqInit \n ")
+    println(matcher(tesSeqInit , str))
+
     println("\n =========== \n")
-    //println(s"matcher : regInit= $regInit")
-    println(matcher(regInit, str))
-    println("\n =========== \n")
+
+    val rexpTest=BINIT(BNTIMES(BALT( intern(a) , BONE() ) ,2,0))
+    println(matcher(rexpTest , "a".toList))
+
+    val rexpTest2=BINIT(BNTIMES(BSEQ( intern(a) , intern(a) ) ,2,0))
+    println(matcher(rexpTest , "a".toList))
+
     //val reg= intern(rexp)
     //println("submatcher : reg ")
     //println(submatcher(reg, str))
-    
-    println("\n =========== \n")
 
 
-    val s = "aa".toList
-    val interReg=intern2(EVIL1(2))
-    println(s"NTIMES, reg is $interReg")
-    println(matcher(interReg,s))
+  /*  
+    println("\n +++++++++++++++ \n")
+    val s = "aaaaaaa".toList
+    //gets accepted becuase the second fin(ntimes) is true and first bntimes is nullable
+    val ntimesreg=intern2(EVIL1(3))
+   // println(s"NTIMES, reg is $interReg")
+    println(matcher(ntimesreg,s))
     println("\n Converted to Seq \n")
-    val evilrxp=SEQ(SEQ(ALT(CHAR(helperf('a')),ONE()),ALT(CHAR(helperf('a')),ONE())) ,  SEQ(CHAR(helperf('a')), CHAR(helperf('a')) ))
+    val evilrxp=SEQ(
+       SEQ(SEQ(ALT(CHAR(helperf('a')),ONE()),ALT(CHAR(helperf('a')),ONE())) ,ALT(CHAR(helperf('a')),ONE())) 
+    ,  SEQ(SEQ(CHAR(helperf('a')), CHAR(helperf('a'))) , CHAR(helperf('a')))
+    )
     println(matcher(intern2(evilrxp),s))
-    
-
+    */
 }
 
 def EVIL1(n: Int) = 
@@ -2154,12 +2118,49 @@ pn1ammonite/$file/`marked-SemiringBoolean`.Semiring#975ammonite/$file/`mark
 7
 5ammonite/$file/`marked-SemiringBoolean`.helperf().[S]7
 5ammonite/$file/`marked-SemiringBoolean`.helperf().(c)>
-<ammonite/$file/`marked-SemiringBoolean`.helperf().(semiring)`^scala/Function1#scala/Char#975ammonite/$file/`marked-SemiringBoolean`.helperf().[S]í: *s
-local56 Ä*br1ÄäZ"X
+<ammonite/$file/`marked-SemiringBoolean`.helperf().(semiring)`^scala/Function1#scala/Char#975ammonite/$file/`marked-SemiringBoolean`.helperf().[S]í: *k
+8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[C]	*CÄä&$scala/Nothing#
+scala/Any#*k
+8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[S]	*SÄä&$scala/Nothing#
+scala/Any#*˚
+9ammonite/$file/`marked-SemiringBoolean`.stripMarks().(re)*reÄä≥"∞
+≠™,ammonite/$file/`marked-SemiringBoolean`.REG#<:8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[C]<:8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[S]*Œ
+?ammonite/$file/`marked-SemiringBoolean`.stripMarks().(semiring) †Ä*semiringÄäw"u
+sq1ammonite/$file/`marked-SemiringBoolean`.Semiring#<:8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[S]*Ø
+local56 Ä*fÄäó"î
+ëéscala/Function1#<:8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[C]<:8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[S]*Ã
+local57 Ä*r1Ää≥"∞
+≠™,ammonite/$file/`marked-SemiringBoolean`.REG#<:8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[C]<:8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[S]*Ã
+local58 Ä*r2Ää≥"∞
+≠™,ammonite/$file/`marked-SemiringBoolean`.REG#<:8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[C]<:8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[S]*Ã
+local59 Ä*r1Ää≥"∞
+≠™,ammonite/$file/`marked-SemiringBoolean`.REG#<:8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[C]<:8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[S]*Ã
+local60 Ä*r2Ää≥"∞
+≠™,ammonite/$file/`marked-SemiringBoolean`.REG#<:8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[C]<:8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[S]*À
+local61 Ä*rÄä≥"∞
+≠™,ammonite/$file/`marked-SemiringBoolean`.REG#<:8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[C]<:8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[S]*À
+local62 Ä*rÄä≥"∞
+≠™,ammonite/$file/`marked-SemiringBoolean`.REG#<:8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[C]<:8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[S]*)
+local63 Ä*nÄä"
+
+scala/Int#*/
+local64 Ä*currentÄä"
+
+scala/Int#*À
+local65 Ä*rÄä≥"∞
+≠™,ammonite/$file/`marked-SemiringBoolean`.REG#<:8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[C]<:8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[S]*˙
+5ammonite/$file/`marked-SemiringBoolean`.stripMarks().*
+stripMarksÄä©¶
+t
+8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[C]
+8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[S];
+9ammonite/$file/`marked-SemiringBoolean`.stripMarks().(re)A
+?ammonite/$file/`marked-SemiringBoolean`.stripMarks().(semiring)≠™,ammonite/$file/`marked-SemiringBoolean`.REG#<:8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[C]<:8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[S]í: *s
+local66 Ä*br1ÄäZ"X
 VT-ammonite/$file/`marked-SemiringBoolean`.Rexp#scala/Char#scala/Boolean#*r
-local57 Ä*br2ÄäY"W
+local67 Ä*br2ÄäY"W
 US,ammonite/$file/`marked-SemiringBoolean`.REG#scala/Char#scala/Boolean#*P
-local58 Ä*sÄä9"7
+local68 Ä*sÄä9"7
 53 scala/collection/immutable/List#scala/Char#*q
 0ammonite/$file/`marked-SemiringBoolean`.test0().*test0j
 mainargs/main#Ää scala/Unit#í: *i
@@ -2169,44 +2170,45 @@ scala/Any#*i
 scala/Any#*Û
 6ammonite/$file/`marked-SemiringBoolean`.myNtimes().(r)*rÄäØ"¨
 ©¶,ammonite/$file/`marked-SemiringBoolean`.REG#:86ammonite/$file/`marked-SemiringBoolean`.myNtimes().[C]:86ammonite/$file/`marked-SemiringBoolean`.myNtimes().[S]*«
-local59 Ä*rÄäØ"¨
+local69 Ä*rÄäØ"¨
 ©¶,ammonite/$file/`marked-SemiringBoolean`.REG#:86ammonite/$file/`marked-SemiringBoolean`.myNtimes().[C]:86ammonite/$file/`marked-SemiringBoolean`.myNtimes().[S]*)
-local60 Ä*nÄä"
+local70 Ä*nÄä"
 
 scala/Int#*«
-local61 Ä*rÄäØ"¨
+local71 Ä*rÄäØ"¨
 ©¶,ammonite/$file/`marked-SemiringBoolean`.REG#:86ammonite/$file/`marked-SemiringBoolean`.myNtimes().[C]:86ammonite/$file/`marked-SemiringBoolean`.myNtimes().[S]*«
-local62 Ä*rÄäØ"¨
+local72 Ä*rÄäØ"¨
 ©¶,ammonite/$file/`marked-SemiringBoolean`.REG#:86ammonite/$file/`marked-SemiringBoolean`.myNtimes().[C]:86ammonite/$file/`marked-SemiringBoolean`.myNtimes().[S]*)
-local63 Ä*nÄä"
+local73 Ä*nÄä"
 
 scala/Int#*˘
 3ammonite/$file/`marked-SemiringBoolean`.myNtimes().*myNtimesÄä¨©
 p
 6ammonite/$file/`marked-SemiringBoolean`.myNtimes().[C]
 6ammonite/$file/`marked-SemiringBoolean`.myNtimes().[S]	
-local62©¶,ammonite/$file/`marked-SemiringBoolean`.REG#:86ammonite/$file/`marked-SemiringBoolean`.myNtimes().[C]:86ammonite/$file/`marked-SemiringBoolean`.myNtimes().[S]í: *)
-local64 Ä*nÄä"
+local72©¶,ammonite/$file/`marked-SemiringBoolean`.REG#:86ammonite/$file/`marked-SemiringBoolean`.myNtimes().[C]:86ammonite/$file/`marked-SemiringBoolean`.myNtimes().[S]í: *)
+local74 Ä*nÄä"
 
 scala/Int#*q
-local65 Ä*aÄäZ"X
+local75 Ä*aÄäZ"X
 VT-ammonite/$file/`marked-SemiringBoolean`.Rexp#scala/Char#scala/Boolean#*q
-local66 Ä*bÄäZ"X
+local76 Ä*bÄäZ"X
 VT-ammonite/$file/`marked-SemiringBoolean`.Rexp#scala/Char#scala/Boolean#*t
-local67 Ä*rexpÄäZ"X
-VT-ammonite/$file/`marked-SemiringBoolean`.Rexp#scala/Char#scala/Boolean#*|
-local68 Ä*testSequencesÄäY"W
-US,ammonite/$file/`marked-SemiringBoolean`.REG#scala/Char#scala/Boolean#*v
-local69 Ä*regInitÄäY"W
-US,ammonite/$file/`marked-SemiringBoolean`.REG#scala/Char#scala/Boolean#*R
-local70 Ä*strÄä9"7
-53 scala/collection/immutable/List#scala/Char#*P
-local71 Ä*sÄä9"7
-53 scala/collection/immutable/List#scala/Char#*w
-local72 Ä*interRegÄäY"W
+local77 Ä*rexpÄäZ"X
+VT-ammonite/$file/`marked-SemiringBoolean`.Rexp#scala/Char#scala/Boolean#*w
+local78 Ä*rexpInitÄäY"W
 US,ammonite/$file/`marked-SemiringBoolean`.REG#scala/Char#scala/Boolean#*w
-local73 Ä*evilrxpÄäZ"X
-VT-ammonite/$file/`marked-SemiringBoolean`.Rexp#scala/Char#scala/Boolean#*s
+local79 Ä*testSeqÄäZ"X
+VT-ammonite/$file/`marked-SemiringBoolean`.Rexp#scala/Char#scala/Boolean#*y
+local80 Ä*
+tesSeqInitÄäY"W
+US,ammonite/$file/`marked-SemiringBoolean`.REG#scala/Char#scala/Boolean#*R
+local81 Ä*strÄä9"7
+53 scala/collection/immutable/List#scala/Char#*w
+local82 Ä*rexpTestÄäY"W
+US,ammonite/$file/`marked-SemiringBoolean`.REG#scala/Char#scala/Boolean#*x
+local83 Ä*	rexpTest2ÄäY"W
+US,ammonite/$file/`marked-SemiringBoolean`.REG#scala/Char#scala/Boolean#*s
 1ammonite/$file/`marked-SemiringBoolean`.test01().*test01j
 mainargs/main#Ää scala/Unit#í: *R
 3ammonite/$file/`marked-SemiringBoolean`.EVIL1().(n)*nÄä"
@@ -2224,24 +2226,24 @@ scala/Int#*ë
 <ammonite/$file/`marked-SemiringBoolean`.time_needed().(code)*codeÄäE"C
 Aj?
 =;9ammonite/$file/`marked-SemiringBoolean`.time_needed().[T]*.
-local74 Ä*startÄä"
+local84 Ä*startÄä"
 scala/Long#*&
-local75*jÄä"
+local85*jÄä"
 
 scala/Int#*,
-local76 Ä*endÄä"
+local86 Ä*endÄä"
 scala/Long#*°
 6ammonite/$file/`marked-SemiringBoolean`.time_needed().*time_neededÄäŒÀ
 ;
 9ammonite/$file/`marked-SemiringBoolean`.time_needed().[T]y
 9ammonite/$file/`marked-SemiringBoolean`.time_needed().(i)
 <ammonite/$file/`marked-SemiringBoolean`.time_needed().(code)scala/Double#í: *&
-local77*iÄä"
+local87*iÄä"
 
 scala/Int#*q
 0ammonite/$file/`marked-SemiringBoolean`.test1().*test1j
 mainargs/main#Ää scala/Unit#í: *&
-local78*iÄä"
+local88*iÄä"
 
 scala/Int#*q
 0ammonite/$file/`marked-SemiringBoolean`.test2().*test2j
@@ -2251,10 +2253,10 @@ scala/Int#*q
 0ammonite/$file/`marked-SemiringBoolean`.$main().*$mainÄä>< 86scala/collection/Iterator#scala/Predef.String#í: *Å
 3ammonite/$file/`marked-SemiringBoolean`.toString().*toStringÄä"
 j
-java/lang/String#í: öscala/Any#toString().*Ω
+java/lang/String#í: öscala/Any#toString().*Ù
 (ammonite/$file/`marked-SemiringBoolean`.
- *marked-SemiringBooleanÄäÎ
-Ëjava/lang/Object#-¢*(ammonite/$file/`marked-SemiringBoolean`."ü
+ *marked-SemiringBooleanÄä¢
+üjava/lang/Object#-¢*(ammonite/$file/`marked-SemiringBoolean`."÷
 3ammonite/$file/`marked-SemiringBoolean`.`<init>`().
 -ammonite/$file/`marked-SemiringBoolean`.Rexp#
 -ammonite/$file/`marked-SemiringBoolean`.Rexp.
@@ -2275,6 +2277,7 @@ scala/Int#*q
 1ammonite/$file/`marked-SemiringBoolean`.intern().
 2ammonite/$file/`marked-SemiringBoolean`.intern2().
 2ammonite/$file/`marked-SemiringBoolean`.helperf().
+5ammonite/$file/`marked-SemiringBoolean`.stripMarks().
 0ammonite/$file/`marked-SemiringBoolean`.test0().
 3ammonite/$file/`marked-SemiringBoolean`.myNtimes().
 1ammonite/$file/`marked-SemiringBoolean`.test01().
@@ -2570,16 +2573,16 @@ scala/Int#2J
 << 1ammonite/$file/`marked-SemiringBoolean`.REG.BSEQ.2
 << local232
 << local242F
-<< 8ammonite/$file/`marked-SemiringBoolean`.fin().(semiring)2F
-< < $8ammonite/$file/`marked-SemiringBoolean`.Semiring#plus().2F
-<%< -8ammonite/$file/`marked-SemiringBoolean`.fin().(semiring)2G
-<.< 39ammonite/$file/`marked-SemiringBoolean`.Semiring#times().2<
-<4< 7.ammonite/$file/`marked-SemiringBoolean`.fin().2
-<8< :local232A
-<<< D3ammonite/$file/`marked-SemiringBoolean`.nullable().2
-<E< Glocal242<
-<J< M.ammonite/$file/`marked-SemiringBoolean`.fin().2
-<N< Plocal242@
+<< 8ammonite/$file/`marked-SemiringBoolean`.fin().(semiring)2F
+<< #8ammonite/$file/`marked-SemiringBoolean`.Semiring#plus().2F
+<$< ,8ammonite/$file/`marked-SemiringBoolean`.fin().(semiring)2G
+<-< 29ammonite/$file/`marked-SemiringBoolean`.Semiring#times().2<
+<3< 6.ammonite/$file/`marked-SemiringBoolean`.fin().2
+<7< 9local232A
+<;< C3ammonite/$file/`marked-SemiringBoolean`.nullable().2
+<D< Flocal242<
+<I< L.ammonite/$file/`marked-SemiringBoolean`.fin().2
+<M< Olocal242@
 == 2ammonite/$file/`marked-SemiringBoolean`.REG.BSTAR.2
 == local252<
 == .ammonite/$file/`marked-SemiringBoolean`.fin().2
@@ -2587,1021 +2590,973 @@ scala/Int#2J
 >> 4ammonite/$file/`marked-SemiringBoolean`.REG.BNTIMES.2
 >> local262
 >> local272
->> local282A
->$> ,3ammonite/$file/`marked-SemiringBoolean`.nullable().2
->-> .local262
->0> 2scala/Any#`==`().2F
->3> ;8ammonite/$file/`marked-SemiringBoolean`.fin().(semiring)2E
-><> ?7ammonite/$file/`marked-SemiringBoolean`.Semiring#one().2F
-?? 8ammonite/$file/`marked-SemiringBoolean`.fin().(semiring)2E
-?? 7ammonite/$file/`marked-SemiringBoolean`.Semiring#one().2
-@@ local282!
-@@ scala/Int#`==`(+3).2
-@@ local272<
-AA .ammonite/$file/`marked-SemiringBoolean`.fin().2
-AA 	local262F
-CC 8ammonite/$file/`marked-SemiringBoolean`.fin().(semiring)2F
-CC 8ammonite/$file/`marked-SemiringBoolean`.Semiring#zero().2<
+>> local282
+?? 	local272!
+?
+? scala/Int#`==`(+3).2A
+?? 3ammonite/$file/`marked-SemiringBoolean`.nullable().2
+?? local262
+@@ local282!
+@@ scala/Int#`==`(+3).2
+@@ local272<
+@@ .ammonite/$file/`marked-SemiringBoolean`.fin().2
+@@ local262F
+A	A 8ammonite/$file/`marked-SemiringBoolean`.fin().(semiring)2F
+AA 8ammonite/$file/`marked-SemiringBoolean`.Semiring#zero().2<
 77 .ammonite/$file/`marked-SemiringBoolean`.fin().2A
-F
-F 3ammonite/$file/`marked-SemiringBoolean`.shift().[C]2A
-FF 3ammonite/$file/`marked-SemiringBoolean`.shift().[S]2A
-FF 3ammonite/$file/`marked-SemiringBoolean`.shift().[S]2D
-FF 6ammonite/$file/`marked-SemiringBoolean`.shift().(mark)2:
-FF ,ammonite/$file/`marked-SemiringBoolean`.REG#2A
-F F !3ammonite/$file/`marked-SemiringBoolean`.shift().[C]2A
-F"F #3ammonite/$file/`marked-SemiringBoolean`.shift().[S]2B
-FF 4ammonite/$file/`marked-SemiringBoolean`.shift().(re)2A
-F)F *3ammonite/$file/`marked-SemiringBoolean`.shift().[C]2A
-F&F '3ammonite/$file/`marked-SemiringBoolean`.shift().(c)2?
-F<F D1ammonite/$file/`marked-SemiringBoolean`.Semiring#2A
-FEF F3ammonite/$file/`marked-SemiringBoolean`.shift().[S]2H
-F2F ::ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)2:
-FJF M,ammonite/$file/`marked-SemiringBoolean`.REG#2A
-FNF O3ammonite/$file/`marked-SemiringBoolean`.shift().[C]2A
-FPF Q3ammonite/$file/`marked-SemiringBoolean`.shift().[S]2B
-GG 4ammonite/$file/`marked-SemiringBoolean`.shift().(re)2@
-HH 2ammonite/$file/`marked-SemiringBoolean`.REG.BZERO.2@
-HH 2ammonite/$file/`marked-SemiringBoolean`.REG.BZERO.2?
-II 1ammonite/$file/`marked-SemiringBoolean`.REG.BONE.2?
-II 1ammonite/$file/`marked-SemiringBoolean`.REG.BONE.2@
-JJ 2ammonite/$file/`marked-SemiringBoolean`.REG.BCHAR.2
-JJ local292
-JJ local302@
-JJ 2ammonite/$file/`marked-SemiringBoolean`.REG.BCHAR.2H
-JJ ':ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)2G
-J(J -9ammonite/$file/`marked-SemiringBoolean`.Semiring#times().2D
-J.J 26ammonite/$file/`marked-SemiringBoolean`.shift().(mark)2
-J4J 5local302A
-J6J 73ammonite/$file/`marked-SemiringBoolean`.shift().(c)2
-J;J <local302?
-KK 1ammonite/$file/`marked-SemiringBoolean`.REG.BALT.2
-KK local312
-KK local322?
-KK 1ammonite/$file/`marked-SemiringBoolean`.REG.BALT.2>
-K K %0ammonite/$file/`marked-SemiringBoolean`.shift().2D
-K&K *6ammonite/$file/`marked-SemiringBoolean`.shift().(mark)2
-K,K .local312A
-K0K 13ammonite/$file/`marked-SemiringBoolean`.shift().(c)2>
-K4K 90ammonite/$file/`marked-SemiringBoolean`.shift().2D
-K:K >6ammonite/$file/`marked-SemiringBoolean`.shift().(mark)2
-K@K Blocal322A
-KDK E3ammonite/$file/`marked-SemiringBoolean`.shift().(c)2?
-LL 1ammonite/$file/`marked-SemiringBoolean`.REG.BSEQ.2
-LL local332
-LL local342?
-MM 1ammonite/$file/`marked-SemiringBoolean`.REG.BSEQ.2>
-MM 0ammonite/$file/`marked-SemiringBoolean`.shift().2D
-MM 6ammonite/$file/`marked-SemiringBoolean`.shift().(mark)2
-MM local332A
-MM 3ammonite/$file/`marked-SemiringBoolean`.shift().(c)2>
-NN 0ammonite/$file/`marked-SemiringBoolean`.shift().2H
-NN :ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)2F
-NN  8ammonite/$file/`marked-SemiringBoolean`.Semiring#plus().2H
-N!N ):ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)2G
-N*N /9ammonite/$file/`marked-SemiringBoolean`.Semiring#times().2D
-N0N 46ammonite/$file/`marked-SemiringBoolean`.shift().(mark)2A
-N6N >3ammonite/$file/`marked-SemiringBoolean`.nullable().2
-N?N Alocal332<
-NEN H.ammonite/$file/`marked-SemiringBoolean`.fin().2
-NIN Klocal332
-NON Qlocal342A
-NSN T3ammonite/$file/`marked-SemiringBoolean`.shift().(c)2@
-OO 2ammonite/$file/`marked-SemiringBoolean`.REG.BSTAR.2
-OO local352@
-OO 2ammonite/$file/`marked-SemiringBoolean`.REG.BSTAR.2>
-OO "0ammonite/$file/`marked-SemiringBoolean`.shift().2H
-O#O +:ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)2F
-O,O 08ammonite/$file/`marked-SemiringBoolean`.Semiring#plus().2D
-O1O 56ammonite/$file/`marked-SemiringBoolean`.shift().(mark)2<
-O7O :.ammonite/$file/`marked-SemiringBoolean`.fin().2
-O;O <local352
-O@O Alocal352A
-OCO D3ammonite/$file/`marked-SemiringBoolean`.shift().(c)2B
-PP 4ammonite/$file/`marked-SemiringBoolean`.REG.BNTIMES.2
-PP local362
-PP local372
-PP !local382
-QQ local372!
-QQ scala/Int#`==`(+3).2?
-RR 1ammonite/$file/`marked-SemiringBoolean`.REG.BONE.2
-TT local382 
-TT scala/Int#`<`(+3).2
-TT local372>
-UU "0ammonite/$file/`marked-SemiringBoolean`.shift().2H
-U#U +:ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)2F
-U,U 08ammonite/$file/`marked-SemiringBoolean`.Semiring#plus().2D
-U1U 56ammonite/$file/`marked-SemiringBoolean`.shift().(mark)2<
-U7U :.ammonite/$file/`marked-SemiringBoolean`.fin().2
-U;U <local362
-U@U Alocal362A
-UCU D3ammonite/$file/`marked-SemiringBoolean`.shift().(c)2
-UU local392<
-WW .ammonite/$file/`marked-SemiringBoolean`.fin().2
-WW local362
-WW !scala/Any#`==`().2H
-W"W *:ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)2E
-W+W .7ammonite/$file/`marked-SemiringBoolean`.Semiring#one().2B
-XX 4ammonite/$file/`marked-SemiringBoolean`.REG.BNTIMES.2
-X X "local392
-X$X %local372
-X'X .local382 
-X/X 0scala/Int#`+`(+4).2B
-ZZ 4ammonite/$file/`marked-SemiringBoolean`.REG.BNTIMES.2
-Z Z "local392
-Z$Z %local372
-Z'Z .local382B
-]] 4ammonite/$file/`marked-SemiringBoolean`.REG.BNTIMES.2
-]] local362
-]]  local372
-]"] )local382B
-
-ññ 2ammonite/$file/`marked-SemiringBoolean`.REG.BINIT.2
-
-ññ local402@
-
-ññ 0ammonite/$file/`marked-SemiringBoolean`.shift().2J
-
-ññ %:ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)2G
-
-ñ&ñ )7ammonite/$file/`marked-SemiringBoolean`.Semiring#one().2
-
-ñ+ñ ,local402C
-
-ñ.ñ /3ammonite/$file/`marked-SemiringBoolean`.shift().(c)2>
-FF 	0ammonite/$file/`marked-SemiringBoolean`.shift().2D
-
-öö 4ammonite/$file/`marked-SemiringBoolean`.Semiring#[S]2D
-
-õõ 4ammonite/$file/`marked-SemiringBoolean`.Semiring#[S]2H
-
-õõ 
-8ammonite/$file/`marked-SemiringBoolean`.Semiring#zero().2D
-
-úú 4ammonite/$file/`marked-SemiringBoolean`.Semiring#[S]2G
-
-úú 	7ammonite/$file/`marked-SemiringBoolean`.Semiring#one().2D
-
-ùù 4ammonite/$file/`marked-SemiringBoolean`.Semiring#[S]2K
-
-ùù ;ammonite/$file/`marked-SemiringBoolean`.Semiring#plus().(a)2D
-
-ùù 4ammonite/$file/`marked-SemiringBoolean`.Semiring#[S]2K
-
-ùù ;ammonite/$file/`marked-SemiringBoolean`.Semiring#plus().(b)2D
-
-ùù 4ammonite/$file/`marked-SemiringBoolean`.Semiring#[S]2H
-
-ùù 
-8ammonite/$file/`marked-SemiringBoolean`.Semiring#plus().2D
-
-ûû 4ammonite/$file/`marked-SemiringBoolean`.Semiring#[S]2L
-
-ûû <ammonite/$file/`marked-SemiringBoolean`.Semiring#times().(a)2D
-
-ûû 4ammonite/$file/`marked-SemiringBoolean`.Semiring#[S]2L
-
-ûû <ammonite/$file/`marked-SemiringBoolean`.Semiring#times().(b)2D
-
-ûû 4ammonite/$file/`marked-SemiringBoolean`.Semiring#[S]2I
-
-ûû 9ammonite/$file/`marked-SemiringBoolean`.Semiring#times().2L
-
-öö <ammonite/$file/`marked-SemiringBoolean`.Semiring#`<init>`().2A
-
-öö 1ammonite/$file/`marked-SemiringBoolean`.Semiring#2A
-
-†† 1ammonite/$file/`marked-SemiringBoolean`.Semiring#2
-
-† † 'scala/Boolean#2
-
-°° scala/Boolean#2O
-
-°° 
-?ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.zero().2
-
-¢¢ scala/Boolean#2N
-
-¢¢ 	>ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.one().2
-
-££ scala/Boolean#2R
-
-££ Bammonite/$file/`marked-SemiringBoolean`.booleanSemiring.plus().(a)2
-
-££ !scala/Boolean#2R
-
-££ Bammonite/$file/`marked-SemiringBoolean`.booleanSemiring.plus().(b)2
-
-£$£ +scala/Boolean#2R
-
-£.£ /Bammonite/$file/`marked-SemiringBoolean`.booleanSemiring.plus().(a)2%
-
-£0£ 2scala/Boolean#`||`().2R
-
-£3£ 4Bammonite/$file/`marked-SemiringBoolean`.booleanSemiring.plus().(b)2O
-
-££ 
-?ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.plus().2
-
-§§ scala/Boolean#2S
-
-§§ Cammonite/$file/`marked-SemiringBoolean`.booleanSemiring.times().(a)2
-
-§§ "scala/Boolean#2S
-
-§§ Cammonite/$file/`marked-SemiringBoolean`.booleanSemiring.times().(b)2
-
-§%§ ,scala/Boolean#2S
-
-§/§ 0Cammonite/$file/`marked-SemiringBoolean`.booleanSemiring.times().(a)2%
-
-§1§ 3scala/Boolean#`&&`().2S
-
-§4§ 5Cammonite/$file/`marked-SemiringBoolean`.booleanSemiring.times().(b)2P
-
-§§ @ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.times().2H
-
-†† 8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.2A
-
-®® 	1ammonite/$file/`marked-SemiringBoolean`.mat().[C]2A
-
-®
-® 1ammonite/$file/`marked-SemiringBoolean`.mat().[S]2<
-
-®® ,ammonite/$file/`marked-SemiringBoolean`.REG#2A
-
-®® 1ammonite/$file/`marked-SemiringBoolean`.mat().[C]2A
-
-®® 1ammonite/$file/`marked-SemiringBoolean`.mat().[S]2A
-
-®® 1ammonite/$file/`marked-SemiringBoolean`.mat().(r)2#
-
-®® !scala/package.List#2A
-
-®"® #1ammonite/$file/`marked-SemiringBoolean`.mat().[C]2A
-
-®® 1ammonite/$file/`marked-SemiringBoolean`.mat().(s)2A
-
-®6® >1ammonite/$file/`marked-SemiringBoolean`.Semiring#2A
-
-®?® @1ammonite/$file/`marked-SemiringBoolean`.mat().[S]2H
-
-®,® 48ammonite/$file/`marked-SemiringBoolean`.mat().(semiring)2<
-
-®E® H,ammonite/$file/`marked-SemiringBoolean`.REG#2A
-
-®I® J1ammonite/$file/`marked-SemiringBoolean`.mat().[C]2A
-
-®K® L1ammonite/$file/`marked-SemiringBoolean`.mat().[S]2A
-
-®P® Q1ammonite/$file/`marked-SemiringBoolean`.mat().(s)2"
-
-©© 
-scala/package.Nil.2A
-
-©© 1ammonite/$file/`marked-SemiringBoolean`.mat().(r)2#
-
-™™ 
-scala/package.`::`.2
-
-™™ local412
-
-™
-™ local422>
-
-™™ .ammonite/$file/`marked-SemiringBoolean`.mat().2@
-
-™™ 0ammonite/$file/`marked-SemiringBoolean`.shift().2H
-
-™™ "8ammonite/$file/`marked-SemiringBoolean`.mat().(semiring)2H
-
-™#™ '8ammonite/$file/`marked-SemiringBoolean`.Semiring#zero().2A
-
-™)™ *1ammonite/$file/`marked-SemiringBoolean`.mat().(r)2
-
-™,™ -local412
-
-™0™ 2local422>
-
-®® .ammonite/$file/`marked-SemiringBoolean`.mat().2E
-
-≠≠ 5ammonite/$file/`marked-SemiringBoolean`.matcher().[C]2E
-
-≠≠ 5ammonite/$file/`marked-SemiringBoolean`.matcher().[S]2<
-
-≠≠ ,ammonite/$file/`marked-SemiringBoolean`.REG#2E
-
-≠≠ 5ammonite/$file/`marked-SemiringBoolean`.matcher().[C]2E
-
-≠≠ 5ammonite/$file/`marked-SemiringBoolean`.matcher().[S]2E
-
-≠≠ 5ammonite/$file/`marked-SemiringBoolean`.matcher().(r)2#
-
-≠!≠ %scala/package.List#2E
-
-≠&≠ '5ammonite/$file/`marked-SemiringBoolean`.matcher().[C]2E
-
-≠≠ 5ammonite/$file/`marked-SemiringBoolean`.matcher().(s)2A
-
-≠:≠ B1ammonite/$file/`marked-SemiringBoolean`.Semiring#2E
-
-≠C≠ D5ammonite/$file/`marked-SemiringBoolean`.matcher().[S]2L
-
-≠0≠ 8<ammonite/$file/`marked-SemiringBoolean`.matcher().(semiring)2E
-
-≠I≠ J5ammonite/$file/`marked-SemiringBoolean`.matcher().[S]2E
-
-ÆÆ 5ammonite/$file/`marked-SemiringBoolean`.matcher().(s)2!
-
-ÆÆ 
-scala/Any#`==`().2"
-
-ÆÆ scala/package.Nil.2C
-
-ÆÆ 3ammonite/$file/`marked-SemiringBoolean`.nullable().2E
-
-ÆÆ 5ammonite/$file/`marked-SemiringBoolean`.matcher().(r)2>
-
-∞∞ .ammonite/$file/`marked-SemiringBoolean`.mat().2E
-
-∞∞ 5ammonite/$file/`marked-SemiringBoolean`.matcher().(r)2E
-
-∞∞ 5ammonite/$file/`marked-SemiringBoolean`.matcher().(s)2
-
-∞∞ local432>
-
-±± .ammonite/$file/`marked-SemiringBoolean`.fin().2
-
-±± local432
-
-±± local442)
-
-≤≤ scala/Predef.println(+1).2(
-
-≤≤ scala/StringContext#s().2
-
-≤ ≤ !local432
-
-≤+≤ ,local442
-
-≥≥ 	local442B
-
-≠≠ 2ammonite/$file/`marked-SemiringBoolean`.matcher().2H
-
-∂∂ 8ammonite/$file/`marked-SemiringBoolean`.submatcher().[C]2H
-
-∂∂ 8ammonite/$file/`marked-SemiringBoolean`.submatcher().[S]2<
-
-∂∂ ,ammonite/$file/`marked-SemiringBoolean`.REG#2H
-
-∂∂ 8ammonite/$file/`marked-SemiringBoolean`.submatcher().[C]2H
-
-∂∂  8ammonite/$file/`marked-SemiringBoolean`.submatcher().[S]2H
-
-∂∂ 8ammonite/$file/`marked-SemiringBoolean`.submatcher().(r)2#
-
-∂&∂ *scala/package.List#2H
-
-∂+∂ ,8ammonite/$file/`marked-SemiringBoolean`.submatcher().[C]2H
-
-∂#∂ $8ammonite/$file/`marked-SemiringBoolean`.submatcher().(s)2A
-
-∂?∂ G1ammonite/$file/`marked-SemiringBoolean`.Semiring#2H
-
-∂H∂ I8ammonite/$file/`marked-SemiringBoolean`.submatcher().[S]2O
-
-∂5∂ =?ammonite/$file/`marked-SemiringBoolean`.submatcher().(semiring)2H
-
-∂M∂ N8ammonite/$file/`marked-SemiringBoolean`.submatcher().[S]2<
-
-∑∑ ,ammonite/$file/`marked-SemiringBoolean`.REG#2H
-
-∑∑ 8ammonite/$file/`marked-SemiringBoolean`.submatcher().[C]2H
-
-∑∑ 8ammonite/$file/`marked-SemiringBoolean`.submatcher().[S]2A
-
-∑∑ 1ammonite/$file/`marked-SemiringBoolean`.intern().2B
-
-∑∑ #2ammonite/$file/`marked-SemiringBoolean`.Rexp.STAR.2B
-
-∑$∑ (2ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.2O
-
-∑.∑ 6?ammonite/$file/`marked-SemiringBoolean`.submatcher().(semiring)2G
-
-∑7∑ :7ammonite/$file/`marked-SemiringBoolean`.Semiring#one().2
-
-∑∑ local452B
-
-∏∏ 2ammonite/$file/`marked-SemiringBoolean`.REG.BINIT.2A
-
-∏∏ 1ammonite/$file/`marked-SemiringBoolean`.REG.BSEQ.2
-
-∏∏ local452A
-
-∏∏  1ammonite/$file/`marked-SemiringBoolean`.REG.BSEQ.2H
-
-∏!∏ "8ammonite/$file/`marked-SemiringBoolean`.submatcher().(r)2
-
-∏#∏ &local452
-
-∏∏ local462B
-
-ππ 2ammonite/$file/`marked-SemiringBoolean`.matcher().2
-
-ππ local462H
-
-ππ 8ammonite/$file/`marked-SemiringBoolean`.submatcher().(s)2E
-
-∂∂ 5ammonite/$file/`marked-SemiringBoolean`.submatcher().2D
-
-ææ 4ammonite/$file/`marked-SemiringBoolean`.intern().[C]2D
-
-ææ 4ammonite/$file/`marked-SemiringBoolean`.intern().[S]2=
-
-ææ -ammonite/$file/`marked-SemiringBoolean`.Rexp#2D
-
-ææ 4ammonite/$file/`marked-SemiringBoolean`.intern().[C]2D
-
-ææ 4ammonite/$file/`marked-SemiringBoolean`.intern().[S]2D
-
-ææ 4ammonite/$file/`marked-SemiringBoolean`.intern().(r)2A
-
-æ.æ 61ammonite/$file/`marked-SemiringBoolean`.Semiring#2D
-
-æ7æ 84ammonite/$file/`marked-SemiringBoolean`.intern().[S]2K
-
-æ$æ ,;ammonite/$file/`marked-SemiringBoolean`.intern().(semiring)2<
-
-æ=æ @,ammonite/$file/`marked-SemiringBoolean`.REG#2D
-
-æAæ B4ammonite/$file/`marked-SemiringBoolean`.intern().[C]2D
-
-æCæ D4ammonite/$file/`marked-SemiringBoolean`.intern().[S]2D
-
-æHæ I4ammonite/$file/`marked-SemiringBoolean`.intern().(r)2B
-
-øø 2ammonite/$file/`marked-SemiringBoolean`.Rexp.ZERO.2B
-
-øø 2ammonite/$file/`marked-SemiringBoolean`.REG.BZERO.2A
-
-¿¿ 
-1ammonite/$file/`marked-SemiringBoolean`.Rexp.ONE.2A
-
-¿¿ 1ammonite/$file/`marked-SemiringBoolean`.REG.BONE.2B
-
-¡¡ 2ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.2
-
-¡¡ local472B
-
-¡¡ 2ammonite/$file/`marked-SemiringBoolean`.REG.BCHAR.2K
-
-¡¡  ;ammonite/$file/`marked-SemiringBoolean`.intern().(semiring)2H
-
-¡!¡ %8ammonite/$file/`marked-SemiringBoolean`.Semiring#zero().2
-
-¡'¡ (local472A
-
-¬¬ 
+C
+C 3ammonite/$file/`marked-SemiringBoolean`.shift().[C]2A
+CC 3ammonite/$file/`marked-SemiringBoolean`.shift().[S]2A
+CC 3ammonite/$file/`marked-SemiringBoolean`.shift().[S]2D
+CC 6ammonite/$file/`marked-SemiringBoolean`.shift().(mark)2:
+CC ,ammonite/$file/`marked-SemiringBoolean`.REG#2A
+C C !3ammonite/$file/`marked-SemiringBoolean`.shift().[C]2A
+C"C #3ammonite/$file/`marked-SemiringBoolean`.shift().[S]2B
+CC 4ammonite/$file/`marked-SemiringBoolean`.shift().(re)2A
+C)C *3ammonite/$file/`marked-SemiringBoolean`.shift().[C]2A
+C&C '3ammonite/$file/`marked-SemiringBoolean`.shift().(c)2?
+C<C D1ammonite/$file/`marked-SemiringBoolean`.Semiring#2A
+CEC F3ammonite/$file/`marked-SemiringBoolean`.shift().[S]2H
+C2C ::ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)2:
+CJC M,ammonite/$file/`marked-SemiringBoolean`.REG#2A
+CNC O3ammonite/$file/`marked-SemiringBoolean`.shift().[C]2A
+CPC Q3ammonite/$file/`marked-SemiringBoolean`.shift().[S]2B
+DD 4ammonite/$file/`marked-SemiringBoolean`.shift().(re)2@
+EE 2ammonite/$file/`marked-SemiringBoolean`.REG.BZERO.2@
+EE 2ammonite/$file/`marked-SemiringBoolean`.REG.BZERO.2?
+FF 1ammonite/$file/`marked-SemiringBoolean`.REG.BONE.2?
+FF 1ammonite/$file/`marked-SemiringBoolean`.REG.BONE.2@
+GG 2ammonite/$file/`marked-SemiringBoolean`.REG.BCHAR.2
+GG local292
+GG local302@
+GG 2ammonite/$file/`marked-SemiringBoolean`.REG.BCHAR.2H
+GG ':ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)2G
+G(G -9ammonite/$file/`marked-SemiringBoolean`.Semiring#times().2D
+G.G 26ammonite/$file/`marked-SemiringBoolean`.shift().(mark)2
+G4G 5local302A
+G6G 73ammonite/$file/`marked-SemiringBoolean`.shift().(c)2
+G;G <local302?
+HH 1ammonite/$file/`marked-SemiringBoolean`.REG.BALT.2
+HH local312
+HH local322?
+HH 1ammonite/$file/`marked-SemiringBoolean`.REG.BALT.2>
+H H %0ammonite/$file/`marked-SemiringBoolean`.shift().2D
+H&H *6ammonite/$file/`marked-SemiringBoolean`.shift().(mark)2
+H,H .local312A
+H0H 13ammonite/$file/`marked-SemiringBoolean`.shift().(c)2>
+H4H 90ammonite/$file/`marked-SemiringBoolean`.shift().2D
+H:H >6ammonite/$file/`marked-SemiringBoolean`.shift().(mark)2
+H@H Blocal322A
+HDH E3ammonite/$file/`marked-SemiringBoolean`.shift().(c)2?
+II 1ammonite/$file/`marked-SemiringBoolean`.REG.BSEQ.2
+II local332
+II local342?
+JJ 1ammonite/$file/`marked-SemiringBoolean`.REG.BSEQ.2>
+JJ 0ammonite/$file/`marked-SemiringBoolean`.shift().2D
+JJ 6ammonite/$file/`marked-SemiringBoolean`.shift().(mark)2
+JJ local332A
+JJ 3ammonite/$file/`marked-SemiringBoolean`.shift().(c)2>
+KK 0ammonite/$file/`marked-SemiringBoolean`.shift().2H
+KK :ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)2F
+KK  8ammonite/$file/`marked-SemiringBoolean`.Semiring#plus().2H
+K!K ):ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)2G
+K*K /9ammonite/$file/`marked-SemiringBoolean`.Semiring#times().2D
+K0K 46ammonite/$file/`marked-SemiringBoolean`.shift().(mark)2A
+K6K >3ammonite/$file/`marked-SemiringBoolean`.nullable().2
+K?K Alocal332<
+KEK H.ammonite/$file/`marked-SemiringBoolean`.fin().2
+KIK Klocal332
+KOK Qlocal342A
+KSK T3ammonite/$file/`marked-SemiringBoolean`.shift().(c)2@
+LL 2ammonite/$file/`marked-SemiringBoolean`.REG.BSTAR.2
+LL local352@
+LL 2ammonite/$file/`marked-SemiringBoolean`.REG.BSTAR.2>
+LL "0ammonite/$file/`marked-SemiringBoolean`.shift().2H
+L#L +:ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)2F
+L,L 08ammonite/$file/`marked-SemiringBoolean`.Semiring#plus().2D
+L1L 56ammonite/$file/`marked-SemiringBoolean`.shift().(mark)2<
+L7L :.ammonite/$file/`marked-SemiringBoolean`.fin().2
+L;L <local352
+L@L Alocal352A
+LCL D3ammonite/$file/`marked-SemiringBoolean`.shift().(c)2B
+MM 4ammonite/$file/`marked-SemiringBoolean`.REG.BNTIMES.2
+MM local362
+MM local372
+MM !local382>
+NN  0ammonite/$file/`marked-SemiringBoolean`.shift().2H
+N!N ):ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)2F
+N*N .8ammonite/$file/`marked-SemiringBoolean`.Semiring#plus().2D
+N/N 36ammonite/$file/`marked-SemiringBoolean`.shift().(mark)2<
+N5N 8.ammonite/$file/`marked-SemiringBoolean`.fin().2
+N9N :local362
+N>N ?local362A
+NAN B3ammonite/$file/`marked-SemiringBoolean`.shift().(c)2
+NN local392<
+OO .ammonite/$file/`marked-SemiringBoolean`.fin().2
+OO local392
+OO !scala/Any#`==`().2H
+O"O *:ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)2E
+O+O .7ammonite/$file/`marked-SemiringBoolean`.Semiring#one().2B
+PP 4ammonite/$file/`marked-SemiringBoolean`.REG.BNTIMES.2
+PP local392
+P P !local372
+P$P +local382 
+P+P ,scala/Int#`+`(+4).2B
+RR 4ammonite/$file/`marked-SemiringBoolean`.REG.BNTIMES.2
+R R "local392
+R%R &local372
+R)R 0local382@
+TT 2ammonite/$file/`marked-SemiringBoolean`.REG.BINIT.2
+TT local402>
+TT 0ammonite/$file/`marked-SemiringBoolean`.shift().2H
+TT %:ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)2E
+T&T )7ammonite/$file/`marked-SemiringBoolean`.Semiring#one().2
+T+T ,local402A
+T.T /3ammonite/$file/`marked-SemiringBoolean`.shift().(c)2>
+CC 	0ammonite/$file/`marked-SemiringBoolean`.shift().2B
+XX 4ammonite/$file/`marked-SemiringBoolean`.Semiring#[S]2B
+YY 4ammonite/$file/`marked-SemiringBoolean`.Semiring#[S]2F
+YY 
+8ammonite/$file/`marked-SemiringBoolean`.Semiring#zero().2B
+ZZ 4ammonite/$file/`marked-SemiringBoolean`.Semiring#[S]2E
+ZZ 	7ammonite/$file/`marked-SemiringBoolean`.Semiring#one().2B
+[[ 4ammonite/$file/`marked-SemiringBoolean`.Semiring#[S]2I
+[[ ;ammonite/$file/`marked-SemiringBoolean`.Semiring#plus().(a)2B
+[[ 4ammonite/$file/`marked-SemiringBoolean`.Semiring#[S]2I
+[[ ;ammonite/$file/`marked-SemiringBoolean`.Semiring#plus().(b)2B
+[[ 4ammonite/$file/`marked-SemiringBoolean`.Semiring#[S]2F
+[[ 
+8ammonite/$file/`marked-SemiringBoolean`.Semiring#plus().2B
+\\ 4ammonite/$file/`marked-SemiringBoolean`.Semiring#[S]2J
+\\ <ammonite/$file/`marked-SemiringBoolean`.Semiring#times().(a)2B
+\\ 4ammonite/$file/`marked-SemiringBoolean`.Semiring#[S]2J
+\\ <ammonite/$file/`marked-SemiringBoolean`.Semiring#times().(b)2B
+\\ 4ammonite/$file/`marked-SemiringBoolean`.Semiring#[S]2G
+\\ 9ammonite/$file/`marked-SemiringBoolean`.Semiring#times().2J
+XX <ammonite/$file/`marked-SemiringBoolean`.Semiring#`<init>`().2?
+XX 1ammonite/$file/`marked-SemiringBoolean`.Semiring#2?
+^^ 1ammonite/$file/`marked-SemiringBoolean`.Semiring#2
+^ ^ 'scala/Boolean#2
+__ scala/Boolean#2M
+__ 
+?ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.zero().2
+`` scala/Boolean#2L
+`` 	>ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.one().2
+aa scala/Boolean#2P
+aa Bammonite/$file/`marked-SemiringBoolean`.booleanSemiring.plus().(a)2
+aa !scala/Boolean#2P
+aa Bammonite/$file/`marked-SemiringBoolean`.booleanSemiring.plus().(b)2
+a$a +scala/Boolean#2P
+a.a /Bammonite/$file/`marked-SemiringBoolean`.booleanSemiring.plus().(a)2#
+a0a 2scala/Boolean#`||`().2P
+a3a 4Bammonite/$file/`marked-SemiringBoolean`.booleanSemiring.plus().(b)2M
+aa 
+?ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.plus().2
+bb scala/Boolean#2Q
+bb Cammonite/$file/`marked-SemiringBoolean`.booleanSemiring.times().(a)2
+bb "scala/Boolean#2Q
+bb Cammonite/$file/`marked-SemiringBoolean`.booleanSemiring.times().(b)2
+b%b ,scala/Boolean#2Q
+b/b 0Cammonite/$file/`marked-SemiringBoolean`.booleanSemiring.times().(a)2#
+b1b 3scala/Boolean#`&&`().2Q
+b4b 5Cammonite/$file/`marked-SemiringBoolean`.booleanSemiring.times().(b)2N
+bb @ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.times().2F
+^^ 8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.2?
+ff 	1ammonite/$file/`marked-SemiringBoolean`.mat().[C]2?
+f
+f 1ammonite/$file/`marked-SemiringBoolean`.mat().[S]2:
+ff ,ammonite/$file/`marked-SemiringBoolean`.REG#2?
+ff 1ammonite/$file/`marked-SemiringBoolean`.mat().[C]2?
+ff 1ammonite/$file/`marked-SemiringBoolean`.mat().[S]2?
+ff 1ammonite/$file/`marked-SemiringBoolean`.mat().(r)2!
+ff !scala/package.List#2?
+f"f #1ammonite/$file/`marked-SemiringBoolean`.mat().[C]2?
+ff 1ammonite/$file/`marked-SemiringBoolean`.mat().(s)2?
+f6f >1ammonite/$file/`marked-SemiringBoolean`.Semiring#2?
+f?f @1ammonite/$file/`marked-SemiringBoolean`.mat().[S]2F
+f,f 48ammonite/$file/`marked-SemiringBoolean`.mat().(semiring)2:
+fEf H,ammonite/$file/`marked-SemiringBoolean`.REG#2?
+fIf J1ammonite/$file/`marked-SemiringBoolean`.mat().[C]2?
+fKf L1ammonite/$file/`marked-SemiringBoolean`.mat().[S]2?
+fPf Q1ammonite/$file/`marked-SemiringBoolean`.mat().(s)2 
+gg 
+scala/package.Nil.2?
+gg 1ammonite/$file/`marked-SemiringBoolean`.mat().(r)2!
+hh 
+scala/package.`::`.2
+hh local412
+h
+h local422<
+hh .ammonite/$file/`marked-SemiringBoolean`.mat().2>
+hh 0ammonite/$file/`marked-SemiringBoolean`.shift().2F
+hh "8ammonite/$file/`marked-SemiringBoolean`.mat().(semiring)2F
+h#h '8ammonite/$file/`marked-SemiringBoolean`.Semiring#zero().2?
+h)h *1ammonite/$file/`marked-SemiringBoolean`.mat().(r)2
+h,h -local412
+h0h 2local422<
+ff .ammonite/$file/`marked-SemiringBoolean`.mat().2C
+kk 5ammonite/$file/`marked-SemiringBoolean`.matcher().[C]2C
+kk 5ammonite/$file/`marked-SemiringBoolean`.matcher().[S]2:
+kk ,ammonite/$file/`marked-SemiringBoolean`.REG#2C
+kk 5ammonite/$file/`marked-SemiringBoolean`.matcher().[C]2C
+kk 5ammonite/$file/`marked-SemiringBoolean`.matcher().[S]2C
+kk 5ammonite/$file/`marked-SemiringBoolean`.matcher().(r)2!
+k!k %scala/package.List#2C
+k&k '5ammonite/$file/`marked-SemiringBoolean`.matcher().[C]2C
+kk 5ammonite/$file/`marked-SemiringBoolean`.matcher().(s)2?
+k:k B1ammonite/$file/`marked-SemiringBoolean`.Semiring#2C
+kCk D5ammonite/$file/`marked-SemiringBoolean`.matcher().[S]2J
+k0k 8<ammonite/$file/`marked-SemiringBoolean`.matcher().(semiring)2C
+kIk J5ammonite/$file/`marked-SemiringBoolean`.matcher().[S]2C
+ll 5ammonite/$file/`marked-SemiringBoolean`.matcher().(s)2
+ll 
+scala/Any#`==`().2 
+ll scala/package.Nil.2A
+ll 3ammonite/$file/`marked-SemiringBoolean`.nullable().2C
+ll 5ammonite/$file/`marked-SemiringBoolean`.matcher().(r)2<
+nn .ammonite/$file/`marked-SemiringBoolean`.mat().2C
+nn 5ammonite/$file/`marked-SemiringBoolean`.matcher().(r)2C
+nn 5ammonite/$file/`marked-SemiringBoolean`.matcher().(s)2
+nn local432<
+oo .ammonite/$file/`marked-SemiringBoolean`.fin().2
+oo local432
+oo local442'
+pp scala/Predef.println(+1).2&
+pp scala/StringContext#s().2
+p p !local432
+p+p ,local442
+qq 	local442@
+kk 2ammonite/$file/`marked-SemiringBoolean`.matcher().2F
+tt 8ammonite/$file/`marked-SemiringBoolean`.submatcher().[C]2F
+tt 8ammonite/$file/`marked-SemiringBoolean`.submatcher().[S]2:
+tt ,ammonite/$file/`marked-SemiringBoolean`.REG#2F
+tt 8ammonite/$file/`marked-SemiringBoolean`.submatcher().[C]2F
+tt  8ammonite/$file/`marked-SemiringBoolean`.submatcher().[S]2F
+tt 8ammonite/$file/`marked-SemiringBoolean`.submatcher().(r)2!
+t&t *scala/package.List#2F
+t+t ,8ammonite/$file/`marked-SemiringBoolean`.submatcher().[C]2F
+t#t $8ammonite/$file/`marked-SemiringBoolean`.submatcher().(s)2?
+t?t G1ammonite/$file/`marked-SemiringBoolean`.Semiring#2F
+tHt I8ammonite/$file/`marked-SemiringBoolean`.submatcher().[S]2M
+t5t =?ammonite/$file/`marked-SemiringBoolean`.submatcher().(semiring)2F
+tMt N8ammonite/$file/`marked-SemiringBoolean`.submatcher().[S]2:
+uu ,ammonite/$file/`marked-SemiringBoolean`.REG#2F
+uu 8ammonite/$file/`marked-SemiringBoolean`.submatcher().[C]2F
+uu 8ammonite/$file/`marked-SemiringBoolean`.submatcher().[S]2?
+uu 1ammonite/$file/`marked-SemiringBoolean`.intern().2@
+uu #2ammonite/$file/`marked-SemiringBoolean`.Rexp.STAR.2@
+u$u (2ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.2M
+u.u 6?ammonite/$file/`marked-SemiringBoolean`.submatcher().(semiring)2E
+u7u :7ammonite/$file/`marked-SemiringBoolean`.Semiring#one().2
+uu local452@
+vv 2ammonite/$file/`marked-SemiringBoolean`.REG.BINIT.2?
+vv 1ammonite/$file/`marked-SemiringBoolean`.REG.BSEQ.2
+vv local452?
+vv  1ammonite/$file/`marked-SemiringBoolean`.REG.BSEQ.2F
+v!v "8ammonite/$file/`marked-SemiringBoolean`.submatcher().(r)2
+v#v &local452
+vv local462@
+ww 2ammonite/$file/`marked-SemiringBoolean`.matcher().2
+ww local462F
+ww 8ammonite/$file/`marked-SemiringBoolean`.submatcher().(s)2C
+tt 5ammonite/$file/`marked-SemiringBoolean`.submatcher().2B
+|| 4ammonite/$file/`marked-SemiringBoolean`.intern().[C]2B
+|| 4ammonite/$file/`marked-SemiringBoolean`.intern().[S]2;
+|| -ammonite/$file/`marked-SemiringBoolean`.Rexp#2B
+|| 4ammonite/$file/`marked-SemiringBoolean`.intern().[C]2B
+|| 4ammonite/$file/`marked-SemiringBoolean`.intern().[S]2B
+|| 4ammonite/$file/`marked-SemiringBoolean`.intern().(r)2?
+|.| 61ammonite/$file/`marked-SemiringBoolean`.Semiring#2B
+|7| 84ammonite/$file/`marked-SemiringBoolean`.intern().[S]2I
+|$| ,;ammonite/$file/`marked-SemiringBoolean`.intern().(semiring)2:
+|=| @,ammonite/$file/`marked-SemiringBoolean`.REG#2B
+|A| B4ammonite/$file/`marked-SemiringBoolean`.intern().[C]2B
+|C| D4ammonite/$file/`marked-SemiringBoolean`.intern().[S]2B
+|H| I4ammonite/$file/`marked-SemiringBoolean`.intern().(r)2@
+}} 2ammonite/$file/`marked-SemiringBoolean`.Rexp.ZERO.2@
+}} 2ammonite/$file/`marked-SemiringBoolean`.REG.BZERO.2?
+~~ 
+1ammonite/$file/`marked-SemiringBoolean`.Rexp.ONE.2?
+~~ 1ammonite/$file/`marked-SemiringBoolean`.REG.BONE.2@
+ 2ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.2
+ local472@
+ 2ammonite/$file/`marked-SemiringBoolean`.REG.BCHAR.2I
+  ;ammonite/$file/`marked-SemiringBoolean`.intern().(semiring)2F
+! %8ammonite/$file/`marked-SemiringBoolean`.Semiring#zero().2
+' (local472A
+
+ÄÄ 
 1ammonite/$file/`marked-SemiringBoolean`.Rexp.ALT.2
 
-¬¬ local482
+ÄÄ local482
 
-¬¬ local492A
+ÄÄ local492A
 
-¬¬ 1ammonite/$file/`marked-SemiringBoolean`.REG.BALT.2A
+ÄÄ 1ammonite/$file/`marked-SemiringBoolean`.REG.BALT.2A
 
-¬¬ !1ammonite/$file/`marked-SemiringBoolean`.intern().2
+ÄÄ !1ammonite/$file/`marked-SemiringBoolean`.intern().2
 
-¬"¬ $local482A
+Ä"Ä $local482A
 
-¬'¬ -1ammonite/$file/`marked-SemiringBoolean`.intern().2
+Ä'Ä -1ammonite/$file/`marked-SemiringBoolean`.intern().2
 
-¬.¬ 0local492A
+Ä.Ä 0local492A
 
-√√ 
+ÅÅ 
 1ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.2
 
-√√ local502
+ÅÅ local502
 
-√√ local512A
+ÅÅ local512A
 
-√√ 1ammonite/$file/`marked-SemiringBoolean`.REG.BSEQ.2A
+ÅÅ 1ammonite/$file/`marked-SemiringBoolean`.REG.BSEQ.2A
 
-√√ !1ammonite/$file/`marked-SemiringBoolean`.intern().2
+ÅÅ !1ammonite/$file/`marked-SemiringBoolean`.intern().2
 
-√"√ $local502A
+Å"Å $local502A
 
-√'√ -1ammonite/$file/`marked-SemiringBoolean`.intern().2
+Å'Å -1ammonite/$file/`marked-SemiringBoolean`.intern().2
 
-√.√ 0local512B
+Å.Å 0local512B
 
-ƒƒ 2ammonite/$file/`marked-SemiringBoolean`.Rexp.STAR.2
+ÇÇ 2ammonite/$file/`marked-SemiringBoolean`.Rexp.STAR.2
 
-ƒƒ local522B
+ÇÇ local522B
 
-ƒƒ 2ammonite/$file/`marked-SemiringBoolean`.REG.BSTAR.2A
+ÇÇ 2ammonite/$file/`marked-SemiringBoolean`.REG.BSTAR.2A
 
-ƒƒ 1ammonite/$file/`marked-SemiringBoolean`.intern().2
+ÇÇ 1ammonite/$file/`marked-SemiringBoolean`.intern().2
 
-ƒƒ  local522D
+ÇÇ  local522D
 
-≈≈ 4ammonite/$file/`marked-SemiringBoolean`.Rexp.NTIMES.2
+ÉÉ 4ammonite/$file/`marked-SemiringBoolean`.Rexp.NTIMES.2
 
-≈≈ local532
+ÉÉ local532
 
-≈≈ local542D
+ÉÉ local542D
+
+ÉÉ 4ammonite/$file/`marked-SemiringBoolean`.REG.BNTIMES.2A
+
+ÉÉ %1ammonite/$file/`marked-SemiringBoolean`.intern().2
+
+É&É 'local532
+
+É)É *local542U
+
+É+É 2Eammonite/$file/`marked-SemiringBoolean`.REG.BNTIMES.apply().(current)2?
+|| 
+1ammonite/$file/`marked-SemiringBoolean`.intern().2E
+
+ÜÜ 5ammonite/$file/`marked-SemiringBoolean`.intern2().[C]2E
+
+ÜÜ 5ammonite/$file/`marked-SemiringBoolean`.intern2().[S]2=
+
+ÜÜ -ammonite/$file/`marked-SemiringBoolean`.Rexp#2E
+
+ÜÜ 5ammonite/$file/`marked-SemiringBoolean`.intern2().[C]2E
+
+ÜÜ 5ammonite/$file/`marked-SemiringBoolean`.intern2().[S]2E
+
+ÜÜ 5ammonite/$file/`marked-SemiringBoolean`.intern2().(r)2A
+
+Ü/Ü 71ammonite/$file/`marked-SemiringBoolean`.Semiring#2E
+
+Ü8Ü 95ammonite/$file/`marked-SemiringBoolean`.intern2().[S]2L
+
+Ü%Ü -<ammonite/$file/`marked-SemiringBoolean`.intern2().(semiring)2<
+
+Ü>Ü A,ammonite/$file/`marked-SemiringBoolean`.REG#2E
+
+ÜBÜ C5ammonite/$file/`marked-SemiringBoolean`.intern2().[C]2E
+
+ÜDÜ E5ammonite/$file/`marked-SemiringBoolean`.intern2().[S]2B
+
+ÜIÜ N2ammonite/$file/`marked-SemiringBoolean`.REG.BINIT.2A
+
+ÜOÜ U1ammonite/$file/`marked-SemiringBoolean`.intern().2E
+
+ÜVÜ W5ammonite/$file/`marked-SemiringBoolean`.intern2().(r)2B
+
+ÜÜ 2ammonite/$file/`marked-SemiringBoolean`.intern2().2E
+
+àà 5ammonite/$file/`marked-SemiringBoolean`.helperf().[S]2
+
+àà scala/Char#2E
+
+àà 5ammonite/$file/`marked-SemiringBoolean`.helperf().(c)2A
+
+à(à 01ammonite/$file/`marked-SemiringBoolean`.Semiring#2E
+
+à1à 25ammonite/$file/`marked-SemiringBoolean`.helperf().[S]2L
+
+àà &<ammonite/$file/`marked-SemiringBoolean`.helperf().(semiring)2
+
+à6à :scala/Char#2E
+
+à>à ?5ammonite/$file/`marked-SemiringBoolean`.helperf().[S]2
+
+ââ 
+scala/Char#2
+
+ââ local552
+
+ââ local552$
+
+ââ scala/Char#`==`(+2).2E
+
+ââ 5ammonite/$file/`marked-SemiringBoolean`.helperf().(c)2L
+
+ââ #<ammonite/$file/`marked-SemiringBoolean`.helperf().(semiring)2G
+
+â$â '7ammonite/$file/`marked-SemiringBoolean`.Semiring#one().2L
+
+â-â 5<ammonite/$file/`marked-SemiringBoolean`.helperf().(semiring)2H
+
+â6â :8ammonite/$file/`marked-SemiringBoolean`.Semiring#zero().2B
+
+àà 2ammonite/$file/`marked-SemiringBoolean`.helperf().2H
+
+èè 8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[C]2H
+
+èè 8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[S]2<
+
+èè ,ammonite/$file/`marked-SemiringBoolean`.REG#2H
+
+èè 8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[C]2H
+
+èè 8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[S]2I
+
+èè 9ammonite/$file/`marked-SemiringBoolean`.stripMarks().(re)2A
+
+è2è :1ammonite/$file/`marked-SemiringBoolean`.Semiring#2H
+
+è;è <8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[S]2O
+
+è(è 0?ammonite/$file/`marked-SemiringBoolean`.stripMarks().(semiring)2<
+
+è@è C,ammonite/$file/`marked-SemiringBoolean`.REG#2H
+
+èDè E8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[C]2H
+
+èFè G8ammonite/$file/`marked-SemiringBoolean`.stripMarks().[S]2I
+
+êê 9ammonite/$file/`marked-SemiringBoolean`.stripMarks().(re)2B
+
+ë	ë 2ammonite/$file/`marked-SemiringBoolean`.REG.BZERO.2B
+
+ë"ë '2ammonite/$file/`marked-SemiringBoolean`.REG.BZERO.2A
+
+í	í 1ammonite/$file/`marked-SemiringBoolean`.REG.BONE.2A
+
+í"í &1ammonite/$file/`marked-SemiringBoolean`.REG.BONE.2B
+
+ì	ì 2ammonite/$file/`marked-SemiringBoolean`.REG.BCHAR.2
+
+ìì local562B
+
+ì"ì '2ammonite/$file/`marked-SemiringBoolean`.REG.BCHAR.2O
+
+ì(ì 0?ammonite/$file/`marked-SemiringBoolean`.stripMarks().(semiring)2H
+
+ì1ì 58ammonite/$file/`marked-SemiringBoolean`.Semiring#zero().2
+
+ì7ì 8local562A
+
+î	î 1ammonite/$file/`marked-SemiringBoolean`.REG.BALT.2
+
+îî local572
+
+îî local582A
+
+î"î &1ammonite/$file/`marked-SemiringBoolean`.REG.BALT.2E
+
+î'î 15ammonite/$file/`marked-SemiringBoolean`.stripMarks().2
+
+î2î 4local572E
+
+î7î A5ammonite/$file/`marked-SemiringBoolean`.stripMarks().2
+
+îBî Dlocal582A
+
+ï	ï 1ammonite/$file/`marked-SemiringBoolean`.REG.BSEQ.2
+
+ïï local592
+
+ïï local602A
+
+ï"ï &1ammonite/$file/`marked-SemiringBoolean`.REG.BSEQ.2E
+
+ï'ï 15ammonite/$file/`marked-SemiringBoolean`.stripMarks().2
+
+ï2ï 4local592E
+
+ï7ï A5ammonite/$file/`marked-SemiringBoolean`.stripMarks().2
+
+ïBï Dlocal602B
+
+ñ	ñ 2ammonite/$file/`marked-SemiringBoolean`.REG.BSTAR.2
+
+ññ local612B
+
+ñ"ñ '2ammonite/$file/`marked-SemiringBoolean`.REG.BSTAR.2E
+
+ñ(ñ 25ammonite/$file/`marked-SemiringBoolean`.stripMarks().2
+
+ñ3ñ 4local612D
+
+ó	ó 4ammonite/$file/`marked-SemiringBoolean`.REG.BNTIMES.2
+
+óó local622
+
+óó local632
+
+óó local642D
+
+ó*ó 14ammonite/$file/`marked-SemiringBoolean`.REG.BNTIMES.2E
+
+ó2ó <5ammonite/$file/`marked-SemiringBoolean`.stripMarks().2
+
+ó=ó >local622
+
+óAó Blocal632
+
+óCó Jlocal642B
+
+ò	ò 2ammonite/$file/`marked-SemiringBoolean`.REG.BINIT.2
+
+òò local652B
+
+ò"ò '2ammonite/$file/`marked-SemiringBoolean`.REG.BINIT.2E
+
+ò(ò 25ammonite/$file/`marked-SemiringBoolean`.stripMarks().2
+
+ò3ò 4local652E
+
+èè 5ammonite/$file/`marked-SemiringBoolean`.stripMarks().2
+
+úú mainargs/main#2A
+
+ûû 1ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.2B
+
+ûû 2ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.2B
+
+ûû 2ammonite/$file/`marked-SemiringBoolean`.helperf().2A
+
+û&û )1ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.2B
+
+û*û .2ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.2B
+
+û/û 62ammonite/$file/`marked-SemiringBoolean`.helperf().2B
+
+û>û B2ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.2B
+
+ûCû J2ammonite/$file/`marked-SemiringBoolean`.helperf().2
+
+ûû local662B
+
+üü 2ammonite/$file/`marked-SemiringBoolean`.intern2().2
+
+üü local662
+
+üü local672:
+
+†† *scala/collection/IterableOnceOps#toList().2
+
+†† 	local682)
+
+°° scala/Predef.println(+1).2B
+
+°° 2ammonite/$file/`marked-SemiringBoolean`.matcher().2
+
+°° local672
+
+°° local682@
+
+ùù 	0ammonite/$file/`marked-SemiringBoolean`.test0().2F
+
+§§ 6ammonite/$file/`marked-SemiringBoolean`.myNtimes().[C]2F
+
+§§ 6ammonite/$file/`marked-SemiringBoolean`.myNtimes().[S]2<
+
+§§ ,ammonite/$file/`marked-SemiringBoolean`.REG#2F
+
+§§ 6ammonite/$file/`marked-SemiringBoolean`.myNtimes().[C]2F
+
+§§ 6ammonite/$file/`marked-SemiringBoolean`.myNtimes().[S]2F
+
+§§ 6ammonite/$file/`marked-SemiringBoolean`.myNtimes().(r)2<
+
+§"§ %,ammonite/$file/`marked-SemiringBoolean`.REG#2F
+
+§&§ '6ammonite/$file/`marked-SemiringBoolean`.myNtimes().[C]2F
+
+§)§ *6ammonite/$file/`marked-SemiringBoolean`.myNtimes().[S]2F
+
+§.§ /6ammonite/$file/`marked-SemiringBoolean`.myNtimes().(r)2D
+
+•	• 4ammonite/$file/`marked-SemiringBoolean`.REG.BNTIMES.2
+
+•• local692
+
+•• local702
+
+•• local702#
+
+•• !scala/Int#`<=`(+3).2A
+
+•'• +1ammonite/$file/`marked-SemiringBoolean`.REG.BONE.2D
+
+¶	¶ 4ammonite/$file/`marked-SemiringBoolean`.REG.BNTIMES.2
+
+¶¶ local712
+
+¶¶ local712D
+
+ß	ß 4ammonite/$file/`marked-SemiringBoolean`.REG.BNTIMES.2
+
+ßß local722
+
+ßß local732A
+
+ßß !1ammonite/$file/`marked-SemiringBoolean`.REG.BSEQ.2
+
+ß"ß #local722C
+
+ß%ß -3ammonite/$file/`marked-SemiringBoolean`.myNtimes().2D
+
+ß.ß 54ammonite/$file/`marked-SemiringBoolean`.REG.BNTIMES.2
+
+ß6ß 7local722
+
+ß9ß :local732"
+
+ß;ß <scala/Int#`-`(+3).2F
+
+®® 6ammonite/$file/`marked-SemiringBoolean`.myNtimes().(r)2C
+
+§§ 3ammonite/$file/`marked-SemiringBoolean`.myNtimes().2
+
+´´ mainargs/main#2
+
+ÆÆ 	local742B
+
+ØØ 2ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.2B
+
+ØØ 2ammonite/$file/`marked-SemiringBoolean`.helperf().2
+
+ØØ 	local752B
+
+∞∞ 2ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.2B
+
+∞∞ 2ammonite/$file/`marked-SemiringBoolean`.helperf().2
+
+∞∞ 	local762A
+
+±± 1ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.2D
+
+±± 4ammonite/$file/`marked-SemiringBoolean`.Rexp.NTIMES.2A
+
+±± 1ammonite/$file/`marked-SemiringBoolean`.Rexp.ALT.2
+
+±± local752A
+
+±± "1ammonite/$file/`marked-SemiringBoolean`.Rexp.ONE.2
+
+±'± (local742D
+
+±,± 24ammonite/$file/`marked-SemiringBoolean`.Rexp.NTIMES.2
+
+±3± 4local752
+
+±5± 6local742
+
+±± local772B
+
+¥¥ 2ammonite/$file/`marked-SemiringBoolean`.intern2().2
+
+¥¥ local772
+
+¥¥ local782A
+
+∂∂ 1ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.2A
+
+∂∂ 1ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.2A
+
+∂∂ 1ammonite/$file/`marked-SemiringBoolean`.Rexp.ALT.2
+
+∂∂ local752A
+
+∂∂ !1ammonite/$file/`marked-SemiringBoolean`.Rexp.ONE.2A
+
+∂%∂ (1ammonite/$file/`marked-SemiringBoolean`.Rexp.ALT.2
+
+∂)∂ *local752A
+
+∂+∂ .1ammonite/$file/`marked-SemiringBoolean`.Rexp.ONE.2A
+
+∂4∂ 71ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.2
+
+∂8∂ 9local752
+
+∂:∂ ;local752
+
+∂∂ local792B
+
+∑∑ 2ammonite/$file/`marked-SemiringBoolean`.intern2().2
+
+∑∑ "local792
+
+∑∑ local802:
+
+∫∫ *scala/collection/IterableOnceOps#toList().2
+
+∫∫ local812)
+
+ºº scala/Predef.println(+1).2(
+
+ºº scala/StringContext#s().2
+
+ºº !local812
+
+º,º -local742)
+
+ΩΩ scala/Predef.println(+1).2(
+
+ΩΩ scala/StringContext#s().2
+
+Ω5Ω =local782)
+
+ææ scala/Predef.println(+1).2B
+
+ææ 2ammonite/$file/`marked-SemiringBoolean`.matcher().2
+
+ææ local782
+
+ææ !local812)
+
+¿¿ scala/Predef.println(+1).2(
+
+¿¿ scala/StringContext#s().2
+
+¿5¿ ?local802)
+
+¡¡ scala/Predef.println(+1).2B
+
+¡¡ 2ammonite/$file/`marked-SemiringBoolean`.matcher().2
+
+¡¡ local802
+
+¡!¡ $local812)
+
+√√ scala/Predef.println(+1).2B
+
+≈≈ 2ammonite/$file/`marked-SemiringBoolean`.REG.BINIT.2D
 
 ≈≈ 4ammonite/$file/`marked-SemiringBoolean`.REG.BNTIMES.2A
 
-≈≈ %1ammonite/$file/`marked-SemiringBoolean`.intern().2
+≈≈ #1ammonite/$file/`marked-SemiringBoolean`.REG.BALT.2A
 
-≈&≈ 'local532
+≈%≈ +1ammonite/$file/`marked-SemiringBoolean`.intern().2
 
-≈)≈ *local542U
+≈,≈ -local752A
 
-≈+≈ 2Eammonite/$file/`marked-SemiringBoolean`.REG.BNTIMES.apply().(current)2A
+≈1≈ 51ammonite/$file/`marked-SemiringBoolean`.REG.BONE.2
 
-ææ 
-1ammonite/$file/`marked-SemiringBoolean`.intern().2E
+≈≈ local822)
 
-»» 5ammonite/$file/`marked-SemiringBoolean`.intern2().[C]2E
+∆∆ scala/Predef.println(+1).2B
 
-»» 5ammonite/$file/`marked-SemiringBoolean`.intern2().[S]2=
+∆∆ 2ammonite/$file/`marked-SemiringBoolean`.matcher().2
 
-»» -ammonite/$file/`marked-SemiringBoolean`.Rexp#2E
+∆∆ local822:
 
-»» 5ammonite/$file/`marked-SemiringBoolean`.intern2().[C]2E
+∆#∆ )*scala/collection/IterableOnceOps#toList().2B
 
-»» 5ammonite/$file/`marked-SemiringBoolean`.intern2().[S]2E
+»» 2ammonite/$file/`marked-SemiringBoolean`.REG.BINIT.2D
 
-»» 5ammonite/$file/`marked-SemiringBoolean`.intern2().(r)2A
+»» 4ammonite/$file/`marked-SemiringBoolean`.REG.BNTIMES.2A
 
-»/» 71ammonite/$file/`marked-SemiringBoolean`.Semiring#2E
+» » $1ammonite/$file/`marked-SemiringBoolean`.REG.BSEQ.2A
 
-»8» 95ammonite/$file/`marked-SemiringBoolean`.intern2().[S]2L
+»&» ,1ammonite/$file/`marked-SemiringBoolean`.intern().2
 
-»%» -<ammonite/$file/`marked-SemiringBoolean`.intern2().(semiring)2<
+»-» .local752A
 
-»>» A,ammonite/$file/`marked-SemiringBoolean`.REG#2E
+»2» 81ammonite/$file/`marked-SemiringBoolean`.intern().2
 
-»B» C5ammonite/$file/`marked-SemiringBoolean`.intern2().[C]2E
+»9» :local752
 
-»D» E5ammonite/$file/`marked-SemiringBoolean`.intern2().[S]2B
+»» local832)
 
-»I» N2ammonite/$file/`marked-SemiringBoolean`.REG.BINIT.2A
+…… scala/Predef.println(+1).2B
 
-»O» U1ammonite/$file/`marked-SemiringBoolean`.intern().2E
+…… 2ammonite/$file/`marked-SemiringBoolean`.matcher().2
 
-»V» W5ammonite/$file/`marked-SemiringBoolean`.intern2().(r)2B
+…… local822:
 
-»» 2ammonite/$file/`marked-SemiringBoolean`.intern2().2E
+…#… )*scala/collection/IterableOnceOps#toList().2A
 
-   5ammonite/$file/`marked-SemiringBoolean`.helperf().[S]2
-
-   scala/Char#2E
-
-   5ammonite/$file/`marked-SemiringBoolean`.helperf().(c)2A
-
- (  01ammonite/$file/`marked-SemiringBoolean`.Semiring#2E
-
- 1  25ammonite/$file/`marked-SemiringBoolean`.helperf().[S]2L
-
-   &<ammonite/$file/`marked-SemiringBoolean`.helperf().(semiring)2
-
- 6  :scala/Char#2E
-
- >  ?5ammonite/$file/`marked-SemiringBoolean`.helperf().[S]2
-
-ÀÀ 
-scala/Char#2
-
-ÀÀ local552
-
-ÀÀ local552$
-
-ÀÀ scala/Char#`==`(+2).2E
-
-ÀÀ 5ammonite/$file/`marked-SemiringBoolean`.helperf().(c)2L
-
-ÀÀ #<ammonite/$file/`marked-SemiringBoolean`.helperf().(semiring)2G
-
-À$À '7ammonite/$file/`marked-SemiringBoolean`.Semiring#one().2L
-
-À-À 5<ammonite/$file/`marked-SemiringBoolean`.helperf().(semiring)2H
-
-À6À :8ammonite/$file/`marked-SemiringBoolean`.Semiring#zero().2B
-
-   2ammonite/$file/`marked-SemiringBoolean`.helperf().2
-
-““ mainargs/main#2A
-
-‘‘ 1ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.2B
-
-‘‘ 2ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.2B
-
-‘‘ 2ammonite/$file/`marked-SemiringBoolean`.helperf().2A
-
-‘&‘ )1ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.2B
-
-‘*‘ .2ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.2B
-
-‘/‘ 62ammonite/$file/`marked-SemiringBoolean`.helperf().2B
-
-‘>‘ B2ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.2B
-
-‘C‘ J2ammonite/$file/`marked-SemiringBoolean`.helperf().2
-
-‘‘ local562B
-
-’’ 2ammonite/$file/`marked-SemiringBoolean`.intern2().2
-
-’’ local562
-
-’’ local572:
-
-÷÷ *scala/collection/IterableOnceOps#toList().2
-
-÷÷ 	local582)
-
-◊◊ scala/Predef.println(+1).2B
-
-◊◊ 2ammonite/$file/`marked-SemiringBoolean`.matcher().2
-
-◊◊ local572
-
-◊◊ local582@
-
-”” 	0ammonite/$file/`marked-SemiringBoolean`.test0().2F
-
-⁄⁄ 6ammonite/$file/`marked-SemiringBoolean`.myNtimes().[C]2F
-
-⁄⁄ 6ammonite/$file/`marked-SemiringBoolean`.myNtimes().[S]2<
-
-⁄⁄ ,ammonite/$file/`marked-SemiringBoolean`.REG#2F
-
-⁄⁄ 6ammonite/$file/`marked-SemiringBoolean`.myNtimes().[C]2F
-
-⁄⁄ 6ammonite/$file/`marked-SemiringBoolean`.myNtimes().[S]2F
-
-⁄⁄ 6ammonite/$file/`marked-SemiringBoolean`.myNtimes().(r)2<
-
-⁄"⁄ %,ammonite/$file/`marked-SemiringBoolean`.REG#2F
-
-⁄&⁄ '6ammonite/$file/`marked-SemiringBoolean`.myNtimes().[C]2F
-
-⁄)⁄ *6ammonite/$file/`marked-SemiringBoolean`.myNtimes().[S]2F
-
-⁄.⁄ /6ammonite/$file/`marked-SemiringBoolean`.myNtimes().(r)2D
-
-€	€ 4ammonite/$file/`marked-SemiringBoolean`.REG.BNTIMES.2
-
-€€ local592
-
-€€ local602
-
-€€ local602#
-
-€€ !scala/Int#`<=`(+3).2A
-
-€'€ +1ammonite/$file/`marked-SemiringBoolean`.REG.BONE.2D
-
-‹	‹ 4ammonite/$file/`marked-SemiringBoolean`.REG.BNTIMES.2
-
-‹‹ local612
-
-‹‹ local612D
-
-›	› 4ammonite/$file/`marked-SemiringBoolean`.REG.BNTIMES.2
-
-›› local622
-
-›› local632A
-
-›› !1ammonite/$file/`marked-SemiringBoolean`.REG.BSEQ.2
-
-›"› #local622C
-
-›%› -3ammonite/$file/`marked-SemiringBoolean`.myNtimes().2D
-
-›.› 54ammonite/$file/`marked-SemiringBoolean`.REG.BNTIMES.2
-
-›6› 7local622
-
-›9› :local632"
-
-›;› <scala/Int#`-`(+3).2F
-
-ﬁﬁ 6ammonite/$file/`marked-SemiringBoolean`.myNtimes().(r)2C
-
-⁄⁄ 3ammonite/$file/`marked-SemiringBoolean`.myNtimes().2
-
-·· mainargs/main#2
-
-„„ local642B
-
-‰‰ 2ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.2B
-
-‰‰ 2ammonite/$file/`marked-SemiringBoolean`.helperf().2
-
-‰‰ 	local652B
-
-ÂÂ 2ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.2B
-
-ÂÂ 2ammonite/$file/`marked-SemiringBoolean`.helperf().2
-
-ÂÂ 	local662D
-
-ÊÊ 4ammonite/$file/`marked-SemiringBoolean`.Rexp.NTIMES.2A
-
-ÊÊ 1ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.2
-
-ÊÊ local652
-
-ÊÊ local662
-
-ÊÊ  local642
-
-ÊÊ local672B
-
-ËË 2ammonite/$file/`marked-SemiringBoolean`.REG.BINIT.2C
-
-ËË $3ammonite/$file/`marked-SemiringBoolean`.myNtimes().2A
-
-Ë%Ë +1ammonite/$file/`marked-SemiringBoolean`.intern().2
-
-Ë,Ë 0local672
-
-ËË local682B
-
-ÈÈ 2ammonite/$file/`marked-SemiringBoolean`.intern2().2
-
-ÈÈ local672
-
-ÈÈ local692:
-
-ÍÍ *scala/collection/IterableOnceOps#toList().2
-
-ÍÍ local702)
-
-ÎÎ scala/Predef.println(+1).2(
-
-ÎÎ scala/StringContext#s().2
-
-Î Î #local702
-
-Î.Î /local642)
-
-ÌÌ scala/Predef.println(+1).2B
-
-ÌÌ 2ammonite/$file/`marked-SemiringBoolean`.matcher().2
-
-ÌÌ !local682
-
-Ì#Ì &local702)
-
-ÓÓ scala/Predef.println(+1).2)
-
- scala/Predef.println(+1).2B
-
- 2ammonite/$file/`marked-SemiringBoolean`.matcher().2
-
- local692
-
-  local702)
-
-ÒÒ scala/Predef.println(+1).2)
-
-ˆˆ scala/Predef.println(+1).2:
-
-˘˘ *scala/collection/IterableOnceOps#toList().2
-
-˘˘ 	local712B
-
-˙˙ 2ammonite/$file/`marked-SemiringBoolean`.intern2().2@
-
-˙˙ 0ammonite/$file/`marked-SemiringBoolean`.EVIL1().2
-
-˙˙ local722)
-
-˚˚ scala/Predef.println(+1).2(
-
-˚˚ scala/StringContext#s().2
-
-˚˚ &local722)
-
-¸¸ scala/Predef.println(+1).2B
-
-¸¸ 2ammonite/$file/`marked-SemiringBoolean`.matcher().2
-
-¸¸ local722
-
-¸¸ local712)
-
-˝˝ scala/Predef.println(+1).2A
-
-˛˛ 1ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.2A
-
-˛˛ 1ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.2A
-
-˛˛ 1ammonite/$file/`marked-SemiringBoolean`.Rexp.ALT.2B
-
-˛˛  2ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.2B
-
-˛!˛ (2ammonite/$file/`marked-SemiringBoolean`.helperf().2A
-
-˛/˛ 21ammonite/$file/`marked-SemiringBoolean`.Rexp.ONE.2A
-
-˛6˛ 91ammonite/$file/`marked-SemiringBoolean`.Rexp.ALT.2B
-
-˛:˛ >2ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.2B
-
-˛?˛ F2ammonite/$file/`marked-SemiringBoolean`.helperf().2A
-
-˛M˛ P1ammonite/$file/`marked-SemiringBoolean`.Rexp.ONE.2A
-
-˛X˛ [1ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.2B
-
-˛\˛ `2ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.2B
-
-˛a˛ h2ammonite/$file/`marked-SemiringBoolean`.helperf().2B
-
-˛p˛ t2ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.2B
-
-˛u˛ |2ammonite/$file/`marked-SemiringBoolean`.helperf().2
-
-˛˛ local732)
-
-ˇˇ scala/Predef.println(+1).2B
-
-ˇˇ 2ammonite/$file/`marked-SemiringBoolean`.matcher().2B
-
-ˇˇ 2ammonite/$file/`marked-SemiringBoolean`.intern2().2
-
-ˇˇ #local732
-
-ˇ%ˇ &local712A
-
-‚‚ 
+¨¨ 
 1ammonite/$file/`marked-SemiringBoolean`.test01().2
 
-ÑÑ 
+‡‡ 
 scala/Int#2C
 
-Ñ
-Ñ 3ammonite/$file/`marked-SemiringBoolean`.EVIL1().(n)2A
+‡
+‡ 3ammonite/$file/`marked-SemiringBoolean`.EVIL1().(n)2A
 
-ÖÖ 1ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.2D
+·· 1ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.2D
 
-ÖÖ 4ammonite/$file/`marked-SemiringBoolean`.Rexp.NTIMES.2>
+·· 4ammonite/$file/`marked-SemiringBoolean`.Rexp.NTIMES.2>
 
-ÖÖ .ammonite/$file/`marked-SemiringBoolean`.OPT().2B
+·· .ammonite/$file/`marked-SemiringBoolean`.OPT().2B
 
-ÖÖ 2ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.2B
+·· 2ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.2B
 
-ÖÖ 2ammonite/$file/`marked-SemiringBoolean`.helperf().2C
+·· 2ammonite/$file/`marked-SemiringBoolean`.helperf().2C
 
-Ö&Ö '3ammonite/$file/`marked-SemiringBoolean`.EVIL1().(n)2D
+·&· '3ammonite/$file/`marked-SemiringBoolean`.EVIL1().(n)2D
 
-Ö*Ö 04ammonite/$file/`marked-SemiringBoolean`.Rexp.NTIMES.2B
+·*· 04ammonite/$file/`marked-SemiringBoolean`.Rexp.NTIMES.2B
 
-Ö1Ö 52ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.2B
+·1· 52ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.2B
 
-Ö6Ö =2ammonite/$file/`marked-SemiringBoolean`.helperf().2C
+·6· =2ammonite/$file/`marked-SemiringBoolean`.helperf().2C
 
-ÖEÖ F3ammonite/$file/`marked-SemiringBoolean`.EVIL1().(n)2@
+·E· F3ammonite/$file/`marked-SemiringBoolean`.EVIL1().(n)2@
 
-ÑÑ 	0ammonite/$file/`marked-SemiringBoolean`.EVIL1().2A
+‡‡ 	0ammonite/$file/`marked-SemiringBoolean`.EVIL1().2A
 
-áá 1ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.2B
+„„ 1ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.2B
 
-áá 2ammonite/$file/`marked-SemiringBoolean`.Rexp.STAR.2B
+„„ 2ammonite/$file/`marked-SemiringBoolean`.Rexp.STAR.2B
 
-áá 2ammonite/$file/`marked-SemiringBoolean`.Rexp.STAR.2B
+„„ 2ammonite/$file/`marked-SemiringBoolean`.Rexp.STAR.2B
 
-áá 2ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.2B
+„„ 2ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.2B
 
-áá &2ammonite/$file/`marked-SemiringBoolean`.helperf().2B
+„„ &2ammonite/$file/`marked-SemiringBoolean`.helperf().2B
 
-á0á 42ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.2B
+„0„ 42ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.2B
 
-á5á <2ammonite/$file/`marked-SemiringBoolean`.helperf().2>
+„5„ <2ammonite/$file/`marked-SemiringBoolean`.helperf().2>
 
-áá 	.ammonite/$file/`marked-SemiringBoolean`.EVIL2.2I
+„„ 	.ammonite/$file/`marked-SemiringBoolean`.EVIL2.2I
 
-ââ 9ammonite/$file/`marked-SemiringBoolean`.time_needed().[T]2
+ÂÂ 9ammonite/$file/`marked-SemiringBoolean`.time_needed().[T]2
 
-ââ 
+ÂÂ 
 scala/Int#2I
 
-ââ 9ammonite/$file/`marked-SemiringBoolean`.time_needed().(i)2I
+ÂÂ 9ammonite/$file/`marked-SemiringBoolean`.time_needed().(i)2I
 
-â$â %9ammonite/$file/`marked-SemiringBoolean`.time_needed().[T]2L
+Â$Â %9ammonite/$file/`marked-SemiringBoolean`.time_needed().[T]2L
 
-ââ <ammonite/$file/`marked-SemiringBoolean`.time_needed().(code)2!
+ÂÂ <ammonite/$file/`marked-SemiringBoolean`.time_needed().(code)2!
 
-ää java/lang/System#2,
+ÊÊ java/lang/System#2,
 
-ää java/lang/System#nanoTime().2
+ÊÊ java/lang/System#nanoTime().2
 
-ää local742+
+ÊÊ local842+
 
-ãã scala/runtime/RichInt#to().2I
+ÁÁ scala/runtime/RichInt#to().2I
 
-ãã 9ammonite/$file/`marked-SemiringBoolean`.time_needed().(i)2
+ÁÁ 9ammonite/$file/`marked-SemiringBoolean`.time_needed().(i)2
 
-ãã local752L
+ÁÁ local852L
 
-ãã <ammonite/$file/`marked-SemiringBoolean`.time_needed().(code)2!
+ÁÁ <ammonite/$file/`marked-SemiringBoolean`.time_needed().(code)2!
 
-åå java/lang/System#2,
+ËË java/lang/System#2,
 
-åå java/lang/System#nanoTime().2
+ËË java/lang/System#nanoTime().2
 
-åå 	local762
+ËË 	local862
 
-çç local762#
+ÈÈ local862#
 
-çç scala/Long#`-`(+4).2
+ÈÈ scala/Long#`-`(+4).2
 
-ç	ç local742#
+È	È local842#
 
-çç scala/Long#`/`(+6).2I
+ÈÈ scala/Long#`/`(+6).2I
 
-çç 9ammonite/$file/`marked-SemiringBoolean`.time_needed().(i)2"
+ÈÈ 9ammonite/$file/`marked-SemiringBoolean`.time_needed().(i)2"
 
-çç scala/Int#`*`(+6).2F
+ÈÈ scala/Int#`*`(+6).2F
 
-ââ 6ammonite/$file/`marked-SemiringBoolean`.time_needed().2
+ÂÂ 6ammonite/$file/`marked-SemiringBoolean`.time_needed().2
 
-ëë mainargs/main#2+
+ÌÌ mainargs/main#2+
 
-ìì scala/runtime/RichInt#to().26
+ÔÔ scala/runtime/RichInt#to().26
 
-ìì &scala/collection/immutable/Range#by().2
+ÔÔ &scala/collection/immutable/Range#by().2
 
-ìì local772)
+ÔÔ local872)
 
-îî scala/Predef.println(+1).2(
+ scala/Predef.println(+1).2(
 
-îî scala/StringContext#f().2
+ scala/StringContext#f().2
 
-îî local772F
+ local872F
 
-îî 6ammonite/$file/`marked-SemiringBoolean`.time_needed().2B
+ 6ammonite/$file/`marked-SemiringBoolean`.time_needed().2B
 
-î#î *2ammonite/$file/`marked-SemiringBoolean`.matcher().2B
+# *2ammonite/$file/`marked-SemiringBoolean`.matcher().2B
 
-î+î 22ammonite/$file/`marked-SemiringBoolean`.intern2().2@
++ 22ammonite/$file/`marked-SemiringBoolean`.intern2().2@
 
-î3î 80ammonite/$file/`marked-SemiringBoolean`.EVIL1().2
+3 80ammonite/$file/`marked-SemiringBoolean`.EVIL1().2
 
-î9î :local7721
+9 :local8721
 
-îCî D!scala/collection/StringOps#`*`().2
+C D!scala/collection/StringOps#`*`().2
 
-îEî Flocal772:
+E Flocal872:
 
-îIî O*scala/collection/IterableOnceOps#toList().2@
+I O*scala/collection/IterableOnceOps#toList().2@
 
-íí 	0ammonite/$file/`marked-SemiringBoolean`.test1().2
+ÓÓ 	0ammonite/$file/`marked-SemiringBoolean`.test1().2
 
-òò mainargs/main#2+
+ÙÙ mainargs/main#2+
 
-öö scala/runtime/RichInt#to().26
+ˆˆ scala/runtime/RichInt#to().26
 
-öö &scala/collection/immutable/Range#by().2
+ˆˆ &scala/collection/immutable/Range#by().2
 
-öö local782)
+ˆˆ local882)
 
-õõ scala/Predef.println(+1).2(
+˜˜ scala/Predef.println(+1).2(
 
-õõ scala/StringContext#f().2
+˜˜ scala/StringContext#f().2
 
-õõ local782F
+˜˜ local882F
 
-õõ 6ammonite/$file/`marked-SemiringBoolean`.time_needed().2B
+˜˜ 6ammonite/$file/`marked-SemiringBoolean`.time_needed().2B
 
-õ#õ *2ammonite/$file/`marked-SemiringBoolean`.matcher().2B
+˜#˜ *2ammonite/$file/`marked-SemiringBoolean`.matcher().2B
 
-õ+õ 22ammonite/$file/`marked-SemiringBoolean`.intern2().2>
+˜+˜ 22ammonite/$file/`marked-SemiringBoolean`.intern2().2>
 
-õ3õ 8.ammonite/$file/`marked-SemiringBoolean`.EVIL2.21
+˜3˜ 8.ammonite/$file/`marked-SemiringBoolean`.EVIL2.21
 
-õ@õ A!scala/collection/StringOps#`*`().2
+˜@˜ A!scala/collection/StringOps#`*`().2
 
-õBõ Clocal782:
+˜B˜ Clocal882:
 
-õEõ K*scala/collection/IterableOnceOps#toList().2@
+˜E˜ K*scala/collection/IterableOnceOps#toList().2@
 
-ôô 	0ammonite/$file/`marked-SemiringBoolean`.test2().2
+ıı 	0ammonite/$file/`marked-SemiringBoolean`.test2().2
 
-ûû mainargs/main#2@
+˙˙ mainargs/main#2@
 
-üü 0ammonite/$file/`marked-SemiringBoolean`.test1().2@
+˚˚ 0ammonite/$file/`marked-SemiringBoolean`.test1().2@
 
-üü 0ammonite/$file/`marked-SemiringBoolean`.test2().2>
+˚˚ 0ammonite/$file/`marked-SemiringBoolean`.test2().2>
 
-üü .ammonite/$file/`marked-SemiringBoolean`.all().PZ dee6c45a46e0ddab5a6a0a88a36e293ab_
+˚˚ .ammonite/$file/`marked-SemiringBoolean`.all().PZ f7f262b8e166cf84f2cd93c76ead4542b_
 0%0 1S
 Q
 2
@@ -3650,23 +3605,23 @@ L
 
 ;0; 7<:
 8ammonite/$file/`marked-SemiringBoolean`.fin().(semiring)bZ
-<4< ;N
+<3< :N
 L
 2
 
-<4< ;<:
+<3< :<:
 8ammonite/$file/`marked-SemiringBoolean`.fin().(semiring)bZ
-<<< HN
+<;< GN
 L
 2
 
-<<< H<:
+<;< G<:
 8ammonite/$file/`marked-SemiringBoolean`.fin().(semiring)bZ
-<J< QN
+<I< PN
 L
 2
 
-<J< Q<:
+<I< P<:
 8ammonite/$file/`marked-SemiringBoolean`.fin().(semiring)bZ
 == N
 L
@@ -3674,829 +3629,871 @@ L
 
 == <:
 8ammonite/$file/`marked-SemiringBoolean`.fin().(semiring)bZ
->$> /N
+?? N
 L
 2
 
->$> /<:
+?? <:
 8ammonite/$file/`marked-SemiringBoolean`.fin().(semiring)bZ
-AA 
-N
+@@  N
 L
 2
 
-AA 
-<:
+@@  <:
 8ammonite/$file/`marked-SemiringBoolean`.fin().(semiring)b\
-K K 2P
+H H 2P
 N
 2
 
-K K 2><
+H H 2><
 :ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)b\
-K4K FP
+H4H FP
 N
 2
 
-K4K F><
+H4H F><
 :ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)b\
-MM P
+JJ P
 N
 2
 
-MM ><
+JJ ><
 :ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)b\
-N6N BP
+K6K BP
 N
 2
 
-N6N B><
+K6K B><
 :ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)b\
-NEN LP
+KEK LP
 N
 2
 
-NEN L><
+KEK L><
 :ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)b\
-NN UP
+KK UP
 N
 2
 
-NN U><
+KK U><
 :ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)b\
-O7O =P
+L7L =P
 N
 2
 
-O7O =><
+L7L =><
 :ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)b\
-OO EP
+LL EP
 N
 2
 
-OO E><
+LL E><
 :ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)b\
-U7U =P
+N5N ;P
 N
 2
 
-U7U =><
+N5N ;><
 :ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)b\
-UU EP
+NN CP
 N
 2
 
-UU E><
+NN C><
 :ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)b\
-WW P
+OO P
 N
 2
 
-WW ><
-:ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)b`
-
-ññ 0R
-P
-2
-
-ññ 0><
-:ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)b^
-
-™™ .P
+OO ><
+:ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)b\
+TT 0P
 N
-2
+2
 
-™™ .<:
+TT 0><
+:ammonite/$file/`marked-SemiringBoolean`.shift().(semiring)bZ
+hh .N
+L
+2
+
+hh .<:
+8ammonite/$file/`marked-SemiringBoolean`.mat().(semiring)bZ
+hh 3N
+L
+2
+
+hh 3<:
 8ammonite/$file/`marked-SemiringBoolean`.mat().(semiring)b^
+ll R
+P
+2
 
-™™ 3P
-N
-2
+ll @>
+<ammonite/$file/`marked-SemiringBoolean`.matcher().(semiring)b^
+nn R
+P
+2
 
-™™ 3<:
-8ammonite/$file/`marked-SemiringBoolean`.mat().(semiring)bb
+nn @>
+<ammonite/$file/`marked-SemiringBoolean`.matcher().(semiring)b^
+oo R
+P
+2
 
-ÆÆ T
-R
-2
+oo @>
+<ammonite/$file/`marked-SemiringBoolean`.matcher().(semiring)ba
+uu =U
+S
+2
 
-ÆÆ @>
-<ammonite/$file/`marked-SemiringBoolean`.matcher().(semiring)bb
+uu =CA
+?ammonite/$file/`marked-SemiringBoolean`.submatcher().(semiring)ba
+ww U
+S
+2
 
-∞∞ T
-R
-2
-
-∞∞ @>
-<ammonite/$file/`marked-SemiringBoolean`.matcher().(semiring)bb
-
-±± T
-R
-2
-
-±± @>
-<ammonite/$file/`marked-SemiringBoolean`.matcher().(semiring)be
-
-∑∑ =W
-U
-2
-
-∑∑ =CA
-?ammonite/$file/`marked-SemiringBoolean`.submatcher().(semiring)be
-
-ππ W
-U
-2
-
-ππ CA
+ww CA
 ?ammonite/$file/`marked-SemiringBoolean`.submatcher().(semiring)ba
 
-¬¬ %S
+ÄÄ %S
 Q
 2
 
-¬¬ %?=
+ÄÄ %?=
 ;ammonite/$file/`marked-SemiringBoolean`.intern().(semiring)ba
 
-¬'¬ 1S
+Ä'Ä 1S
 Q
 2
 
-¬'¬ 1?=
+Ä'Ä 1?=
 ;ammonite/$file/`marked-SemiringBoolean`.intern().(semiring)ba
 
-√√ %S
+ÅÅ %S
 Q
 2
 
-√√ %?=
+ÅÅ %?=
 ;ammonite/$file/`marked-SemiringBoolean`.intern().(semiring)ba
 
-√'√ 1S
+Å'Å 1S
 Q
 2
 
-√'√ 1?=
+Å'Å 1?=
 ;ammonite/$file/`marked-SemiringBoolean`.intern().(semiring)ba
 
-ƒƒ !S
+ÇÇ !S
 Q
 2
 
-ƒƒ !?=
+ÇÇ !?=
 ;ammonite/$file/`marked-SemiringBoolean`.intern().(semiring)ba
 
-≈≈ (S
+ÉÉ (S
 Q
 2
 
-≈≈ (?=
+ÉÉ (?=
 ;ammonite/$file/`marked-SemiringBoolean`.intern().(semiring)bb
 
-»O» XT
+ÜOÜ XT
 R
 2
 
-»O» X@>
-<ammonite/$file/`marked-SemiringBoolean`.intern2().(semiring)bÜ
+ÜOÜ X@>
+<ammonite/$file/`marked-SemiringBoolean`.intern2().(semiring)be
 
-‘‘ xBv
+î'î 5W
+U
+2
+
+î'î 5CA
+?ammonite/$file/`marked-SemiringBoolean`.stripMarks().(semiring)be
+
+î7î EW
+U
+2
+
+î7î ECA
+?ammonite/$file/`marked-SemiringBoolean`.stripMarks().(semiring)be
+
+ï'ï 5W
+U
+2
+
+ï'ï 5CA
+?ammonite/$file/`marked-SemiringBoolean`.stripMarks().(semiring)be
+
+ï7ï EW
+U
+2
+
+ï7ï ECA
+?ammonite/$file/`marked-SemiringBoolean`.stripMarks().(semiring)be
+
+ñ(ñ 5W
+U
+2
+
+ñ(ñ 5CA
+?ammonite/$file/`marked-SemiringBoolean`.stripMarks().(semiring)be
+
+ó2ó ?W
+U
+2
+
+ó2ó ?CA
+?ammonite/$file/`marked-SemiringBoolean`.stripMarks().(semiring)be
+
+ò(ò 5W
+U
+2
+
+ò(ò 5CA
+?ammonite/$file/`marked-SemiringBoolean`.stripMarks().(semiring)bÜ
+
+ûû xBv
 O:M
 2
 
-‘‘ ;
+ûû ;
 9ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.apply().scala/Char#scala/Boolean#bá
 
-‘‘ yBw
+ûû yBw
 P:N
 2
 
-‘‘ <
+ûû <
 :ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.apply().scala/Char#scala/Boolean#b4
 
-‘‘ &B$
+ûû &B$
 2
 
-‘‘ scala/Boolean#b^
+ûû scala/Boolean#b^
 
-‘‘ #P
+ûû #P
 N
 2
 
-‘‘ #<:
+ûû #<:
 8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bÜ
 
-‘&‘ )xBv
+û&û )xBv
 O:M
 2
 
-‘&‘ );
+û&û );
 9ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.apply().scala/Char#scala/Boolean#bá
 
-‘*‘ .yBw
+û*û .yBw
 P:N
 2
 
-‘*‘ .<
+û*û .<
 :ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.apply().scala/Char#scala/Boolean#b4
 
-‘/‘ 6&B$
+û/û 6&B$
 2
 
-‘/‘ 6scala/Boolean#b^
+û/û 6scala/Boolean#b^
 
-‘/‘ ;P
+û/û ;P
 N
 2
 
-‘/‘ ;<:
+û/û ;<:
 8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bá
 
-‘>‘ ByBw
+û>û ByBw
 P:N
 2
 
-‘>‘ B<
+û>û B<
 :ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.apply().scala/Char#scala/Boolean#b4
 
-‘C‘ J&B$
+ûCû J&B$
 2
 
-‘C‘ Jscala/Boolean#b^
+ûCû Jscala/Boolean#b^
 
-‘C‘ OP
+ûCû OP
 N
 2
 
-‘C‘ O<:
+ûCû O<:
 8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bE
 
-’’ 7B5
+üü 7B5
 2
 
-’’ scala/Char#scala/Boolean#b^
+üü scala/Char#scala/Boolean#b^
 
-’’ P
+üü P
 N
 2
 
-’’ <:
+üü <:
 8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bN
 
-÷÷ @
+†† @
 >
 ,*
 (scala/LowPriorityImplicits#wrapString().2
 
-÷÷ bE
+†† bE
 
-◊◊ 7B5
+°° 7B5
 2
 
-◊◊ scala/Char#scala/Boolean#b^
+°° scala/Char#scala/Boolean#b^
 
-◊◊ P
+°° P
 N
 2
 
-◊◊ <:
+°° <:
 8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bá
 
-‰‰ yBw
+ØØ yBw
 P:N
 2
 
-‰‰ <
+ØØ <
 :ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.apply().scala/Char#scala/Boolean#b4
 
-‰‰ &B$
+ØØ &B$
 2
 
-‰‰ scala/Boolean#b^
+ØØ scala/Boolean#b^
 
-‰‰ P
+ØØ P
 N
 2
 
-‰‰ <:
+ØØ <:
 8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bá
 
-ÂÂ yBw
+∞∞ yBw
 P:N
 2
 
-ÂÂ <
+∞∞ <
 :ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.apply().scala/Char#scala/Boolean#b4
 
-ÂÂ &B$
+∞∞ &B$
 2
 
-ÂÂ scala/Boolean#b^
+∞∞ scala/Boolean#b^
 
-ÂÂ P
+∞∞ P
 N
 2
 
-ÂÂ <:
-8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bâ
-
-ÊÊ {By
-R:P
-2
-
-ÊÊ >
-<ammonite/$file/`marked-SemiringBoolean`.Rexp.NTIMES.apply().scala/Char#scala/Boolean#bÜ
-
-ÊÊ xBv
-O:M
-2
-
-ÊÊ ;
-9ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.apply().scala/Char#scala/Boolean#bá
-
-ËË yBw
-P:N
-2
-
-ËË <
-:ammonite/$file/`marked-SemiringBoolean`.REG.BINIT.apply().scala/Char#scala/Boolean#bE
-
-ËË $7B5
-2
-
-ËË $scala/Char#scala/Boolean#bE
-
-Ë%Ë +7B5
-2
-
-Ë%Ë +scala/Char#scala/Boolean#b^
-
-Ë%Ë 1P
-N
-2
-
-Ë%Ë 1<:
-8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bE
-
-ÈÈ 7B5
-2
-
-ÈÈ scala/Char#scala/Boolean#b^
-
-ÈÈ P
-N
-2
-
-ÈÈ <:
-8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bN
-
-ÍÍ @
->
-,*
-(scala/LowPriorityImplicits#wrapString().2
-
-ÍÍ bE
-
-ÌÌ 7B5
-2
-
-ÌÌ scala/Char#scala/Boolean#b^
-
-ÌÌ 'P
-N
-2
-
-ÌÌ '<:
-8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bE
-
- 7B5
-2
-
- scala/Char#scala/Boolean#b^
-
- !P
-N
-2
-
- !<:
-8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bN
-
-˘˘ @
->
-,*
-(scala/LowPriorityImplicits#wrapString().2
-
-˘˘ bE
-
-˙˙ 7B5
-2
-
-˙˙ scala/Char#scala/Boolean#b^
-
-˙˙ "P
-N
-2
-
-˙˙ "<:
-8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bE
-
-¸¸ 7B5
-2
-
-¸¸ scala/Char#scala/Boolean#b^
-
-¸¸ P
-N
-2
-
-¸¸ <:
+∞∞ <:
 8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bÜ
 
-˛˛ xBv
+±± xBv
 O:M
 2
 
-˛˛ ;
-9ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.apply().scala/Char#scala/Boolean#bÜ
-
-˛˛ xBv
-O:M
-2
-
-˛˛ ;
-9ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.apply().scala/Char#scala/Boolean#bÜ
-
-˛˛ xBv
-O:M
-2
-
-˛˛ ;
-9ammonite/$file/`marked-SemiringBoolean`.Rexp.ALT.apply().scala/Char#scala/Boolean#bá
-
-˛˛  yBw
-P:N
-2
-
-˛˛  <
-:ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.apply().scala/Char#scala/Boolean#b4
-
-˛!˛ (&B$
-2
-
-˛!˛ (scala/Boolean#b^
-
-˛!˛ -P
-N
-2
-
-˛!˛ -<:
-8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bÜ
-
-˛/˛ 2xBv
-O:M
-2
-
-˛/˛ 2;
-9ammonite/$file/`marked-SemiringBoolean`.Rexp.ONE.apply().scala/Char#scala/Boolean#bÜ
-
-˛6˛ 9xBv
-O:M
-2
-
-˛6˛ 9;
-9ammonite/$file/`marked-SemiringBoolean`.Rexp.ALT.apply().scala/Char#scala/Boolean#bá
-
-˛:˛ >yBw
-P:N
-2
-
-˛:˛ ><
-:ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.apply().scala/Char#scala/Boolean#b4
-
-˛?˛ F&B$
-2
-
-˛?˛ Fscala/Boolean#b^
-
-˛?˛ KP
-N
-2
-
-˛?˛ K<:
-8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bÜ
-
-˛M˛ PxBv
-O:M
-2
-
-˛M˛ P;
-9ammonite/$file/`marked-SemiringBoolean`.Rexp.ONE.apply().scala/Char#scala/Boolean#bÜ
-
-˛X˛ [xBv
-O:M
-2
-
-˛X˛ [;
-9ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.apply().scala/Char#scala/Boolean#bá
-
-˛\˛ `yBw
-P:N
-2
-
-˛\˛ `<
-:ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.apply().scala/Char#scala/Boolean#b4
-
-˛a˛ h&B$
-2
-
-˛a˛ hscala/Boolean#b^
-
-˛a˛ mP
-N
-2
-
-˛a˛ m<:
-8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bá
-
-˛p˛ tyBw
-P:N
-2
-
-˛p˛ t<
-:ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.apply().scala/Char#scala/Boolean#b4
-
-˛u˛ |&B$
-2
-
-˛u˛ |scala/Boolean#b`
-˛u˛ ÅQ
-O
-2
-˛u˛ Å<:
-8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bE
-
-ˇˇ 7B5
-2
-
-ˇˇ scala/Char#scala/Boolean#bE
-
-ˇˇ 7B5
-2
-
-ˇˇ scala/Char#scala/Boolean#b^
-
-ˇˇ $P
-N
-2
-
-ˇˇ $<:
-8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.b^
-
-ˇˇ 'P
-N
-2
-
-ˇˇ '<:
-8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bÜ
-
-ÖÖ xBv
-O:M
-2
-
-ÖÖ ;
+±± ;
 9ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.apply().scala/Char#scala/Boolean#bâ
 
-ÖÖ {By
+±± {By
 R:P
 2
 
-ÖÖ >
-<ammonite/$file/`marked-SemiringBoolean`.Rexp.NTIMES.apply().scala/Char#scala/Boolean#bE
+±± >
+<ammonite/$file/`marked-SemiringBoolean`.Rexp.NTIMES.apply().scala/Char#scala/Boolean#bÜ
 
-ÖÖ 7B5
-2
-
-ÖÖ scala/Char#scala/Boolean#bá
-
-ÖÖ yBw
-P:N
-2
-
-ÖÖ <
-:ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.apply().scala/Char#scala/Boolean#b4
-
-ÖÖ &B$
-2
-
-ÖÖ scala/Boolean#b^
-
-ÖÖ "P
-N
-2
-
-ÖÖ "<:
-8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bâ
-
-Ö*Ö 0{By
-R:P
-2
-
-Ö*Ö 0>
-<ammonite/$file/`marked-SemiringBoolean`.Rexp.NTIMES.apply().scala/Char#scala/Boolean#bá
-
-Ö1Ö 5yBw
-P:N
-2
-
-Ö1Ö 5<
-:ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.apply().scala/Char#scala/Boolean#b4
-
-Ö6Ö =&B$
-2
-
-Ö6Ö =scala/Boolean#b^
-
-Ö6Ö BP
-N
-2
-
-Ö6Ö B<:
-8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bÜ
-
-áá xBv
+±± xBv
 O:M
 2
 
-áá ;
-9ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.apply().scala/Char#scala/Boolean#bá
+±± ;
+9ammonite/$file/`marked-SemiringBoolean`.Rexp.ALT.apply().scala/Char#scala/Boolean#bÜ
 
-áá yBw
-P:N
+±± "xBv
+O:M
 2
 
-áá <
-:ammonite/$file/`marked-SemiringBoolean`.Rexp.STAR.apply().scala/Char#scala/Boolean#bá
+±± ";
+9ammonite/$file/`marked-SemiringBoolean`.Rexp.ONE.apply().scala/Char#scala/Boolean#bâ
 
-áá yBw
-P:N
+±,± 2{By
+R:P
 2
 
-áá <
-:ammonite/$file/`marked-SemiringBoolean`.Rexp.STAR.apply().scala/Char#scala/Boolean#bá
+±,± 2>
+<ammonite/$file/`marked-SemiringBoolean`.Rexp.NTIMES.apply().scala/Char#scala/Boolean#bE
 
-áá yBw
-P:N
+¥¥ 7B5
 2
 
-áá <
-:ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.apply().scala/Char#scala/Boolean#b4
+¥¥ scala/Char#scala/Boolean#b^
 
-áá &&B$
-2
-
-áá &scala/Boolean#b^
-
-áá +P
+¥¥ P
 N
 2
 
-áá +<:
+¥¥ <:
+8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bÜ
+
+∂∂ xBv
+O:M
+2
+
+∂∂ ;
+9ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.apply().scala/Char#scala/Boolean#bÜ
+
+∂∂ xBv
+O:M
+2
+
+∂∂ ;
+9ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.apply().scala/Char#scala/Boolean#bÜ
+
+∂∂ xBv
+O:M
+2
+
+∂∂ ;
+9ammonite/$file/`marked-SemiringBoolean`.Rexp.ALT.apply().scala/Char#scala/Boolean#bÜ
+
+∂∂ !xBv
+O:M
+2
+
+∂∂ !;
+9ammonite/$file/`marked-SemiringBoolean`.Rexp.ONE.apply().scala/Char#scala/Boolean#bÜ
+
+∂%∂ (xBv
+O:M
+2
+
+∂%∂ (;
+9ammonite/$file/`marked-SemiringBoolean`.Rexp.ALT.apply().scala/Char#scala/Boolean#bÜ
+
+∂+∂ .xBv
+O:M
+2
+
+∂+∂ .;
+9ammonite/$file/`marked-SemiringBoolean`.Rexp.ONE.apply().scala/Char#scala/Boolean#bÜ
+
+∂4∂ 7xBv
+O:M
+2
+
+∂4∂ 7;
+9ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.apply().scala/Char#scala/Boolean#bE
+
+∑∑ 7B5
+2
+
+∑∑ scala/Char#scala/Boolean#b^
+
+∑∑ #P
+N
+2
+
+∑∑ #<:
+8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bN
+
+∫∫ @
+>
+,*
+(scala/LowPriorityImplicits#wrapString().2
+
+∫∫ bE
+
+ææ 7B5
+2
+
+ææ scala/Char#scala/Boolean#b^
+
+ææ "P
+N
+2
+
+ææ "<:
+8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bE
+
+¡¡ 7B5
+2
+
+¡¡ scala/Char#scala/Boolean#b^
+
+¡¡ %P
+N
+2
+
+¡¡ %<:
 8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bá
 
-á0á 4yBw
+≈≈ yBw
 P:N
 2
 
-á0á 4<
+≈≈ <
+:ammonite/$file/`marked-SemiringBoolean`.REG.BINIT.apply().scala/Char#scala/Boolean#bâ
+
+≈≈ {By
+R:P
+2
+
+≈≈ >
+<ammonite/$file/`marked-SemiringBoolean`.REG.BNTIMES.apply().scala/Char#scala/Boolean#bÜ
+
+≈≈ #xBv
+O:M
+2
+
+≈≈ #;
+9ammonite/$file/`marked-SemiringBoolean`.REG.BALT.apply().scala/Char#scala/Boolean#bE
+
+≈%≈ +7B5
+2
+
+≈%≈ +scala/Char#scala/Boolean#b^
+
+≈%≈ .P
+N
+2
+
+≈%≈ .<:
+8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bÜ
+
+≈1≈ 5xBv
+O:M
+2
+
+≈1≈ 5;
+9ammonite/$file/`marked-SemiringBoolean`.REG.BONE.apply().scala/Char#scala/Boolean#bE
+
+∆∆ 7B5
+2
+
+∆∆ scala/Char#scala/Boolean#bN
+
+∆∆ "@
+>
+,*
+(scala/LowPriorityImplicits#wrapString().2
+
+∆∆ "b^
+
+∆∆ *P
+N
+2
+
+∆∆ *<:
+8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bá
+
+»» yBw
+P:N
+2
+
+»» <
+:ammonite/$file/`marked-SemiringBoolean`.REG.BINIT.apply().scala/Char#scala/Boolean#bâ
+
+»» {By
+R:P
+2
+
+»» >
+<ammonite/$file/`marked-SemiringBoolean`.REG.BNTIMES.apply().scala/Char#scala/Boolean#bÜ
+
+» » $xBv
+O:M
+2
+
+» » $;
+9ammonite/$file/`marked-SemiringBoolean`.REG.BSEQ.apply().scala/Char#scala/Boolean#bE
+
+»&» ,7B5
+2
+
+»&» ,scala/Char#scala/Boolean#b^
+
+»&» /P
+N
+2
+
+»&» /<:
+8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bE
+
+»2» 87B5
+2
+
+»2» 8scala/Char#scala/Boolean#b^
+
+»2» ;P
+N
+2
+
+»2» ;<:
+8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bE
+
+…… 7B5
+2
+
+…… scala/Char#scala/Boolean#bN
+
+…… "@
+>
+,*
+(scala/LowPriorityImplicits#wrapString().2
+
+…… "b^
+
+…… *P
+N
+2
+
+…… *<:
+8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bÜ
+
+·· xBv
+O:M
+2
+
+·· ;
+9ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.apply().scala/Char#scala/Boolean#bâ
+
+·· {By
+R:P
+2
+
+·· >
+<ammonite/$file/`marked-SemiringBoolean`.Rexp.NTIMES.apply().scala/Char#scala/Boolean#bE
+
+·· 7B5
+2
+
+·· scala/Char#scala/Boolean#bá
+
+·· yBw
+P:N
+2
+
+·· <
 :ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.apply().scala/Char#scala/Boolean#b4
 
-á5á <&B$
+·· &B$
 2
 
-á5á <scala/Boolean#b^
+·· scala/Boolean#b^
 
-á5á AP
+·· "P
 N
 2
 
-á5á A<:
-8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bN
+·· "<:
+8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bâ
 
-ãã @
->
-,*
-(scala/LowPriorityImplicits#intWrapper().2
-
-ãã bN
-
-ìì @
->
-,*
-(scala/LowPriorityImplicits#intWrapper().2
-
-ìì b0
-
-îî W"B 
+·*· 0{By
+R:P
 2
 
-îî W
+·*· 0>
+<ammonite/$file/`marked-SemiringBoolean`.Rexp.NTIMES.apply().scala/Char#scala/Boolean#bá
+
+·1· 5yBw
+P:N
+2
+
+·1· 5<
+:ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.apply().scala/Char#scala/Boolean#b4
+
+·6· =&B$
+2
+
+·6· =scala/Boolean#b^
+
+·6· BP
+N
+2
+
+·6· B<:
+8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bÜ
+
+„„ xBv
+O:M
+2
+
+„„ ;
+9ammonite/$file/`marked-SemiringBoolean`.Rexp.SEQ.apply().scala/Char#scala/Boolean#bá
+
+„„ yBw
+P:N
+2
+
+„„ <
+:ammonite/$file/`marked-SemiringBoolean`.Rexp.STAR.apply().scala/Char#scala/Boolean#bá
+
+„„ yBw
+P:N
+2
+
+„„ <
+:ammonite/$file/`marked-SemiringBoolean`.Rexp.STAR.apply().scala/Char#scala/Boolean#bá
+
+„„ yBw
+P:N
+2
+
+„„ <
+:ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.apply().scala/Char#scala/Boolean#b4
+
+„„ &&B$
+2
+
+„„ &scala/Boolean#b^
+
+„„ +P
+N
+2
+
+„„ +<:
+8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bá
+
+„0„ 4yBw
+P:N
+2
+
+„0„ 4<
+:ammonite/$file/`marked-SemiringBoolean`.Rexp.CHAR.apply().scala/Char#scala/Boolean#b4
+
+„5„ <&B$
+2
+
+„5„ <scala/Boolean#b^
+
+„5„ AP
+N
+2
+
+„5„ A<:
+8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bN
+
+ÁÁ @
+>
+,*
+(scala/LowPriorityImplicits#intWrapper().2
+
+ÁÁ bN
+
+ÔÔ @
+>
+,*
+(scala/LowPriorityImplicits#intWrapper().2
+
+ÔÔ b0
+
+ W"B 
+2
+
+ W
 scala/Any#b4
 
-îî &B$
+ &B$
 2
 
-îî scala/Boolean#bE
+ scala/Boolean#bE
 
-î#î *7B5
+# *7B5
 2
 
-î#î *scala/Char#scala/Boolean#bE
+# *scala/Char#scala/Boolean#bE
 
-î+î 27B5
++ 27B5
 2
 
-î+î 2scala/Char#scala/Boolean#b^
++ 2scala/Char#scala/Boolean#b^
 
-î+î <P
++ <P
 N
 2
 
-î+î <<:
++ <<:
 8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bN
 
-î?î F@
+? F@
 >
 ,*
 (scala/LowPriorityImplicits#wrapString().2
 
-î?î FbC
+? FbC
 
-î?î B5
+? B5
 3
 !
 scala/Predef.augmentString().2
 
-î?î Bb^
+? Bb^
 
-î#î PP
+# PP
 N
 2
 
-î#î P<:
+# P<:
 8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bN
 
-öö @
+ˆˆ @
 >
 ,*
 (scala/LowPriorityImplicits#intWrapper().2
 
-öö b0
+ˆˆ b0
 
-õõ S"B 
+˜˜ S"B 
 2
 
-õõ S
+˜˜ S
 scala/Any#b4
 
-õõ &B$
+˜˜ &B$
 2
 
-õõ scala/Boolean#bE
+˜˜ scala/Boolean#bE
 
-õ#õ *7B5
+˜#˜ *7B5
 2
 
-õ#õ *scala/Char#scala/Boolean#bE
+˜#˜ *scala/Char#scala/Boolean#bE
 
-õ+õ 27B5
+˜+˜ 27B5
 2
 
-õ+õ 2scala/Char#scala/Boolean#b^
+˜+˜ 2scala/Char#scala/Boolean#b^
 
-õ+õ 9P
+˜+˜ 9P
 N
 2
 
-õ+õ 9<:
+˜+˜ 9<:
 8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.bN
 
-õ<õ C@
+˜<˜ C@
 >
 ,*
 (scala/LowPriorityImplicits#wrapString().2
 
-õ<õ CbC
+˜<˜ CbC
 
-õ<õ ?5
+˜<˜ ?5
 3
 !
 scala/Predef.augmentString().2
 
-õ<õ ?b^
+˜<˜ ?b^
 
-õ#õ LP
+˜#˜ LP
 N
 2
 
-õ#õ L<:
+˜#˜ L<:
 8ammonite/$file/`marked-SemiringBoolean`.booleanSemiring.

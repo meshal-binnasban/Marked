@@ -2121,7 +2121,14 @@ Aammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.one(). *oneÄä
 753ammonite/$file/`marked-SemiringLeftLong`.LeftlongT#í: ö8ammonite/$file/`marked-SemiringLeftLong`.Semiring#one().*‘
 Bammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.zero(). *zeroÄä?"=
 ;j9
-753ammonite/$file/`marked-SemiringLeftLong`.LeftlongT#í: ö9ammonite/$file/`marked-SemiringLeftLong`.Semiring#zero().*é
+753ammonite/$file/`marked-SemiringLeftLong`.LeftlongT#í: ö9ammonite/$file/`marked-SemiringLeftLong`.Semiring#zero().*ç
+Eammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.plus().(a)*aÄä;"9
+753ammonite/$file/`marked-SemiringLeftLong`.LeftlongT#*ç
+Eammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.plus().(b)*bÄä;"9
+753ammonite/$file/`marked-SemiringLeftLong`.LeftlongT#*„
+Bammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.plus(). *plusÄäÕ é
+Eammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.plus().(a)
+Eammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.plus().(b)753ammonite/$file/`marked-SemiringLeftLong`.LeftlongT#í: ö9ammonite/$file/`marked-SemiringLeftLong`.Semiring#plus().*é
 Fammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.times().(a)*aÄä;"9
 753ammonite/$file/`marked-SemiringLeftLong`.LeftlongT#*é
 Fammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.times().(b)*bÄä;"9
@@ -2135,14 +2142,7 @@ Fammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.range().(y)*yÄä
 420ammonite/$file/`marked-SemiringLeftLong`.RangeT#*®
 Cammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.range(). *rangeÄäÃ…ê
 Fammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.range().(x)
-Fammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.range().(y)420ammonite/$file/`marked-SemiringLeftLong`.RangeT#í: *ç
-Eammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.plus().(a)*aÄä;"9
-753ammonite/$file/`marked-SemiringLeftLong`.LeftlongT#*ç
-Eammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.plus().(b)*bÄä;"9
-753ammonite/$file/`marked-SemiringLeftLong`.LeftlongT#*„
-Bammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.plus(). *plusÄäÕ é
-Eammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.plus().(a)
-Eammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.plus().(b)753ammonite/$file/`marked-SemiringLeftLong`.LeftlongT#í: ö9ammonite/$file/`marked-SemiringLeftLong`.Semiring#plus().*é
+Fammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.range().(y)420ammonite/$file/`marked-SemiringLeftLong`.RangeT#í: *é
 Iammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.leftlong().(x)*xÄä8"6
 420ammonite/$file/`marked-SemiringLeftLong`.RangeT#*é
 Iammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.leftlong().(y)*yÄä8"6
@@ -2162,9 +2162,9 @@ Fammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.`<init>`().
 Cammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.index().
 Aammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.one().
 Bammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.zero().
+Bammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.plus().
 Cammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.times().
 Cammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.range().
-Bammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.plus().
 Fammonite/$file/`marked-SemiringLeftLong`.semiringILeftlong.leftlong().í: *e
 2ammonite/$file/`marked-SemiringLeftLong`.mat().[C]	*CÄä&$scala/Nothing#
 scala/Any#*e

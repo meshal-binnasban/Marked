@@ -49,7 +49,7 @@ def nullable[C,S](r: REG[C,S])(using semiring: Semiring[S]) : S = r match {
   case BALT(r1, r2) => semiring.plus(nullable(r1),nullable(r2))
   case BSEQ(r1, r2) => semiring.times(nullable(r1),nullable(r2))
   case BSTAR(r) => semiring.one
-  case BNTIMES(r, n , current) => if (n == 0) semiring.one else nullable(r)
+  case BNTIMES(r, n , current) => if (n == 0) semiring.one else nullable(r) // include current?
   case BINIT(r) => nullable(r)
 }
 
@@ -62,7 +62,7 @@ def fin[C,S](r: REG[C,S])(using semiring: Semiring[S]) : S = r match {
   case BSTAR(r) => fin(r)
   case BNTIMES(r, n, current) => 
     if (n == 0) nullable(r)  
-    else if (current == n || (nullable(r) == semiring.one) && current<n) fin(r)
+    else if(current == n) fin(r) //fin(r)//|| (nullable(r) == semiring.one) && current<n
     else semiring.zero  
 }
 def shift[C,S](mark: S, re: REG[C,S], c: C)(using semiring: Semiring[S]): REG[C,S] = {
@@ -75,97 +75,13 @@ def shift[C,S](mark: S, re: REG[C,S], c: C)(using semiring: Semiring[S]): REG[C,
         BSEQ(shift(mark, r1, c),
              shift(semiring.plus(semiring.times(mark, nullable(r1)), fin(r1)), r2, c))
       case BSTAR(r) => BSTAR(shift(semiring.plus(mark, fin(r)), r, c))
-      case BNTIMES(r, n , current) => 
-        if (n==0) {
-            BONE()
-        } else {
-
-            // this is not yet working properly, when testing the evil reg gives wrong result
-             if(current < n+1)
-                {
-                    val rr= shift(semiring.plus(mark, fin(r)), r , c)
-                    if(fin(rr) == semiring.one){
-                    BNTIMES(rr, n, current + 1)
-                    }
+      case BNTIMES(r, n , current) => {
+                    val rr=shift(semiring.plus(mark, fin(r)), r, c)
+                    if(fin(rr) == semiring.one)
+                    BNTIMES(rr, n , current+1)
                     else
-                        BNTIMES(rr, n, current )
-                }else{ 
-                println(s" re is  $re")
-                re
-                }
-        }
-
-          
-          /*
-           if (n == 0) {
-            BONE()
-            } else { 
-                if (current < n+1) {
-                    val rr = shift(semiring.plus(mark, fin(r)), r, c)
-                    //|| nullable(r) == semiring.one
-                    if (fin(r) == semiring.one || nullable(r) == semiring.one) {
-                        BNTIMES(rr, n, current + 1)
-                    } else {
-                        BNTIMES(rr, n, current)
-                    }
-                } else {
-                    BNTIMES(r, n, current) // Maintain the correct state
-                }
-            }
-       */
-       /*
-        if (n == 0) {
-            BONE()
-        } else { 
-            if(current < n){
-            val rr = shift(semiring.plus(mark, fin(r)), r, c)
-                if (fin(r) == semiring.one) {
-                    BNTIMES(rr, n, current + 1)
-                } else {
-                    BNTIMES(rr, n, current)
-                }
-        }
-        else {
-            if(current == n){
-                re
-            }else BZERO()
-            
-        }
-        }
-     */   
-      /*  
-        if (current >= n) {
-            BONE()
-        } else {
-            val rr = shift(semiring.plus(mark, fin(r)), r, c)
-            if (fin(rr) == semiring.one) {
-                BNTIMES(rr, n, current + 1)
-            } else {
-                BNTIMES(rr, n, current)
-            }
-        }
-         */
-       /* 
-        if(n==0){
-            BONE()
-        }
-        else
-        { 
-            if(current < n+1){
-                val rr=shift(semiring.plus(mark,fin(r)),r,c)
-                if(fin(rr) == semiring.one){
-                    val x=BNTIMES(rr,n,current+1)
-                    println(s"this is x $x")
-                    x
-                }else
-                    BNTIMES(rr,n,current)
-                }
-                else
-                {
-                    re
-                }
-        }
-        */ 
+                        BNTIMES(rr , n , current)
+      }
       case BINIT(r) => shift(semiring.one, r, c)
     }
   }
@@ -225,6 +141,18 @@ def helperf[S](c: Char)(using semiring: Semiring[S]): Char => S =
 def helperft[S](c: Char)(using semiring: Semiring[S]): ((Char, Int)) => S = 
   (x: Char, pos: Int) => if (x == c) semiring.index(pos) else semiring.zero
  */
+def stripMarks[C,S](re: REG[C,S])(using semiring: Semiring[S]): REG[C,S] =
+  re match {
+    case BZERO()               => BZERO()
+    case BONE()                => BONE()
+    case BCHAR(_, f)           => BCHAR(semiring.zero, f)
+    case BALT(r1, r2)          => BALT(stripMarks(r1), stripMarks(r2))
+    case BSEQ(r1, r2)          => BSEQ(stripMarks(r1), stripMarks(r2))
+    case BSTAR(r)              => BSTAR(stripMarks(r))
+    case BNTIMES(r, n,current)         => BNTIMES(stripMarks(r), n,current)
+    case BINIT(r)              => BINIT(stripMarks(r))
+  }
+
 
 @main
 def test0() = {
@@ -243,34 +171,55 @@ def myNtimes[C, S](r: REG[C, S]): REG[C, S] = r match {
 
 @main
 def test01() = {
-/*
-   val n=4
+
+    val n=1
     val a = CHAR(helperf('a'))
     val b = CHAR(helperf('b'))
-    val rexp =NTIMES(ALT(a,ONE()), n) // one causes issues
+    val rexp =SEQ(NTIMES(ALT(a,ONE()), n) , NTIMES(a,n))
+   // val rexp = NTIMES(a,n)
 
-    val testSequences=BINIT(myNtimes(intern(rexp)))
-    val regInit=intern2(rexp)
-    val str = "ab".toList
-    println(s"input is  : str= $str and n is $n , first is NTIMES constructed as SEQs, Second is using the constructor NTIMES")
-    println(matcher(testSequences, str))
+    val rexpInit=intern2(rexp)
+
+    val testSeq=SEQ(SEQ(ALT(a,ONE()),ALT(a,ONE())), SEQ(a,a))
+    val tesSeqInit=intern2(testSeq)
+
+    
+    val str = "aa".toList
+
+    println(s"input is: str= $str and n is $n \n")
+    println(s"1- Using the constructor NTIMES \n \n $rexpInit \n")
+    println(matcher(rexpInit, str))
+
+    println(s"\n2- Using the constructor SEQs \n \n $tesSeqInit \n ")
+    println(matcher(tesSeqInit , str))
+
     println("\n =========== \n")
-    println(matcher(regInit, str))
-*/
+
+    val rexpTest=BINIT(BNTIMES(BALT( intern(a) , BONE() ) ,2,0))
+    println(matcher(rexpTest , "a".toList))
+
+    val rexpTest2=BINIT(BNTIMES(BSEQ( intern(a) , intern(a) ) ,2,0))
+    println(matcher(rexpTest , "a".toList))
+
     //val reg= intern(rexp)
     //println("submatcher : reg ")
     //println(submatcher(reg, str))
-    
-    println("\n +++++++++++++++ \n")
-    val s = "aaa".toList
-    val interReg=intern2(EVIL1(1))
-   // println(s"NTIMES, reg is $interReg")
-    println(matcher(interReg,s))
-    println("\n Converted to Seq \n")
-    val evilrxp=SEQ(SEQ(ALT(CHAR(helperf('a')),ONE()),ALT(CHAR(helperf('a')),ONE())) ,  SEQ(CHAR(helperf('a')), CHAR(helperf('a')) ))
-    println(matcher(intern2(evilrxp),s))
-    
 
+
+  /*  
+    println("\n +++++++++++++++ \n")
+    val s = "aaaaaaa".toList
+    //gets accepted becuase the second fin(ntimes) is true and first bntimes is nullable
+    val ntimesreg=intern2(EVIL1(3))
+   // println(s"NTIMES, reg is $interReg")
+    println(matcher(ntimesreg,s))
+    println("\n Converted to Seq \n")
+    val evilrxp=SEQ(
+       SEQ(SEQ(ALT(CHAR(helperf('a')),ONE()),ALT(CHAR(helperf('a')),ONE())) ,ALT(CHAR(helperf('a')),ONE())) 
+    ,  SEQ(SEQ(CHAR(helperf('a')), CHAR(helperf('a'))) , CHAR(helperf('a')))
+    )
+    println(matcher(intern2(evilrxp),s))
+    */
 }
 
 def EVIL1(n: Int) = 

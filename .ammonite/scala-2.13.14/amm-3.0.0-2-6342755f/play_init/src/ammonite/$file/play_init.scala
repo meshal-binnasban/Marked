@@ -172,7 +172,6 @@ def matcher(r: REG, s: List[Char]) : Boolean =
 
 
 // pretty-printing REGs
-
 def implode(ss: Seq[String]) = ss.mkString("\n")
 def explode(s: String) = s.split("\n").toList
 
