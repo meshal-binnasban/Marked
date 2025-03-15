@@ -213,7 +213,7 @@
         "platform": {
             "name": "jvm",
             "config": {
-                "home": "/usr/local/Cellar/openjdk@17/17.0.14/libexec/openjdk.jdk/Contents/Home",
+                "home": "/Library/Java/JavaVirtualMachines/jdk-18.0.2.1.jdk/Contents/Home",
                 "options": [
                     "-Duser.dir=/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/project"
                 ]
@@ -222,7 +222,7 @@
                 
             ],
             "runtimeConfig": {
-                "home": "/usr/local/Cellar/openjdk@17/17.0.14/libexec/openjdk.jdk/Contents/Home",
+                "home": "/Library/Java/JavaVirtualMachines/jdk-18.0.2.1.jdk/Contents/Home",
                 "options": [
                     "-Duser.dir=/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/project"
                 ]

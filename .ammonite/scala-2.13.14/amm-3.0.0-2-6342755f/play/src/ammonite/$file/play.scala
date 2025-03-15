@@ -83,7 +83,6 @@ extension (r: Rexp) {
 }
 
 
-
 // marked regular expressions
 enum REG {
   case BZERO
@@ -296,6 +295,21 @@ def test4() = {
   println(pp(mat(breg, s.take(4))))
 
   println(matcher(breg, s))
+
+  println(s"\n\n  ============================ \n\n")
+  val reg=BNT(BALT(BCHAR(false,'a'),BONE), 2)
+  val ss="aaa".toList
+  println(matcher(reg,ss))
+
+  for (i <- ss.indices) {
+  println(s"${i + 1}- =shift ${ss(i)}=")
+  val sPart = ss.take(i + 1)
+  println(pp(mat(reg, sPart)))
+  }
+
+
+
+
 }
 
 

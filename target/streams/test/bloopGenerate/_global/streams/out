@@ -1,4 +1,4 @@
-[0m[[0m[0mdebug[0m] [0m[0m[marked-test] Classpath dependencies List()[0m
-[0m[[0m[0mdebug[0m] [0m[0m[marked-test] Dependencies from configurations List(marked)[0m
-[0m[[0m[0mdebug[0m] [0m[0mBloop wrote the configuration of project 'marked-test' to '/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/.bloop/marked-test.json'[0m
-[0m[[0m[32msuccess[0m] [0m[0mGenerated .bloop/marked-test.json[0m
+[debug] [marked-test] Classpath dependencies List()
+[debug] [marked-test] Dependencies from configurations List(marked)
+[debug] Bloop wrote the configuration of project 'marked-test' to '/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/.bloop/marked-test.json'
+[success] Generated .bloop/marked-test.json

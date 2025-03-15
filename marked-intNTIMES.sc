@@ -26,6 +26,7 @@ import Rexp._
 def OPT(r: Rexp) = ALT(r, ONE)
 
 def shift(mark: Int,re: Rexp,c: Char ): Rexp = re match {
+    
     case ZERO => ZERO
     case ONE=> ONE
     case CHAR(ch,marked) => {
@@ -46,13 +47,22 @@ def shift(mark: Int,re: Rexp,c: Char ): Rexp = re match {
       }  
     //  SEQ (shift(mark,r1,c), shift(mark * nullable(r1) + fin(r1),r2,c))
     case STAR(r) => STAR(shift(mark + fin(r), r,c))
-    case NTIMES(r, n,nmark,counter) =>
-      if (counter == n || n==0) NTIMES(r, n,nmark,counter) else 
-                    if (mark ==1 || fin(r)==1)
-                    { val m=mark + fin(r)
-                      NTIMES(shift(m, r, c), n , m::nmark,counter+1)
-                    }
-                    else NTIMES(shift(0, r, c), n,0::nmark,counter)
+    case NTIMES(r, n,nmark,counter) => // maybe shift false if n==0 or counter == n?
+      if (n==0){
+        ONE
+      }else{
+        if(counter == n){
+           //NTIMES(r, n,nmark,counter) // maybe we need to shift?
+           NTIMES(r, n , fin(r)::nmark,counter)
+        } else 
+            if (mark ==1 || fin(r)==1)
+            { 
+              val m=mark + fin(r)
+              NTIMES(shift(m, r, c), n , m::nmark,counter+1)
+            }
+            else NTIMES(shift(0, r, c), n,fin(r)::nmark,counter)
+      }
+        
       /*
       if (n == 0) NTIMES(r, n,nmark,counter) else 
                     if (mark ==1 || fin(r)==1)
@@ -84,7 +94,7 @@ def fin(r: Rexp) : Int = r match {
   case SEQ(r1, r2) => (fin(r1) * nullable(r2)) + fin(r2) 
   case STAR(r) => fin(r)
   case NTIMES(r,n,nmark , counter) => // we check the first n marks in nmarks, and if they each more than one and not more than n
-    if(n == counter ) fin(r) else 0 
+    if(n == counter || (counter<n && nullable(r) == 1)) fin(r) else 0 
    // if(nmark >= n) fin(r) else 0 // 
 }
 
@@ -208,6 +218,7 @@ def test00() = {
   println(matcher(br1,ss))
 */
 }
+
 @main
 def test01() = {
     val n=2
@@ -294,19 +305,38 @@ def test02() = {
 
 @main
 def test03() = {
-    val n=2
-    val rexp=EVIL1(n)
-    println("=====Test====")
-    val br1 = intern2(rexp)
-    val s = "aaab".toList
-    println(s"s is $s \n rexp= $br1 \n ")
+  
+   
+  val n=2
+  val rexp=EVIL1(n)
+  println("=====Test====")
+  val br1 = intern2(rexp)
+  val s = "aaba".toList
+  println(s"s is $s \n rexp= $br1 \n ")
 
-    for (i <- s.indices) {
-    println(s"${i + 1}- =shift ${s(i)}=")
-    val sPart = s.take(i + 1)
-    println(pp(mat(br1, sPart)))
-    }
-    println(matcher(br1,s))
+  for (i <- s.indices) {
+  println(s"${i + 1}- =shift ${s(i)}=")
+  val sPart = s.take(i + 1)
+  println(pp(mat(br1, sPart)))
+  }
+  println(matcher(br1,s))
+  println(matcher2(br1,s))
+
+
+/*
+  println("\n \n ========================================== \n\n")
+  val reg=intern2(NTIMES(OPT(CHAR('a')), 2))
+  val ss="aa".toList
+  println(matcher(reg,ss))
+
+  for (i <- ss.indices) {
+  println(s"${i + 1}- =shift ${ss(i)}=")
+  val sPart = ss.take(i + 1)
+  println(pp(mat(reg, sPart)))
+  }
+
+  println(matcher2(reg,ss))
+  */
 }
 
 def size(r: Rexp) : Int = r match {
@@ -350,7 +380,7 @@ def time_needed[T](i: Int, code: => T) = {
 }
 
 //@arg(doc = "Test (a?{n}) (a{n})")
-@main
+
 def test1() = {
   for (i <- 0 to 11000 by 1000) {
     println(f"$i: ${time_needed(2, matcher(EVIL1(i), ("a" * i).toList))}%.5f")
@@ -358,7 +388,7 @@ def test1() = {
 }
 
 //@arg(doc = "Test (a*)* b")
-@main
+
 def test2() = {
   for (i <- 0 to 7000000 by 500000) {
     println(f"$i: ${time_needed(2, matcher(EVIL2, ("a" * i).toList))}%.5f")
@@ -366,7 +396,7 @@ def test2() = {
 } 
 
 //@arg(doc = "All tests.")
-@main
+
 def all() = { test1(); test2() } 
 
 // pretty-printing REGs
