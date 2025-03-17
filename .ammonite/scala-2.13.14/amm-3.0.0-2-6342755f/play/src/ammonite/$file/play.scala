@@ -141,8 +141,8 @@ def fin(r: REG) : Boolean = r match {
   case BALT(r1, r2) => fin(r1) || fin(r2)
   case BSEQ(r1, r2) => (fin(r1) && nullable(r2)) || fin(r2)
   case BSTAR(r) => fin(r)
-  case BNT(r, n) => if (n == 0) fin(r) else false
-}
+  case BNT(r, n) => if (n == 0 || nullable(r)) fin(r) else false
+}//else if nullable(r) then fin(r) 
 
 // shift function from the paper
 def shift(m: Boolean, r: REG, c: Char) : REG = {
@@ -297,19 +297,18 @@ def test4() = {
   println(matcher(breg, s))
 
   println(s"\n\n  ============================ \n\n")
-  val reg=BNT(BALT(BCHAR(false,'a'),BONE), 2)
-  val ss="aaa".toList
-  println(matcher(reg,ss))
+
+  val reg=NT("a" | ONE , 2)
+  val regi=intern(reg)
+
+  val ss="aab".toList
+  println(matcher(regi,ss))
 
   for (i <- ss.indices) {
   println(s"${i + 1}- =shift ${ss(i)}=")
   val sPart = ss.take(i + 1)
-  println(pp(mat(reg, sPart)))
+  println(pp(mat(regi, sPart)))
   }
-
-
-
-
 }
 
 

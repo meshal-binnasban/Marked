@@ -52,25 +52,16 @@ def shift(mark: Int,re: Rexp,c: Char ): Rexp = re match {
         ONE
       }else{
         if(counter == n){
-           //NTIMES(r, n,nmark,counter) // maybe we need to shift?
-           NTIMES(r, n , fin(r)::nmark,counter)
+           val test=shift(mark+fin(r), r, c)
+           NTIMES(test, n,fin(test)::nmark,counter) // maybe we need to shift?
         } else 
-            if (mark ==1 || fin(r)==1)
+            if (mark >= 1 || fin(r) >= 1)
             { 
               val m=mark + fin(r)
               NTIMES(shift(m, r, c), n , m::nmark,counter+1)
             }
-            else NTIMES(shift(0, r, c), n,fin(r)::nmark,counter)
-      }
-        
-      /*
-      if (n == 0) NTIMES(r, n,nmark,counter) else 
-                    if (mark ==1 || fin(r)==1)
-                    { val m=mark + fin(r)
-                      NTIMES(shift(m, r, c), n - 1 , m::nmark,counter+1)
-                    }
-                    else NTIMES(shift(0, r, c), n,0::nmark,counter)
-        */
+            else NTIMES(shift(0, r, c), n,0::nmark,counter)
+      }  
     case INIT(r) => shift(1, r, c)
      
 }
@@ -94,7 +85,8 @@ def fin(r: Rexp) : Int = r match {
   case SEQ(r1, r2) => (fin(r1) * nullable(r2)) + fin(r2) 
   case STAR(r) => fin(r)
   case NTIMES(r,n,nmark , counter) => // we check the first n marks in nmarks, and if they each more than one and not more than n
-    if(n == counter || (counter<n && nullable(r) == 1)) fin(r) else 0 
+    if(n == counter || (counter<n && nullable(r) == 1)) 
+    fin(r) else 0 
    // if(nmark >= n) fin(r) else 0 // 
 }
 
@@ -135,14 +127,22 @@ def mkeps_marked(r: Rexp): VALUE = r match {
     case CHAR(c,marked) => if(marked.head >=1) CHARV(c)
       else UNMARKED(c.toString())
     case ALT(r1, r2) =>
-      if (fin(r1) == 1) LEFT(mkeps_marked(r1))
-      else if (fin(r2) == 1) RIGHT(mkeps_marked(r2))
+      if (fin(r1) >= 1) LEFT(mkeps_marked(r1))
+      else if (fin(r2) >= 1) RIGHT(mkeps_marked(r2))
       else UNMARKED("ALT")
     case SEQ(r1, r2) => SEQV(mkeps_marked(r1), mkeps_marked(r2))
     case STAR(r1) =>
-      if (fin(r1) == 1) STARV(List(mkeps_marked(r1)))
+      if (fin(r1) >= 1) STARV(List(mkeps_marked(r1)))
       else STARV(Nil)
+    case NTIMES(r, n, nmark,counter) =>
+      if (n == 0) EMPTY
+      else if (counter == n) mkeps_marked(r)
+      else if (fin(r) >= 1) SEQV(mkeps_marked(r), mkeps_marked(NTIMES(r, n, nmark,counter+1)))
+      else UNMARKED("NTIMES")
+      // if(n == counter || (counter<n && nullable(r) == 1)) 
+   // fin(r) else 0 
     case ZERO => ZEROV
+    
   }
 
   //construct function which should generate a marked regex indicating 
@@ -186,16 +186,16 @@ def test00() = {
   
   val a=CHAR('a')
   val b=CHAR('b')
-  //val rexp=ALT( SEQ(a, ALT(ONE, b)) , SEQ(a , b))
-  val rexp=STAR(   ALT(a ,ALT(a ,b))   )
+  val rexp=NTIMES(   ALT(a ,ALT(a ,b)) , 2  )
 
   val ss="ab".toList
-  //val result=matcher(intern2(rexp),ss)
+ // val result=matcher(intern2(rexp),ss)
  // println("Testing mkeps \n")
  // println(s" rexp=$rexp Result=$result\n")
 
   val finReg=matcher2(intern2(rexp),ss)
- // println(mkeps_marked(finReg))
+  println(s"finReg=$finReg\n")
+  println(mkeps_marked(finReg))
 
   // test extract
   val regsList=extractStages(finReg,ss)
@@ -203,28 +203,30 @@ def test00() = {
   for ((ch,regex) <- regsList) {
   println(s"\nInput Character: $ch")
   println(s"Regex: $regex \n")
-}
-
-/*
-  println("=====Test====")
-  val br1 = intern2(rexp)
-  println(s"ss is $ss \n rexp= $br1 \n ")
-
-  for (i <- ss.indices) {
-  println(s"${i + 1}- =shift ${ss(i)}=")
-  val sPart = ss.take(i + 1)
-  println(pp(mat(br1, sPart)))
+  println(mkeps_marked(regex))
   }
-  println(matcher(br1,ss))
-*/
+
+  val combinedResults = regsList.map { case (ch, regex) =>
+    val markedValue = mkeps_marked(regex)
+    (ch, regex, markedValue)
+  }
+
+  val combinedString = combinedResults.map { case (ch, _, markedValue) =>
+  s"'$ch' -> $markedValue"
+  }.mkString(", ")
+  
+  println(s"\nCombined Results: $combinedString\n")
+  println("\n========================\n")
+
 }
 
+//testing NTIMES and SEQ NTIMES.
 @main
 def test01() = {
     val n=2
     val rexp=intern2(EVIL1(n))
 
-    val ss="aaab".toList
+    val ss="aaaaa".toList
     println(s"input is $ss \n")
 
     println(s"NTIMES :\n")
@@ -245,9 +247,7 @@ def test01() = {
 
     println("\n========================\n")
 
-    val a=CHAR('a')
-    val opta=ALT(a,ONE)
-
+  
     val testRexp=intern2(SeqNTIMES(EVIL1(n)))
     println(s"input is $ss \n")
 
@@ -273,70 +273,42 @@ def test01() = {
 
 @main
 def test02() = {
-
   val a=CHAR('a')
   val b=CHAR('b')
-  val opta=ALT(a,ONE)
-  val optb=ALT(b,ONE)
-  val newS="a".toList
+  val rexp=NTIMES(   ALT( a , ONE ) , 2  )
 
-  //SEQ(NTIMES(OPT(CHAR('a')), n), NTIMES(CHAR('a'), n))
-  val newRexp=SEQ(opta,opta) 
-  val newRexpI= intern2(newRexp)
-  println(s"newS is $newS \n rexp= $newRexpI \n ")
-  for (i <- newS.indices) {
-  println(s"${i + 1}- =shift ${newS(i)}=")
-  val sPart = newS.take(i + 1)
-  println(pp(mat(newRexpI, sPart)))
-  }
-  println(matcher(newRexpI,newS))
+  val ss="aab".toList
+  val result=matcher(intern2(rexp),ss)
+  println(s" rexp=$rexp Result=$result\n")
 
-
-  println("\n========================\n")
-
-  val sequence=SEQ(SEQ(opta,ONE),a)
-   
-  val sequenceT=intern2(sequence)
-  val finReg3=matcher2(intern2(sequenceT),"a".toList)
-  println(pp(finReg3))
-  println(s"The result is :${fin(finReg3)}")
+  val finReg=matcher2(intern2(rexp),ss)
+  println(s"finReg=${pp(finReg)}\n")
 
 }
 
 @main
 def test03() = {
-  
-   
-  val n=2
-  val rexp=EVIL1(n)
-  println("=====Test====")
-  val br1 = intern2(rexp)
-  val s = "aaba".toList
-  println(s"s is $s \n rexp= $br1 \n ")
+  val a=CHAR('a')
+  val b=CHAR('b')
+  val rexp=SEQ(a , b)
 
-  for (i <- s.indices) {
-  println(s"${i + 1}- =shift ${s(i)}=")
-  val sPart = s.take(i + 1)
-  println(pp(mat(br1, sPart)))
-  }
-  println(matcher(br1,s))
-  println(matcher2(br1,s))
+  val shiftedOnce=shift(1,rexp,'a')
+  val shiftedTwice=shift(1,shiftedOnce,'b')
+  println(s"Shifted Once: ${pp(shiftedTwice)}\n")
 
+  val unshiftedOnce=unshift(1,shiftedTwice,'a')
+  println(s"Unshifted Once: ${pp(unshiftedOnce)}\n")
 
-/*
-  println("\n \n ========================================== \n\n")
-  val reg=intern2(NTIMES(OPT(CHAR('a')), 2))
-  val ss="aa".toList
-  println(matcher(reg,ss))
+  println(s"unshift using basic unshift2 : ${pp(unshift2(shiftedTwice))}\n")
 
-  for (i <- ss.indices) {
-  println(s"${i + 1}- =shift ${ss(i)}=")
-  val sPart = ss.take(i + 1)
-  println(pp(mat(reg, sPart)))
-  }
+  println("\n========================\n")
+  val rexp2=STAR(a)
+  val shiftedOnce2=shift(1,rexp2,'a')
+  println(s"Shifted Once: ${pp(shiftedOnce2)}\n")
 
-  println(matcher2(reg,ss))
-  */
+  val unshiftedOnce2=unshift(1,shiftedOnce2,'a')
+  println(s"Unshifted Once: ${pp(unshiftedOnce2)}\n")
+
 }
 
 def size(r: Rexp) : Int = r match {
@@ -443,3 +415,48 @@ def matcher(r: Rexp , s: String) : Int = s.toList match {
     fin(x)
 }
 */
+
+// maybe we dont'need mark in unshift
+def unshift(mark: Int, r: Rexp, c: Char): Rexp = r match {
+  case ZERO => ZERO
+  case ONE => ONE
+  case CHAR(ch,marked) => 
+    //  m && (d == c) from shift
+    //revers ? (m || d != c, d)
+    val newMark = if (ch == c){
+                    if(mark>=1)
+                     0 else
+                       1 * marked.head
+                       }
+                       else
+                        0
+    CHAR(ch, newMark :: marked.tail) 
+  case ALT(r1, r2) => ALT(unshift(mark, r1, c), unshift(mark, r2, c))
+  case SEQ(r1, r2) =>
+      SEQ(unshift(mark, r1, c), unshift(fin(r1), r2, c))
+  case STAR(r) =>
+    STAR(unshift(mark, r, c)) // STAR(unshift(mark * fin(r), r, c))
+  
+  case NTIMES(r, n,nmark,counter) =>
+    if (n == 0) NTIMES(r, n,nmark,counter) else {
+      if (mark < 1 || fin(r) < 1) {
+        val m = mark * fin(r)
+        NTIMES(unshift(m, r, c), n, m::nmark,counter-1)
+      } else {
+        NTIMES(unshift(0, r, c), n, 0::nmark,counter)
+      }
+    }
+}
+
+def unshift2 (r:Rexp): Rexp = r match {
+  case ZERO => ZERO
+  case ONE => ONE
+  case CHAR(ch,marked) => CHAR(ch,marked.tail)
+  case ALT(r1, r2) => ALT(unshift2(r1), unshift2(r2))
+  case SEQ(r1, r2) => SEQ(unshift2(r1), unshift2(r2))
+  case STAR(r) => STAR(unshift2(r))
+  case NTIMES(r, n,nmark,counter) => NTIMES(unshift2(r), n,nmark,counter)
+
+}
+
+
