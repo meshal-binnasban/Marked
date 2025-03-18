@@ -51,7 +51,7 @@ def shift(mark: Int,re: Rexp,c: Char ): Rexp = re match {
       if (n==0){
         ONE
       }else{
-        if(counter == n){
+        if(counter == n){ 
            val test=shift(mark+fin(r), r, c)
            NTIMES(test, n,fin(test)::nmark,counter) // maybe we need to shift?
         } else 
@@ -456,7 +456,6 @@ def unshift2 (r:Rexp): Rexp = r match {
   case SEQ(r1, r2) => SEQ(unshift2(r1), unshift2(r2))
   case STAR(r) => STAR(unshift2(r))
   case NTIMES(r, n,nmark,counter) => NTIMES(unshift2(r), n,nmark,counter)
-
 }
 
 

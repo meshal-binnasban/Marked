@@ -52,8 +52,8 @@ def shift(mark: Boolean,re: Rexpb, c: Char ): Rexpb = re match {
     case ONEb(bs)=> ONEb(bs)
     case CHARb(ch,marked,bs) => {
         if(mark && ch == c)
-        CHARb(ch,mark && ch == c, bs) 
-        else CHARb(ch,mark && ch == c) // maybe [] for bs ?
+        CHARb(ch,mark && ch == c,bs) 
+        else CHARb(ch,mark && ch == c,bs) // maybe [] for bs ?
     }
     case ALTb(r1, r2,bs) => ALTb(shift(mark,r1,c),shift(mark,r2,c),bs) 
     case SEQb(r1,r2,bs) =>
@@ -142,7 +142,7 @@ def matcher2(r: Rexpb, s: List[Char]) : Rexpb =
   
 enum VALUE {
   case ZEROV
-  case EMPTY
+  case ONEV
   case CHARV(c: Char)
   case UNMARKED(s:String)
   case SEQV(v1: VALUE, r2: VALUE )
@@ -169,23 +169,25 @@ def mkeps_marked(r: Rexpb): List[Int] = r match {
   }
 
 def mkeps_marked2(r: Rexpb): List[Int] = r match {
-    case ONEb(bs) => bs 
+    case ONEb(bs) => List()//bs 
     case CHARb(_, marked, bs) => if (marked) bs else List() 
     case ALTb(r1, r2, bs) =>
-        if (fin(r1)) bs ++ mkeps_marked2(r1) 
+        if (fin(r1))  bs ++ mkeps_marked2(r1) 
         else if (fin(r2)) bs ++ mkeps_marked2(r2) 
-        else bs
+        else List() //bs
     case SEQb(r1, r2, bs) =>
-        if (fin(r1) && nullable(r2)) bs ++ mkeps_marked2(r1) ++ mkeps_marked2(r2)
-        else if (fin(r2)) bs ++ mkeps_marked2(r2)
-        else bs
+        if (fin(r1) && nullable(r2)) bs ++ mkeps_marked2(r1) ++ mkeps_marked2(r2) 
+        else if (fin(r2)) bs ++  mkeps_marked2(r2)
+        else List() //bs
+
     case STARb(r, bs) =>
         if (fin(r)) bs ++ mkeps_marked2(r)
-        else bs
+        else List() //bs
+
     case NTIMESb(r, n, nmark, counter, bs) =>
         if (counter == n && fin(r)) bs ++ nmark ++ mkeps_marked2(r) 
-        else bs
-    case INITb(r, bs) => mkeps_marked2(r)
+        else List() //bs
+    case INITb(r, bs) => bs ++ mkeps_marked2(r)
     case ZEROb => List() 
 }
 
@@ -201,20 +203,14 @@ def mkeps_marked2(r: Rexpb): List[Int] = r match {
     case INITb(r, bs) => INITb(fuse(cs, r), cs ++ bs)
 }
 
-def decode(r: Rexpb, bs: List[Int]): (VALUE, List[Int]) = r match {
-  case ONEb(_) => (EMPTY, bs) // not sure this should be included
-  case CHARb(c, _, _) => (CHARV(c), bs) // (2) decode (c) bs = (Char(c), bs)
-  case ALTb(r1, r2, _) => bs match {
-    
-    case 0 :: bs1 => // (3) decode (r1 + r2) 0 :: bs =  (Left(v), bs')  where decode r1 bs => v,bs' 
-        val (v, bsp) = decode(r1, bs1)
-        (LEFT(v), bsp) 
-      
-    case 1 :: bs1 => // (4) decode (r1 + r2) 1 :: bs = (Right(v), bs') where decode r2 bs => v,bs'
-        val (v, bsp) = decode(r2, bs1)
-        println(s"decode r1: $v  and bsp= $bsp")
-        (RIGHT(v), bsp) 
-    case bs1::Nil => 
+//r Rexp
+def decode(r: Rexp, bs: List[Int]): (VALUE, List[Int]) = r match {
+  case ONE => (ONEV, bs) // not sure this should be included
+  case CHAR(c, _) => (CHARV(c), bs) // (2) decode (c) bs = (Char(c), bs)
+  case ALT(r1, r2) => bs match {
+/*
+    case bs1::Nil =>
+        println(s"decode r1: $r1  and bs1= $bs1") 
         if(bs1 == 0){
             val (v, bsp)= decode(r1, bs1::Nil)
             (LEFT(v), bsp)
@@ -223,22 +219,35 @@ def decode(r: Rexpb, bs: List[Int]): (VALUE, List[Int]) = r match {
             val (v, bsp)= decode(r2, bs1::Nil)
             (RIGHT(v), bsp)
         } 
-    case _ => (EMPTY, bs)
+*/
+    case 0 :: bs1 => // (3) decode (r1 + r2) 0 :: bs =  (Left(v), bs')  where decode r1 bs => v,bs' 
+        val (v, bsp) = decode(r1, bs1)
+        (LEFT(v), bsp) 
+      
+    case 1 :: bs1 => // (4) decode (r1 + r2) 1 :: bs = (Right(v), bs') where decode r2 bs => v,bs'
+        val (v, bsp) = decode(r2, bs1)
+
+        (RIGHT(v), bsp)
+
+   
+    case x =>
+      println(s"ALTb bs: $bs and x=$x") 
+      (ZEROV, bs)
          // in case of something else, may need to remove it but just incase
   }
 
-  case SEQb(r1, r2, _) =>  // (5) decode (r1 · r2) bs = (Seq(v1, v2), bs3) where decode r1 bs => v1,bs2 and decode r2 bs2 =>v2,bs3 
+  case SEQ(r1, r2) =>  // (5) decode (r1 · r2) bs = (Seq(v1, v2), bs3) where decode r1 bs => v1,bs2 and decode r2 bs2 =>v2,bs3 
     val (v1, bs2) = decode(r1, bs)
     val (v2, bs3) = decode(r2, bs2)
     (SEQV(v1, v2), bs3) 
 
-  case STARb(r, _) => bs match { 
+  case STAR(r) => bs match { 
     case 1 :: bs1 => // (6) decode (r∗) 1 :: bs = (Stars [], bs)
         (STARV( List() ), bs1) 
 
     case 0 :: bs1 =>   // (7) decode (r∗) 0 :: bs = (Stars (v :: vs), bs')
       val (v, bs2) = decode(r, bs1)
-      val (STARV(vs), bsv) = decode(STARb(r,bs2), bs2) // Recursive case for matching multiple times
+      val (STARV(vs), bsv) = decode(STAR(r), bs2) // Recursive case for matching multiple times
       (STARV(v :: vs), bsv) 
 
     case _ => (STARV(List()), bs) //  maybe not needed
@@ -246,8 +255,6 @@ def decode(r: Rexpb, bs: List[Int]): (VALUE, List[Int]) = r match {
 
   //case _ => (EMPTY, bs) // maybe not needed
 }
-
-
 
 def intern2(r: Rexp) : Rexpb = INITb(intern(r),List())
 
@@ -318,22 +325,21 @@ def test01() = {
 def test02() = {
   val a=CHAR('a')
   val b=CHAR('b')
-  val rexp=ALT(a, ALT(b,ONE))
+  val rexp=ALT(a, SEQ(b,b))
   val rexpI=intern2(rexp)
   println(s" Reg : \n ${pp(rexpI)}\n")
 
-  val ss="b".toList
+  val ss="bb".toList
   val result=matcher(rexpI,ss)
   println(s"Result=$result\n")
 
   val finReg=matcher2(rexpI,ss)
-  println(s"finReg=\n${pp(finReg)}\n")
+  println(s"finReg=\n${pp(finReg)}\n finReg=${finReg}\n")
 
   println(s"mkeps_marked=${mkeps_marked(finReg)}\n")
   println(s"mkeps_marked2=${mkeps_marked2(finReg)}\n")
 
-  val originalRexp=intern(rexp)
-  println(s"decode=${decode(finReg,mkeps_marked2(finReg))}\n")
+  println(s"decode=${decode(rexp,mkeps_marked2(finReg))}\n")
 
 }
 
