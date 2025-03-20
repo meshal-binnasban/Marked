@@ -214,9 +214,6 @@ def pp(e: REG) : String = e match {
 }
 def pps(es: REG*) = indent(es.map(pp))
 
-
-
-
 @main
 def test1() = {
   println("=====Test====")

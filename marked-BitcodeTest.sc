@@ -53,7 +53,7 @@ def shift(mark: Boolean,re: Rexpb, c: Char ): Rexpb = re match {
     case CHARb(ch,marked,bs) => {
         if(mark && ch == c)
         CHARb(ch,mark && ch == c,bs) 
-        else CHARb(ch,mark && ch == c,bs) // maybe [] for bs ?
+        else CHARb(ch,mark && ch == c) // maybe [] for bs ?
     }
     case ALTb(r1, r2,bs) => ALTb(shift(mark,r1,c),shift(mark,r2,c),bs) 
     case SEQb(r1,r2,bs) =>
@@ -69,7 +69,7 @@ def shift(mark: Boolean,re: Rexpb, c: Char ): Rexpb = re match {
       else{
         SEQb(shift(mark, r1, c), shift(fin(r1), r2, c) , bs)   
       }  
-    //  SEQ (shift(mark,r1,c), shift(mark * nullable(r1) + fin(r1),r2,c))
+   
 
     case STARb(r,bs) => STARb(shift(mark || fin(r), r,c),bs ++ List(0)) // could be if fin(r) then list(0) else list(1)
     
@@ -169,7 +169,7 @@ def mkeps_marked(r: Rexpb): List[Int] = r match {
   }
 
 def mkeps_marked2(r: Rexpb): List[Int] = r match {
-    case ONEb(bs) => List()//bs 
+    case ONEb(bs) => bs// 
     case CHARb(_, marked, bs) => if (marked) bs else List() 
     case ALTb(r1, r2, bs) =>
         if (fin(r1))  bs ++ mkeps_marked2(r1) 
@@ -181,8 +181,8 @@ def mkeps_marked2(r: Rexpb): List[Int] = r match {
         else List() //bs
 
     case STARb(r, bs) =>
-        if (fin(r)) bs ++ mkeps_marked2(r)
-        else List() //bs
+        if (fin(r)) bs ++ List(1) ++ mkeps_marked2(r) 
+        else List() 
 
     case NTIMESb(r, n, nmark, counter, bs) =>
         if (counter == n && fin(r)) bs ++ nmark ++ mkeps_marked2(r) 
@@ -203,57 +203,43 @@ def mkeps_marked2(r: Rexpb): List[Int] = r match {
     case INITb(r, bs) => INITb(fuse(cs, r), cs ++ bs)
 }
 
-//r Rexp
+
 def decode(r: Rexp, bs: List[Int]): (VALUE, List[Int]) = r match {
   case ONE => (ONEV, bs) // not sure this should be included
   case CHAR(c, _) => (CHARV(c), bs) // (2) decode (c) bs = (Char(c), bs)
   case ALT(r1, r2) => bs match {
-/*
-    case bs1::Nil =>
-        println(s"decode r1: $r1  and bs1= $bs1") 
-        if(bs1 == 0){
-            val (v, bsp)= decode(r1, bs1::Nil)
-            (LEFT(v), bsp)
-        }
-        else {
-            val (v, bsp)= decode(r2, bs1::Nil)
-            (RIGHT(v), bsp)
-        } 
-*/
+
     case 0 :: bs1 => // (3) decode (r1 + r2) 0 :: bs =  (Left(v), bs')  where decode r1 bs => v,bs' 
         val (v, bsp) = decode(r1, bs1)
         (LEFT(v), bsp) 
       
     case 1 :: bs1 => // (4) decode (r1 + r2) 1 :: bs = (Right(v), bs') where decode r2 bs => v,bs'
         val (v, bsp) = decode(r2, bs1)
-
         (RIGHT(v), bsp)
-
-   
     case x =>
       println(s"ALTb bs: $bs and x=$x") 
       (ZEROV, bs)
          // in case of something else, may need to remove it but just incase
   }
-
   case SEQ(r1, r2) =>  // (5) decode (r1 · r2) bs = (Seq(v1, v2), bs3) where decode r1 bs => v1,bs2 and decode r2 bs2 =>v2,bs3 
     val (v1, bs2) = decode(r1, bs)
     val (v2, bs3) = decode(r2, bs2)
+    println(s"SEQb bs: $bs and r1=$r1 and r2=$r2 and bs2=$bs2 and bs3=$bs3")
     (SEQV(v1, v2), bs3) 
 
-  case STAR(r) => bs match { 
-    case 1 :: bs1 => // (6) decode (r∗) 1 :: bs = (Stars [], bs)
-        (STARV( List() ), bs1) 
+  case STAR(r) => bs match {
+    case 1 :: bs1 => 
+      (STARV(List()), bs1) // Correctly terminate recursion for STAR
 
-    case 0 :: bs1 =>   // (7) decode (r∗) 0 :: bs = (Stars (v :: vs), bs')
+    case 0 :: bs1 =>   
       val (v, bs2) = decode(r, bs1)
-      val (STARV(vs), bsv) = decode(STAR(r), bs2) // Recursive case for matching multiple times
+      val (STARV(vs), bsv) = decode(STAR(r), bs2) 
       (STARV(v :: vs), bsv) 
 
-    case _ => (STARV(List()), bs) //  maybe not needed
+    case _ => 
+      (STARV(List()), bs) // Edge case: No matches in STAR
   }
 
-  //case _ => (EMPTY, bs) // maybe not needed
 }
 
 def intern2(r: Rexp) : Rexpb = INITb(intern(r),List())
@@ -325,11 +311,12 @@ def test01() = {
 def test02() = {
   val a=CHAR('a')
   val b=CHAR('b')
-  val rexp=ALT(a, SEQ(b,b))
+  val rexp=STAR(ALT(a,SEQ(a,b)))
   val rexpI=intern2(rexp)
-  println(s" Reg : \n ${pp(rexpI)}\n")
+  val ss="abab".toList
+  println(s"String=$ss Reg : \n ${pp(rexpI)}\n")
 
-  val ss="bb".toList
+
   val result=matcher(rexpI,ss)
   println(s"Result=$result\n")
 
@@ -422,7 +409,6 @@ def test2() = {
 } 
 
 //@arg(doc = "All tests.")
-
 def all() = { test1(); test2() } 
 
 // pretty-printing REGs
@@ -499,3 +485,22 @@ def matcher(r: Rexp , s: String) : Int = s.toList match {
     fin(x)
 }
 */
+
+
+
+/*
+mkeps_marked2
+    case bs1::Nil =>
+        println(s"decode r1: $r1  and bs1= $bs1") 
+        if(bs1 == 0){
+            val (v, bsp)= decode(r1, bs1::Nil)
+            (LEFT(v), bsp)
+        }
+        else {
+            val (v, bsp)= decode(r2, bs1::Nil)
+            (RIGHT(v), bsp)
+        } 
+
+      case _ => (EMPTY, bs) // maybe not needed
+*/
+  
