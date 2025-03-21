@@ -91,19 +91,14 @@ def fin(r: Rexp) : Boolean = r match {
   case ONE => false
   case CHAR(_) => false 
   case POINT(CHAR(_)) => true
-  case NTIMES(r, n,counter) => false
-    //println("here")
-   // if(counter < n && nullable(r)) fin(r) else false
-  case POINT(NTIMES(r, n, counter)) => true //if(counter ==n) true else false
   case ALT(r1, r2) => fin(r1) || fin(r2)
   case SEQ(r1, r2) => (fin(r1) && nullable(r2)) || fin(r2)
   case STAR(r) => fin(r)
-
+  case NTIMES(r, n,counter) => counter == n && fin(r)
+  case POINT(r) => fin(r) //?
 }
 
-// shift function from the paper
 def shift(m: Boolean, r: Rexp, c: Char) : Rexp = {
-  //println(s"mode: $m")
   r match {
   case ZERO => ZERO
   case ONE => ONE
@@ -112,33 +107,16 @@ def shift(m: Boolean, r: Rexp, c: Char) : Rexp = {
   case ALT(r1, r2) => ALT(shift(m, r1, c), shift(m, r2, c)) 
   case SEQ(r1, r2) =>
     SEQ(shift(m, r1, c), shift((m && nullable(r1)) || fin(r1), r2, c))
-   
-   /*
-    //println(s"cond: ${m && nullable(r1)}")
-    if (m && nullable(r1))
-    then {
-      //println("if case")
-      ALT(SEQ(shift(m, r1, c), shift(fin(r1), r2, c)), shift(true, r2, c))
-    }
-    else {
-      //println("else case")
-      SEQ(shift(m, r1, c), shift(fin(r1), r2, c))   
-    } 
-
-    */ 
   case STAR(r) => STAR(shift(m || fin(r), r, c))
-
-  case POINT(NTIMES(r, n,counter)) => NTIMES(r, n,counter)
+  //case POINT(NTIMES(r, n,counter)) => NTIMES(r, n,counter)
+  case POINT(r) => POINT(r)
   case NTIMES(r, n,counter) => 
-    if (counter == n) NTIMES(r, n,counter) else 
-        if (m || fin(r)) {
-            val nt=NTIMES(shift(m || fin(r), r, c), n , counter + 1)
-            if (counter + 1 == n && fin(r))
-                POINT(nt) 
-                else 
-                    nt
+    if (counter == n) POINT(NTIMES(r, n, counter))
+      else{
+        if (m || fin(r)) NTIMES(shift(m || fin(r), r, c), n, counter + 1)
+        else NTIMES(shift(false, r, c), n, counter)       
         }
-        else NTIMES(shift(false, r, c), n)
+        
 }
 }
 
@@ -187,6 +165,7 @@ def pp(e: Rexp) : String = e match {
     s"NTIMES{$n}{fin r=${fin(r)}, null r=${nullable(r)} counter=$counter}\n" ++ pps(r)
   case POINT(NTIMES(r, n, counter)) => 
     s"• NTIMES {$n}{fin r=${fin(r)}, null r=${nullable(r)}, counter=$counter}\n" ++ pps(r) 
+  case POINT(r) =>pp(r)
 }
 def pps(es: Rexp*) = indent(es.map(pp))
 
@@ -199,7 +178,7 @@ def test1() = {
   val rexp = (NTIMES("a" | ONE, n)) ~ (NTIMES(CHAR('a'), n))
 
   println("=====Test====")
-  val ss="aaaa".toList
+  val ss="aaaaa".toList
   println(s"String: $ss\n")
   println(s"Result= ${matcher(rexp, ss)}\n")
 
@@ -209,17 +188,17 @@ def test1() = {
   println(pp(mat(rexp, sPart)))
   }
   
-
   val finReg2=matcher2(rexp, ss)
   println(s"Final Reg Tree= \n ${pp(finReg2)}\n")
-  println(s"Raw Reg= ${finReg2}")
+  println(s"Raw Final Reg= ${finReg2}")
 }
 
 @main
 def test2() = {
   println("=====Test====")
-  val br1 = SEQ(ALT("a", "ab"), ALT("bc", "c"))
-  val s = "abc".toList
+  val br1 = SEQ(ALT("a", ONE), ALT(ONE,"c"))
+
+  val s = "ac".toList
 
   println(s"Result= ${matcher(br1, s)} \n")
   val finReg=matcher2(br1, s)
@@ -263,7 +242,16 @@ def test4() = {
   println(s"\n\n  ============================ \n\n")
 
 }
-/*</script>*/ /*<generated>*/
+
+def matchCount(r: Rexp): Int = r match {
+  case ZERO => 0
+  case ONE => 0
+  case CHAR(_) => 1
+  case ALT(r1, r2) => math.max(matchCount(r1), matchCount(r2)) // Return the max of both alternatives
+  case SEQ(r1, r2) => matchCount(r1) + matchCount(r2) // Sum both sequences
+  case STAR(r) => Int.MaxValue // STAR repeats infinitely, set max possible number
+  case NTIMES(r, n, _) => n * matchCount(r) // Multiply by `n`
+}/*</script>*/ /*<generated>*/
 def $main() = { _root_.scala.Iterator[String]() }
   override def toString = "play_point"
   /*</generated>*/

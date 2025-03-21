@@ -1,3 +1,62 @@
+file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/.ammonite/scala-2.13.14/amm-3.0.0-2-6342755f/play_point/src/ammonite/$file/play_point.amm.sc.scala
+### dotty.tools.dotc.core.TypeError$$anon$1: Toplevel definition explode is defined in
+  <WORKSPACE>/play_point.sc
+and also in
+  <WORKSPACE>/.ammonite/scala-2.13.14/amm-3.0.0-2-6342755f/play_point/src/ammonite/$file/play_point.amm.sc.scala
+One of these files should be removed from the classpath.
+
+occurred in the presentation compiler.
+
+presentation compiler configuration:
+
+
+action parameters:
+offset: 3488
+uri: file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/.ammonite/scala-2.13.14/amm-3.0.0-2-6342755f/play_point/src/ammonite/$file/play_point.amm.sc.scala
+text:
+```scala
+
+package ammonite
+package $file
+import _root_.ammonite.interp.api.InterpBridge.{
+  value => interp
+}
+import _root_.ammonite.interp.api.InterpBridge.value.{
+  exit,
+  scalaVersion
+}
+import _root_.ammonite.interp.api.IvyConstructor.{
+  ArtifactIdExt,
+  GroupIdExt
+}
+import _root_.ammonite.compiler.CompilerExtensions.{
+  CompilerInterpAPIExtensions,
+  CompilerReplAPIExtensions
+}
+import _root_.ammonite.runtime.tools.{
+  browse,
+  grep,
+  time,
+  tail
+}
+import _root_.ammonite.compiler.tools.{
+  desugar,
+  source
+}
+import _root_.mainargs.{
+  arg,
+  main
+}
+import _root_.ammonite.repl.tools.Util.{
+  PathRead
+}
+import _root_.ammonite.repl.ReplBridge.value.{
+  codeColorsImplicit
+}
+
+
+object play_point{
+/*<start>*/
 
 enum Rexp {
   case ZERO 
@@ -50,14 +109,20 @@ def fin(r: Rexp) : Boolean = r match {
   case ONE => false
   case CHAR(_) => false 
   case POINT(CHAR(_)) => true
+  case POINT(r) => fin(r)
+  case NTIMES(r, n,counter) => counter == n && fin(r)
+    //println("here")
+   // if(counter < n && nullable(r)) fin(r) else false
+  //case POINT(NTIMES(r, n, counter)) => true //if(counter ==n) true else false
   case ALT(r1, r2) => fin(r1) || fin(r2)
   case SEQ(r1, r2) => (fin(r1) && nullable(r2)) || fin(r2)
   case STAR(r) => fin(r)
-  case NTIMES(r, n,counter) => counter == n && fin(r)
-  case POINT(r) => fin(r) //?
+
 }
 
+// shift function from the paper
 def shift(m: Boolean, r: Rexp, c: Char) : Rexp = {
+  //println(s"mode: $m")
   r match {
   case ZERO => ZERO
   case ONE => ONE
@@ -66,17 +131,40 @@ def shift(m: Boolean, r: Rexp, c: Char) : Rexp = {
   case ALT(r1, r2) => ALT(shift(m, r1, c), shift(m, r2, c)) 
   case SEQ(r1, r2) =>
     SEQ(shift(m, r1, c), shift((m && nullable(r1)) || fin(r1), r2, c))
+     
+  /* 
+    //println(s"cond: ${m && nullable(r1)}")
+    if (m && nullable(r1))
+    then {
+      //println("if case")
+      ALT(SEQ(shift(m, r1, c), shift(fin(r1), r2, c)), shift(true, r2, c))
+    }
+    else {
+      //println("else case")
+      SEQ(shift(m, r1, c), shift(fin(r1), r2, c))   
+    } 
+  */
+     
   case STAR(r) => STAR(shift(m || fin(r), r, c))
+
   //case POINT(NTIMES(r, n,counter)) => NTIMES(r, n,counter)
-  case POINT(r) => POINT(r)
+  case POINT(r) => POINT(shift(m, r, c))
   case NTIMES(r, n,counter) => 
-    if (counter == n) POINT(NTIMES(r, n, counter))
-      else{
-        if (m || fin(r)) NTIMES(shift(m || fin(r), r, c), n, counter + 1)
-        else NTIMES(shift(false, r, c), n, counter)       
+      if (counter == n) 
+      SEQ(POINT(NTIMES(r, n, counter)), shift(false, ONE, c)) 
+      else
+        {
+            if (m || fin(r)) {
+                NTIMES(POINT(shift(m || fin(r), r, c)), n, counter + 1)
+                    }
+    @@else NTIMES(shift(false, r, c), n, counter)
+
+                
         }
         
-}
+       
+
+        }
 }
 
 def mat(r: Rexp, s: List[Char]) : Rexp = s match {
@@ -137,7 +225,7 @@ def test1() = {
   val rexp = (NTIMES("a" | ONE, n)) ~ (NTIMES(CHAR('a'), n))
 
   println("=====Test====")
-  val ss="aaaaa".toList
+  val ss="aa".toList
   println(s"String: $ss\n")
   println(s"Result= ${matcher(rexp, ss)}\n")
 
@@ -147,9 +235,10 @@ def test1() = {
   println(pp(mat(rexp, sPart)))
   }
   
+
   val finReg2=matcher2(rexp, ss)
   println(s"Final Reg Tree= \n ${pp(finReg2)}\n")
-  println(s"Raw Final Reg= ${finReg2}")
+  println(s"Raw Reg= ${finReg2}")
 }
 
 @main
@@ -157,7 +246,7 @@ def test2() = {
   println("=====Test====")
   val br1 = SEQ(ALT("a", ONE), ALT(ONE,"c"))
 
-  val s = "ac".toList
+  val s = "acac".toList
 
   println(s"Result= ${matcher(br1, s)} \n")
   val finReg=matcher2(br1, s)
@@ -210,4 +299,22 @@ def matchCount(r: Rexp): Int = r match {
   case SEQ(r1, r2) => matchCount(r1) + matchCount(r2) // Sum both sequences
   case STAR(r) => Int.MaxValue // STAR repeats infinitely, set max possible number
   case NTIMES(r, n, _) => n * matchCount(r) // Multiply by `n`
+} 
 }
+
+```
+
+
+
+#### Error stacktrace:
+
+```
+
+```
+#### Short summary: 
+
+dotty.tools.dotc.core.TypeError$$anon$1: Toplevel definition explode is defined in
+  <WORKSPACE>/play_point.sc
+and also in
+  <WORKSPACE>/.ammonite/scala-2.13.14/amm-3.0.0-2-6342755f/play_point/src/ammonite/$file/play_point.amm.sc.scala
+One of these files should be removed from the classpath.

@@ -1,0 +1,3496 @@
+
+ååplay_point2.sc®Pimport scala.language.implicitConversions
+import os.size
+
+enum Rexp {
+  case ZERO 
+  case ONE 
+  case CHAR(c: Char)
+  case POINT(r: Rexp, tag:List[Int]=List())
+  case ALT(r1: Rexp, r2: Rexp) 
+  case SEQ(r1: Rexp, r2: Rexp) 
+  case STAR(r: Rexp) 
+  case NTIMES(r: Rexp, n: Int , counter: Int = 0)
+}
+import Rexp._
+
+def nullable (r: Rexp) : Boolean = r match {
+  case ZERO => false
+  case ONE => true
+  case CHAR(_) => false
+  case POINT(r,tag) => nullable(r)
+  case ALT(r1, r2) => nullable(r1) || nullable(r2)
+  case SEQ(r1, r2) => nullable(r1) && nullable(r2)
+  case STAR(_) => true
+  case NTIMES(r, n,counter) => if (n == 0) true else nullable(r)
+}
+
+def fin(r: Rexp) : Boolean = r match {
+  case ZERO => false
+  case ONE => false
+  case CHAR(_) => false 
+  case POINT(CHAR(_),tag) =>  
+    if (tag.head > 0) true else false 
+  case ALT(r1, r2) => fin(r1) || fin(r2)
+  case SEQ(r1, r2) => (fin(r1) && nullable(r2)) || fin(r2)
+  case STAR(r) => fin(r)
+  case NTIMES(r, n,counter) => counter == n && fin(r)
+  case POINT(r,tag) => fin(r) //?
+}
+
+def shift(m: Boolean, re: Rexp, cp: (Char, Int)) : Rexp = {
+  val (c, pos) = cp
+
+  re match {
+  case ZERO => ZERO
+  case ONE => ONE
+  case CHAR(d) => if(m && d == c) 
+                    POINT(CHAR(d), List(pos+1)) 
+                  else CHAR(d)
+
+  case POINT(CHAR(d),tag) => if(m && d == c)
+                               POINT(CHAR(d), pos+1 ::tag ) 
+                             else POINT(CHAR(d), 0::tag)
+
+  case ALT(r1, r2) => ALT(shift(m, r1, cp), shift(m, r2, cp)) 
+  case SEQ(r1, r2) =>
+    if (m && nullable(r1))
+      {
+        ALT(
+            SEQ(shift(m, r1, cp), shift(fin(r1), r2, cp)) 
+                , 
+            shift(true, r2, cp))
+      }
+      else{
+        SEQ(shift(m, r1, cp), shift(fin(r1), r2, cp))   
+      }  
+    //SEQ(shift(m, r1, cp), shift((m && nullable(r1)) || fin(r1), r2, cp))
+  case STAR(r) => STAR(shift(m || fin(r), r, cp))
+  
+  //case POINT(NTIMES(r, n,counter)) => NTIMES(r, n,counter)
+  case POINT(NTIMES(r, n,counter),tag) => 
+    POINT(NTIMES(r, n,counter),tag:+pos)
+  case NTIMES(r, n,counter) => 
+   // println(s"NTIMES: ${matchCount(re)}")
+    if (counter == n) re
+      else{
+        if (m || fin(r)) NTIMES(shift(m || fin(r), r, cp), n, counter+1)
+        else NTIMES(shift(false, r, cp), n, counter)       
+        } // if shifted r is final, wrap in point? didn't work
+}
+}
+
+def mat(r: Rexp, s: List[Char]): Rexp = s match {
+  case Nil => r
+  case c :: cs =>
+    cs.zipWithIndex.foldLeft(shift(true, r, (c, 0))) {
+      case (currRexp, (c, i)) =>
+        shift(false, currRexp, (c, i + 1)) 
+    }
+}
+
+
+def matcher(r: Rexp, s: List[Char]) : Boolean =
+  if (s == Nil) nullable(r) else fin(mat(r, s))
+
+def matcher2(r: Rexp, s: List[Char]) : Rexp =
+  if (s == Nil)
+     if(nullable(r)) r else ZERO 
+     else mat(r, s)
+
+
+@main
+def test1() = {
+
+  
+}
+
+@main
+def test2() = {
+  val rexp = STAR("a" | "b" )
+
+  println("=====Test====")
+  val s="abba".toList
+  println(s"String: $s\n")
+  val finReg=matcher2(rexp, s)
+  println(s"Original size=${size(rexp)} Result= ${fin(finReg)} \n")
+
+
+  for (i <- s.indices) {
+  println(s"${i + 1}- =shift ${s(i)}=")
+  val sPart = s.take(i + 1)
+  println(pp(mat(rexp, sPart)))
+  }
+
+  println(s"Final Reg Tree= \n ${pp(finReg)}\n")
+  println(s"Raw Final Reg= ${finReg} size= ${size(finReg)}")
+
+  println(s"Points and Part expressions") 
+  val extracted = extractPoints(finReg) 
+  extracted.foreach { 
+    case (r, point) =>
+        println(s"r = $r and point = $point")
+    }
+
+  val inputLength = s.length        
+  val stages = traverseStages(finReg, inputLength)
+  stages.foreach(stage => println( pp(stage))) 
+
+  val (current,next) = popPoints(finReg)
+  println(s"1 current= ${current}\n")
+ // println(s"2 next= ${next}")
+  val (current2,next2)=popPoints(next)
+  println(s"2 current2= ${current2}")
+ // println(s"4 next2= ${next2}")
+  val (current3,next3) = popPoints(next2)
+  println(s"3 current= ${current3}\n")
+ // println(s"2 next= ${next}")
+  val (current4,next4)=popPoints(next3)
+  println(s"4 current2= ${current4}")
+ // println(s"4 next2= ${next2}")
+
+}
+
+//testing sequences, experimented with different sequences stuctures
+@main
+def test3() = {
+  println("=====Test====")
+  val rexp = ("a" ~ "b") 
+  val s = "ab".toList
+  println(s"start: $rexp")
+  println("=============\n")
+
+  
+  for (n <- (1 to s.length)) {
+    val sl = s.slice(0, n)
+    println(s"shift: ${sl.last}")
+    println(pp(mat(rexp, sl)))
+  }
+    
+  println(s"Result= ${matcher(rexp, s)}")
+  val finReg=matcher2(rexp, s)
+  println(s"Final Reg Tree= \n ${pp(finReg)}\n")
+  println(s"Raw Reg= ${finReg}")
+}
+
+// NTIMES test
+@main
+def test4() = {
+  //val rexp=ALT(NTIMES("a" | "b" , 2), NTIMES("c" | "d" , 2)) working
+  //val rexp=NTIMES( NTIMES("a",2) , 1) not working
+  val n=2
+  val rexp = (NTIMES("a" | ONE, n)) ~ (NTIMES(CHAR('a'), n))
+
+  println("=====Test====")
+  val ss="aaaab".toList
+  println(s"String: $ss\n")
+  println(s"Result= ${matcher(rexp, ss)}\n")
+
+  
+  for (i <- ss.indices) {
+  println(s"${i + 1}- =shift ${ss(i)}=")
+  val sPart = ss.take(i + 1)
+  println(pp(mat(rexp, sPart)))
+  }
+
+  val finReg2=matcher2(rexp, ss)
+  println(s"Final Reg Tree= \n ${pp(finReg2)}\n")
+  println(s"Raw Final Reg= ${finReg2}")
+  println(s"Points and Regular expressions")
+  val extracted = extractPoints(finReg2) 
+  extracted.foreach { 
+    case (r, point) =>
+        println(s"r = $r and point = $point")
+    }
+
+}
+
+def popPoints(r: Rexp): (Rexp, Rexp) = r match {
+  case ZERO => (ZERO, ZERO)
+  case ONE  => (ONE, ONE)
+  case CHAR(c) => (CHAR(c), CHAR(c)) // Return the same character for both current and next state becaue it doesnt have marks or points
+  case POINT(inner, tags) =>
+    val (currentInner, nextInner) = popPoints(inner)
+    if (tags.isEmpty) {
+      // No marker left: return the inner result for both current and next state.
+      (currentInner, nextInner)
+    } else {
+      // Build the updated next state by removing the top marker.
+      val updatedNext = POINT(inner, tags.tail)
+      tags.head match {
+        case 0 =>
+          // If the top marker is 0, current stage is unmarked: return the inner result.
+          (currentInner, updatedNext)
+        case x =>
+          // Otherwise, current stage is marked: wrap the inner result with a POINT having tag x or maybe use flag 1 as positive or marked.
+          (POINT(currentInner, List(x-1)), updatedNext)
+      }
+    }
+  case ALT(r1, r2) =>
+    val (curr1, next1) = popPoints(r1)
+    val (curr2, next2) = popPoints(r2)
+    (ALT(curr1, curr2), ALT(next1, next2))
+  
+  case SEQ(r1, r2) =>
+    val (curr1, next1) = popPoints(r1)
+    val (curr2, next2) = popPoints(r2)
+    (SEQ(curr1, curr2), SEQ(next1, next2))
+  
+  case STAR(inner) =>
+    val (curr, next) = popPoints(inner)
+    (STAR(curr), STAR(next))
+  
+  case NTIMES(inner, n, counter) =>
+    val (curr, next) = popPoints(inner)
+    (NTIMES(curr, n, counter), NTIMES(next, n, counter))
+}
+
+def traverseStages(r: Rexp, inputLength: Int): List[Rexp] = {
+  def loop(state: Rexp, stages: List[Rexp], remaining: Int): List[Rexp] = {
+    if (remaining == 0) stages
+    else {
+      val (currentStage, nextState) = popPoints(state)
+      loop(nextState, stages :+ currentStage, remaining - 1)
+    }
+  }
+  loop(r, List.empty, inputLength+1)
+}
+
+def traverseStages2(r: Rexp, inputLength: Int): List[Rexp] = {
+  val (stages, _) = (0 until (inputLength + 1)).foldLeft((List(r), r)) { case ((acc, state), _) =>
+    val (currentStage, nextState) = popPoints(state)
+    (acc :+ currentStage, nextState)
+  }
+  stages
+}
+
+
+def extractPoints(r: Rexp): List[(Rexp, Int)] = r match {
+  case POINT(r, pos) => pos.filter(_ != 0).map(p => (r, p-1)).reverse
+  case ALT(r1, r2)   => extractPoints(r1) ++ extractPoints(r2)
+  case SEQ(r1, r2)   => extractPoints(r1) ++ extractPoints(r2)
+  case STAR(r)       => extractPoints(r)
+  case NTIMES(r, _, _) => extractPoints(r)
+  case _             => List()
+}
+
+def matchCount(r: Rexp): Int = r match {
+  case ZERO => 0
+  case ONE => 0
+  case CHAR(_) => 1
+  case POINT(r,tag) => matchCount(r)
+  case ALT(r1, r2) => math.max(matchCount(r1), matchCount(r2)) // Return the max of both alternatives
+  case SEQ(r1, r2) => matchCount(r1) + matchCount(r2) // Sum both sequences
+ // case STAR(r) => Int.MaxValue // STAR repeats infinitely, set max possible number
+  case NTIMES(r, n, _) => n * matchCount(r) // Multiply by `n`
+}
+
+def size(r: Rexp) : Int = r match {
+  case ZERO => 1
+  case ONE => 1
+  case CHAR(_) => 1
+  case ALT(r1, r2) => 1 + size(r1) + size(r2)
+  case SEQ(r1, r2) => 1 + size(r1) + size(r2)
+  case STAR(r) => 1 + size(r)
+  case NTIMES(r,n,counter) => 1 + size(r) 
+  case POINT(r,tag) => 1 + size(r)}
+
+// some syntax sugar for regexes
+def charlist2rexp(s : List[Char]): Rexp = s match {
+  case Nil => ONE
+  case c::Nil => CHAR(c)
+  case c::s => SEQ(CHAR(c), charlist2rexp(s))
+}
+// strings are coerced into Rexps
+given Conversion[String, Rexp] = s => charlist2rexp(s.toList)
+
+//val ABCD : Rexp = "abcd"
+
+extension (r: Rexp) {
+  def | (s: Rexp) = ALT(r, s)
+  def % = STAR(r)
+  def ~ (s: Rexp) = SEQ(r, s)
+}
+
+// pretty-printing REGs
+def implode(ss: Seq[String]) = ss.mkString("\n")
+def explode(s: String) = s.split("\n").toList
+
+def lst(s: String) : String = explode(s) match {
+  case hd :: tl => implode(" ‚îî" ++ hd :: tl.map("  " ++ _))
+  case Nil => ""
+}
+
+def mid(s: String) : String = explode(s) match {
+  case hd :: tl => implode(" ‚îú" ++ hd :: tl.map(" ‚îÇ" ++ _))
+  case Nil => ""
+}
+
+def indent(ss: Seq[String]) : String = ss match {
+  case init :+ last => implode(init.map(mid) :+ lst(last))
+  case _ => "" 
+}
+
+def pp(e: Rexp) : String = e match {
+  case ZERO => "0\n"
+  case ONE => "1\n"
+  case CHAR(c) => s"$c\n"
+  case POINT(CHAR(c),tag) => if(tag.head >0) s"‚Ä¢$c\n" else s"$c\n"
+  case ALT(r1, r2) => s"ALT{fin r1=${fin(r1)}, null r1=${nullable(r1)}}\n" ++ pps(r1, r2)
+  case SEQ(r1, r2) => s"SEQ{fin r1=${fin(r1)}, null r1=${nullable(r1)}}\n" ++ pps(r1, r2)
+  case STAR(r) => "STAR\n" ++ pps(r)
+  case NTIMES(r, n,counter) => 
+    s"NTIMES{$n}{fin r=${fin(r)}, null r=${nullable(r)} counter=$counter}\n" ++ pps(r)
+  case POINT(NTIMES(r, n, counter),tag) => 
+    s"‚Ä¢ NTIMES {$n}{fin r=${fin(r)}, null r=${nullable(r)}, counter=$counter}\n" ++ pps(r) 
+  case POINT(r,tag) =>pp(r)
+}
+def pps(es: Rexp*) = indent(es.map(pp))
+*o
++ammonite/$file/play_point2.Rexp#`<init>`(). Ä@*<init>Ää*( $" ammonite/$file/play_point2.Rexp#í: *¬
+ ammonite/$file/play_point2.Rexp# îÄ*RexpÄäà
+Öjava/lang/Object#scala/reflect/Enum#$" ammonite/$file/play_point2.Rexp#"-
++ammonite/$file/play_point2.Rexp#`<init>`().í: *f
+%ammonite/$file/play_point2.Rexp.ZERO. Ä©*ZEROÄä("&
+$" ammonite/$file/play_point2.Rexp#í: *d
+$ammonite/$file/play_point2.Rexp.ONE. Ä©*ONEÄä("&
+$" ammonite/$file/play_point2.Rexp#í: *O
+'ammonite/$file/play_point2.Rexp.CHAR#c. Ä*cÄä"
+scala/Char#í: *O
+/ammonite/$file/play_point2.Rexp.CHAR#copy().(c)*cÄä"
+scala/Char#*°
+,ammonite/$file/play_point2.Rexp.CHAR#copy().*copyÄä`^1
+/ammonite/$file/play_point2.Rexp.CHAR#copy().(c))'%ammonite/$file/play_point2.Rexp.CHAR#í: *•
+6ammonite/$file/play_point2.Rexp.CHAR#copy$default$1().*copy$default$1ÄäP"N
+LjJ
+HBF
+scala/Char#3
+1/-scala/annotation/unchecked/uncheckedVariance#í: *}
+/ammonite/$file/play_point2.Rexp.CHAR#ordinal().*ordinalÄä"
+j
+
+scala/Int#í: öscala/reflect/Enum#ordinal().*T
+*ammonite/$file/play_point2.Rexp.CHAR#_1().*_1Ää"
+j
+scala/Char#í: *V
+3ammonite/$file/play_point2.Rexp.CHAR#`<init>`().(c) Ä*cÄä"
+scala/Char#*Æ
+0ammonite/$file/play_point2.Rexp.CHAR#`<init>`(). Ä@*<init>Äädb5
+3ammonite/$file/play_point2.Rexp.CHAR#`<init>`().(c))'%ammonite/$file/play_point2.Rexp.CHAR#í: *¥
+%ammonite/$file/play_point2.Rexp.CHAR# àÅ*CHARÄäı
+Ú$" ammonite/$file/play_point2.Rexp#)'%ammonite/$file/play_point2.Rexp.CHAR#"û
+'ammonite/$file/play_point2.Rexp.CHAR#c.
+0ammonite/$file/play_point2.Rexp.CHAR#`<init>`().
+,ammonite/$file/play_point2.Rexp.CHAR#copy().
+6ammonite/$file/play_point2.Rexp.CHAR#copy$default$1().
+/ammonite/$file/play_point2.Rexp.CHAR#ordinal().
+*ammonite/$file/play_point2.Rexp.CHAR#_1().í: *P
+0ammonite/$file/play_point2.Rexp.CHAR.apply().(c)*cÄä"
+scala/Char#*§
+-ammonite/$file/play_point2.Rexp.CHAR.apply().*applyÄäa_2
+0ammonite/$file/play_point2.Rexp.CHAR.apply().(c))'%ammonite/$file/play_point2.Rexp.CHAR#í: *p
+4ammonite/$file/play_point2.Rexp.CHAR.unapply().(x$1)*x$1Ää-"+
+)'%ammonite/$file/play_point2.Rexp.CHAR#*¨
+/ammonite/$file/play_point2.Rexp.CHAR.unapply().*unapplyÄäec6
+4ammonite/$file/play_point2.Rexp.CHAR.unapply().(x$1))'%ammonite/$file/play_point2.Rexp.CHAR#í: *~
+0ammonite/$file/play_point2.Rexp.CHAR.toString().*toStringÄä"
+j
+java/lang/String#í: öscala/Any#toString().* 
+%ammonite/$file/play_point2.Rexp.CHAR.
+ *CHARÄäç
+äjava/lang/Object#*¢'%ammonite/$file/play_point2.Rexp.CHAR."ƒ
+0ammonite/$file/play_point2.Rexp.CHAR.`<init>`().
+-ammonite/$file/play_point2.Rexp.CHAR.apply().
+/ammonite/$file/play_point2.Rexp.CHAR.unapply().
+0ammonite/$file/play_point2.Rexp.CHAR.toString().í: *e
+(ammonite/$file/play_point2.Rexp.POINT#r. Ä*rÄä("&
+$" ammonite/$file/play_point2.Rexp#í: *y
+*ammonite/$file/play_point2.Rexp.POINT#tag. Ä*tagÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#í: *e
+0ammonite/$file/play_point2.Rexp.POINT#copy().(r)*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*y
+2ammonite/$file/play_point2.Rexp.POINT#copy().(tag)*tagÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#*⁄
+-ammonite/$file/play_point2.Rexp.POINT#copy().*copyÄäóîf
+0ammonite/$file/play_point2.Rexp.POINT#copy().(r)
+2ammonite/$file/play_point2.Rexp.POINT#copy().(tag)*(&ammonite/$file/play_point2.Rexp.POINT#í: *ª
+7ammonite/$file/play_point2.Rexp.POINT#copy$default$1().*copy$default$1Ääe"c
+aj_
+]B[
+$" ammonite/$file/play_point2.Rexp#3
+1/-scala/annotation/unchecked/uncheckedVariance#í: *À
+7ammonite/$file/play_point2.Rexp.POINT#copy$default$2().*copy$default$2Ääu"s
+qjo
+mBk
+42 scala/collection/immutable/List#
+scala/Int#3
+1/-scala/annotation/unchecked/uncheckedVariance#í: *~
+0ammonite/$file/play_point2.Rexp.POINT#ordinal().*ordinalÄä"
+j
+
+scala/Int#í: öscala/reflect/Enum#ordinal().*j
++ammonite/$file/play_point2.Rexp.POINT#_1().*_1Ää,"*
+(j&
+$" ammonite/$file/play_point2.Rexp#í: *z
++ammonite/$file/play_point2.Rexp.POINT#_2().*_2Ää<":
+8j6
+42 scala/collection/immutable/List#
+scala/Int#í: *l
+4ammonite/$file/play_point2.Rexp.POINT#`<init>`().(r) Ä*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*Ä
+6ammonite/$file/play_point2.Rexp.POINT#`<init>`().(tag) Ä*tagÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#*Î
+1ammonite/$file/play_point2.Rexp.POINT#`<init>`(). Ä@*<init>Ääüún
+4ammonite/$file/play_point2.Rexp.POINT#`<init>`().(r)
+6ammonite/$file/play_point2.Rexp.POINT#`<init>`().(tag)*(&ammonite/$file/play_point2.Rexp.POINT#í: *œ
+&ammonite/$file/play_point2.Rexp.POINT# àÅ*POINTÄäé
+ã$" ammonite/$file/play_point2.Rexp#*(&ammonite/$file/play_point2.Rexp.POINT#"∂
+(ammonite/$file/play_point2.Rexp.POINT#r.
+*ammonite/$file/play_point2.Rexp.POINT#tag.
+1ammonite/$file/play_point2.Rexp.POINT#`<init>`().
+-ammonite/$file/play_point2.Rexp.POINT#copy().
+7ammonite/$file/play_point2.Rexp.POINT#copy$default$1().
+7ammonite/$file/play_point2.Rexp.POINT#copy$default$2().
+0ammonite/$file/play_point2.Rexp.POINT#ordinal().
++ammonite/$file/play_point2.Rexp.POINT#_1().
++ammonite/$file/play_point2.Rexp.POINT#_2().í: *f
+1ammonite/$file/play_point2.Rexp.POINT.apply().(r)*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*z
+3ammonite/$file/play_point2.Rexp.POINT.apply().(tag)*tagÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#*ﬁ
+.ammonite/$file/play_point2.Rexp.POINT.apply().*applyÄäôñh
+1ammonite/$file/play_point2.Rexp.POINT.apply().(r)
+3ammonite/$file/play_point2.Rexp.POINT.apply().(tag)*(&ammonite/$file/play_point2.Rexp.POINT#í: *r
+5ammonite/$file/play_point2.Rexp.POINT.unapply().(x$1)*x$1Ää.",
+*(&ammonite/$file/play_point2.Rexp.POINT#*Ø
+0ammonite/$file/play_point2.Rexp.POINT.unapply().*unapplyÄäge7
+5ammonite/$file/play_point2.Rexp.POINT.unapply().(x$1)*(&ammonite/$file/play_point2.Rexp.POINT#í: *
+1ammonite/$file/play_point2.Rexp.POINT.toString().*toStringÄä"
+j
+java/lang/String#í: öscala/Any#toString().*Â
+Dammonite/$file/play_point2.Rexp.POINT.$lessinit$greater$default$2().*$lessinit$greater$default$2Ääu"s
+qjo
+mBk
+42 scala/collection/immutable/List#
+scala/Int#3
+1/-scala/annotation/unchecked/uncheckedVariance#í: *ó
+&ammonite/$file/play_point2.Rexp.POINT.
+ *POINTÄäÿ
+’java/lang/Object#+¢(&ammonite/$file/play_point2.Rexp.POINT."é
+1ammonite/$file/play_point2.Rexp.POINT.`<init>`().
+.ammonite/$file/play_point2.Rexp.POINT.apply().
+0ammonite/$file/play_point2.Rexp.POINT.unapply().
+1ammonite/$file/play_point2.Rexp.POINT.toString().
+Dammonite/$file/play_point2.Rexp.POINT.$lessinit$greater$default$2().í: *e
+'ammonite/$file/play_point2.Rexp.ALT#r1. Ä*r1Ää("&
+$" ammonite/$file/play_point2.Rexp#í: *e
+'ammonite/$file/play_point2.Rexp.ALT#r2. Ä*r2Ää("&
+$" ammonite/$file/play_point2.Rexp#í: *e
+/ammonite/$file/play_point2.Rexp.ALT#copy().(r1)*r1Ää("&
+$" ammonite/$file/play_point2.Rexp#*e
+/ammonite/$file/play_point2.Rexp.ALT#copy().(r2)*r2Ää("&
+$" ammonite/$file/play_point2.Rexp#*“
++ammonite/$file/play_point2.Rexp.ALT#copy().*copyÄäëéb
+/ammonite/$file/play_point2.Rexp.ALT#copy().(r1)
+/ammonite/$file/play_point2.Rexp.ALT#copy().(r2)(&$ammonite/$file/play_point2.Rexp.ALT#í: *π
+5ammonite/$file/play_point2.Rexp.ALT#copy$default$1().*copy$default$1Ääe"c
+aj_
+]B[
+$" ammonite/$file/play_point2.Rexp#3
+1/-scala/annotation/unchecked/uncheckedVariance#í: *π
+5ammonite/$file/play_point2.Rexp.ALT#copy$default$2().*copy$default$2Ääe"c
+aj_
+]B[
+$" ammonite/$file/play_point2.Rexp#3
+1/-scala/annotation/unchecked/uncheckedVariance#í: *|
+.ammonite/$file/play_point2.Rexp.ALT#ordinal().*ordinalÄä"
+j
+
+scala/Int#í: öscala/reflect/Enum#ordinal().*h
+)ammonite/$file/play_point2.Rexp.ALT#_1().*_1Ää,"*
+(j&
+$" ammonite/$file/play_point2.Rexp#í: *h
+)ammonite/$file/play_point2.Rexp.ALT#_2().*_2Ää,"*
+(j&
+$" ammonite/$file/play_point2.Rexp#í: *l
+3ammonite/$file/play_point2.Rexp.ALT#`<init>`().(r1) Ä*r1Ää("&
+$" ammonite/$file/play_point2.Rexp#*l
+3ammonite/$file/play_point2.Rexp.ALT#`<init>`().(r2) Ä*r2Ää("&
+$" ammonite/$file/play_point2.Rexp#*„
+/ammonite/$file/play_point2.Rexp.ALT#`<init>`(). Ä@*<init>Ääôñj
+3ammonite/$file/play_point2.Rexp.ALT#`<init>`().(r1)
+3ammonite/$file/play_point2.Rexp.ALT#`<init>`().(r2)(&$ammonite/$file/play_point2.Rexp.ALT#í: *∑
+$ammonite/$file/play_point2.Rexp.ALT# àÅ*ALTÄä˙
+˜$" ammonite/$file/play_point2.Rexp#(&$ammonite/$file/play_point2.Rexp.ALT#"§
+'ammonite/$file/play_point2.Rexp.ALT#r1.
+'ammonite/$file/play_point2.Rexp.ALT#r2.
+/ammonite/$file/play_point2.Rexp.ALT#`<init>`().
++ammonite/$file/play_point2.Rexp.ALT#copy().
+5ammonite/$file/play_point2.Rexp.ALT#copy$default$1().
+5ammonite/$file/play_point2.Rexp.ALT#copy$default$2().
+.ammonite/$file/play_point2.Rexp.ALT#ordinal().
+)ammonite/$file/play_point2.Rexp.ALT#_1().
+)ammonite/$file/play_point2.Rexp.ALT#_2().í: *f
+0ammonite/$file/play_point2.Rexp.ALT.apply().(r1)*r1Ää("&
+$" ammonite/$file/play_point2.Rexp#*f
+0ammonite/$file/play_point2.Rexp.ALT.apply().(r2)*r2Ää("&
+$" ammonite/$file/play_point2.Rexp#*÷
+,ammonite/$file/play_point2.Rexp.ALT.apply().*applyÄäìêd
+0ammonite/$file/play_point2.Rexp.ALT.apply().(r1)
+0ammonite/$file/play_point2.Rexp.ALT.apply().(r2)(&$ammonite/$file/play_point2.Rexp.ALT#í: *n
+3ammonite/$file/play_point2.Rexp.ALT.unapply().(x$1)*x$1Ää,"*
+(&$ammonite/$file/play_point2.Rexp.ALT#*©
+.ammonite/$file/play_point2.Rexp.ALT.unapply().*unapplyÄäca5
+3ammonite/$file/play_point2.Rexp.ALT.unapply().(x$1)(&$ammonite/$file/play_point2.Rexp.ALT#í: *}
+/ammonite/$file/play_point2.Rexp.ALT.toString().*toStringÄä"
+j
+java/lang/String#í: öscala/Any#toString().*√
+$ammonite/$file/play_point2.Rexp.ALT.
+ *ALTÄäà
+Öjava/lang/Object#)¢&$ammonite/$file/play_point2.Rexp.ALT."¿
+/ammonite/$file/play_point2.Rexp.ALT.`<init>`().
+,ammonite/$file/play_point2.Rexp.ALT.apply().
+.ammonite/$file/play_point2.Rexp.ALT.unapply().
+/ammonite/$file/play_point2.Rexp.ALT.toString().í: *e
+'ammonite/$file/play_point2.Rexp.SEQ#r1. Ä*r1Ää("&
+$" ammonite/$file/play_point2.Rexp#í: *e
+'ammonite/$file/play_point2.Rexp.SEQ#r2. Ä*r2Ää("&
+$" ammonite/$file/play_point2.Rexp#í: *e
+/ammonite/$file/play_point2.Rexp.SEQ#copy().(r1)*r1Ää("&
+$" ammonite/$file/play_point2.Rexp#*e
+/ammonite/$file/play_point2.Rexp.SEQ#copy().(r2)*r2Ää("&
+$" ammonite/$file/play_point2.Rexp#*“
++ammonite/$file/play_point2.Rexp.SEQ#copy().*copyÄäëéb
+/ammonite/$file/play_point2.Rexp.SEQ#copy().(r1)
+/ammonite/$file/play_point2.Rexp.SEQ#copy().(r2)(&$ammonite/$file/play_point2.Rexp.SEQ#í: *π
+5ammonite/$file/play_point2.Rexp.SEQ#copy$default$1().*copy$default$1Ääe"c
+aj_
+]B[
+$" ammonite/$file/play_point2.Rexp#3
+1/-scala/annotation/unchecked/uncheckedVariance#í: *π
+5ammonite/$file/play_point2.Rexp.SEQ#copy$default$2().*copy$default$2Ääe"c
+aj_
+]B[
+$" ammonite/$file/play_point2.Rexp#3
+1/-scala/annotation/unchecked/uncheckedVariance#í: *|
+.ammonite/$file/play_point2.Rexp.SEQ#ordinal().*ordinalÄä"
+j
+
+scala/Int#í: öscala/reflect/Enum#ordinal().*h
+)ammonite/$file/play_point2.Rexp.SEQ#_1().*_1Ää,"*
+(j&
+$" ammonite/$file/play_point2.Rexp#í: *h
+)ammonite/$file/play_point2.Rexp.SEQ#_2().*_2Ää,"*
+(j&
+$" ammonite/$file/play_point2.Rexp#í: *l
+3ammonite/$file/play_point2.Rexp.SEQ#`<init>`().(r1) Ä*r1Ää("&
+$" ammonite/$file/play_point2.Rexp#*l
+3ammonite/$file/play_point2.Rexp.SEQ#`<init>`().(r2) Ä*r2Ää("&
+$" ammonite/$file/play_point2.Rexp#*„
+/ammonite/$file/play_point2.Rexp.SEQ#`<init>`(). Ä@*<init>Ääôñj
+3ammonite/$file/play_point2.Rexp.SEQ#`<init>`().(r1)
+3ammonite/$file/play_point2.Rexp.SEQ#`<init>`().(r2)(&$ammonite/$file/play_point2.Rexp.SEQ#í: *∑
+$ammonite/$file/play_point2.Rexp.SEQ# àÅ*SEQÄä˙
+˜$" ammonite/$file/play_point2.Rexp#(&$ammonite/$file/play_point2.Rexp.SEQ#"§
+'ammonite/$file/play_point2.Rexp.SEQ#r1.
+'ammonite/$file/play_point2.Rexp.SEQ#r2.
+/ammonite/$file/play_point2.Rexp.SEQ#`<init>`().
++ammonite/$file/play_point2.Rexp.SEQ#copy().
+5ammonite/$file/play_point2.Rexp.SEQ#copy$default$1().
+5ammonite/$file/play_point2.Rexp.SEQ#copy$default$2().
+.ammonite/$file/play_point2.Rexp.SEQ#ordinal().
+)ammonite/$file/play_point2.Rexp.SEQ#_1().
+)ammonite/$file/play_point2.Rexp.SEQ#_2().í: *f
+0ammonite/$file/play_point2.Rexp.SEQ.apply().(r1)*r1Ää("&
+$" ammonite/$file/play_point2.Rexp#*f
+0ammonite/$file/play_point2.Rexp.SEQ.apply().(r2)*r2Ää("&
+$" ammonite/$file/play_point2.Rexp#*÷
+,ammonite/$file/play_point2.Rexp.SEQ.apply().*applyÄäìêd
+0ammonite/$file/play_point2.Rexp.SEQ.apply().(r1)
+0ammonite/$file/play_point2.Rexp.SEQ.apply().(r2)(&$ammonite/$file/play_point2.Rexp.SEQ#í: *n
+3ammonite/$file/play_point2.Rexp.SEQ.unapply().(x$1)*x$1Ää,"*
+(&$ammonite/$file/play_point2.Rexp.SEQ#*©
+.ammonite/$file/play_point2.Rexp.SEQ.unapply().*unapplyÄäca5
+3ammonite/$file/play_point2.Rexp.SEQ.unapply().(x$1)(&$ammonite/$file/play_point2.Rexp.SEQ#í: *}
+/ammonite/$file/play_point2.Rexp.SEQ.toString().*toStringÄä"
+j
+java/lang/String#í: öscala/Any#toString().*√
+$ammonite/$file/play_point2.Rexp.SEQ.
+ *SEQÄäà
+Öjava/lang/Object#)¢&$ammonite/$file/play_point2.Rexp.SEQ."¿
+/ammonite/$file/play_point2.Rexp.SEQ.`<init>`().
+,ammonite/$file/play_point2.Rexp.SEQ.apply().
+.ammonite/$file/play_point2.Rexp.SEQ.unapply().
+/ammonite/$file/play_point2.Rexp.SEQ.toString().í: *d
+'ammonite/$file/play_point2.Rexp.STAR#r. Ä*rÄä("&
+$" ammonite/$file/play_point2.Rexp#í: *d
+/ammonite/$file/play_point2.Rexp.STAR#copy().(r)*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*°
+,ammonite/$file/play_point2.Rexp.STAR#copy().*copyÄä`^1
+/ammonite/$file/play_point2.Rexp.STAR#copy().(r))'%ammonite/$file/play_point2.Rexp.STAR#í: *∫
+6ammonite/$file/play_point2.Rexp.STAR#copy$default$1().*copy$default$1Ääe"c
+aj_
+]B[
+$" ammonite/$file/play_point2.Rexp#3
+1/-scala/annotation/unchecked/uncheckedVariance#í: *}
+/ammonite/$file/play_point2.Rexp.STAR#ordinal().*ordinalÄä"
+j
+
+scala/Int#í: öscala/reflect/Enum#ordinal().*i
+*ammonite/$file/play_point2.Rexp.STAR#_1().*_1Ää,"*
+(j&
+$" ammonite/$file/play_point2.Rexp#í: *k
+3ammonite/$file/play_point2.Rexp.STAR#`<init>`().(r) Ä*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*Æ
+0ammonite/$file/play_point2.Rexp.STAR#`<init>`(). Ä@*<init>Äädb5
+3ammonite/$file/play_point2.Rexp.STAR#`<init>`().(r))'%ammonite/$file/play_point2.Rexp.STAR#í: *¥
+%ammonite/$file/play_point2.Rexp.STAR# àÅ*STARÄäı
+Ú$" ammonite/$file/play_point2.Rexp#)'%ammonite/$file/play_point2.Rexp.STAR#"û
+'ammonite/$file/play_point2.Rexp.STAR#r.
+0ammonite/$file/play_point2.Rexp.STAR#`<init>`().
+,ammonite/$file/play_point2.Rexp.STAR#copy().
+6ammonite/$file/play_point2.Rexp.STAR#copy$default$1().
+/ammonite/$file/play_point2.Rexp.STAR#ordinal().
+*ammonite/$file/play_point2.Rexp.STAR#_1().í: *e
+0ammonite/$file/play_point2.Rexp.STAR.apply().(r)*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*§
+-ammonite/$file/play_point2.Rexp.STAR.apply().*applyÄäa_2
+0ammonite/$file/play_point2.Rexp.STAR.apply().(r))'%ammonite/$file/play_point2.Rexp.STAR#í: *p
+4ammonite/$file/play_point2.Rexp.STAR.unapply().(x$1)*x$1Ää-"+
+)'%ammonite/$file/play_point2.Rexp.STAR#*¨
+/ammonite/$file/play_point2.Rexp.STAR.unapply().*unapplyÄäec6
+4ammonite/$file/play_point2.Rexp.STAR.unapply().(x$1))'%ammonite/$file/play_point2.Rexp.STAR#í: *~
+0ammonite/$file/play_point2.Rexp.STAR.toString().*toStringÄä"
+j
+java/lang/String#í: öscala/Any#toString().* 
+%ammonite/$file/play_point2.Rexp.STAR.
+ *STARÄäç
+äjava/lang/Object#*¢'%ammonite/$file/play_point2.Rexp.STAR."ƒ
+0ammonite/$file/play_point2.Rexp.STAR.`<init>`().
+-ammonite/$file/play_point2.Rexp.STAR.apply().
+/ammonite/$file/play_point2.Rexp.STAR.unapply().
+0ammonite/$file/play_point2.Rexp.STAR.toString().í: *f
+)ammonite/$file/play_point2.Rexp.NTIMES#r. Ä*rÄä("&
+$" ammonite/$file/play_point2.Rexp#í: *P
+)ammonite/$file/play_point2.Rexp.NTIMES#n. Ä*nÄä"
+
+scala/Int#í: *\
+/ammonite/$file/play_point2.Rexp.NTIMES#counter. Ä*counterÄä"
+
+scala/Int#í: *f
+1ammonite/$file/play_point2.Rexp.NTIMES#copy().(r)*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*P
+1ammonite/$file/play_point2.Rexp.NTIMES#copy().(n)*nÄä"
+
+scala/Int#*\
+7ammonite/$file/play_point2.Rexp.NTIMES#copy().(counter)*counterÄä"
+
+scala/Int#*ñ
+.ammonite/$file/play_point2.Rexp.NTIMES#copy().*copyÄä“œü
+1ammonite/$file/play_point2.Rexp.NTIMES#copy().(r)
+1ammonite/$file/play_point2.Rexp.NTIMES#copy().(n)
+7ammonite/$file/play_point2.Rexp.NTIMES#copy().(counter)+)'ammonite/$file/play_point2.Rexp.NTIMES#í: *º
+8ammonite/$file/play_point2.Rexp.NTIMES#copy$default$1().*copy$default$1Ääe"c
+aj_
+]B[
+$" ammonite/$file/play_point2.Rexp#3
+1/-scala/annotation/unchecked/uncheckedVariance#í: *¶
+8ammonite/$file/play_point2.Rexp.NTIMES#copy$default$2().*copy$default$2ÄäO"M
+KjI
+GBE
+
+scala/Int#3
+1/-scala/annotation/unchecked/uncheckedVariance#í: *¶
+8ammonite/$file/play_point2.Rexp.NTIMES#copy$default$3().*copy$default$3ÄäO"M
+KjI
+GBE
+
+scala/Int#3
+1/-scala/annotation/unchecked/uncheckedVariance#í: *
+1ammonite/$file/play_point2.Rexp.NTIMES#ordinal().*ordinalÄä"
+j
+
+scala/Int#í: öscala/reflect/Enum#ordinal().*k
+,ammonite/$file/play_point2.Rexp.NTIMES#_1().*_1Ää,"*
+(j&
+$" ammonite/$file/play_point2.Rexp#í: *U
+,ammonite/$file/play_point2.Rexp.NTIMES#_2().*_2Ää"
+j
+
+scala/Int#í: *U
+,ammonite/$file/play_point2.Rexp.NTIMES#_3().*_3Ää"
+j
+
+scala/Int#í: *m
+5ammonite/$file/play_point2.Rexp.NTIMES#`<init>`().(r) Ä*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*W
+5ammonite/$file/play_point2.Rexp.NTIMES#`<init>`().(n) Ä*nÄä"
+
+scala/Int#*c
+;ammonite/$file/play_point2.Rexp.NTIMES#`<init>`().(counter) Ä*counterÄä"
+
+scala/Int#*´
+2ammonite/$file/play_point2.Rexp.NTIMES#`<init>`(). Ä@*<init>Ääﬁ€´
+5ammonite/$file/play_point2.Rexp.NTIMES#`<init>`().(r)
+5ammonite/$file/play_point2.Rexp.NTIMES#`<init>`().(n)
+;ammonite/$file/play_point2.Rexp.NTIMES#`<init>`().(counter)+)'ammonite/$file/play_point2.Rexp.NTIMES#í: *Ú
+'ammonite/$file/play_point2.Rexp.NTIMES# àÅ*NTIMESÄäØ
+¨$" ammonite/$file/play_point2.Rexp#+)'ammonite/$file/play_point2.Rexp.NTIMES#"÷
+)ammonite/$file/play_point2.Rexp.NTIMES#r.
+)ammonite/$file/play_point2.Rexp.NTIMES#n.
+/ammonite/$file/play_point2.Rexp.NTIMES#counter.
+2ammonite/$file/play_point2.Rexp.NTIMES#`<init>`().
+.ammonite/$file/play_point2.Rexp.NTIMES#copy().
+8ammonite/$file/play_point2.Rexp.NTIMES#copy$default$1().
+8ammonite/$file/play_point2.Rexp.NTIMES#copy$default$2().
+8ammonite/$file/play_point2.Rexp.NTIMES#copy$default$3().
+1ammonite/$file/play_point2.Rexp.NTIMES#ordinal().
+,ammonite/$file/play_point2.Rexp.NTIMES#_1().
+,ammonite/$file/play_point2.Rexp.NTIMES#_2().
+,ammonite/$file/play_point2.Rexp.NTIMES#_3().í: *g
+2ammonite/$file/play_point2.Rexp.NTIMES.apply().(r)*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*Q
+2ammonite/$file/play_point2.Rexp.NTIMES.apply().(n)*nÄä"
+
+scala/Int#*]
+8ammonite/$file/play_point2.Rexp.NTIMES.apply().(counter)*counterÄä"
+
+scala/Int#*õ
+/ammonite/$file/play_point2.Rexp.NTIMES.apply().*applyÄä’“¢
+2ammonite/$file/play_point2.Rexp.NTIMES.apply().(r)
+2ammonite/$file/play_point2.Rexp.NTIMES.apply().(n)
+8ammonite/$file/play_point2.Rexp.NTIMES.apply().(counter)+)'ammonite/$file/play_point2.Rexp.NTIMES#í: *t
+6ammonite/$file/play_point2.Rexp.NTIMES.unapply().(x$1)*x$1Ää/"-
++)'ammonite/$file/play_point2.Rexp.NTIMES#*≤
+1ammonite/$file/play_point2.Rexp.NTIMES.unapply().*unapplyÄäig8
+6ammonite/$file/play_point2.Rexp.NTIMES.unapply().(x$1)+)'ammonite/$file/play_point2.Rexp.NTIMES#í: *Ä
+2ammonite/$file/play_point2.Rexp.NTIMES.toString().*toStringÄä"
+j
+java/lang/String#í: öscala/Any#toString().*¿
+Eammonite/$file/play_point2.Rexp.NTIMES.$lessinit$greater$default$3().*$lessinit$greater$default$3ÄäO"M
+KjI
+GBE
+
+scala/Int#3
+1/-scala/annotation/unchecked/uncheckedVariance#í: *ü
+'ammonite/$file/play_point2.Rexp.NTIMES.
+ *NTIMESÄäﬁ
+€java/lang/Object#,¢)'ammonite/$file/play_point2.Rexp.NTIMES."ì
+2ammonite/$file/play_point2.Rexp.NTIMES.`<init>`().
+/ammonite/$file/play_point2.Rexp.NTIMES.apply().
+1ammonite/$file/play_point2.Rexp.NTIMES.unapply().
+2ammonite/$file/play_point2.Rexp.NTIMES.toString().
+Eammonite/$file/play_point2.Rexp.NTIMES.$lessinit$greater$default$3().í: *Y
+2ammonite/$file/play_point2.Rexp.$new().(_$ordinal)*	_$ordinalÄä"
+
+scala/Int#*X
+.ammonite/$file/play_point2.Rexp.$new().($name)*$nameÄä"
+java/lang/String#*Ã
+'ammonite/$file/play_point2.Rexp.$new().*$newÄäèåd
+2ammonite/$file/play_point2.Rexp.$new().(_$ordinal)
+.ammonite/$file/play_point2.Rexp.$new().($name)$" ammonite/$file/play_point2.Rexp#í *\
+7ammonite/$file/play_point2.Rexp.fromOrdinal().(ordinal)*ordinalÄä"
+
+scala/Int#*≠
+.ammonite/$file/play_point2.Rexp.fromOrdinal().*fromOrdinalÄäca9
+7ammonite/$file/play_point2.Rexp.fromOrdinal().(ordinal)$" ammonite/$file/play_point2.Rexp#í: *ê
+ ammonite/$file/play_point2.Rexp.
+ *RexpÄäÿ
+’java/lang/Object#%¢" ammonite/$file/play_point2.Rexp."î
++ammonite/$file/play_point2.Rexp.`<init>`().
+%ammonite/$file/play_point2.Rexp.ZERO.
+$ammonite/$file/play_point2.Rexp.ONE.
+%ammonite/$file/play_point2.Rexp.CHAR#
+%ammonite/$file/play_point2.Rexp.CHAR.
+%ammonite/$file/play_point2.Rexp.CHAR.
+&ammonite/$file/play_point2.Rexp.POINT#
+&ammonite/$file/play_point2.Rexp.POINT.
+&ammonite/$file/play_point2.Rexp.POINT.
+$ammonite/$file/play_point2.Rexp.ALT#
+$ammonite/$file/play_point2.Rexp.ALT.
+$ammonite/$file/play_point2.Rexp.ALT.
+$ammonite/$file/play_point2.Rexp.SEQ#
+$ammonite/$file/play_point2.Rexp.SEQ.
+$ammonite/$file/play_point2.Rexp.SEQ.
+%ammonite/$file/play_point2.Rexp.STAR#
+%ammonite/$file/play_point2.Rexp.STAR.
+%ammonite/$file/play_point2.Rexp.STAR.
+'ammonite/$file/play_point2.Rexp.NTIMES#
+'ammonite/$file/play_point2.Rexp.NTIMES.
+'ammonite/$file/play_point2.Rexp.NTIMES.
+'ammonite/$file/play_point2.Rexp.$new().
+.ammonite/$file/play_point2.Rexp.fromOrdinal().í: *^
+)ammonite/$file/play_point2.nullable().(r)*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*>
+local0 Ä*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*P
+local1 Ä*tagÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#*?
+local2 Ä*r1Ää("&
+$" ammonite/$file/play_point2.Rexp#*?
+local3 Ä*r2Ää("&
+$" ammonite/$file/play_point2.Rexp#*?
+local4 Ä*r1Ää("&
+$" ammonite/$file/play_point2.Rexp#*?
+local5 Ä*r2Ää("&
+$" ammonite/$file/play_point2.Rexp#*>
+local6 Ä*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*(
+local7 Ä*nÄä"
+
+scala/Int#*.
+local8 Ä*counterÄä"
+
+scala/Int#*_
+&ammonite/$file/play_point2.nullable().*nullableÄä 
+local6scala/Boolean#í: *Y
+$ammonite/$file/play_point2.fin().(r)*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*P
+local9 Ä*tagÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#*@
+local10 Ä*r1Ää("&
+$" ammonite/$file/play_point2.Rexp#*@
+local11 Ä*r2Ää("&
+$" ammonite/$file/play_point2.Rexp#*@
+local12 Ä*r1Ää("&
+$" ammonite/$file/play_point2.Rexp#*@
+local13 Ä*r2Ää("&
+$" ammonite/$file/play_point2.Rexp#*?
+local14 Ä*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*?
+local15 Ä*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*)
+local16 Ä*nÄä"
+
+scala/Int#*/
+local17 Ä*counterÄä"
+
+scala/Int#*?
+local18 Ä*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*Q
+local19 Ä*tagÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#*V
+!ammonite/$file/play_point2.fin().*finÄä!	
+local18scala/Boolean#í: *I
+&ammonite/$file/play_point2.shift().(m)*mÄä"
+scala/Boolean#*]
+'ammonite/$file/play_point2.shift().(re)*reÄä("&
+$" ammonite/$file/play_point2.Rexp#*k
+'ammonite/$file/play_point2.shift().(cp)*cpÄä6"4
+20scala/Tuple2#scala/Char#
+scala/Int#**
+local20 Ä*cÄä"
+scala/Char#*+
+local21 Ä*posÄä"
+
+scala/Int#**
+local22 Ä*dÄä"
+scala/Char#**
+local23 Ä*dÄä"
+scala/Char#*Q
+local24 Ä*tagÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#*.
+local25 Ä*elem$1Ää"
+
+scala/Int#*@
+local26 Ä*r1Ää("&
+$" ammonite/$file/play_point2.Rexp#*@
+local27 Ä*r2Ää("&
+$" ammonite/$file/play_point2.Rexp#*@
+local28 Ä*r1Ää("&
+$" ammonite/$file/play_point2.Rexp#*@
+local29 Ä*r2Ää("&
+$" ammonite/$file/play_point2.Rexp#*?
+local30 Ä*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*?
+local31 Ä*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*)
+local32 Ä*nÄä"
+
+scala/Int#*/
+local33 Ä*counterÄä"
+
+scala/Int#*Q
+local34 Ä*tagÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#*?
+local35 Ä*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*)
+local36 Ä*nÄä"
+
+scala/Int#*/
+local37 Ä*counterÄä"
+
+scala/Int#*ﬂ
+#ammonite/$file/play_point2.shift().*shiftÄä•¢z
+&ammonite/$file/play_point2.shift().(m)
+'ammonite/$file/play_point2.shift().(re)
+'ammonite/$file/play_point2.shift().(cp)$" ammonite/$file/play_point2.Rexp#í: *Y
+$ammonite/$file/play_point2.mat().(r)*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*j
+$ammonite/$file/play_point2.mat().(s)*sÄä9"7
+53 scala/collection/immutable/List#scala/Char#**
+local38 Ä*cÄä"
+scala/Char#*Q
+local39 Ä*csÄä9"7
+53 scala/collection/immutable/List#scala/Char#*>
+local40*x$1Ää("&
+$" ammonite/$file/play_point2.Rexp#*Ö
+local41*x$2Ääo"m
+kiscala/Tuple2#HBF
+scala/Char#3
+1/-scala/annotation/unchecked/uncheckedVariance#
+scala/Int#*F
+local42 Ä*currRexpÄä("&
+$" ammonite/$file/play_point2.Rexp#**
+local43 Ä*cÄä"
+scala/Char#*)
+local44 Ä*iÄä"
+
+scala/Int#*´
+!ammonite/$file/play_point2.mat().*matÄävtL
+$ammonite/$file/play_point2.mat().(r)
+$ammonite/$file/play_point2.mat().(s)$" ammonite/$file/play_point2.Rexp#í: *]
+(ammonite/$file/play_point2.matcher().(r)*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*n
+(ammonite/$file/play_point2.matcher().(s)*sÄä9"7
+53 scala/collection/immutable/List#scala/Char#*©
+%ammonite/$file/play_point2.matcher().*matcherÄäljT
+(ammonite/$file/play_point2.matcher().(r)
+(ammonite/$file/play_point2.matcher().(s)scala/Boolean#í: *^
+)ammonite/$file/play_point2.matcher2().(r)*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*o
+)ammonite/$file/play_point2.matcher2().(s)*sÄä9"7
+53 scala/collection/immutable/List#scala/Char#*¿
+&ammonite/$file/play_point2.matcher2().*matcher2ÄäÄ~V
+)ammonite/$file/play_point2.matcher2().(r)
+)ammonite/$file/play_point2.matcher2().(s)$" ammonite/$file/play_point2.Rexp#í: *d
+#ammonite/$file/play_point2.test1().*test1j
+mainargs/main#Ää scala/Unit#í: *B
+local45 Ä*rexpÄä("&
+$" ammonite/$file/play_point2.Rexp#*P
+local46 Ä*sÄä9"7
+53 scala/collection/immutable/List#scala/Char#*D
+local47 Ä*finRegÄä("&
+$" ammonite/$file/play_point2.Rexp#*&
+local48*iÄä"
+
+scala/Int#*T
+local49 Ä*sPartÄä9"7
+53 scala/collection/immutable/List#scala/Char#*ê
+local50 Ä*	extractedÄäq"o
+mk scala/collection/immutable/List#GEscala/Tuple2#$" ammonite/$file/play_point2.Rexp#
+scala/Int#*a
+local51*x$1ÄäK"I
+GEscala/Tuple2#$" ammonite/$file/play_point2.Rexp#
+scala/Int#*?
+local52 Ä*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*-
+local53 Ä*pointÄä"
+
+scala/Int#*3
+local54 Ä*inputLengthÄä"
+
+scala/Int#*j
+local55 Ä*stagesÄäN"L
+JH scala/collection/immutable/List#$" ammonite/$file/play_point2.Rexp#*@
+local56*stageÄä("&
+$" ammonite/$file/play_point2.Rexp#*E
+local57 Ä*currentÄä("&
+$" ammonite/$file/play_point2.Rexp#*B
+local58 Ä*nextÄä("&
+$" ammonite/$file/play_point2.Rexp#*F
+local59 Ä*current2Ää("&
+$" ammonite/$file/play_point2.Rexp#*C
+local60 Ä*next2Ää("&
+$" ammonite/$file/play_point2.Rexp#*F
+local61 Ä*current3Ää("&
+$" ammonite/$file/play_point2.Rexp#*C
+local62 Ä*next3Ää("&
+$" ammonite/$file/play_point2.Rexp#*F
+local63 Ä*current4Ää("&
+$" ammonite/$file/play_point2.Rexp#*C
+local64 Ä*next4Ää("&
+$" ammonite/$file/play_point2.Rexp#*d
+#ammonite/$file/play_point2.test2().*test2j
+mainargs/main#Ää scala/Unit#í: *B
+local65 Ä*rexpÄä("&
+$" ammonite/$file/play_point2.Rexp#*P
+local66 Ä*sÄä9"7
+53 scala/collection/immutable/List#scala/Char#*&
+local67*nÄä"
+
+scala/Int#*Q
+local68 Ä*slÄä9"7
+53 scala/collection/immutable/List#scala/Char#*D
+local69 Ä*finRegÄä("&
+$" ammonite/$file/play_point2.Rexp#*d
+#ammonite/$file/play_point2.test3().*test3j
+mainargs/main#Ää scala/Unit#í: *)
+local70 Ä*nÄä"
+
+scala/Int#*B
+local71 Ä*rexpÄä("&
+$" ammonite/$file/play_point2.Rexp#*Q
+local72 Ä*ssÄä9"7
+53 scala/collection/immutable/List#scala/Char#*&
+local73*iÄä"
+
+scala/Int#*T
+local74 Ä*sPartÄä9"7
+53 scala/collection/immutable/List#scala/Char#*E
+local75 Ä*finReg2Ää("&
+$" ammonite/$file/play_point2.Rexp#*ê
+local76 Ä*	extractedÄäq"o
+mk scala/collection/immutable/List#GEscala/Tuple2#$" ammonite/$file/play_point2.Rexp#
+scala/Int#*a
+local77*x$1ÄäK"I
+GEscala/Tuple2#$" ammonite/$file/play_point2.Rexp#
+scala/Int#*?
+local78 Ä*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*-
+local79 Ä*pointÄä"
+
+scala/Int#*d
+#ammonite/$file/play_point2.test4().*test4j
+mainargs/main#Ää scala/Unit#í: *_
+*ammonite/$file/play_point2.popPoints().(r)*rÄä("&
+$" ammonite/$file/play_point2.Rexp#**
+local80 Ä*cÄä"
+scala/Char#*C
+local81 Ä*innerÄä("&
+$" ammonite/$file/play_point2.Rexp#*R
+local82 Ä*tagsÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#*J
+local83 Ä*currentInnerÄä("&
+$" ammonite/$file/play_point2.Rexp#*G
+local84 Ä*	nextInnerÄä("&
+$" ammonite/$file/play_point2.Rexp#*I
+local85 Ä*updatedNextÄä("&
+$" ammonite/$file/play_point2.Rexp#*)
+local86 Ä*xÄä"
+
+scala/Int#*@
+local87 Ä*r1Ää("&
+$" ammonite/$file/play_point2.Rexp#*@
+local88 Ä*r2Ää("&
+$" ammonite/$file/play_point2.Rexp#*C
+local89 Ä*curr1Ää("&
+$" ammonite/$file/play_point2.Rexp#*C
+local90 Ä*next1Ää("&
+$" ammonite/$file/play_point2.Rexp#*C
+local91 Ä*curr2Ää("&
+$" ammonite/$file/play_point2.Rexp#*C
+local92 Ä*next2Ää("&
+$" ammonite/$file/play_point2.Rexp#*@
+local93 Ä*r1Ää("&
+$" ammonite/$file/play_point2.Rexp#*@
+local94 Ä*r2Ää("&
+$" ammonite/$file/play_point2.Rexp#*C
+local95 Ä*curr1Ää("&
+$" ammonite/$file/play_point2.Rexp#*C
+local96 Ä*next1Ää("&
+$" ammonite/$file/play_point2.Rexp#*C
+local97 Ä*curr2Ää("&
+$" ammonite/$file/play_point2.Rexp#*C
+local98 Ä*next2Ää("&
+$" ammonite/$file/play_point2.Rexp#*C
+local99 Ä*innerÄä("&
+$" ammonite/$file/play_point2.Rexp#*C
+local100 Ä*currÄä("&
+$" ammonite/$file/play_point2.Rexp#*C
+local101 Ä*nextÄä("&
+$" ammonite/$file/play_point2.Rexp#*D
+local102 Ä*innerÄä("&
+$" ammonite/$file/play_point2.Rexp#**
+local103 Ä*nÄä"
+
+scala/Int#*0
+local104 Ä*counterÄä"
+
+scala/Int#*C
+local105 Ä*currÄä("&
+$" ammonite/$file/play_point2.Rexp#*C
+local106 Ä*nextÄä("&
+$" ammonite/$file/play_point2.Rexp#*“
+'ammonite/$file/play_point2.popPoints().*	popPointsÄäêç,
+*ammonite/$file/play_point2.popPoints().(r)][scala/Tuple2#$" ammonite/$file/play_point2.Rexp#$" ammonite/$file/play_point2.Rexp#í: *d
+/ammonite/$file/play_point2.traverseStages().(r)*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*b
+9ammonite/$file/play_point2.traverseStages().(inputLength)*inputLengthÄä"
+
+scala/Int#*A
+local107*stateÄä("&
+$" ammonite/$file/play_point2.Rexp#*h
+local108*stagesÄäN"L
+JH scala/collection/immutable/List#$" ammonite/$file/play_point2.Rexp#*/
+local109*	remainingÄä"
+
+scala/Int#*K
+local110 Ä*currentStageÄä("&
+$" ammonite/$file/play_point2.Rexp#*H
+local111 Ä*	nextStateÄä("&
+$" ammonite/$file/play_point2.Rexp#*Ü
+local112*loopÄänl
+local107
+local108
+local109JH scala/collection/immutable/List#$" ammonite/$file/play_point2.Rexp#*â
+,ammonite/$file/play_point2.traverseStages().*traverseStagesÄäΩ∫l
+/ammonite/$file/play_point2.traverseStages().(r)
+9ammonite/$file/play_point2.traverseStages().(inputLength)JH scala/collection/immutable/List#$" ammonite/$file/play_point2.Rexp#í: *e
+0ammonite/$file/play_point2.traverseStages2().(r)*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*c
+:ammonite/$file/play_point2.traverseStages2().(inputLength)*inputLengthÄä"
+
+scala/Int#*¢
+local113*x$1Äää"á
+ÑÅscala/Tuple2#JH scala/collection/immutable/List#$" ammonite/$file/play_point2.Rexp#$" ammonite/$file/play_point2.Rexp#*)
+local114*x$2Ää"
+
+scala/Int#*h
+local115 Ä*accÄäN"L
+JH scala/collection/immutable/List#$" ammonite/$file/play_point2.Rexp#*D
+local116 Ä*stateÄä("&
+$" ammonite/$file/play_point2.Rexp#*K
+local117 Ä*currentStageÄä("&
+$" ammonite/$file/play_point2.Rexp#*H
+local118 Ä*	nextStateÄä("&
+$" ammonite/$file/play_point2.Rexp#*k
+local119 Ä*stagesÄäN"L
+JH scala/collection/immutable/List#$" ammonite/$file/play_point2.Rexp#*ç
+-ammonite/$file/play_point2.traverseStages2().*traverseStages2Ääøºn
+0ammonite/$file/play_point2.traverseStages2().(r)
+:ammonite/$file/play_point2.traverseStages2().(inputLength)JH scala/collection/immutable/List#$" ammonite/$file/play_point2.Rexp#í: *c
+.ammonite/$file/play_point2.extractPoints().(r)*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*@
+local120 Ä*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*R
+local121 Ä*posÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#*'
+local122*pÄä"
+
+scala/Int#*A
+local123 Ä*r1Ää("&
+$" ammonite/$file/play_point2.Rexp#*A
+local124 Ä*r2Ää("&
+$" ammonite/$file/play_point2.Rexp#*A
+local125 Ä*r1Ää("&
+$" ammonite/$file/play_point2.Rexp#*A
+local126 Ä*r2Ää("&
+$" ammonite/$file/play_point2.Rexp#*@
+local127 Ä*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*@
+local128 Ä*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*∆
++ammonite/$file/play_point2.extractPoints().*extractPointsÄä}{
+
+local128mk scala/collection/immutable/List#GEscala/Tuple2#$" ammonite/$file/play_point2.Rexp#
+scala/Int#í: *`
++ammonite/$file/play_point2.matchCount().(r)*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*@
+local129 Ä*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*R
+local130 Ä*tagÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#*A
+local131 Ä*r1Ää("&
+$" ammonite/$file/play_point2.Rexp#*A
+local132 Ä*r2Ää("&
+$" ammonite/$file/play_point2.Rexp#*A
+local133 Ä*r1Ää("&
+$" ammonite/$file/play_point2.Rexp#*A
+local134 Ä*r2Ää("&
+$" ammonite/$file/play_point2.Rexp#*@
+local135 Ä*rÄä("&
+$" ammonite/$file/play_point2.Rexp#**
+local136 Ä*nÄä"
+
+scala/Int#*a
+(ammonite/$file/play_point2.matchCount().*
+matchCountÄä
+
+local135
+scala/Int#í: *Z
+%ammonite/$file/play_point2.size().(r)*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*A
+local137 Ä*r1Ää("&
+$" ammonite/$file/play_point2.Rexp#*A
+local138 Ä*r2Ää("&
+$" ammonite/$file/play_point2.Rexp#*A
+local139 Ä*r1Ää("&
+$" ammonite/$file/play_point2.Rexp#*A
+local140 Ä*r2Ää("&
+$" ammonite/$file/play_point2.Rexp#*@
+local141 Ä*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*@
+local142 Ä*rÄä("&
+$" ammonite/$file/play_point2.Rexp#**
+local143 Ä*nÄä"
+
+scala/Int#*0
+local144 Ä*counterÄä"
+
+scala/Int#*@
+local145 Ä*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*R
+local146 Ä*tagÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#*U
+"ammonite/$file/play_point2.size().*sizeÄä
+
+local145
+scala/Int#í: *t
+.ammonite/$file/play_point2.charlist2rexp().(s)*sÄä9"7
+53 scala/collection/immutable/List#scala/Char#*+
+local147 Ä*cÄä"
+scala/Char#*+
+local148 Ä*cÄä"
+scala/Char#*Q
+local149 Ä*sÄä9"7
+53 scala/collection/immutable/List#scala/Char#*}
++ammonite/$file/play_point2.charlist2rexp().*charlist2rexpÄä42
+
+local149$" ammonite/$file/play_point2.Rexp#í: *1
+local150*sÄä"
+scala/Predef.String#*¬
+8ammonite/$file/play_point2.given_Conversion_String_Rexp. Ëà*given_Conversion_String_RexpÄäY"W
+USscala/Conversion#scala/Predef.String#$" ammonite/$file/play_point2.Rexp#í: *Y
+$ammonite/$file/play_point2.`|`().(r)*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*Y
+$ammonite/$file/play_point2.`|`().(s)*sÄä("&
+$" ammonite/$file/play_point2.Rexp#*´
+!ammonite/$file/play_point2.`|`().*|Ääxv&
+$ammonite/$file/play_point2.`|`().(r)&
+$ammonite/$file/play_point2.`|`().(s)$" ammonite/$file/play_point2.Rexp#í: *Y
+$ammonite/$file/play_point2.`%`().(r)*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*É
+!ammonite/$file/play_point2.`%`().*%ÄäPN&
+$ammonite/$file/play_point2.`%`().(r)$" ammonite/$file/play_point2.Rexp#í: *Y
+$ammonite/$file/play_point2.`~`().(r)*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*Y
+$ammonite/$file/play_point2.`~`().(s)*sÄä("&
+$" ammonite/$file/play_point2.Rexp#*´
+!ammonite/$file/play_point2.`~`().*~Ääxv&
+$ammonite/$file/play_point2.`~`().(r)&
+$ammonite/$file/play_point2.`~`().(s)$" ammonite/$file/play_point2.Rexp#í: *x
+)ammonite/$file/play_point2.implode().(ss)*ssÄäA"?
+=;scala/collection/immutable/Seq#scala/Predef.String#*Ü
+%ammonite/$file/play_point2.implode().*implodeÄäIG+
+)ammonite/$file/play_point2.implode().(ss)scala/Predef.String#í: *Q
+(ammonite/$file/play_point2.explode().(s)*sÄä"
+scala/Predef.String#*®
+%ammonite/$file/play_point2.explode().*explodeÄäki*
+(ammonite/$file/play_point2.explode().(s);9 scala/collection/immutable/List#java/lang/String#í: *M
+$ammonite/$file/play_point2.lst().(s)*sÄä"
+scala/Predef.String#*2
+local151 Ä*hdÄä"
+java/lang/String#*X
+local152 Ä*tlÄä?"=
+;9 scala/collection/immutable/List#java/lang/String#*9
+local153 Ä*elem$2Ää"
+scala/Predef.String#*y
+!ammonite/$file/play_point2.lst().*lstÄäDB&
+$ammonite/$file/play_point2.lst().(s)scala/Predef.String#í: *M
+$ammonite/$file/play_point2.mid().(s)*sÄä"
+scala/Predef.String#*2
+local154 Ä*hdÄä"
+java/lang/String#*X
+local155 Ä*tlÄä?"=
+;9 scala/collection/immutable/List#java/lang/String#*9
+local156 Ä*elem$3Ää"
+scala/Predef.String#*y
+!ammonite/$file/play_point2.mid().*midÄäDB&
+$ammonite/$file/play_point2.mid().(s)scala/Predef.String#í: *w
+(ammonite/$file/play_point2.indent().(ss)*ssÄäA"?
+=;scala/collection/immutable/Seq#scala/Predef.String#*\
+local157 Ä*initÄäA"?
+=;scala/collection/immutable/Seq#scala/Predef.String#*4
+local158 Ä*lastÄä"
+java/lang/String#*1
+local159*sÄä"
+scala/Predef.String#*É
+$ammonite/$file/play_point2.indent().*indentÄäHF*
+(ammonite/$file/play_point2.indent().(ss)scala/Predef.String#í: *X
+#ammonite/$file/play_point2.pp().(e)*eÄä("&
+$" ammonite/$file/play_point2.Rexp#*+
+local160 Ä*cÄä"
+scala/Char#*+
+local161 Ä*cÄä"
+scala/Char#*R
+local162 Ä*tagÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#*A
+local163 Ä*r1Ää("&
+$" ammonite/$file/play_point2.Rexp#*A
+local164 Ä*r2Ää("&
+$" ammonite/$file/play_point2.Rexp#*A
+local165 Ä*r1Ää("&
+$" ammonite/$file/play_point2.Rexp#*A
+local166 Ä*r2Ää("&
+$" ammonite/$file/play_point2.Rexp#*@
+local167 Ä*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*@
+local168 Ä*rÄä("&
+$" ammonite/$file/play_point2.Rexp#**
+local169 Ä*nÄä"
+
+scala/Int#*0
+local170 Ä*counterÄä"
+
+scala/Int#*@
+local171 Ä*rÄä("&
+$" ammonite/$file/play_point2.Rexp#**
+local172 Ä*nÄä"
+
+scala/Int#*0
+local173 Ä*counterÄä"
+
+scala/Int#*R
+local174 Ä*tagÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#*@
+local175 Ä*rÄä("&
+$" ammonite/$file/play_point2.Rexp#*R
+local176 Ä*tagÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#*v
+ ammonite/$file/play_point2.pp().*ppÄäCA%
+#ammonite/$file/play_point2.pp().(e)scala/Predef.String#í: *_
+%ammonite/$file/play_point2.pps().(es)*esÄä,"*
+(r&
+$" ammonite/$file/play_point2.Rexp#*=
+local177*eÄä("&
+$" ammonite/$file/play_point2.Rexp#*z
+!ammonite/$file/play_point2.pps().*ppsÄäEC'
+%ammonite/$file/play_point2.pps().(es)scala/Predef.String#í: *w
+#ammonite/$file/play_point2.$main().*$mainÄä>< 86scala/collection/Iterator#scala/Predef.String#í: *t
+&ammonite/$file/play_point2.toString().*toStringÄä"
+j
+java/lang/String#í: öscala/Any#toString().*ö
+ammonite/$file/play_point2.
+ *play_point2Ää‡
+
+›
+java/lang/Object# ¢ammonite/$file/play_point2."°
+
+&ammonite/$file/play_point2.`<init>`().
+ ammonite/$file/play_point2.Rexp#
+ ammonite/$file/play_point2.Rexp.
+ ammonite/$file/play_point2.Rexp.
+&ammonite/$file/play_point2.nullable().
+!ammonite/$file/play_point2.fin().
+#ammonite/$file/play_point2.shift().
+!ammonite/$file/play_point2.mat().
+%ammonite/$file/play_point2.matcher().
+&ammonite/$file/play_point2.matcher2().
+#ammonite/$file/play_point2.test1().
+#ammonite/$file/play_point2.test2().
+#ammonite/$file/play_point2.test3().
+#ammonite/$file/play_point2.test4().
+'ammonite/$file/play_point2.popPoints().
+,ammonite/$file/play_point2.traverseStages().
+-ammonite/$file/play_point2.traverseStages2().
++ammonite/$file/play_point2.extractPoints().
+(ammonite/$file/play_point2.matchCount().
+"ammonite/$file/play_point2.size().
++ammonite/$file/play_point2.charlist2rexp().
+8ammonite/$file/play_point2.given_Conversion_String_Rexp.
+!ammonite/$file/play_point2.`|`().
+!ammonite/$file/play_point2.`%`().
+!ammonite/$file/play_point2.`~`().
+%ammonite/$file/play_point2.implode().
+%ammonite/$file/play_point2.explode().
+!ammonite/$file/play_point2.lst().
+!ammonite/$file/play_point2.mid().
+$ammonite/$file/play_point2.indent().
+ ammonite/$file/play_point2.pp().
+!ammonite/$file/play_point2.pps().
+#ammonite/$file/play_point2.$main().
+&ammonite/$file/play_point2.toString().í: *6
+[A]	*AÄä&$scala/Nothing#
+scala/Any#2
+ scala/2
+ scala/language.2-
+ )#scala/language.implicitConversions.2
+ 	os/2
+
+ os/size.29
+ +ammonite/$file/play_point2.Rexp#`<init>`().2.
+ 	 ammonite/$file/play_point2.Rexp#23
+ %ammonite/$file/play_point2.Rexp.ZERO.22
+ 
+$ammonite/$file/play_point2.Rexp.ONE.2
+ scala/Char#25
+ 'ammonite/$file/play_point2.Rexp.CHAR#c.2>
+ 0ammonite/$file/play_point2.Rexp.CHAR#`<init>`().23
+ %ammonite/$file/play_point2.Rexp.CHAR#2.
+  ammonite/$file/play_point2.Rexp#26
+ (ammonite/$file/play_point2.Rexp.POINT#r.28
+ *ammonite/$file/play_point2.Rexp.POINT#tag.2!
+ scala/package.List#2
+ "
+scala/Int#2?
+ 1ammonite/$file/play_point2.Rexp.POINT#`<init>`().24
+ &ammonite/$file/play_point2.Rexp.POINT#2!
+$ (scala/package.List.2.
+  ammonite/$file/play_point2.Rexp#25
+ 'ammonite/$file/play_point2.Rexp.ALT#r1.2.
+  ammonite/$file/play_point2.Rexp#25
+ 'ammonite/$file/play_point2.Rexp.ALT#r2.2=
+
+ 
+/ammonite/$file/play_point2.Rexp.ALT#`<init>`().22
+ 
+$ammonite/$file/play_point2.Rexp.ALT#2.
+		  ammonite/$file/play_point2.Rexp#25
+		 'ammonite/$file/play_point2.Rexp.SEQ#r1.2.
+		  ammonite/$file/play_point2.Rexp#25
+		 'ammonite/$file/play_point2.Rexp.SEQ#r2.2=
+	
+	 
+/ammonite/$file/play_point2.Rexp.SEQ#`<init>`().22
+		 
+$ammonite/$file/play_point2.Rexp.SEQ#2.
+
+
+  ammonite/$file/play_point2.Rexp#25
+
+
+ 'ammonite/$file/play_point2.Rexp.STAR#r.2>
+
+
+ 0ammonite/$file/play_point2.Rexp.STAR#`<init>`().23
+
+
+ %ammonite/$file/play_point2.Rexp.STAR#2.
+  ammonite/$file/play_point2.Rexp#27
+ )ammonite/$file/play_point2.Rexp.NTIMES#r.2
+ 
+scala/Int#27
+ )ammonite/$file/play_point2.Rexp.NTIMES#n.2
+) ,
+scala/Int#2=
+  '/ammonite/$file/play_point2.Rexp.NTIMES#counter.2@
+ 2ammonite/$file/play_point2.Rexp.NTIMES#`<init>`().25
+ 'ammonite/$file/play_point2.Rexp.NTIMES#2.
+  ammonite/$file/play_point2.Rexp.2.
+  ammonite/$file/play_point2.Rexp#27
+ )ammonite/$file/play_point2.nullable().(r)2
+  scala/Boolean#27
+# $)ammonite/$file/play_point2.nullable().(r)23
+ %ammonite/$file/play_point2.Rexp.ZERO.22
+ 
+$ammonite/$file/play_point2.Rexp.ONE.23
+ %ammonite/$file/play_point2.Rexp.CHAR.24
+ &ammonite/$file/play_point2.Rexp.POINT.2
+ local02
+ local124
+ &ammonite/$file/play_point2.nullable().2
+  !local022
+ 
+$ammonite/$file/play_point2.Rexp.ALT.2
+ local22
+ local324
+ &ammonite/$file/play_point2.nullable().2
+ !local22#
+# %scala/Boolean#`||`().24
+& .&ammonite/$file/play_point2.nullable().2
+/ 1local322
+ 
+$ammonite/$file/play_point2.Rexp.SEQ.2
+ local42
+ local524
+ &ammonite/$file/play_point2.nullable().2
+ !local42#
+# %scala/Boolean#`&&`().24
+& .&ammonite/$file/play_point2.nullable().2
+/ 1local523
+ %ammonite/$file/play_point2.Rexp.STAR.25
+ 'ammonite/$file/play_point2.Rexp.NTIMES.2
+ local62
+ local72
+ local82
+# $local72!
+% 'scala/Int#`==`(+3).24
+5 =&ammonite/$file/play_point2.nullable().2
+> ?local624
+ &ammonite/$file/play_point2.nullable().2.
+  ammonite/$file/play_point2.Rexp#22
+ 	$ammonite/$file/play_point2.fin().(r)2
+ scala/Boolean#22
+ $ammonite/$file/play_point2.fin().(r)23
+ %ammonite/$file/play_point2.Rexp.ZERO.22
+ 
+$ammonite/$file/play_point2.Rexp.ONE.23
+ %ammonite/$file/play_point2.Rexp.CHAR.24
+ &ammonite/$file/play_point2.Rexp.POINT.23
+ %ammonite/$file/play_point2.Rexp.CHAR.2
+ local92
+ local922
+ $scala/collection/IterableOps#head().2 
+ scala/Int#`>`(+3).22
+   
+$ammonite/$file/play_point2.Rexp.ALT.2
+   local102
+   local112/
+   !ammonite/$file/play_point2.fin().2
+   local102#
+    scala/Boolean#`||`().2/
+ !  $!ammonite/$file/play_point2.fin().2
+ %  'local1122
+!! 
+$ammonite/$file/play_point2.Rexp.SEQ.2
+!! local122
+!! local132/
+!! !ammonite/$file/play_point2.fin().2
+!! local122#
+!! !scala/Boolean#`&&`().24
+!"! *&ammonite/$file/play_point2.nullable().2
+!+! -local132#
+!0! 2scala/Boolean#`||`().2/
+!3! 6!ammonite/$file/play_point2.fin().2
+!7! 9local1323
+"" %ammonite/$file/play_point2.Rexp.STAR.2
+"" local142/
+"" !ammonite/$file/play_point2.fin().2
+"" local1425
+## 'ammonite/$file/play_point2.Rexp.NTIMES.2
+## local152
+## local162
+## local172
+## &local172!
+#'# )scala/Int#`==`(+3).2
+#*# +local162#
+#,# .scala/Boolean#`&&`().2/
+#/# 2!ammonite/$file/play_point2.fin().2
+#3# 4local1524
+$$ &ammonite/$file/play_point2.Rexp.POINT.2
+$$ local182
+$$ local192/
+$$ !ammonite/$file/play_point2.fin().2
+$$ local182/
+ !ammonite/$file/play_point2.fin().2
+'' scala/Boolean#24
+'
+' &ammonite/$file/play_point2.shift().(m)2.
+''  ammonite/$file/play_point2.Rexp#25
+'' 'ammonite/$file/play_point2.shift().(re)2
+'%' )scala/Char#2
+'+' .
+scala/Int#25
+' ' "'ammonite/$file/play_point2.shift().(cp)2.
+'3' 7 ammonite/$file/play_point2.Rexp#25
+(( 'ammonite/$file/play_point2.shift().(cp)2
+(( local202
+(
+( local2125
+** 'ammonite/$file/play_point2.shift().(re)23
+++ %ammonite/$file/play_point2.Rexp.ZERO.23
+++ %ammonite/$file/play_point2.Rexp.ZERO.22
+,, 
+$ammonite/$file/play_point2.Rexp.ONE.22
+,, $ammonite/$file/play_point2.Rexp.ONE.23
+-- %ammonite/$file/play_point2.Rexp.CHAR.2
+-- local2224
+-- &ammonite/$file/play_point2.shift().(m)2#
+-- scala/Boolean#`&&`().2
+-- local222"
+-- scala/Char#`==`(+2).2
+--  local2024
+.. &ammonite/$file/play_point2.Rexp.POINT.23
+.. %ammonite/$file/play_point2.Rexp.CHAR.2
+..  local222!
+.#. 'scala/package.List.2
+.(. +local212 
+.+. ,scala/Int#`+`(+4).23
+// %ammonite/$file/play_point2.Rexp.CHAR.2
+// local2224
+11 &ammonite/$file/play_point2.Rexp.POINT.23
+11 %ammonite/$file/play_point2.Rexp.CHAR.2
+11 local232
+11 local2424
+1 1 !&ammonite/$file/play_point2.shift().(m)2#
+1"1 $scala/Boolean#`&&`().2
+1%1 &local232"
+1'1 )scala/Char#`==`(+2).2
+1*1 +local2024
+22 $&ammonite/$file/play_point2.Rexp.POINT.23
+2%2 )%ammonite/$file/play_point2.Rexp.CHAR.2
+2*2 +local232
+262 9local2424
+3"3 '&ammonite/$file/play_point2.Rexp.POINT.23
+3(3 ,%ammonite/$file/play_point2.Rexp.CHAR.2
+3-3 .local232
+343 7local2422
+55 
+$ammonite/$file/play_point2.Rexp.ALT.2
+55 local262
+55 local2722
+55 $ammonite/$file/play_point2.Rexp.ALT.21
+55 #ammonite/$file/play_point2.shift().24
+5 5 !&ammonite/$file/play_point2.shift().(m)2
+5#5 %local2625
+5'5 )'ammonite/$file/play_point2.shift().(cp)21
+5,5 1#ammonite/$file/play_point2.shift().24
+525 3&ammonite/$file/play_point2.shift().(m)2
+555 7local2725
+595 ;'ammonite/$file/play_point2.shift().(cp)22
+66 
+$ammonite/$file/play_point2.Rexp.SEQ.2
+66 local282
+66 local2924
+77 	&ammonite/$file/play_point2.shift().(m)2#
+7
+7 scala/Boolean#`&&`().24
+77 &ammonite/$file/play_point2.nullable().2
+77 local2822
+99 $ammonite/$file/play_point2.Rexp.ALT.22
+:: $ammonite/$file/play_point2.Rexp.SEQ.21
+:: #ammonite/$file/play_point2.shift().24
+:: &ammonite/$file/play_point2.shift().(m)2
+:: local2825
+:: 'ammonite/$file/play_point2.shift().(cp)21
+:": '#ammonite/$file/play_point2.shift().2/
+:(: +!ammonite/$file/play_point2.fin().2
+:,: .local282
+:1: 3local2925
+:5: 7'ammonite/$file/play_point2.shift().(cp)21
+<< #ammonite/$file/play_point2.shift().2
+<< local2925
+<< 'ammonite/$file/play_point2.shift().(cp)22
+?? $ammonite/$file/play_point2.Rexp.SEQ.21
+?? #ammonite/$file/play_point2.shift().24
+?? &ammonite/$file/play_point2.shift().(m)2
+?? local2825
+?? 'ammonite/$file/play_point2.shift().(cp)21
+?? ##ammonite/$file/play_point2.shift().2/
+?$? '!ammonite/$file/play_point2.fin().2
+?(? *local282
+?-? /local2925
+?1? 3'ammonite/$file/play_point2.shift().(cp)23
+BB %ammonite/$file/play_point2.Rexp.STAR.2
+BB local3023
+BB %ammonite/$file/play_point2.Rexp.STAR.21
+BB #ammonite/$file/play_point2.shift().24
+BB &ammonite/$file/play_point2.shift().(m)2#
+BB !scala/Boolean#`||`().2/
+B"B %!ammonite/$file/play_point2.fin().2
+B&B 'local302
+B*B +local3025
+B-B /'ammonite/$file/play_point2.shift().(cp)24
+EE &ammonite/$file/play_point2.Rexp.POINT.25
+EE 'ammonite/$file/play_point2.Rexp.NTIMES.2
+EE local312
+EE local322
+EE  local332
+E"E %local3424
+FF 	&ammonite/$file/play_point2.Rexp.POINT.25
+F
+F 'ammonite/$file/play_point2.Rexp.NTIMES.2
+FF local312
+FF local322
+FF local332
+FF "local342-
+F"F $scala/collection/SeqOps#`:+`().2
+F$F 'local2125
+GG 'ammonite/$file/play_point2.Rexp.NTIMES.2
+GG local352
+GG local362
+GG local372
+II local372!
+II scala/Int#`==`(+3).2
+II local3625
+II 'ammonite/$file/play_point2.shift().(re)24
+KK &ammonite/$file/play_point2.shift().(m)2#
+KK scala/Boolean#`||`().2/
+KK !ammonite/$file/play_point2.fin().2
+KK local3525
+KK 'ammonite/$file/play_point2.Rexp.NTIMES.21
+K K %#ammonite/$file/play_point2.shift().24
+K&K '&ammonite/$file/play_point2.shift().(m)2#
+K(K *scala/Boolean#`||`().2/
+K+K .!ammonite/$file/play_point2.fin().2
+K/K 0local352
+K3K 4local3525
+K6K 8'ammonite/$file/play_point2.shift().(cp)2
+K;K <local362
+K>K Elocal372 
+KEK Fscala/Int#`+`(+4).25
+LL 'ammonite/$file/play_point2.Rexp.NTIMES.21
+LL #ammonite/$file/play_point2.shift().2
+L!L "local3525
+L$L &'ammonite/$file/play_point2.shift().(cp)2
+L)L *local362
+L,L 3local3721
+'' 	#ammonite/$file/play_point2.shift().2.
+QQ  ammonite/$file/play_point2.Rexp#22
+QQ 	$ammonite/$file/play_point2.mat().(r)2!
+QQ scala/package.List#2
+QQ scala/Char#22
+QQ $ammonite/$file/play_point2.mat().(s)2.
+Q!Q % ammonite/$file/play_point2.Rexp#22
+Q(Q )$ammonite/$file/play_point2.mat().(s)2 
+RR 
+scala/package.Nil.22
+RR $ammonite/$file/play_point2.mat().(r)2!
+S	S scala/package.`::`.2
+SS local382
+SS local392
+TT local392I
+TT ;scala/collection/StrictOptimizedIterableOps#zipWithIndex().27
+TT )scala/collection/LinearSeqOps#foldLeft().21
+TT "#ammonite/$file/play_point2.shift().22
+T)T *$ammonite/$file/play_point2.mat().(r)2
+T-T .local382
+UU local422
+UU local432
+UU local4421
+VV #ammonite/$file/play_point2.shift().2
+VV local422
+V V !local432
+V#V $local442 
+V%V &scala/Int#`+`(+4).2/
+QQ !ammonite/$file/play_point2.mat().2.
+[[  ammonite/$file/play_point2.Rexp#26
+[[ (ammonite/$file/play_point2.matcher().(r)2!
+[[ scala/package.List#2
+[[ !scala/Char#26
+[[ (ammonite/$file/play_point2.matcher().(s)2
+[&[ -scala/Boolean#26
+\\ (ammonite/$file/play_point2.matcher().(s)2
+\\ 
+scala/Any#`==`().2 
+\\ scala/package.Nil.24
+\\ &ammonite/$file/play_point2.nullable().26
+\\ (ammonite/$file/play_point2.matcher().(r)2/
+\!\ $!ammonite/$file/play_point2.fin().2/
+\%\ (!ammonite/$file/play_point2.mat().26
+\)\ *(ammonite/$file/play_point2.matcher().(r)26
+\,\ -(ammonite/$file/play_point2.matcher().(s)23
+[[ %ammonite/$file/play_point2.matcher().2.
+^^  ammonite/$file/play_point2.Rexp#27
+^^ )ammonite/$file/play_point2.matcher2().(r)2!
+^^ scala/package.List#2
+^^ "scala/Char#27
+^^ )ammonite/$file/play_point2.matcher2().(s)2.
+^'^ + ammonite/$file/play_point2.Rexp#27
+__ )ammonite/$file/play_point2.matcher2().(s)2
+__ 
+scala/Any#`==`().2 
+__ scala/package.Nil.24
+`` &ammonite/$file/play_point2.nullable().27
+`` )ammonite/$file/play_point2.matcher2().(r)27
+`` )ammonite/$file/play_point2.matcher2().(r)23
+``  %ammonite/$file/play_point2.Rexp.ZERO.2/
+a
+a !ammonite/$file/play_point2.mat().27
+aa )ammonite/$file/play_point2.matcher2().(r)27
+aa )ammonite/$file/play_point2.matcher2().(s)24
+^^ &ammonite/$file/play_point2.matcher2().2
+dd mainargs/main#21
+ee 	#ammonite/$file/play_point2.test1().2
+jj mainargs/main#23
+ll %ammonite/$file/play_point2.Rexp.STAR.2/
+ll !ammonite/$file/play_point2.`|`().2
+ll 
+local452'
+nn 	scala/Predef.println(+1).28
+oo *scala/collection/IterableOnceOps#toList().2
+oo local462'
+pp 	scala/Predef.println(+1).2&
+p
+p scala/StringContext#s().2
+pp local4624
+qq &ammonite/$file/play_point2.matcher2().2
+qq local452
+qq local462
+qq local472'
+rr 	scala/Predef.println(+1).2&
+r
+r scala/StringContext#s().20
+rr  "ammonite/$file/play_point2.size().2
+r!r %local452/
+r2r 5!ammonite/$file/play_point2.fin().2
+r6r <local472
+uu local4620
+uu "scala/collection/SeqOps#indices().2
+uu local482'
+vv 	scala/Predef.println(+1).2&
+v
+v scala/StringContext#s().2
+vv local482 
+vv scala/Int#`+`(+4).2
+vv  local462
+v!v "local482
+ww local4625
+ww 'scala/collection/immutable/List#take().2
+ww local482 
+ww scala/Int#`+`(+4).2
+ww local492'
+xx 	scala/Predef.println(+1).2.
+x
+x  ammonite/$file/play_point2.pp().2/
+xx !ammonite/$file/play_point2.mat().2
+xx local452
+xx local492'
+{{ 	scala/Predef.println(+1).2&
+{
+{ scala/StringContext#s().2.
+{!{ # ammonite/$file/play_point2.pp().2
+{${ *local472'
+|| 	scala/Predef.println(+1).2&
+|
+| scala/StringContext#s().2
+|| #local4720
+|-| 1"ammonite/$file/play_point2.size().2
+|2| 8local472'
+~~ 	scala/Predef.println(+1).2&
+~
+~ scala/StringContext#s().29
+ +ammonite/$file/play_point2.extractPoints().2
+  &local472
+ local502
+
+ÄÄ local502:
+
+ÄÄ *scala/collection/immutable/List#foreach().2
+
+Å
+Å local522
+
+ÅÅ local532)
+
+ÇÇ scala/Predef.println(+1).2(
+
+ÇÇ scala/StringContext#s().2
+
+ÇÇ local522
+
+Ç&Ç +local532
+
+ÖÖ local4629
+
+ÖÖ )scala/collection/immutable/List#length().2
+
+ÖÖ local542<
+
+ÜÜ ,ammonite/$file/play_point2.traverseStages().2
+
+ÜÜ $local472
+
+Ü&Ü 1local542
+
+ÜÜ local552
+
+áá local552:
+
+á	á *scala/collection/immutable/List#foreach().2
+
+áá local562)
+
+áá !scala/Predef.println(+1).20
+
+á#á % ammonite/$file/play_point2.pp().2
+
+á&á +local5627
+
+ââ  'ammonite/$file/play_point2.popPoints().2
+
+â!â 'local472
+
+ââ local572
+
+ââ local582)
+
+ää 	scala/Predef.println(+1).2(
+
+ä
+ä scala/StringContext#s().2
+
+ää  local5727
+
+åå  'ammonite/$file/play_point2.popPoints().2
+
+å!å %local582
+
+åå local592
+
+åå local602)
+
+çç 	scala/Predef.println(+1).2(
+
+ç
+ç scala/StringContext#s().2
+
+çç "local5927
+
+èè "'ammonite/$file/play_point2.popPoints().2
+
+è#è (local602
+
+èè local612
+
+èè local622)
+
+êê 	scala/Predef.println(+1).2(
+
+ê
+ê scala/StringContext#s().2
+
+êê !local6127
+
+íí  'ammonite/$file/play_point2.popPoints().2
+
+í!í &local622
+
+íí local632
+
+íí local642)
+
+ìì 	scala/Predef.println(+1).2(
+
+ì
+ì scala/StringContext#s().2
+
+ìì "local6321
+kk 	#ammonite/$file/play_point2.test2().2
+
+ôô mainargs/main#2)
+
+õõ 	scala/Predef.println(+1).21
+
+úú !ammonite/$file/play_point2.`~`().2
+
+úú 
+local652:
+
+ùù *scala/collection/IterableOnceOps#toList().2
+
+ùù local662)
+
+ûû 	scala/Predef.println(+1).2(
+
+û
+û scala/StringContext#s().2
+
+ûû local652)
+
+üü 	scala/Predef.println(+1).2+
+
+¢¢ scala/runtime/RichInt#to().2
+
+¢¢ local6629
+
+¢¢ )scala/collection/immutable/List#length().2;
+
+¢¢ +scala/collection/immutable/Range#foreach().2
+
+¢¢ local672
+
+££ local6628
+
+££ (scala/collection/immutable/List#slice().2
+
+££ local672
+
+££ 
+local682)
+
+§§ scala/Predef.println(+1).2(
+
+§§ scala/StringContext#s().2
+
+§§ local6827
+
+§§ 'scala/collection/immutable/List#last().2)
+
+•• scala/Predef.println(+1).20
+
+••  ammonite/$file/play_point2.pp().21
+
+•• !ammonite/$file/play_point2.mat().2
+
+•• local652
+
+•• local682)
+
+®® 	scala/Predef.println(+1).2(
+
+®
+® scala/StringContext#s().25
+
+®® %ammonite/$file/play_point2.matcher().2
+
+®® "local652
+
+®$® %local6626
+
+©© &ammonite/$file/play_point2.matcher2().2
+
+©© local652
+
+©© local662
+
+©© local692)
+
+™™ 	scala/Predef.println(+1).2(
+
+™
+™ scala/StringContext#s().20
+
+™!™ # ammonite/$file/play_point2.pp().2
+
+™$™ *local692)
+
+´´ 	scala/Predef.println(+1).2(
+
+´
+´ scala/StringContext#s().2
+
+´´ local6923
+
+öö 	#ammonite/$file/play_point2.test3().2
+
+ØØ mainargs/main#2
+
+≥≥ local7021
+
+¥$¥ %!ammonite/$file/play_point2.`~`().27
+
+¥¥ 'ammonite/$file/play_point2.Rexp.NTIMES.21
+
+¥¥ !ammonite/$file/play_point2.`|`().24
+
+¥¥ $ammonite/$file/play_point2.Rexp.ONE.2
+
+¥ ¥ !local7027
+
+¥'¥ -'ammonite/$file/play_point2.Rexp.NTIMES.25
+
+¥.¥ 2%ammonite/$file/play_point2.Rexp.CHAR.2
+
+¥9¥ :local702
+
+¥¥ 
+local712)
+
+∂∂ 	scala/Predef.println(+1).2:
+
+∑∑ *scala/collection/IterableOnceOps#toList().2
+
+∑∑ local722)
+
+∏∏ 	scala/Predef.println(+1).2(
+
+∏
+∏ scala/StringContext#s().2
+
+∏∏ local722)
+
+ππ 	scala/Predef.println(+1).2(
+
+π
+π scala/StringContext#s().25
+
+ππ %ammonite/$file/play_point2.matcher().2
+
+ππ "local712
+
+π$π &local722
+
+ºº local7222
+
+ºº "scala/collection/SeqOps#indices().2
+
+ºº local732)
+
+ΩΩ 	scala/Predef.println(+1).2(
+
+Ω
+Ω scala/StringContext#s().2
+
+ΩΩ local732"
+
+ΩΩ scala/Int#`+`(+4).2
+
+ΩΩ !local722
+
+Ω"Ω #local732
+
+ææ local7227
+
+ææ 'scala/collection/immutable/List#take().2
+
+ææ local732"
+
+ææ scala/Int#`+`(+4).2
+
+ææ local742)
+
+øø 	scala/Predef.println(+1).20
+
+ø
+ø  ammonite/$file/play_point2.pp().21
+
+øø !ammonite/$file/play_point2.mat().2
+
+øø local712
+
+øø local7426
+
+¬¬ &ammonite/$file/play_point2.matcher2().2
+
+¬¬ local712
+
+¬¬ local722
+
+¬¬ local752)
+
+√√ 	scala/Predef.println(+1).2(
+
+√
+√ scala/StringContext#s().20
+
+√!√ # ammonite/$file/play_point2.pp().2
+
+√$√ +local752)
+
+ƒƒ 	scala/Predef.println(+1).2(
+
+ƒ
+ƒ scala/StringContext#s().2
+
+ƒƒ $local752)
+
+≈≈ 	scala/Predef.println(+1).2(
+
+≈
+≈ scala/StringContext#s().2;
+
+∆∆ +ammonite/$file/play_point2.extractPoints().2
+
+∆ ∆ 'local752
+
+∆∆ local762
+
+«« local762:
+
+«« *scala/collection/immutable/List#foreach().2
+
+»
+» local782
+
+»» local792)
+
+…… scala/Predef.println(+1).2(
+
+…… scala/StringContext#s().2
+
+…… local782
+
+…&… +local7923
+
+∞∞ 	#ammonite/$file/play_point2.test4().20
+
+ŒŒ  ammonite/$file/play_point2.Rexp#2:
+
+ŒŒ *ammonite/$file/play_point2.popPoints().(r)20
+
+ŒŒ  ammonite/$file/play_point2.Rexp#20
+
+ŒŒ # ammonite/$file/play_point2.Rexp#2:
+
+Œ'Œ (*ammonite/$file/play_point2.popPoints().(r)25
+
+œœ %ammonite/$file/play_point2.Rexp.ZERO.25
+
+œœ %ammonite/$file/play_point2.Rexp.ZERO.25
+
+œœ %ammonite/$file/play_point2.Rexp.ZERO.24
+
+–– 
+$ammonite/$file/play_point2.Rexp.ONE.24
+
+–– $ammonite/$file/play_point2.Rexp.ONE.24
+
+–– $ammonite/$file/play_point2.Rexp.ONE.25
+
+—— %ammonite/$file/play_point2.Rexp.CHAR.2
+
+—— local8025
+
+—— %ammonite/$file/play_point2.Rexp.CHAR.2
+
+—— local8025
+
+——  %ammonite/$file/play_point2.Rexp.CHAR.2
+
+—!— "local8026
+
+““ &ammonite/$file/play_point2.Rexp.POINT.2
+
+““ local812
+
+““ local8227
+
+”$” -'ammonite/$file/play_point2.popPoints().2
+
+”.” 3local812
+
+”	” local832
+
+””  local842
+
+‘‘ local822:
+
+‘‘ *scala/collection/immutable/List#isEmpty().2
+
+÷÷ local832
+
+÷÷ local8426
+
+ŸŸ &ammonite/$file/play_point2.Rexp.POINT.2
+
+ŸŸ #local812
+
+Ÿ%Ÿ )local8224
+
+Ÿ*Ÿ .$scala/collection/IterableOps#tail().2
+
+Ÿ
+Ÿ local852
+
+⁄⁄ 
+local8224
+
+⁄⁄ $scala/collection/IterableOps#head().2
+
+›› local832
+
+›› $local852
+
+ﬁﬁ local8626
+
+‡‡ &ammonite/$file/play_point2.Rexp.POINT.2
+
+‡‡ local832#
+
+‡‡ #scala/package.List.2
+
+‡$‡ %local862"
+
+‡%‡ &scala/Int#`-`(+3).2
+
+‡+‡ 6local8524
+
+„„ 
+$ammonite/$file/play_point2.Rexp.ALT.2
+
+„„ local872
+
+„„ local8827
+
+‰‰ "'ammonite/$file/play_point2.popPoints().2
+
+‰#‰ %local872
+
+‰	‰ local892
+
+‰‰ local9027
+
+ÂÂ "'ammonite/$file/play_point2.popPoints().2
+
+Â#Â %local882
+
+Â	Â local912
+
+ÂÂ local9224
+
+ÊÊ $ammonite/$file/play_point2.Rexp.ALT.2
+
+Ê	Ê local892
+
+ÊÊ local9124
+
+ÊÊ $ammonite/$file/play_point2.Rexp.ALT.2
+
+ÊÊ !local902
+
+Ê#Ê (local9224
+
+ËË 
+$ammonite/$file/play_point2.Rexp.SEQ.2
+
+ËË local932
+
+ËË local9427
+
+ÈÈ "'ammonite/$file/play_point2.popPoints().2
+
+È#È %local932
+
+È	È local952
+
+ÈÈ local9627
+
+ÍÍ "'ammonite/$file/play_point2.popPoints().2
+
+Í#Í %local942
+
+Í	Í local972
+
+ÍÍ local9824
+
+ÎÎ $ammonite/$file/play_point2.Rexp.SEQ.2
+
+Î	Î local952
+
+ÎÎ local9724
+
+ÎÎ $ammonite/$file/play_point2.Rexp.SEQ.2
+
+ÎÎ !local962
+
+Î#Î (local9825
+
+ÌÌ %ammonite/$file/play_point2.Rexp.STAR.2
+
+ÌÌ local9927
+
+ÓÓ  'ammonite/$file/play_point2.popPoints().2
+
+Ó!Ó &local992
+
+Ó	Ó local1002
+
+ÓÓ local10125
+
+ÔÔ 	%ammonite/$file/play_point2.Rexp.STAR.2
+
+Ô
+Ô local10025
+
+ÔÔ %ammonite/$file/play_point2.Rexp.STAR.2
+
+ÔÔ local10127
+
+ÒÒ 'ammonite/$file/play_point2.Rexp.NTIMES.2
+
+ÒÒ local1022
+
+ÒÒ local1032
+
+ÒÒ local10427
+
+ÚÚ  'ammonite/$file/play_point2.popPoints().2
+
+Ú!Ú &local1022
+
+Ú	Ú local1052
+
+ÚÚ local10627
+
+ÛÛ 'ammonite/$file/play_point2.Rexp.NTIMES.2
+
+ÛÛ local1052
+
+ÛÛ local1032
+
+ÛÛ local10427
+
+ÛÛ %'ammonite/$file/play_point2.Rexp.NTIMES.2
+
+Û&Û *local1062
+
+Û,Û -local1032
+
+Û/Û 6local10427
+
+ŒŒ 'ammonite/$file/play_point2.popPoints().20
+
+ˆˆ  ammonite/$file/play_point2.Rexp#2?
+
+ˆˆ /ammonite/$file/play_point2.traverseStages().(r)2
+
+ˆ)ˆ ,
+scala/Int#2I
+
+ˆˆ '9ammonite/$file/play_point2.traverseStages().(inputLength)2#
+
+ˆ/ˆ 3scala/package.List#20
+
+ˆ4ˆ 8 ammonite/$file/play_point2.Rexp#20
+
+˜˜  ammonite/$file/play_point2.Rexp#2
+
+˜˜ local1072#
+
+˜ ˜ $scala/package.List#20
+
+˜%˜ ) ammonite/$file/play_point2.Rexp#2
+
+˜˜ local1082
+
+˜7˜ :
+scala/Int#2
+
+˜,˜ 5local1092#
+
+˜=˜ Ascala/package.List#20
+
+˜B˜ F ammonite/$file/play_point2.Rexp#2
+
+¯¯ local1092#
+
+¯¯ scala/Int#`==`(+3).2
+
+¯¯ local10827
+
+˙&˙ /'ammonite/$file/play_point2.popPoints().2
+
+˙0˙ 5local1072
+
+˙˙ local1102
+
+˙˙ "local1112
+
+˚˚ 
+local1122
+
+˚˚ local1112
+
+˚˚ local1082/
+
+˚˚ scala/collection/SeqOps#`:+`().2
+
+˚ ˚ ,local1102
+
+˚.˚ 7local1092"
+
+˚8˚ 9scala/Int#`-`(+3).2
+
+˜˜ 
+local1122
+
+˛˛ local1122?
+
+˛˛ /ammonite/$file/play_point2.traverseStages().(r)2#
+
+˛
+˛ scala/package.List.28
+
+˛˛ (scala/collection/immutable/List.empty().2I
+
+˛˛ !9ammonite/$file/play_point2.traverseStages().(inputLength)2"
+
+˛!˛ "scala/Int#`+`(+4).2<
+
+ˆˆ ,ammonite/$file/play_point2.traverseStages().20
+
+ÅÅ  ammonite/$file/play_point2.Rexp#2@
+
+ÅÅ 0ammonite/$file/play_point2.traverseStages2().(r)2
+
+Å*Å -
+scala/Int#2J
+
+ÅÅ (:ammonite/$file/play_point2.traverseStages2().(inputLength)2#
+
+Å0Å 4scala/package.List#20
+
+Å5Å 9 ammonite/$file/play_point2.Rexp#2.
+
+ÇÇ scala/runtime/RichInt#until().2J
+
+ÇÇ ):ammonite/$file/play_point2.traverseStages2().(inputLength)2"
+
+Ç*Ç +scala/Int#`+`(+4).2<
+
+Ç0Ç 8,scala/collection/IterableOnceOps#foldLeft().2#
+
+Ç:Ç >scala/package.List.2@
+
+Ç?Ç @0ammonite/$file/play_point2.traverseStages2().(r)2@
+
+ÇCÇ D0ammonite/$file/play_point2.traverseStages2().(r)2
+
+ÇPÇ Slocal1152
+
+ÇUÇ Zlocal11627
+
+É$É -'ammonite/$file/play_point2.popPoints().2
+
+É.É 3local1162
+
+É	É local1172
+
+ÉÉ  local1182
+
+ÑÑ local1152/
+
+Ñ	Ñ scala/collection/SeqOps#`:+`().2
+
+ÑÑ local1172
+
+ÑÑ #local1182
+
+ÇÇ local1192
+
+ÜÜ local1192=
+
+ÅÅ -ammonite/$file/play_point2.traverseStages2().20
+
+ää  ammonite/$file/play_point2.Rexp#2>
+
+ää .ammonite/$file/play_point2.extractPoints().(r)2#
+
+ää  scala/package.List#20
+
+ä"ä & ammonite/$file/play_point2.Rexp#2
+
+ä(ä +
+scala/Int#2>
+
+ä0ä 1.ammonite/$file/play_point2.extractPoints().(r)26
+
+ãã &ammonite/$file/play_point2.Rexp.POINT.2
+
+ãã local1202
+
+ãã local1212
+
+ãã local12129
+
+ãã ")scala/collection/immutable/List#filter().2#
+
+ã%ã 'scala/Int#`!=`(+3).26
+
+ã+ã .&scala/collection/immutable/List#map().2
+
+ã/ã 0local1222
+
+ã5ã 6local1202
+
+ã8ã 9local1222"
+
+ã9ã :scala/Int#`-`(+3).2:
+
+ã>ã E*scala/collection/immutable/List#reverse().24
+
+åå 
+$ammonite/$file/play_point2.Rexp.ALT.2
+
+åå local1232
+
+åå local1242;
+
+åå %+ammonite/$file/play_point2.extractPoints().2
+
+å&å (local12324
+
+å*å ,$scala/collection/IterableOps#`++`().2;
+
+å-å :+ammonite/$file/play_point2.extractPoints().2
+
+å;å =local12424
+
+çç 
+$ammonite/$file/play_point2.Rexp.SEQ.2
+
+çç local1252
+
+çç local1262;
+
+çç %+ammonite/$file/play_point2.extractPoints().2
+
+ç&ç (local12524
+
+ç*ç ,$scala/collection/IterableOps#`++`().2;
+
+ç-ç :+ammonite/$file/play_point2.extractPoints().2
+
+ç;ç =local12625
+
+éé %ammonite/$file/play_point2.Rexp.STAR.2
+
+éé local1272;
+
+éé %+ammonite/$file/play_point2.extractPoints().2
+
+é&é 'local12727
+
+èè 'ammonite/$file/play_point2.Rexp.NTIMES.2
+
+èè local1282;
+
+èè '+ammonite/$file/play_point2.extractPoints().2
+
+è(è )local1282#
+
+êê scala/package.List.2;
+
+ää +ammonite/$file/play_point2.extractPoints().20
+
+ìì  ammonite/$file/play_point2.Rexp#2;
+
+ìì +ammonite/$file/play_point2.matchCount().(r)2
+
+ìì 
+scala/Int#2;
+
+ìì  +ammonite/$file/play_point2.matchCount().(r)25
+
+îî %ammonite/$file/play_point2.Rexp.ZERO.24
+
+ïï 
+$ammonite/$file/play_point2.Rexp.ONE.25
+
+ññ %ammonite/$file/play_point2.Rexp.CHAR.26
+
+óó &ammonite/$file/play_point2.Rexp.POINT.2
+
+óó local1292
+
+óó local13028
+
+óó !(ammonite/$file/play_point2.matchCount().2
+
+ó"ó #local12924
+
+òò 
+$ammonite/$file/play_point2.Rexp.ALT.2
+
+òò local1312
+
+òò local1322
+
+òò scala/math/2)
+
+òò scala/math/package.max().28
+
+òò )(ammonite/$file/play_point2.matchCount().2
+
+ò*ò ,local13128
+
+ò/ò 9(ammonite/$file/play_point2.matchCount().2
+
+ò:ò <local13224
+
+ôô 
+$ammonite/$file/play_point2.Rexp.SEQ.2
+
+ôô local1332
+
+ôô local13428
+
+ôô  (ammonite/$file/play_point2.matchCount().2
+
+ô!ô #local1332"
+
+ô%ô &scala/Int#`+`(+4).28
+
+ô'ô 1(ammonite/$file/play_point2.matchCount().2
+
+ô2ô 4local13427
+
+õõ 'ammonite/$file/play_point2.Rexp.NTIMES.2
+
+õõ local1352
+
+õõ local1362
+
+õõ local1362"
+
+õõ scala/Int#`*`(+3).28
+
+õõ ((ammonite/$file/play_point2.matchCount().2
+
+õ)õ *local13528
+
+ìì (ammonite/$file/play_point2.matchCount().20
+
+ûû  ammonite/$file/play_point2.Rexp#25
+
+û	û 
+%ammonite/$file/play_point2.size().(r)2
+
+ûû 
+scala/Int#25
+
+ûû %ammonite/$file/play_point2.size().(r)25
+
+üü %ammonite/$file/play_point2.Rexp.ZERO.24
+
+†† 
+$ammonite/$file/play_point2.Rexp.ONE.25
+
+°° %ammonite/$file/play_point2.Rexp.CHAR.24
+
+¢¢ 
+$ammonite/$file/play_point2.Rexp.ALT.2
+
+¢¢ local1372
+
+¢¢ local1382"
+
+¢¢ scala/Int#`+`(+4).22
+
+¢¢ "ammonite/$file/play_point2.size().2
+
+¢¢ !local1372"
+
+¢#¢ $scala/Int#`+`(+4).22
+
+¢%¢ )"ammonite/$file/play_point2.size().2
+
+¢*¢ ,local13824
+
+££ 
+$ammonite/$file/play_point2.Rexp.SEQ.2
+
+££ local1392
+
+££ local1402"
+
+££ scala/Int#`+`(+4).22
+
+££ "ammonite/$file/play_point2.size().2
+
+££ !local1392"
+
+£#£ $scala/Int#`+`(+4).22
+
+£%£ )"ammonite/$file/play_point2.size().2
+
+£*£ ,local14025
+
+§§ %ammonite/$file/play_point2.Rexp.STAR.2
+
+§§ local1412"
+
+§§ scala/Int#`+`(+4).22
+
+§§ "ammonite/$file/play_point2.size().2
+
+§§ local14127
+
+•• 'ammonite/$file/play_point2.Rexp.NTIMES.2
+
+•• local1422
+
+•• local1432
+
+•• local1442"
+
+• • !scala/Int#`+`(+4).22
+
+•"• &"ammonite/$file/play_point2.size().2
+
+•'• (local14226
+
+¶¶ &ammonite/$file/play_point2.Rexp.POINT.2
+
+¶¶ local1452
+
+¶¶ local1462"
+
+¶¶ scala/Int#`+`(+4).22
+
+¶¶ "ammonite/$file/play_point2.size().2
+
+¶ ¶ !local14522
+
+ûû "ammonite/$file/play_point2.size().2#
+
+©© scala/package.List#2
+
+©© scala/Char#2>
+
+©© .ammonite/$file/play_point2.charlist2rexp().(s)20
+
+©#© ' ammonite/$file/play_point2.Rexp#2>
+
+©*© +.ammonite/$file/play_point2.charlist2rexp().(s)2"
+
+™™ 
+scala/package.Nil.24
+
+™™ $ammonite/$file/play_point2.Rexp.ONE.2#
+
+´´ 
+scala/package.`::`.2
+
+´´ local1472"
+
+´
+´ scala/package.Nil.25
+
+´´ %ammonite/$file/play_point2.Rexp.CHAR.2
+
+´´ local1472#
+
+¨¨ 
+scala/package.`::`.2
+
+¨¨ local1482
+
+¨
+¨ local14924
+
+¨¨ $ammonite/$file/play_point2.Rexp.SEQ.25
+
+¨¨ %ammonite/$file/play_point2.Rexp.CHAR.2
+
+¨¨ local1482;
+
+¨¨ )+ammonite/$file/play_point2.charlist2rexp().2
+
+¨*¨ +local1492;
+
+©© +ammonite/$file/play_point2.charlist2rexp().2!
+
+ØØ scala/Conversion#2$
+
+ØØ scala/Predef.String#20
+
+ØØ  ammonite/$file/play_point2.Rexp#2
+
+Ø!Ø "local1502;
+
+Ø&Ø 3+ammonite/$file/play_point2.charlist2rexp().2
+
+Ø4Ø 5local1502:
+
+Ø6Ø <*scala/collection/IterableOnceOps#toList().20
+
+≥≥  ammonite/$file/play_point2.Rexp#24
+
+≥≥ $ammonite/$file/play_point2.`|`().(r)20
+
+¥¥  ammonite/$file/play_point2.Rexp#24
+
+¥	¥ 
+$ammonite/$file/play_point2.`|`().(s)24
+
+¥¥ $ammonite/$file/play_point2.Rexp.ALT.24
+
+¥¥ $ammonite/$file/play_point2.`|`().(r)24
+
+¥¥ $ammonite/$file/play_point2.`|`().(s)21
+
+¥¥ !ammonite/$file/play_point2.`|`().24
+
+≥≥ $ammonite/$file/play_point2.`%`().(r)25
+
+µ
+µ %ammonite/$file/play_point2.Rexp.STAR.24
+
+µµ $ammonite/$file/play_point2.`%`().(r)21
+
+µµ !ammonite/$file/play_point2.`%`().24
+
+≥≥ $ammonite/$file/play_point2.`~`().(r)20
+
+∂∂  ammonite/$file/play_point2.Rexp#24
+
+∂	∂ 
+$ammonite/$file/play_point2.`~`().(s)24
+
+∂∂ $ammonite/$file/play_point2.Rexp.SEQ.24
+
+∂∂ $ammonite/$file/play_point2.`~`().(r)24
+
+∂∂ $ammonite/$file/play_point2.`~`().(s)21
+
+∂∂ !ammonite/$file/play_point2.`~`().2"
+
+∫∫ scala/package.Seq#2$
+
+∫∫ scala/Predef.String#29
+
+∫∫ )ammonite/$file/play_point2.implode().(ss)29
+
+∫∫ !)ammonite/$file/play_point2.implode().(ss)2>
+
+∫"∫ *.scala/collection/IterableOnceOps#mkString(+1).25
+
+∫∫ %ammonite/$file/play_point2.implode().2$
+
+ªª scala/Predef.String#28
+
+ªª (ammonite/$file/play_point2.explode().(s)28
+
+ªª (ammonite/$file/play_point2.explode().(s)2+
+
+ªª  java/lang/String#split(+1).2:
+
+ª'ª -*scala/collection/IterableOnceOps#toList().25
+
+ªª %ammonite/$file/play_point2.explode().2$
+
+ΩΩ scala/Predef.String#24
+
+ΩΩ 	$ammonite/$file/play_point2.lst().(s)2$
+
+ΩΩ scala/Predef.String#25
+
+ΩΩ %%ammonite/$file/play_point2.explode().24
+
+Ω&Ω '$ammonite/$file/play_point2.lst().(s)2#
+
+æ
+æ scala/package.`::`.2
+
+ææ 	local1512
+
+ææ local15225
+
+ææ %ammonite/$file/play_point2.implode().2
+
+æ)æ +local15226
+
+æ,æ /&scala/collection/immutable/List#map().24
+
+æ5æ 7$scala/collection/StringOps#`++`(+2).2"
+
+øø 
+scala/package.Nil.21
+
+ΩΩ !ammonite/$file/play_point2.lst().2$
+
+¬¬ scala/Predef.String#24
+
+¬¬ 	$ammonite/$file/play_point2.mid().(s)2$
+
+¬¬ scala/Predef.String#25
+
+¬¬ %%ammonite/$file/play_point2.explode().24
+
+¬&¬ '$ammonite/$file/play_point2.mid().(s)2#
+
+√
+√ scala/package.`::`.2
+
+√√ 	local1542
+
+√√ local15525
+
+√√ %ammonite/$file/play_point2.implode().2
+
+√)√ +local15526
+
+√,√ /&scala/collection/immutable/List#map().24
+
+√5√ 7$scala/collection/StringOps#`++`(+2).2"
+
+ƒƒ 
+scala/package.Nil.21
+
+¬¬ !ammonite/$file/play_point2.mid().2"
+
+«« scala/package.Seq#2$
+
+«« scala/Predef.String#28
+
+«« (ammonite/$file/play_point2.indent().(ss)2$
+
+«« $scala/Predef.String#28
+
+«'« )(ammonite/$file/play_point2.indent().(ss)2#
+
+»» scala/package.`:+`.2
+
+»» local1572
+
+»» local15825
+
+»» %ammonite/$file/play_point2.implode().2
+
+»» #local15723
+
+»$» '#scala/collection/IterableOps#map().21
+
+»(» +!ammonite/$file/play_point2.mid().2/
+
+»-» /scala/collection/SeqOps#`:+`().21
+
+»0» 3!ammonite/$file/play_point2.lst().2
+
+»4» 8local15824
+
+«« 
+$ammonite/$file/play_point2.indent().20
+
+Ã
+Ã  ammonite/$file/play_point2.Rexp#23
+
+ÃÃ #ammonite/$file/play_point2.pp().(e)2$
+
+ÃÃ scala/Predef.String#23
+
+ÃÃ #ammonite/$file/play_point2.pp().(e)25
+
+ÕÕ %ammonite/$file/play_point2.Rexp.ZERO.24
+
+ŒŒ 
+$ammonite/$file/play_point2.Rexp.ONE.25
+
+œœ %ammonite/$file/play_point2.Rexp.CHAR.2
+
+œœ local1602(
+
+œœ scala/StringContext#s().2
+
+œœ local16026
+
+–– &ammonite/$file/play_point2.Rexp.POINT.25
+
+–– %ammonite/$file/play_point2.Rexp.CHAR.2
+
+–– local1612
+
+–– local1622
+
+– – #local16224
+
+–$– ($scala/collection/IterableOps#head().2"
+
+–)– *scala/Int#`>`(+3).2(
+
+–-– .scala/StringContext#s().2
+
+–1– 2local1612(
+
+–;– <scala/StringContext#s().2
+
+–>– ?local16124
+
+—— 
+$ammonite/$file/play_point2.Rexp.ALT.2
+
+—— local1632
+
+—— local1642(
+
+—— scala/StringContext#s().21
+
+—%— (!ammonite/$file/play_point2.fin().2
+
+—)— +local16326
+
+—9— A&ammonite/$file/play_point2.nullable().2
+
+—B— Dlocal16324
+
+—K— M$scala/collection/StringOps#`++`(+2).21
+
+—N— Q!ammonite/$file/play_point2.pps().2
+
+—R— Tlocal1632
+
+—V— Xlocal16424
+
+““ 
+$ammonite/$file/play_point2.Rexp.SEQ.2
+
+““ local1652
+
+““ local1662(
+
+““ scala/StringContext#s().21
+
+“%“ (!ammonite/$file/play_point2.fin().2
+
+“)“ +local16526
+
+“9“ A&ammonite/$file/play_point2.nullable().2
+
+“B“ Dlocal16524
+
+“K“ M$scala/collection/StringOps#`++`(+2).21
+
+“N“ Q!ammonite/$file/play_point2.pps().2
+
+“R“ Tlocal1652
+
+“V“ Xlocal16625
+
+”” %ammonite/$file/play_point2.Rexp.STAR.2
+
+”” local16724
+
+”” $scala/collection/StringOps#`++`(+2).21
+
+”” !!ammonite/$file/play_point2.pps().2
+
+”"” #local16727
+
+‘‘ 'ammonite/$file/play_point2.Rexp.NTIMES.2
+
+‘‘ local1682
+
+‘‘ local1692
+
+‘‘ local1702(
+
+’’ scala/StringContext#s().2
+
+’’ local16921
+
+’’ !ammonite/$file/play_point2.fin().2
+
+’’ local16826
+
+’+’ 3&ammonite/$file/play_point2.nullable().2
+
+’4’ 5local1682
+
+’A’ Hlocal17024
+
+’M’ O$scala/collection/StringOps#`++`(+2).21
+
+’P’ S!ammonite/$file/play_point2.pps().2
+
+’T’ Ulocal16826
+
+÷÷ &ammonite/$file/play_point2.Rexp.POINT.27
+
+÷÷ 'ammonite/$file/play_point2.Rexp.NTIMES.2
+
+÷÷ local1712
+
+÷÷ local1722
+
+÷÷ !local1732
+
+÷#÷ &local1742(
+
+◊◊ scala/StringContext#s().2
+
+◊◊ local17221
+
+◊◊ !ammonite/$file/play_point2.fin().2
+
+◊ ◊ !local17126
+
+◊.◊ 6&ammonite/$file/play_point2.nullable().2
+
+◊7◊ 8local1712
+
+◊E◊ Llocal17324
+
+◊Q◊ S$scala/collection/StringOps#`++`(+2).21
+
+◊T◊ W!ammonite/$file/play_point2.pps().2
+
+◊X◊ Ylocal17126
+
+ÿÿ &ammonite/$file/play_point2.Rexp.POINT.2
+
+ÿÿ local1752
+
+ÿÿ local17620
+
+ÿÿ  ammonite/$file/play_point2.pp().2
+
+ÿÿ local17520
+
+ÃÃ  ammonite/$file/play_point2.pp().20
+
+⁄⁄  ammonite/$file/play_point2.Rexp#25
+
+⁄⁄ 
+%ammonite/$file/play_point2.pps().(es)24
+
+⁄⁄ $ammonite/$file/play_point2.indent().25
+
+⁄⁄ %ammonite/$file/play_point2.pps().(es)23
+
+⁄⁄ "#scala/collection/IterableOps#map().20
+
+⁄#⁄ % ammonite/$file/play_point2.pp().21
+
+⁄⁄ !ammonite/$file/play_point2.pps().PZ 90bb37f0579824a5bb4c574fd2175be8ba
+$ (UBS
+=:;
+2
+
+$ (+
+)scala/collection/IterableFactory#apply().scala/Nothing#b]
+.#. 'QBO
+=:;
+2
+
+.#. '+
+)scala/collection/IterableFactory#apply().
+scala/Int#b,
+242 9 B
+2
+
+242 9
+scala/Int#b,
+323 7 B
+2
+
+323 7
+scala/Int#b,
+FF $ B
+2
+
+FF $
+scala/Int#b_
+S	S SBQ
+>:<
+2
+
+S	S ,
+*scala/collection/immutable/`::`.unapply().scala/Char#bJ
+oo >
+<
+,*
+(scala/LowPriorityImplicits#wrapString().2
+
+oo b1
+
+ÄÄ #B!
+2
+
+ÄÄ scala/Unit#b1
+
+áá #B!
+2
+
+áá scala/Unit#bN
+
+ù
+ù @
+>
+,*
+(scala/LowPriorityImplicits#wrapString().2
+
+ù
+ù b1
+
+¢¢ #B!
+2
+
+¢¢ scala/Unit#bN
+
+¢¢ @
+>
+,*
+(scala/LowPriorityImplicits#intWrapper().2
+
+¢¢ bN
+
+∑	∑ @
+>
+,*
+(scala/LowPriorityImplicits#wrapString().2
+
+∑	∑ b1
+
+«« #B!
+2
+
+«« scala/Unit#ba
+
+‡‡ #SBQ
+?:=
+2
+
+‡‡ #+
+)scala/collection/IterableFactory#apply().
+scala/Int#b©
+
+ÇÇ 8öBó
+2
+
+ÇÇ 8ÑÅscala/Tuple2#JH scala/collection/immutable/List#$" ammonite/$file/play_point2.Rexp#$" ammonite/$file/play_point2.Rexp#bN
+
+ÇÇ @
+>
+,*
+(scala/LowPriorityImplicits#intWrapper().2
+
+ÇÇ bi
+
+ãã .[BY
+2
+
+ãã .GEscala/Tuple2#$" ammonite/$file/play_point2.Rexp#
+scala/Int#bi
+
+åå ,[BY
+2
+
+åå ,GEscala/Tuple2#$" ammonite/$file/play_point2.Rexp#
+scala/Int#bi
+
+çç ,[BY
+2
+
+çç ,GEscala/Tuple2#$" ammonite/$file/play_point2.Rexp#
+scala/Int#be
+
+êê WBU
+?:=
+2
+
+êê +
+)scala/collection/IterableFactory#apply().scala/Nothing#bc
+
+´´ 
+UBS
+@:>
+2
+
+´´ 
+,
+*scala/collection/immutable/`::`.unapply().scala/Char#bc
+
+¨¨ 
+UBS
+@:>
+2
+
+¨¨ 
+,
+*scala/collection/immutable/`::`.unapply().scala/Char#bN
+
+Ø4Ø 5@
+>
+,*
+(scala/LowPriorityImplicits#wrapString().2
+
+Ø4Ø 5bk
+
+ªª &]
+[
+IBG
+.,
+*scala/LowPriorityImplicits#wrapRefArray().java/lang/String#2
+
+ªª &bi
+
+æ
+æ [BY
+@:>
+2
+
+æ
+æ ,
+*scala/collection/immutable/`::`.unapply().java/lang/String#b7
+
+æ&æ :)B'
+2
+
+æ&æ :java/lang/String#b7
+
+æ)æ /)B'
+2
+
+æ)æ /java/lang/String#bC
+
+æ0æ 45
+3
+!
+scala/Predef.augmentString().2
+
+æ0æ 4bi
+
+√
+√ [BY
+@:>
+2
+
+√
+√ ,
+*scala/collection/immutable/`::`.unapply().java/lang/String#b7
+
+√&√ :)B'
+2
+
+√&√ :java/lang/String#b7
+
+√)√ /)B'
+2
+
+√)√ /java/lang/String#bC
+
+√0√ 45
+3
+!
+scala/Predef.augmentString().2
+
+√0√ 4bï
+
+»» ÜBÉ
+>:<
+2
+
+»» *
+(scala/collection/package.`:+`.unapply().java/lang/String#k“h
+86
+[A]	*AÄä&$scala/Nothing#
+scala/Any#,*scala/collection/immutable/Seq#[A]=;scala/collection/immutable/Seq#scala/Predef.String#b7
+
+»» /)B'
+2
+
+»» /java/lang/String#b7
+
+»» ')B'
+2
+
+»» 'java/lang/String#bC
+
+—— J5
+3
+!
+scala/Predef.augmentString().2
+
+—— JbC
+
+““ J5
+3
+!
+scala/Predef.augmentString().2
+
+““ JbC
+
+”” 5
+3
+!
+scala/Predef.augmentString().2
+
+”” bC
+
+’’ L5
+3
+!
+scala/Predef.augmentString().2
+
+’’ LbC
+
+◊◊ P5
+3
+!
+scala/Predef.augmentString().2
+
+◊◊ Pb7
+
+⁄⁄ ")B'
+2
+
+⁄⁄ "java/lang/String#
