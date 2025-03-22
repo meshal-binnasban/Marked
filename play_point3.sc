@@ -55,7 +55,7 @@ def shift(m: Boolean, re: Rexp, cp: (Char, Int)) : Rexp = {
   case SEQ(r1, r2,bs) => SEQ(shift(m, r1, cp), shift((m && nullable(r1)) || fin(r1), r2, cp),bs)
   case STAR(r,bs) => 
     //bs ++ List(0)
-    STAR(shift(m || fin(r), r, cp),bs ++ mkeps(r) ++ List(0))
+    STAR(shift(m || fin(r), r, cp),bs ++ mkeps(r) ++ List(0)) //  drops the performance in case of evil regex
   //case POINT(NTIMES(r, n,counter)) => NTIMES(r, n,counter)
   case POINT(NTIMES(r, n,counter,b),tag , bs) => 
     POINT(NTIMES(r, n,counter,b),tag:+pos,bs) // maybe b instead of bs
@@ -118,6 +118,19 @@ def test1() = {
     val stages = traverseStages(finReg, inputLength)
     stages.reverse.foreach(stage => println( pp(stage))) 
 
+
+
+
+   /*  println("\n=============== EVIL ===============n")
+
+    val EVIL2 = STAR(STAR("a" | "b" ))
+
+    val finReg2=matcher2(EVIL2, "aa".toList)
+    println(pp(finReg2))
+    val mkepsEvilValue = mkeps(finReg2)
+    println(s"mkeps= $mkepsEvilValue")
+    val decodeEvilValue=decode(EVIL2,mkepsEvilValue)
+    println(s"decode=$decodeEvilValue") */
 }
 
 //testing popPoints
@@ -145,6 +158,8 @@ def test2() = {
   val inputLength = s.length        
   val stages = traverseStages(finReg, inputLength)
   stages.reverse.foreach(stage => println( pp(stage))) 
+
+
 
 }
 
@@ -202,6 +217,8 @@ def test4() = {
 
 }
 
+
+
 enum VALUE {
   case ZEROV
   case ONEV
@@ -225,7 +242,6 @@ def decode(r: Rexp, bs: List[Int]): (VALUE, List[Int]) = r match {
         val (v, bsp) = decode(r2, bs1)
         (RIGHT(v), bsp)
     case x =>
-      println(s"ALTb bs: $bs and x=$x") 
       (ZEROV, bs) // in case of something else, may need to remove it but just incase
   }
   case SEQ(r1, r2,_) =>  // (5) decode (r1 · r2) bs = (Seq(v1, v2), bs3) where decode r1 bs => v1,bs2 and decode r2 bs2 =>v2,bs3 
@@ -433,3 +449,22 @@ def pp(e: Rexp) : String = e match {
   case POINT(r,tag,bs) =>pp(r)
 }
 def pps(es: Rexp*) = indent(es.map(pp))
+
+
+val EVIL2 = SEQ(STAR(STAR(CHAR('a'))), CHAR('b'))
+
+@main
+def maintest2() = {
+ // for (i <- 0 to 7000000 by 500000) {
+ // }
+  val i=500000
+  println(f"$i: ${time_needed(2, matcher(EVIL2, ("a" * i).toList))}%.5f")
+
+} 
+
+def time_needed[T](i: Int, code: => T) = {
+  val start = System.nanoTime()
+  for (j <- 1 to i) code
+  val end = System.nanoTime()
+  (end - start) / (i * 1.0e9)
+}
