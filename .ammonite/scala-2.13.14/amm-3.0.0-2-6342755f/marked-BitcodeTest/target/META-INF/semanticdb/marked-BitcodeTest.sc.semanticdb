@@ -1,5 +1,5 @@
 
-œœmarked-BitcodeTest.sc˜ximport scala.compiletime.ops.string
+°˜marked-BitcodeTest.scîximport scala.compiletime.ops.string
 
 enum Rexp {
   case ZERO
@@ -54,7 +54,7 @@ def shift(mark: Boolean,re: Rexpb, c: Char ): Rexpb = re match {
     case CHARb(ch,marked,bs) => {
         if(mark && ch == c)
         CHARb(ch,mark && ch == c,bs) 
-        else CHARb(ch,mark && ch == c) // maybe [] for bs ?
+        else CHARb(ch,mark && ch == c,bs) // maybe [] for bs ?
     }
     case ALTb(r1, r2,bs) => ALTb(shift(mark,r1,c),shift(mark,r2,c),bs) 
     case SEQb(r1,r2,bs) =>
@@ -182,7 +182,7 @@ def mkeps_marked2(r: Rexpb): List[Int] = r match {
         else List() //bs
 
     case STARb(r, bs) =>
-        if (fin(r)) bs ++ List(1) ++ mkeps_marked2(r) 
+        if (fin(r)) bs ++mkeps_marked2(r) ++ List(1) 
         else List() 
 
     case NTIMESb(r, n, nmark, counter, bs) =>
@@ -197,11 +197,11 @@ def mkeps_marked2(r: Rexpb): List[Int] = r match {
     case ZEROb => ZEROb
     case ONEb(bs) => ONEb(cs ++ bs)
     case CHARb(c, marked, bs) => CHARb(c, marked, cs ++ bs)
-    case ALTb(r1, r2, bs) => ALTb(fuse(cs, r1), fuse(cs, r2), cs ++ bs)
-    case SEQb(r1, r2, bs) => SEQb(fuse(cs, r1), fuse(cs, r2), cs ++ bs)
-    case STARb(r, bs) => STARb(fuse(cs, r), cs ++ bs)
-    case NTIMESb(r, n, nmark, counter, bs) => NTIMESb(fuse(cs, r), n, nmark, counter, cs ++ bs)
-    case INITb(r, bs) => INITb(fuse(cs, r), cs ++ bs)
+    case ALTb(r1, r2, bs) => ALTb(r1, r2, cs ++ bs)
+    case SEQb(r1, r2, bs) => SEQb(r1, r2, cs ++ bs)
+    case STARb(r, bs) => STARb(r, cs ++ bs)
+    case NTIMESb(r, n, nmark, counter, bs) => NTIMESb(r, n, nmark, counter, cs ++ bs)
+    case INITb(r, bs) => INITb(r, cs ++ bs)
 }
 
 
@@ -308,6 +308,7 @@ def test01() = {
 
 }
 
+//testing bitcode with STAR and SEQ
 @main
 def test02() = {
   val a=CHAR('a')
@@ -331,18 +332,21 @@ def test02() = {
 
 }
 
+//testing unshift
 @main
 def test03() = {
   val a=CHAR('a')
   val b=CHAR('b')
   val rexp=intern(SEQ(a , b))
 
+  println(s"Original Reg:$rexp \n")
   val shiftedOnce=shift(true,rexp,'a')
   val shiftedTwice=shift(true,shiftedOnce,'b')
-  println(s"Shifted Once: ${pp(shiftedTwice)}\n")
+  println(s"Shifted Once with a: ${pp(shiftedOnce)}\n")
+  println(s"Shifted twice: ${pp(shiftedTwice)}\n")
 
-  val unshiftedOnce=unshift(true,shiftedTwice,'a')
-  println(s"Unshifted Once: ${pp(unshiftedOnce)}\n")
+  val unshiftedOnce=unshift(true,shiftedTwice,'b')
+  println(s"Unshifted Once with b: ${pp(unshiftedOnce)}\n")
 
   println("\n========================\n")
   val rexp2=intern(STAR(a))
@@ -3299,7 +3303,8 @@ scala/Int#2I
 77 scala/Boolean#`&&`().2
 77  local312"
 7!7 #scala/Char#`==`(+2).2=
-7$7 %/ammonite/$file/`marked-BitcodeTest`.shift().(c)2=
+7$7 %/ammonite/$file/`marked-BitcodeTest`.shift().(c)2
+7&7 (local332=
 9	9 /ammonite/$file/`marked-BitcodeTest`.Rexpb.ALTb.2
 99 local342
 99 local352
@@ -3938,15 +3943,15 @@ scala/Int#2G
 
 ·· local11624
 
-·· $scala/collection/IterableOps#`++`().2#
+·· $scala/collection/IterableOps#`++`().2D
 
-·· scala/package.List.24
+·· &4ammonite/$file/`marked-BitcodeTest`.mkeps_marked2().2
 
-·"· $$scala/collection/IterableOps#`++`().2D
+·'· (local11524
 
-·%· 24ammonite/$file/`marked-BitcodeTest`.mkeps_marked2().2
+·*· ,$scala/collection/IterableOps#`++`().2#
 
-·3· 4local1152#
+·-· 1scala/package.List.2#
 
 ¸¸ scala/package.List.2B
 
@@ -4068,25 +4073,17 @@ scala/Int#2?
 
 ÆÆ local1302?
 
-ÆÆ !/ammonite/$file/`marked-BitcodeTest`.Rexpb.ALTb.2;
+ÆÆ !/ammonite/$file/`marked-BitcodeTest`.Rexpb.ALTb.2
 
-Æ"Æ &+ammonite/$file/`marked-BitcodeTest`.fuse().2?
+Æ"Æ $local1282
 
-Æ'Æ )/ammonite/$file/`marked-BitcodeTest`.fuse().(cs)2
+Æ&Æ (local1292?
 
-Æ+Æ -local1282;
+Æ*Æ ,/ammonite/$file/`marked-BitcodeTest`.fuse().(cs)24
 
-Æ0Æ 4+ammonite/$file/`marked-BitcodeTest`.fuse().2?
+Æ-Æ /$scala/collection/IterableOps#`++`().2
 
-Æ5Æ 7/ammonite/$file/`marked-BitcodeTest`.fuse().(cs)2
-
-Æ9Æ ;local1292?
-
-Æ>Æ @/ammonite/$file/`marked-BitcodeTest`.fuse().(cs)24
-
-ÆAÆ C$scala/collection/IterableOps#`++`().2
-
-ÆDÆ Flocal1302?
+Æ0Æ 2local1302?
 
 Ç	Ç /ammonite/$file/`marked-BitcodeTest`.Rexpb.SEQb.2
 
@@ -4096,25 +4093,17 @@ scala/Int#2?
 
 ÇÇ local1332?
 
-ÇÇ !/ammonite/$file/`marked-BitcodeTest`.Rexpb.SEQb.2;
+ÇÇ !/ammonite/$file/`marked-BitcodeTest`.Rexpb.SEQb.2
 
-Ç"Ç &+ammonite/$file/`marked-BitcodeTest`.fuse().2?
+Ç"Ç $local1312
 
-Ç'Ç )/ammonite/$file/`marked-BitcodeTest`.fuse().(cs)2
+Ç&Ç (local1322?
 
-Ç+Ç -local1312;
+Ç*Ç ,/ammonite/$file/`marked-BitcodeTest`.fuse().(cs)24
 
-Ç0Ç 4+ammonite/$file/`marked-BitcodeTest`.fuse().2?
+Ç-Ç /$scala/collection/IterableOps#`++`().2
 
-Ç5Ç 7/ammonite/$file/`marked-BitcodeTest`.fuse().(cs)2
-
-Ç9Ç ;local1322?
-
-Ç>Ç @/ammonite/$file/`marked-BitcodeTest`.fuse().(cs)24
-
-ÇAÇ C$scala/collection/IterableOps#`++`().2
-
-ÇDÇ Flocal1332@
+Ç0Ç 2local1332@
 
 È	È 0ammonite/$file/`marked-BitcodeTest`.Rexpb.STARb.2
 
@@ -4122,19 +4111,15 @@ scala/Int#2?
 
 ÈÈ local1352@
 
-ÈÈ 0ammonite/$file/`marked-BitcodeTest`.Rexpb.STARb.2;
+ÈÈ 0ammonite/$file/`marked-BitcodeTest`.Rexpb.STARb.2
 
-ÈÈ #+ammonite/$file/`marked-BitcodeTest`.fuse().2?
+ÈÈ  local1342?
 
-È$È &/ammonite/$file/`marked-BitcodeTest`.fuse().(cs)2
+È"È $/ammonite/$file/`marked-BitcodeTest`.fuse().(cs)24
 
-È(È )local1342?
+È%È '$scala/collection/IterableOps#`++`().2
 
-È,È ./ammonite/$file/`marked-BitcodeTest`.fuse().(cs)24
-
-È/È 1$scala/collection/IterableOps#`++`().2
-
-È2È 4local1352B
+È(È *local1352B
 
 É	É 2ammonite/$file/`marked-BitcodeTest`.Rexpb.NTIMESb.2
 
@@ -4148,25 +4133,21 @@ scala/Int#2?
 
 É'É )local1402B
 
-É.É 52ammonite/$file/`marked-BitcodeTest`.Rexpb.NTIMESb.2;
+É.É 52ammonite/$file/`marked-BitcodeTest`.Rexpb.NTIMESb.2
 
-É6É :+ammonite/$file/`marked-BitcodeTest`.fuse().2?
+É6É 7local1362
 
-É;É =/ammonite/$file/`marked-BitcodeTest`.fuse().(cs)2
+É9É :local1372
 
-É?É @local1362
+É<É Alocal1382
 
-ÉCÉ Dlocal1372
+ÉCÉ Jlocal1392?
 
-ÉFÉ Klocal1382
+ÉLÉ N/ammonite/$file/`marked-BitcodeTest`.fuse().(cs)24
 
-ÉMÉ Tlocal1392?
+ÉOÉ Q$scala/collection/IterableOps#`++`().2
 
-ÉVÉ X/ammonite/$file/`marked-BitcodeTest`.fuse().(cs)24
-
-ÉYÉ [$scala/collection/IterableOps#`++`().2
-
-É\É ^local1402@
+ÉRÉ Tlocal1402@
 
 Ê	Ê 0ammonite/$file/`marked-BitcodeTest`.Rexpb.INITb.2
 
@@ -4174,19 +4155,15 @@ scala/Int#2?
 
 ÊÊ local1422@
 
-ÊÊ 0ammonite/$file/`marked-BitcodeTest`.Rexpb.INITb.2;
+ÊÊ 0ammonite/$file/`marked-BitcodeTest`.Rexpb.INITb.2
 
-ÊÊ #+ammonite/$file/`marked-BitcodeTest`.fuse().2?
+ÊÊ  local1412?
 
-Ê$Ê &/ammonite/$file/`marked-BitcodeTest`.fuse().(cs)2
+Ê"Ê $/ammonite/$file/`marked-BitcodeTest`.fuse().(cs)24
 
-Ê(Ê )local1412?
+Ê%Ê '$scala/collection/IterableOps#`++`().2
 
-Ê,Ê ./ammonite/$file/`marked-BitcodeTest`.fuse().(cs)24
-
-Ê/Ê 1$scala/collection/IterableOps#`++`().2
-
-Ê2Ê 4local1422;
+Ê(Ê *local1422;
 
 ÂÂ 	+ammonite/$file/`marked-BitcodeTest`.fuse().29
 
@@ -4747,1154 +4724,1170 @@ scala/Int#2@
 ”” 
 -ammonite/$file/`marked-BitcodeTest`.test01().2
 
-µµ mainargs/main#2>
-
-·· .ammonite/$file/`marked-BitcodeTest`.Rexp.CHAR.2
-
-·· local1902>
+¶¶ mainargs/main#2>
 
 ¸¸ .ammonite/$file/`marked-BitcodeTest`.Rexp.CHAR.2
 
-¸¸ local1912>
+¸¸ local1902>
 
-¹¹ .ammonite/$file/`marked-BitcodeTest`.Rexp.STAR.2=
+¹¹ .ammonite/$file/`marked-BitcodeTest`.Rexp.CHAR.2
 
-¹¹ -ammonite/$file/`marked-BitcodeTest`.Rexp.ALT.2
+¹¹ local1912>
 
-¹¹ local1902=
+ºº .ammonite/$file/`marked-BitcodeTest`.Rexp.STAR.2=
 
-¹¹ -ammonite/$file/`marked-BitcodeTest`.Rexp.SEQ.2
+ºº -ammonite/$file/`marked-BitcodeTest`.Rexp.ALT.2
 
-¹¹ local1902
+ºº local1902=
 
-¹¹ local1912
+ºº -ammonite/$file/`marked-BitcodeTest`.Rexp.SEQ.2
 
-¹¹ 
+ºº local1902
+
+ºº local1912
+
+ºº 
 local1922>
 
-ºº .ammonite/$file/`marked-BitcodeTest`.intern2().2
+»» .ammonite/$file/`marked-BitcodeTest`.intern2().2
 
-ºº local1922
+»» local1922
 
-ºº local1932:
+»» local1932:
 
-»» *scala/collection/IterableOnceOps#toList().2
+¼¼ *scala/collection/IterableOnceOps#toList().2
 
-»» local1942)
+¼¼ local1942)
 
-¼¼ 	scala/Predef.println(+1).2(
+½½ 	scala/Predef.println(+1).2(
 
-¼
-¼ scala/StringContext#s().2
+½
+½ scala/StringContext#s().2
 
-¼¼ local19429
+½½ local19429
 
-¼"¼ $)ammonite/$file/`marked-BitcodeTest`.pp().2
+½"½ $)ammonite/$file/`marked-BitcodeTest`.pp().2
 
-¼%¼ *local1932>
+½%½ *local1932>
 
-¿¿ .ammonite/$file/`marked-BitcodeTest`.matcher().2
+ÀÀ .ammonite/$file/`marked-BitcodeTest`.matcher().2
 
-¿¿ local1932
+ÀÀ local1932
 
-¿¿ local1942
+ÀÀ local1942
 
-¿¿ local1952)
+ÀÀ local1952)
 
-ÀÀ 	scala/Predef.println(+1).2(
+ÁÁ 	scala/Predef.println(+1).2(
 
-À
-À scala/StringContext#s().2
+Á
+Á scala/StringContext#s().2
 
-ÀÀ local1952?
+ÁÁ local1952?
 
-ÂÂ /ammonite/$file/`marked-BitcodeTest`.matcher2().2
+ÃÃ /ammonite/$file/`marked-BitcodeTest`.matcher2().2
 
-ÂÂ local1932
+ÃÃ local1932
 
-ÂÂ local1942
+ÃÃ local1942
 
-ÂÂ local1962)
+ÃÃ local1962)
 
-ÃÃ 	scala/Predef.println(+1).2(
+ÄÄ 	scala/Predef.println(+1).2(
 
-Ã
-Ã scala/StringContext#s().29
+Ä
+Ä scala/StringContext#s().29
 
-ÃÃ )ammonite/$file/`marked-BitcodeTest`.pp().2
+ÄÄ )ammonite/$file/`marked-BitcodeTest`.pp().2
 
-ÃÃ  local1962
+ÄÄ  local1962
 
-Ã.Ã 4local1962)
-
-ÅÅ 	scala/Predef.println(+1).2(
-
-Å
-Å scala/StringContext#s().2C
-
-ÅÅ '3ammonite/$file/`marked-BitcodeTest`.mkeps_marked().2
-
-Å(Å .local1962)
+Ä.Ä 4local1962)
 
 ÆÆ 	scala/Predef.println(+1).2(
 
 Æ
-Æ scala/StringContext#s().2D
+Æ scala/StringContext#s().2C
 
-ÆÆ )4ammonite/$file/`marked-BitcodeTest`.mkeps_marked2().2
+ÆÆ '3ammonite/$file/`marked-BitcodeTest`.mkeps_marked().2
 
-Æ*Æ 0local1962)
+Æ(Æ .local1962)
 
-ÈÈ 	scala/Predef.println(+1).2(
+ÇÇ 	scala/Predef.println(+1).2(
 
-È
-È scala/StringContext#s().2=
+Ç
+Ç scala/StringContext#s().2D
 
-ÈÈ -ammonite/$file/`marked-BitcodeTest`.decode().2
+ÇÇ )4ammonite/$file/`marked-BitcodeTest`.mkeps_marked2().2
 
-ÈÈ  local1922D
+Ç*Ç 0local1962)
 
-È!È .4ammonite/$file/`marked-BitcodeTest`.mkeps_marked2().2
+ÉÉ 	scala/Predef.println(+1).2(
 
-È/È 5local1962=
+É
+É scala/StringContext#s().2=
 
-¶¶ 
+ÉÉ -ammonite/$file/`marked-BitcodeTest`.decode().2
+
+ÉÉ  local1922D
+
+É!É .4ammonite/$file/`marked-BitcodeTest`.mkeps_marked2().2
+
+É/É 5local1962=
+
+·· 
 -ammonite/$file/`marked-BitcodeTest`.test02().2
 
-ÌÌ mainargs/main#2>
+ÎÎ mainargs/main#2>
 
-ÎÎ .ammonite/$file/`marked-BitcodeTest`.Rexp.CHAR.2
+ÐÐ .ammonite/$file/`marked-BitcodeTest`.Rexp.CHAR.2
 
-ÎÎ local1972>
+ÐÐ local1972>
 
-ÏÏ .ammonite/$file/`marked-BitcodeTest`.Rexp.CHAR.2
+ÑÑ .ammonite/$file/`marked-BitcodeTest`.Rexp.CHAR.2
 
-ÏÏ local1982=
+ÑÑ local1982=
 
-ÐÐ -ammonite/$file/`marked-BitcodeTest`.intern().2=
+ÒÒ -ammonite/$file/`marked-BitcodeTest`.intern().2=
 
-ÐÐ -ammonite/$file/`marked-BitcodeTest`.Rexp.SEQ.2
+ÒÒ -ammonite/$file/`marked-BitcodeTest`.Rexp.SEQ.2
 
-ÐÐ local1972
+ÒÒ local1972
 
-ÐÐ local1982
+ÒÒ local1982
 
-ÐÐ 
-local1992<
-
-ÒÒ ,ammonite/$file/`marked-BitcodeTest`.shift().2
-
-ÒÒ !local1992
-
-ÒÒ local2002<
-
-ÓÓ ,ammonite/$file/`marked-BitcodeTest`.shift().2
-
-ÓÓ )local2002
-
-ÓÓ local2012)
+ÒÒ 
+local1992)
 
 ÔÔ 	scala/Predef.println(+1).2(
 
 Ô
-Ô scala/StringContext#s().29
+Ô scala/StringContext#s().2
 
-ÔÔ )ammonite/$file/`marked-BitcodeTest`.pp().2
+ÔÔ local1992<
 
-ÔÔ +local2012>
+ÕÕ ,ammonite/$file/`marked-BitcodeTest`.shift().2
 
-ÖÖ .ammonite/$file/`marked-BitcodeTest`.unshift().2
+ÕÕ !local1992
 
-Ö!Ö -local2012
+ÕÕ local2002<
 
-ÖÖ local2022)
+ÖÖ ,ammonite/$file/`marked-BitcodeTest`.shift().2
+
+ÖÖ )local2002
+
+ÖÖ local2012)
 
 ×× 	scala/Predef.println(+1).2(
 
 ×
 × scala/StringContext#s().29
 
-××  )ammonite/$file/`marked-BitcodeTest`.pp().2
+×#× %)ammonite/$file/`marked-BitcodeTest`.pp().2
 
-×!× .local2022)
+×&× 1local2002)
 
-ÙÙ 	scala/Predef.println(+1).2=
+ØØ 	scala/Predef.println(+1).2(
 
-ÚÚ -ammonite/$file/`marked-BitcodeTest`.intern().2>
+Ø
+Ø scala/StringContext#s().29
 
-ÚÚ .ammonite/$file/`marked-BitcodeTest`.Rexp.STAR.2
+ØØ )ammonite/$file/`marked-BitcodeTest`.pp().2
 
-ÚÚ local1972
+Ø Ø ,local2012>
 
-ÚÚ local2032<
+ÚÚ .ammonite/$file/`marked-BitcodeTest`.unshift().2
 
-ÛÛ ,ammonite/$file/`marked-BitcodeTest`.shift().2
+Ú!Ú -local2012
 
-ÛÛ #local2032
+ÚÚ local2022)
 
-ÛÛ local2042)
+ÛÛ 	scala/Predef.println(+1).2(
 
-ÜÜ 	scala/Predef.println(+1).2(
+Û
+Û scala/StringContext#s().29
 
-Ü
-Ü scala/StringContext#s().29
+Û%Û ')ammonite/$file/`marked-BitcodeTest`.pp().2
 
-ÜÜ )ammonite/$file/`marked-BitcodeTest`.pp().2
+Û(Û 5local2022)
 
-ÜÜ +local2042>
+ÝÝ 	scala/Predef.println(+1).2=
 
-ÞÞ .ammonite/$file/`marked-BitcodeTest`.unshift().2
+ÞÞ -ammonite/$file/`marked-BitcodeTest`.intern().2>
 
-Þ"Þ .local2042
+ÞÞ .ammonite/$file/`marked-BitcodeTest`.Rexp.STAR.2
 
-ÞÞ local2052)
+ÞÞ local1972
 
-ßß 	scala/Predef.println(+1).2(
+ÞÞ local2032<
 
-ß
-ß scala/StringContext#s().29
+ßß ,ammonite/$file/`marked-BitcodeTest`.shift().2
 
-ßß  )ammonite/$file/`marked-BitcodeTest`.pp().2
+ßß #local2032
 
-ß!ß /local2052=
+ßß local2042)
 
-ÍÍ 
+àà 	scala/Predef.println(+1).2(
+
+à
+à scala/StringContext#s().29
+
+àà )ammonite/$file/`marked-BitcodeTest`.pp().2
+
+àà +local2042>
+
+ââ .ammonite/$file/`marked-BitcodeTest`.unshift().2
+
+â"â .local2042
+
+ââ local2052)
+
+ãã 	scala/Predef.println(+1).2(
+
+ã
+ã scala/StringContext#s().29
+
+ãã  )ammonite/$file/`marked-BitcodeTest`.pp().2
+
+ã!ã /local2052=
+
+ÏÏ 
 -ammonite/$file/`marked-BitcodeTest`.test03().2:
 
-ãã *ammonite/$file/`marked-BitcodeTest`.Rexpb#2>
+çç *ammonite/$file/`marked-BitcodeTest`.Rexpb#2>
 
-ã	ã 
+ç	ç 
 .ammonite/$file/`marked-BitcodeTest`.size().(r)2
 
-ãã 
+çç 
 scala/Int#2>
 
-ãã .ammonite/$file/`marked-BitcodeTest`.size().(r)2@
+çç .ammonite/$file/`marked-BitcodeTest`.size().(r)2@
 
-ää 0ammonite/$file/`marked-BitcodeTest`.Rexpb.ZEROb.2?
+èè 0ammonite/$file/`marked-BitcodeTest`.Rexpb.ZEROb.2?
 
-åå /ammonite/$file/`marked-BitcodeTest`.Rexpb.ONEb.2
+éé /ammonite/$file/`marked-BitcodeTest`.Rexpb.ONEb.2
 
-åå local2062@
+éé local2062@
 
-ææ 0ammonite/$file/`marked-BitcodeTest`.Rexpb.CHARb.2?
+êê 0ammonite/$file/`marked-BitcodeTest`.Rexpb.CHARb.2?
 
-çç /ammonite/$file/`marked-BitcodeTest`.Rexpb.ALTb.2
+ëë /ammonite/$file/`marked-BitcodeTest`.Rexpb.ALTb.2
 
-çç local2072
+ëë local2072
 
-çç local2082
+ëë local2082
 
-çç local2092"
+ëë local2092"
 
-çç scala/Int#`+`(+4).2;
+ëë scala/Int#`+`(+4).2;
 
-çç "+ammonite/$file/`marked-BitcodeTest`.size().2
+ëë "+ammonite/$file/`marked-BitcodeTest`.size().2
 
-ç#ç %local2072"
+ë#ë %local2072"
 
-ç'ç (scala/Int#`+`(+4).2;
+ë'ë (scala/Int#`+`(+4).2;
 
-ç)ç -+ammonite/$file/`marked-BitcodeTest`.size().2
+ë)ë -+ammonite/$file/`marked-BitcodeTest`.size().2
 
-ç.ç 0local2082?
+ë.ë 0local2082?
 
-èè /ammonite/$file/`marked-BitcodeTest`.Rexpb.SEQb.2
+ìì /ammonite/$file/`marked-BitcodeTest`.Rexpb.SEQb.2
 
-èè local2102
+ìì local2102
 
-èè local2112
+ìì local2112
 
-èè local2122"
+ìì local2122"
 
-èè scala/Int#`+`(+4).2;
+ìì scala/Int#`+`(+4).2;
 
-èè "+ammonite/$file/`marked-BitcodeTest`.size().2
+ìì "+ammonite/$file/`marked-BitcodeTest`.size().2
 
-è#è %local2102"
+ì#ì %local2102"
 
-è'è (scala/Int#`+`(+4).2;
+ì'ì (scala/Int#`+`(+4).2;
 
-è)è -+ammonite/$file/`marked-BitcodeTest`.size().2
+ì)ì -+ammonite/$file/`marked-BitcodeTest`.size().2
 
-è.è 0local2112@
+ì.ì 0local2112@
 
-éé 0ammonite/$file/`marked-BitcodeTest`.Rexpb.STARb.2
+íí 0ammonite/$file/`marked-BitcodeTest`.Rexpb.STARb.2
 
-éé local2132
+íí local2132
 
-éé local2142"
+íí local2142"
 
-éé scala/Int#`+`(+4).2;
+íí scala/Int#`+`(+4).2;
 
-éé +ammonite/$file/`marked-BitcodeTest`.size().2
+íí +ammonite/$file/`marked-BitcodeTest`.size().2
 
-éé  local2132B
+íí  local2132B
 
-êê 2ammonite/$file/`marked-BitcodeTest`.Rexpb.NTIMESb.2
+îî 2ammonite/$file/`marked-BitcodeTest`.Rexpb.NTIMESb.2
 
-êê local2152
+îî local2152
 
-êê local2162
+îî local2162
 
-êê local2172
+îî local2172
 
-êê !local2182
+îî !local2182
 
-ê"ê $local2192"
+î"î $local2192"
 
-ê+ê ,scala/Int#`+`(+4).2;
+î+î ,scala/Int#`+`(+4).2;
 
-ê-ê 1+ammonite/$file/`marked-BitcodeTest`.size().2
+î-î 1+ammonite/$file/`marked-BitcodeTest`.size().2
 
-ê2ê 3local2152@
+î2î 3local2152@
 
-ëë 0ammonite/$file/`marked-BitcodeTest`.Rexpb.INITb.2
+ïï 0ammonite/$file/`marked-BitcodeTest`.Rexpb.INITb.2
 
-ëë local2202
+ïï local2202
 
-ëë local2212"
+ïï local2212"
 
-ëë scala/Int#`+`(+4).2;
+ïï scala/Int#`+`(+4).2;
 
-ëë +ammonite/$file/`marked-BitcodeTest`.size().2
+ïï +ammonite/$file/`marked-BitcodeTest`.size().2
 
-ëë  local2202;
+ïï  local2202;
 
-ãã +ammonite/$file/`marked-BitcodeTest`.size().29
+çç +ammonite/$file/`marked-BitcodeTest`.size().29
 
-îî )ammonite/$file/`marked-BitcodeTest`.Rexp#2C
+òò )ammonite/$file/`marked-BitcodeTest`.Rexp#2C
 
-îî 3ammonite/$file/`marked-BitcodeTest`.SeqNTIMES().(r)29
+òò 3ammonite/$file/`marked-BitcodeTest`.SeqNTIMES().(r)29
 
-îî )ammonite/$file/`marked-BitcodeTest`.Rexp#2C
+òò )ammonite/$file/`marked-BitcodeTest`.Rexp#2C
 
-îî  3ammonite/$file/`marked-BitcodeTest`.SeqNTIMES().(r)2>
+òò  3ammonite/$file/`marked-BitcodeTest`.SeqNTIMES().(r)2>
 
-ïï .ammonite/$file/`marked-BitcodeTest`.Rexp.ZERO.2>
+óó .ammonite/$file/`marked-BitcodeTest`.Rexp.ZERO.2>
 
-ïï .ammonite/$file/`marked-BitcodeTest`.Rexp.ZERO.2=
-
-ðð 
--ammonite/$file/`marked-BitcodeTest`.Rexp.ONE.2=
-
-ðð -ammonite/$file/`marked-BitcodeTest`.Rexp.ONE.2>
-
-ññ .ammonite/$file/`marked-BitcodeTest`.Rexp.CHAR.2
-
-ññ local2222
-
-ññ local2232>
-
-ññ .ammonite/$file/`marked-BitcodeTest`.Rexp.CHAR.2
-
-ññ  local2222
-
-ñ"ñ (local2232=
-
-òò 
--ammonite/$file/`marked-BitcodeTest`.Rexp.ALT.2
-
-òò local2242
-
-òò local2252=
-
-óó -ammonite/$file/`marked-BitcodeTest`.Rexp.ALT.2@
-
-óó 0ammonite/$file/`marked-BitcodeTest`.SeqNTIMES().2
-
-óó local2242@
-
-óó  0ammonite/$file/`marked-BitcodeTest`.SeqNTIMES().2
-
-ó!ó #local2252=
+óó .ammonite/$file/`marked-BitcodeTest`.Rexp.ZERO.2=
 
 ôô 
+-ammonite/$file/`marked-BitcodeTest`.Rexp.ONE.2=
+
+ôô -ammonite/$file/`marked-BitcodeTest`.Rexp.ONE.2>
+
+õõ .ammonite/$file/`marked-BitcodeTest`.Rexp.CHAR.2
+
+õõ local2222
+
+õõ local2232>
+
+õõ .ammonite/$file/`marked-BitcodeTest`.Rexp.CHAR.2
+
+õõ  local2222
+
+õ"õ (local2232=
+
+öö 
+-ammonite/$file/`marked-BitcodeTest`.Rexp.ALT.2
+
+öö local2242
+
+öö local2252=
+
+÷÷ -ammonite/$file/`marked-BitcodeTest`.Rexp.ALT.2@
+
+÷÷ 0ammonite/$file/`marked-BitcodeTest`.SeqNTIMES().2
+
+÷÷ local2242@
+
+÷÷  0ammonite/$file/`marked-BitcodeTest`.SeqNTIMES().2
+
+÷!÷ #local2252=
+
+øø 
 -ammonite/$file/`marked-BitcodeTest`.Rexp.SEQ.2
 
-ôô local2262
+øø local2262
 
-ôô local2272=
+øø local2272=
 
-õõ -ammonite/$file/`marked-BitcodeTest`.Rexp.SEQ.2@
+ùù -ammonite/$file/`marked-BitcodeTest`.Rexp.SEQ.2@
 
-õõ 0ammonite/$file/`marked-BitcodeTest`.SeqNTIMES().2
+ùù 0ammonite/$file/`marked-BitcodeTest`.SeqNTIMES().2
 
-õõ local2262@
+ùù local2262@
 
-õõ  0ammonite/$file/`marked-BitcodeTest`.SeqNTIMES().2
+ùù  0ammonite/$file/`marked-BitcodeTest`.SeqNTIMES().2
 
-õ!õ #local2272>
+ù!ù #local2272>
 
-öö .ammonite/$file/`marked-BitcodeTest`.Rexp.STAR.2
+úú .ammonite/$file/`marked-BitcodeTest`.Rexp.STAR.2
 
-öö local2282>
+úú local2282>
 
-÷÷ .ammonite/$file/`marked-BitcodeTest`.Rexp.STAR.2@
+ûû .ammonite/$file/`marked-BitcodeTest`.Rexp.STAR.2@
 
-÷	÷ 0ammonite/$file/`marked-BitcodeTest`.SeqNTIMES().2
+û	û 0ammonite/$file/`marked-BitcodeTest`.SeqNTIMES().2
 
-÷÷ local2282@
+ûû local2282@
 
-øø 0ammonite/$file/`marked-BitcodeTest`.Rexp.NTIMES.2
+üü 0ammonite/$file/`marked-BitcodeTest`.Rexp.NTIMES.2
 
-øø local2292
+üü local2292
 
-øø local2302
+üü local2302
 
-øø local2312
+üü local2312
 
-øø !local2322@
+üü !local2322@
 
-ùù 0ammonite/$file/`marked-BitcodeTest`.SeqNTIMES().2
+ýý 0ammonite/$file/`marked-BitcodeTest`.SeqNTIMES().2
 
-ùù local2292
+ýý local2292
 
-ùù local2332
+ýý local2332
 
-úú 	local2302#
+þþ 	local2302#
 
-ú
-ú scala/Int#`<=`(+3).2=
+þ
+þ scala/Int#`<=`(+3).2=
 
-úú -ammonite/$file/`marked-BitcodeTest`.Rexp.ONE.2
+þþ -ammonite/$file/`marked-BitcodeTest`.Rexp.ONE.2
 
-ûû local2302#
+ÿÿ local2302#
 
-ûû scala/Int#`==`(+3).2
+ÿÿ scala/Int#`==`(+3).2
 
-ûû local2332@
+ÿÿ local2332@
 
-üü 0ammonite/$file/`marked-BitcodeTest`.SeqNTIMES().2=
+€€ 0ammonite/$file/`marked-BitcodeTest`.SeqNTIMES().2=
 
-üü -ammonite/$file/`marked-BitcodeTest`.Rexp.SEQ.2
+€€ -ammonite/$file/`marked-BitcodeTest`.Rexp.SEQ.2
 
-üü %local2332@
+€€ %local2332@
 
-ü'ü -0ammonite/$file/`marked-BitcodeTest`.Rexp.NTIMES.2
+€'€ -0ammonite/$file/`marked-BitcodeTest`.Rexp.NTIMES.2
 
-ü.ü 5local2332
+€.€ 5local2332
 
-ü6ü 7local2302"
+€6€ 7local2302"
 
-ü7ü 8scala/Int#`-`(+3).2
+€7€ 8scala/Int#`-`(+3).2
 
-ü:ü ?local2312
+€:€ ?local2312
 
-ü@ü Glocal2322@
+€@€ Glocal2322@
 
-îî 0ammonite/$file/`marked-BitcodeTest`.SeqNTIMES().2
+òò 0ammonite/$file/`marked-BitcodeTest`.SeqNTIMES().2
 
-ÿÿ 
+ƒƒ 
 scala/Int#2?
 
-ÿ
-ÿ /ammonite/$file/`marked-BitcodeTest`.EVIL1().(n)2=
+ƒ
+ƒ /ammonite/$file/`marked-BitcodeTest`.EVIL1().(n)2=
 
-ÿÿ -ammonite/$file/`marked-BitcodeTest`.Rexp.SEQ.2@
+ƒƒ -ammonite/$file/`marked-BitcodeTest`.Rexp.SEQ.2@
 
-ÿÿ 0ammonite/$file/`marked-BitcodeTest`.Rexp.NTIMES.2:
+ƒƒ 0ammonite/$file/`marked-BitcodeTest`.Rexp.NTIMES.2:
 
-ÿÿ "*ammonite/$file/`marked-BitcodeTest`.OPT().2>
+ƒƒ "*ammonite/$file/`marked-BitcodeTest`.OPT().2>
 
-ÿ#ÿ '.ammonite/$file/`marked-BitcodeTest`.Rexp.CHAR.2?
+ƒ#ƒ '.ammonite/$file/`marked-BitcodeTest`.Rexp.CHAR.2?
 
-ÿ/ÿ 0/ammonite/$file/`marked-BitcodeTest`.EVIL1().(n)2@
+ƒ/ƒ 0/ammonite/$file/`marked-BitcodeTest`.EVIL1().(n)2@
 
-ÿ3ÿ 90ammonite/$file/`marked-BitcodeTest`.Rexp.NTIMES.2>
+ƒ3ƒ 90ammonite/$file/`marked-BitcodeTest`.Rexp.NTIMES.2>
 
-ÿ:ÿ >.ammonite/$file/`marked-BitcodeTest`.Rexp.CHAR.2?
+ƒ:ƒ >.ammonite/$file/`marked-BitcodeTest`.Rexp.CHAR.2?
 
-ÿEÿ F/ammonite/$file/`marked-BitcodeTest`.EVIL1().(n)2<
+ƒEƒ F/ammonite/$file/`marked-BitcodeTest`.EVIL1().(n)2<
 
-ÿÿ 	,ammonite/$file/`marked-BitcodeTest`.EVIL1().2=
+ƒƒ 	,ammonite/$file/`marked-BitcodeTest`.EVIL1().2=
 
-€€ -ammonite/$file/`marked-BitcodeTest`.Rexp.SEQ.2>
+„„ -ammonite/$file/`marked-BitcodeTest`.Rexp.SEQ.2>
 
-€€ .ammonite/$file/`marked-BitcodeTest`.Rexp.STAR.2>
+„„ .ammonite/$file/`marked-BitcodeTest`.Rexp.STAR.2>
 
-€€ .ammonite/$file/`marked-BitcodeTest`.Rexp.STAR.2>
+„„ .ammonite/$file/`marked-BitcodeTest`.Rexp.STAR.2>
 
-€€ .ammonite/$file/`marked-BitcodeTest`.Rexp.CHAR.2>
+„„ .ammonite/$file/`marked-BitcodeTest`.Rexp.CHAR.2>
 
-€'€ +.ammonite/$file/`marked-BitcodeTest`.Rexp.CHAR.2:
+„'„ +.ammonite/$file/`marked-BitcodeTest`.Rexp.CHAR.2:
 
-€€ 	*ammonite/$file/`marked-BitcodeTest`.EVIL2.2E
+„„ 	*ammonite/$file/`marked-BitcodeTest`.EVIL2.2E
 
-ƒƒ 5ammonite/$file/`marked-BitcodeTest`.time_needed().[T]2
+‡‡ 5ammonite/$file/`marked-BitcodeTest`.time_needed().[T]2
 
-ƒƒ 
+‡‡ 
 scala/Int#2E
 
-ƒƒ 5ammonite/$file/`marked-BitcodeTest`.time_needed().(i)2E
+‡‡ 5ammonite/$file/`marked-BitcodeTest`.time_needed().(i)2E
 
-ƒ$ƒ %5ammonite/$file/`marked-BitcodeTest`.time_needed().[T]2H
+‡$‡ %5ammonite/$file/`marked-BitcodeTest`.time_needed().[T]2H
 
-ƒƒ 8ammonite/$file/`marked-BitcodeTest`.time_needed().(code)2!
+‡‡ 8ammonite/$file/`marked-BitcodeTest`.time_needed().(code)2!
 
-„„ java/lang/System#2,
+ˆˆ java/lang/System#2,
 
-„„ java/lang/System#nanoTime().2
+ˆˆ java/lang/System#nanoTime().2
 
-„„ local2342+
+ˆˆ local2342+
 
-…… scala/runtime/RichInt#to().2E
+‰‰ scala/runtime/RichInt#to().2E
 
-…… 5ammonite/$file/`marked-BitcodeTest`.time_needed().(i)2
+‰‰ 5ammonite/$file/`marked-BitcodeTest`.time_needed().(i)2
 
-…… local2352H
+‰‰ local2352H
 
-…… 8ammonite/$file/`marked-BitcodeTest`.time_needed().(code)2!
+‰‰ 8ammonite/$file/`marked-BitcodeTest`.time_needed().(code)2!
 
-†† java/lang/System#2,
+ŠŠ java/lang/System#2,
 
-†† java/lang/System#nanoTime().2
+ŠŠ java/lang/System#nanoTime().2
 
-†† 	local2362
+ŠŠ 	local2362
 
-‡‡ local2362#
+‹‹ local2362#
 
-‡‡ scala/Long#`-`(+4).2
+‹‹ scala/Long#`-`(+4).2
 
-‡	‡ local2342#
+‹	‹ local2342#
 
-‡‡ scala/Long#`/`(+6).2E
+‹‹ scala/Long#`/`(+6).2E
 
-‡‡ 5ammonite/$file/`marked-BitcodeTest`.time_needed().(i)2"
+‹‹ 5ammonite/$file/`marked-BitcodeTest`.time_needed().(i)2"
 
-‡‡ scala/Int#`*`(+6).2B
+‹‹ scala/Int#`*`(+6).2B
 
-ƒƒ 2ammonite/$file/`marked-BitcodeTest`.time_needed().2
+‡‡ 2ammonite/$file/`marked-BitcodeTest`.time_needed().2
 
-‹‹ mainargs/main#2+
+ mainargs/main#2+
 
- scala/runtime/RichInt#to().26
+‘‘ scala/runtime/RichInt#to().26
 
- &scala/collection/immutable/Range#by().2
+‘‘ &scala/collection/immutable/Range#by().2
 
- local2372)
+‘‘ local2372)
 
-ŽŽ scala/Predef.println(+1).2(
+’’ scala/Predef.println(+1).2(
 
-ŽŽ scala/StringContext#f().2
+’’ scala/StringContext#f().2
 
-ŽŽ local2372B
+’’ local2372B
 
-ŽŽ 2ammonite/$file/`marked-BitcodeTest`.time_needed().2>
+’’ 2ammonite/$file/`marked-BitcodeTest`.time_needed().2>
 
-Ž#Ž *.ammonite/$file/`marked-BitcodeTest`.matcher().2>
+’#’ *.ammonite/$file/`marked-BitcodeTest`.matcher().2>
 
-Ž+Ž 2.ammonite/$file/`marked-BitcodeTest`.intern2().2<
+’+’ 2.ammonite/$file/`marked-BitcodeTest`.intern2().2<
 
-Ž3Ž 8,ammonite/$file/`marked-BitcodeTest`.EVIL1().2
+’3’ 8,ammonite/$file/`marked-BitcodeTest`.EVIL1().2
 
-Ž9Ž :local23721
+’9’ :local23721
 
-ŽCŽ D!scala/collection/StringOps#`*`().2
+’C’ D!scala/collection/StringOps#`*`().2
 
-ŽEŽ Flocal2372:
+’E’ Flocal2372:
 
-ŽHŽ N*scala/collection/IterableOnceOps#toList().2>
+’H’ N*scala/collection/IterableOnceOps#toList().2>
 
-Ž`Ž g.ammonite/$file/`marked-BitcodeTest`.matcher().2>
+’`’ g.ammonite/$file/`marked-BitcodeTest`.matcher().2>
 
-ŽhŽ o.ammonite/$file/`marked-BitcodeTest`.intern2().2<
+’h’ o.ammonite/$file/`marked-BitcodeTest`.intern2().2<
 
-ŽpŽ u,ammonite/$file/`marked-BitcodeTest`.EVIL1().2
+’p’ u,ammonite/$file/`marked-BitcodeTest`.EVIL1().2
 
-ŽvŽ wlocal23723
-Ž€Ž !scala/collection/StringOps#`*`().2
-Ž‚Ž ƒlocal2372<
-Ž…Ž ‹*scala/collection/IterableOnceOps#toList().2<
+’v’ wlocal23723
+’€’ !scala/collection/StringOps#`*`().2
+’‚’ ƒlocal2372<
+’…’ ‹*scala/collection/IterableOnceOps#toList().2<
 
-ŒŒ 	,ammonite/$file/`marked-BitcodeTest`.test1().2
+ 	,ammonite/$file/`marked-BitcodeTest`.test1().2
 
-““ mainargs/main#2+
+—— mainargs/main#2+
 
-•• scala/runtime/RichInt#to().26
+™™ scala/runtime/RichInt#to().26
 
-•• &scala/collection/immutable/Range#by().2
+™™ &scala/collection/immutable/Range#by().2
 
-•• local2382)
+™™ local2382)
 
-–– scala/Predef.println(+1).2(
+šš scala/Predef.println(+1).2(
 
-–– scala/StringContext#f().2
+šš scala/StringContext#f().2
 
-–– local2382B
+šš local2382B
 
-–– 2ammonite/$file/`marked-BitcodeTest`.time_needed().2>
+šš 2ammonite/$file/`marked-BitcodeTest`.time_needed().2>
 
-–#– *.ammonite/$file/`marked-BitcodeTest`.matcher().2>
+š#š *.ammonite/$file/`marked-BitcodeTest`.matcher().2>
 
-–+– 2.ammonite/$file/`marked-BitcodeTest`.intern2().2:
+š+š 2.ammonite/$file/`marked-BitcodeTest`.intern2().2:
 
-–3– 8*ammonite/$file/`marked-BitcodeTest`.EVIL2.21
+š3š 8*ammonite/$file/`marked-BitcodeTest`.EVIL2.21
 
-–@– A!scala/collection/StringOps#`*`().2
+š@š A!scala/collection/StringOps#`*`().2
 
-–B– Clocal2382:
+šBš Clocal2382:
 
-–E– K*scala/collection/IterableOnceOps#toList().2<
+šEš K*scala/collection/IterableOnceOps#toList().2<
 
-”” 	,ammonite/$file/`marked-BitcodeTest`.test2().2<
+˜˜ 	,ammonite/$file/`marked-BitcodeTest`.test2().2<
 
-›› ,ammonite/$file/`marked-BitcodeTest`.test1().2<
+ŸŸ ,ammonite/$file/`marked-BitcodeTest`.test1().2<
 
-›› ,ammonite/$file/`marked-BitcodeTest`.test2().2:
+ŸŸ ,ammonite/$file/`marked-BitcodeTest`.test2().2:
 
-›› *ammonite/$file/`marked-BitcodeTest`.all().2"
+ŸŸ *ammonite/$file/`marked-BitcodeTest`.all().2"
 
-žž scala/package.Seq#2$
+¢¢ scala/package.Seq#2$
 
-žž scala/Predef.String#2B
+¢¢ scala/Predef.String#2B
 
-žž 2ammonite/$file/`marked-BitcodeTest`.implode().(ss)2B
+¢¢ 2ammonite/$file/`marked-BitcodeTest`.implode().(ss)2B
 
-žž !2ammonite/$file/`marked-BitcodeTest`.implode().(ss)2>
+¢¢ !2ammonite/$file/`marked-BitcodeTest`.implode().(ss)2>
 
-ž"ž *.scala/collection/IterableOnceOps#mkString(+1).2>
+¢"¢ *.scala/collection/IterableOnceOps#mkString(+1).2>
 
-žž .ammonite/$file/`marked-BitcodeTest`.implode().2$
+¢¢ .ammonite/$file/`marked-BitcodeTest`.implode().2$
 
-ŸŸ scala/Predef.String#2A
+££ scala/Predef.String#2A
 
-ŸŸ 1ammonite/$file/`marked-BitcodeTest`.explode().(s)2A
+££ 1ammonite/$file/`marked-BitcodeTest`.explode().(s)2A
 
-ŸŸ 1ammonite/$file/`marked-BitcodeTest`.explode().(s)2+
+££ 1ammonite/$file/`marked-BitcodeTest`.explode().(s)2+
 
-ŸŸ  java/lang/String#split(+1).2:
+££  java/lang/String#split(+1).2:
 
-Ÿ'Ÿ -*scala/collection/IterableOnceOps#toList().2>
+£'£ -*scala/collection/IterableOnceOps#toList().2>
 
-ŸŸ .ammonite/$file/`marked-BitcodeTest`.explode().2$
+££ .ammonite/$file/`marked-BitcodeTest`.explode().2$
 
-¡¡ scala/Predef.String#2=
+¥¥ scala/Predef.String#2=
 
-¡¡ 	-ammonite/$file/`marked-BitcodeTest`.lst().(s)2$
+¥¥ 	-ammonite/$file/`marked-BitcodeTest`.lst().(s)2$
 
-¡¡ scala/Predef.String#2>
+¥¥ scala/Predef.String#2>
 
-¡¡ %.ammonite/$file/`marked-BitcodeTest`.explode().2=
+¥¥ %.ammonite/$file/`marked-BitcodeTest`.explode().2=
 
-¡&¡ '-ammonite/$file/`marked-BitcodeTest`.lst().(s)2#
+¥&¥ '-ammonite/$file/`marked-BitcodeTest`.lst().(s)2#
 
-¢
-¢ scala/package.`::`.2
+¦
+¦ scala/package.`::`.2
 
-¢¢ 	local2392
+¦¦ 	local2392
 
-¢¢ local2402>
+¦¦ local2402>
 
-¢¢ .ammonite/$file/`marked-BitcodeTest`.implode().2
+¦¦ .ammonite/$file/`marked-BitcodeTest`.implode().2
 
-¢)¢ +local24026
+¦)¦ +local24026
 
-¢,¢ /&scala/collection/immutable/List#map().24
+¦,¦ /&scala/collection/immutable/List#map().24
 
-¢5¢ 7$scala/collection/StringOps#`++`(+2).2"
+¦5¦ 7$scala/collection/StringOps#`++`(+2).2"
 
-££ 
+§§ 
 scala/package.Nil.2:
 
-¡¡ *ammonite/$file/`marked-BitcodeTest`.lst().2$
+¥¥ *ammonite/$file/`marked-BitcodeTest`.lst().2$
 
-¦¦ scala/Predef.String#2=
+ªª scala/Predef.String#2=
 
-¦¦ 	-ammonite/$file/`marked-BitcodeTest`.mid().(s)2$
+ªª 	-ammonite/$file/`marked-BitcodeTest`.mid().(s)2$
 
-¦¦ scala/Predef.String#2>
+ªª scala/Predef.String#2>
 
-¦¦ %.ammonite/$file/`marked-BitcodeTest`.explode().2=
+ªª %.ammonite/$file/`marked-BitcodeTest`.explode().2=
 
-¦&¦ '-ammonite/$file/`marked-BitcodeTest`.mid().(s)2#
+ª&ª '-ammonite/$file/`marked-BitcodeTest`.mid().(s)2#
 
-§
-§ scala/package.`::`.2
+«
+« scala/package.`::`.2
 
-§§ 	local2422
+«« 	local2422
 
-§§ local2432>
+«« local2432>
 
-§§ .ammonite/$file/`marked-BitcodeTest`.implode().2
+«« .ammonite/$file/`marked-BitcodeTest`.implode().2
 
-§)§ +local24326
+«)« +local24326
 
-§,§ /&scala/collection/immutable/List#map().24
+«,« /&scala/collection/immutable/List#map().24
 
-§5§ 7$scala/collection/StringOps#`++`(+2).2"
+«5« 7$scala/collection/StringOps#`++`(+2).2"
 
-¨¨ 
+¬¬ 
 scala/package.Nil.2:
 
-¦¦ *ammonite/$file/`marked-BitcodeTest`.mid().2"
+ªª *ammonite/$file/`marked-BitcodeTest`.mid().2"
 
-«« scala/package.Seq#2$
+¯¯ scala/package.Seq#2$
 
-«« scala/Predef.String#2A
+¯¯ scala/Predef.String#2A
 
-«« 1ammonite/$file/`marked-BitcodeTest`.indent().(ss)2$
+¯¯ 1ammonite/$file/`marked-BitcodeTest`.indent().(ss)2$
 
-«« $scala/Predef.String#2A
+¯¯ $scala/Predef.String#2A
 
-«'« )1ammonite/$file/`marked-BitcodeTest`.indent().(ss)2#
+¯'¯ )1ammonite/$file/`marked-BitcodeTest`.indent().(ss)2#
 
-¬¬ scala/package.`:+`.2
+°° scala/package.`:+`.2
 
-¬¬ local2452
+°° local2452
 
-¬¬ local2462>
+°° local2462>
 
-¬¬ .ammonite/$file/`marked-BitcodeTest`.implode().2
+°° .ammonite/$file/`marked-BitcodeTest`.implode().2
 
-¬¬ #local24523
+°° #local24523
 
-¬$¬ '#scala/collection/IterableOps#map().2:
+°$° '#scala/collection/IterableOps#map().2:
 
-¬(¬ +*ammonite/$file/`marked-BitcodeTest`.mid().2/
+°(° +*ammonite/$file/`marked-BitcodeTest`.mid().2/
 
-¬-¬ /scala/collection/SeqOps#`:+`().2:
+°-° /scala/collection/SeqOps#`:+`().2:
 
-¬0¬ 3*ammonite/$file/`marked-BitcodeTest`.lst().2
+°0° 3*ammonite/$file/`marked-BitcodeTest`.lst().2
 
-¬4¬ 8local2462=
+°4° 8local2462=
 
-«« 
+¯¯ 
 -ammonite/$file/`marked-BitcodeTest`.indent().2:
 
-°
-° *ammonite/$file/`marked-BitcodeTest`.Rexpb#2<
+´
+´ *ammonite/$file/`marked-BitcodeTest`.Rexpb#2<
 
-°° ,ammonite/$file/`marked-BitcodeTest`.pp().(e)2$
+´´ ,ammonite/$file/`marked-BitcodeTest`.pp().(e)2$
 
-°° scala/Predef.String#2<
+´´ scala/Predef.String#2<
 
-°° ,ammonite/$file/`marked-BitcodeTest`.pp().(e)2@
+´´ ,ammonite/$file/`marked-BitcodeTest`.pp().(e)2@
 
-±± 0ammonite/$file/`marked-BitcodeTest`.Rexpb.ZEROb.2?
+µµ 0ammonite/$file/`marked-BitcodeTest`.Rexpb.ZEROb.2?
 
-²² /ammonite/$file/`marked-BitcodeTest`.Rexpb.ONEb.2
+¶¶ /ammonite/$file/`marked-BitcodeTest`.Rexpb.ONEb.2
 
-²² local2482(
+¶¶ local2482(
 
-²² scala/StringContext#s().2
+¶¶ scala/StringContext#s().2
 
-²² local2482@
+¶¶ local2482@
 
-³³ 0ammonite/$file/`marked-BitcodeTest`.Rexpb.CHARb.2
+·· 0ammonite/$file/`marked-BitcodeTest`.Rexpb.CHARb.2
 
-³³ local2492
+·· local2492
 
-³³ local2502
+·· local2502
 
-³³ local2512
+·· local2512
 
-³!³ 'local2502(
+·!· 'local2502(
 
-³)³ *scala/StringContext#s().2
+·)· *scala/StringContext#s().2
 
-³-³ .local2492
+·-· .local2492
 
-³4³ 6local2512(
+·4· 6local2512(
 
-³@³ Ascala/StringContext#s().2
+·@· Ascala/StringContext#s().2
 
-³C³ Dlocal2492
+·C· Dlocal2492
 
-³J³ Llocal2512?
+·J· Llocal2512?
 
-´´ /ammonite/$file/`marked-BitcodeTest`.Rexpb.ALTb.2
+¸¸ /ammonite/$file/`marked-BitcodeTest`.Rexpb.ALTb.2
 
-´´ local2522
+¸¸ local2522
 
-´´ local2532
+¸¸ local2532
 
-´´ local2542(
+¸¸ local2542(
 
-´´ scala/StringContext#s().2
+¸¸ scala/StringContext#s().2
 
-´%´ 'local25424
+¸%¸ 'local25424
 
-´,´ .$scala/collection/StringOps#`++`(+2).2:
+¸,¸ .$scala/collection/StringOps#`++`(+2).2:
 
-´/´ 2*ammonite/$file/`marked-BitcodeTest`.pps().2
+¸/¸ 2*ammonite/$file/`marked-BitcodeTest`.pps().2
 
-´3´ 5local2522
+¸3¸ 5local2522
 
-´7´ 9local2532?
+¸7¸ 9local2532?
 
-µµ /ammonite/$file/`marked-BitcodeTest`.Rexpb.SEQb.2
+¹¹ /ammonite/$file/`marked-BitcodeTest`.Rexpb.SEQb.2
 
-µµ local2552
+¹¹ local2552
 
-µµ local2562
+¹¹ local2562
 
-µµ local2572(
+¹¹ local2572(
 
-µµ scala/StringContext#s().2
+¹¹ scala/StringContext#s().2
 
-µ%µ 'local25724
+¹%¹ 'local25724
 
-µ,µ .$scala/collection/StringOps#`++`(+2).2:
+¹,¹ .$scala/collection/StringOps#`++`(+2).2:
 
-µ/µ 2*ammonite/$file/`marked-BitcodeTest`.pps().2
+¹/¹ 2*ammonite/$file/`marked-BitcodeTest`.pps().2
 
-µ3µ 5local2552
+¹3¹ 5local2552
 
-µ7µ 9local2562@
+¹7¹ 9local2562@
 
-¶¶ 0ammonite/$file/`marked-BitcodeTest`.Rexpb.STARb.2
+ºº 0ammonite/$file/`marked-BitcodeTest`.Rexpb.STARb.2
 
-¶¶ local2582
+ºº local2582
 
-¶¶ local2592(
+ºº local2592(
 
-¶¶ scala/StringContext#s().2
+ºº scala/StringContext#s().2
 
-¶"¶ $local25924
+º"º $local25924
 
-¶)¶ +$scala/collection/StringOps#`++`(+2).2:
+º)º +$scala/collection/StringOps#`++`(+2).2:
 
-¶,¶ /*ammonite/$file/`marked-BitcodeTest`.pps().2
+º,º /*ammonite/$file/`marked-BitcodeTest`.pps().2
 
-¶0¶ 1local2582B
+º0º 1local2582B
 
-·· 2ammonite/$file/`marked-BitcodeTest`.Rexpb.NTIMESb.2
+»» 2ammonite/$file/`marked-BitcodeTest`.Rexpb.NTIMESb.2
 
-·· local2602
+»» local2602
 
-·· local2612
+»» local2612
 
-·· local2622
+»» local2622
 
-··  local2632
+»»  local2632
 
-·!· #local2642
+»!» #local2642
 
-·,· -local2612#
+»,» -local2612#
 
-·.· 0scala/Int#`==`(+3).2
+».» 0scala/Int#`==`(+3).2
 
-·1· 8local2632%
+»1» 8local2632%
 
-·9· ;scala/Boolean#`&&`().2:
+»9» ;scala/Boolean#`&&`().2:
 
-·<· ?*ammonite/$file/`marked-BitcodeTest`.fin().2
+»<» ?*ammonite/$file/`marked-BitcodeTest`.fin().2
 
-·@· Alocal2602(
+»@» Alocal2602(
 
-·D· Escala/StringContext#s().2
+»D» Escala/StringContext#s().2
 
-·Q· Rlocal2612
+»Q» Rlocal2612
 
-·Y· [local2642
+»Y» [local2642
 
-·d· ilocal2622
+»d» ilocal2622
 
-·s· zlocal26325
-·~· €$scala/collection/StringOps#`++`(+2).2<
-·· „*ammonite/$file/`marked-BitcodeTest`.pps().2
-·…· †local2602(
+»s» zlocal26325
+»~» €$scala/collection/StringOps#`++`(+2).2<
+»» „*ammonite/$file/`marked-BitcodeTest`.pps().2
+»…» †local2602(
 
-¸	¸ 
+¼	¼ 
 scala/StringContext#s().2
 
-¸¸ local2612
+¼¼ local2612
 
-¸¸ local2642
+¼¼ local2642
 
-¸(¸ -local2622
+¼(¼ -local2622
 
-¸7¸ >local26324
+¼7¼ >local26324
 
-¸B¸ D$scala/collection/StringOps#`++`(+2).2:
+¼B¼ D$scala/collection/StringOps#`++`(+2).2:
 
-¸E¸ H*ammonite/$file/`marked-BitcodeTest`.pps().2
+¼E¼ H*ammonite/$file/`marked-BitcodeTest`.pps().2
 
-¸I¸ Jlocal2602@
+¼I¼ Jlocal2602@
 
-¹¹ 0ammonite/$file/`marked-BitcodeTest`.Rexpb.INITb.2
+½½ 0ammonite/$file/`marked-BitcodeTest`.Rexpb.INITb.2
 
-¹¹ local2652
+½½ local2652
 
-¹¹ local2662(
+½½ local2662(
 
-¹¹ scala/StringContext#s().2
+½½ scala/StringContext#s().2
 
-¹"¹ $local26624
+½"½ $local26624
 
-¹(¹ *$scala/collection/StringOps#`++`(+2).2:
+½(½ *$scala/collection/StringOps#`++`(+2).2:
 
-¹+¹ .*ammonite/$file/`marked-BitcodeTest`.pps().2
+½+½ .*ammonite/$file/`marked-BitcodeTest`.pps().2
 
-¹/¹ 0local26529
+½/½ 0local26529
 
-°° )ammonite/$file/`marked-BitcodeTest`.pp().2:
+´´ )ammonite/$file/`marked-BitcodeTest`.pp().2:
 
-»» *ammonite/$file/`marked-BitcodeTest`.Rexpb#2>
+¿¿ *ammonite/$file/`marked-BitcodeTest`.Rexpb#2>
 
-»» 
+¿¿ 
 .ammonite/$file/`marked-BitcodeTest`.pps().(es)2=
 
-»» -ammonite/$file/`marked-BitcodeTest`.indent().2>
+¿¿ -ammonite/$file/`marked-BitcodeTest`.indent().2>
 
-»» .ammonite/$file/`marked-BitcodeTest`.pps().(es)23
+¿¿ .ammonite/$file/`marked-BitcodeTest`.pps().(es)23
 
-» » ##scala/collection/IterableOps#map().29
+¿ ¿ ##scala/collection/IterableOps#map().29
 
-»$» &)ammonite/$file/`marked-BitcodeTest`.pp().2:
+¿$¿ &)ammonite/$file/`marked-BitcodeTest`.pp().2:
 
-»» *ammonite/$file/`marked-BitcodeTest`.pps().2
+¿¿ *ammonite/$file/`marked-BitcodeTest`.pps().2
 
-¾¾ scala/Boolean#2D
+ÂÂ scala/Boolean#2D
 
-¾¾ 4ammonite/$file/`marked-BitcodeTest`.unshift().(mark)2:
+ÂÂ 4ammonite/$file/`marked-BitcodeTest`.unshift().(mark)2:
 
-¾¾ #*ammonite/$file/`marked-BitcodeTest`.Rexpb#2A
+ÂÂ #*ammonite/$file/`marked-BitcodeTest`.Rexpb#2A
 
-¾¾ 1ammonite/$file/`marked-BitcodeTest`.unshift().(r)2
+ÂÂ 1ammonite/$file/`marked-BitcodeTest`.unshift().(r)2
 
-¾(¾ ,scala/Char#2A
+Â(Â ,scala/Char#2A
 
-¾%¾ &1ammonite/$file/`marked-BitcodeTest`.unshift().(c)2:
+Â%Â &1ammonite/$file/`marked-BitcodeTest`.unshift().(c)2:
 
-¾/¾ 4*ammonite/$file/`marked-BitcodeTest`.Rexpb#2A
+Â/Â 4*ammonite/$file/`marked-BitcodeTest`.Rexpb#2A
 
-¾7¾ 81ammonite/$file/`marked-BitcodeTest`.unshift().(r)2@
+Â7Â 81ammonite/$file/`marked-BitcodeTest`.unshift().(r)2@
 
-¿¿ 0ammonite/$file/`marked-BitcodeTest`.Rexpb.ZEROb.2@
+ÃÃ 0ammonite/$file/`marked-BitcodeTest`.Rexpb.ZEROb.2@
 
-¿¿ 0ammonite/$file/`marked-BitcodeTest`.Rexpb.ZEROb.2?
+ÃÃ 0ammonite/$file/`marked-BitcodeTest`.Rexpb.ZEROb.2?
 
-ÀÀ /ammonite/$file/`marked-BitcodeTest`.Rexpb.ONEb.2
+ÄÄ /ammonite/$file/`marked-BitcodeTest`.Rexpb.ONEb.2
 
-ÀÀ local2682?
+ÄÄ local2682?
 
-ÀÀ /ammonite/$file/`marked-BitcodeTest`.Rexpb.ONEb.2
+ÄÄ /ammonite/$file/`marked-BitcodeTest`.Rexpb.ONEb.2
 
-ÀÀ local2682@
+ÄÄ local2682@
 
-ÁÁ 0ammonite/$file/`marked-BitcodeTest`.Rexpb.CHARb.2
+ÅÅ 0ammonite/$file/`marked-BitcodeTest`.Rexpb.CHARb.2
 
-ÁÁ local2692
+ÅÅ local2692
 
-ÁÁ local2702
+ÅÅ local2702
 
-ÁÁ local2712
+ÅÅ local2712
 
-ÄÄ local2692$
+ÈÈ local2692$
 
-ÄÄ scala/Char#`==`(+2).2A
+ÈÈ scala/Char#`==`(+2).2A
 
-ÄÄ 1ammonite/$file/`marked-BitcodeTest`.unshift().(c)2
+ÈÈ 1ammonite/$file/`marked-BitcodeTest`.unshift().(c)2
 
-Ä Ä &local2702
+È È &local2702
 
-ÄÄ local2722@
+ÈÈ local2722@
 
-ÅÅ 	0ammonite/$file/`marked-BitcodeTest`.Rexpb.CHARb.2
+ÉÉ 	0ammonite/$file/`marked-BitcodeTest`.Rexpb.CHARb.2
 
-Å
-Å local2692
+É
+É local2692
 
-ÅÅ local2722
+ÉÉ local2722
 
-ÅÅ local2712?
+ÉÉ local2712?
 
-ÆÆ /ammonite/$file/`marked-BitcodeTest`.Rexpb.ALTb.2
+ÊÊ /ammonite/$file/`marked-BitcodeTest`.Rexpb.ALTb.2
 
-ÆÆ local2732
+ÊÊ local2732
 
-ÆÆ local2742
+ÊÊ local2742
 
-ÆÆ local2752?
+ÊÊ local2752?
 
-ÆÆ /ammonite/$file/`marked-BitcodeTest`.Rexpb.ALTb.2>
+ÊÊ /ammonite/$file/`marked-BitcodeTest`.Rexpb.ALTb.2>
 
-ÆÆ &.ammonite/$file/`marked-BitcodeTest`.unshift().2D
+ÊÊ &.ammonite/$file/`marked-BitcodeTest`.unshift().2D
 
-Æ'Æ +4ammonite/$file/`marked-BitcodeTest`.unshift().(mark)2
+Ê'Ê +4ammonite/$file/`marked-BitcodeTest`.unshift().(mark)2
 
-Æ-Æ /local2732A
+Ê-Ê /local2732A
 
-Æ1Æ 21ammonite/$file/`marked-BitcodeTest`.unshift().(c)2>
+Ê1Ê 21ammonite/$file/`marked-BitcodeTest`.unshift().(c)2>
 
-Æ5Æ <.ammonite/$file/`marked-BitcodeTest`.unshift().2D
+Ê5Ê <.ammonite/$file/`marked-BitcodeTest`.unshift().2D
 
-Æ=Æ A4ammonite/$file/`marked-BitcodeTest`.unshift().(mark)2
+Ê=Ê A4ammonite/$file/`marked-BitcodeTest`.unshift().(mark)2
 
-ÆCÆ Elocal2742A
+ÊCÊ Elocal2742A
 
-ÆGÆ H1ammonite/$file/`marked-BitcodeTest`.unshift().(c)2
+ÊGÊ H1ammonite/$file/`marked-BitcodeTest`.unshift().(c)2
 
-ÆLÆ Nlocal2752?
+ÊLÊ Nlocal2752?
 
-ÇÇ /ammonite/$file/`marked-BitcodeTest`.Rexpb.SEQb.2
+ËË /ammonite/$file/`marked-BitcodeTest`.Rexpb.SEQb.2
 
-ÇÇ local2762
+ËË local2762
 
-ÇÇ local2772
+ËË local2772
 
-ÇÇ local2782?
+ËË local2782?
 
-ÈÈ 
+ÌÌ 
 /ammonite/$file/`marked-BitcodeTest`.Rexpb.SEQb.2>
 
-ÈÈ .ammonite/$file/`marked-BitcodeTest`.unshift().2D
+ÌÌ .ammonite/$file/`marked-BitcodeTest`.unshift().2D
 
-ÈÈ 4ammonite/$file/`marked-BitcodeTest`.unshift().(mark)2
+ÌÌ 4ammonite/$file/`marked-BitcodeTest`.unshift().(mark)2
 
-ÈÈ local2762A
+ÌÌ local2762A
 
-ÈÈ 1ammonite/$file/`marked-BitcodeTest`.unshift().(c)2>
+ÌÌ 1ammonite/$file/`marked-BitcodeTest`.unshift().(c)2>
 
-È!È (.ammonite/$file/`marked-BitcodeTest`.unshift().2:
+Ì!Ì (.ammonite/$file/`marked-BitcodeTest`.unshift().2:
 
-È)È ,*ammonite/$file/`marked-BitcodeTest`.fin().2
+Ì)Ì ,*ammonite/$file/`marked-BitcodeTest`.fin().2
 
-È-È /local2762
+Ì-Ì /local2762
 
-È2È 4local2772A
+Ì2Ì 4local2772A
 
-È6È 71ammonite/$file/`marked-BitcodeTest`.unshift().(c)2
+Ì6Ì 71ammonite/$file/`marked-BitcodeTest`.unshift().(c)2
 
-È:È <local2782@
+Ì:Ì <local2782@
 
-ÉÉ 0ammonite/$file/`marked-BitcodeTest`.Rexpb.STARb.2
+ÍÍ 0ammonite/$file/`marked-BitcodeTest`.Rexpb.STARb.2
 
-ÉÉ local2792
+ÍÍ local2792
 
-ÉÉ local2802@
+ÍÍ local2802@
 
-ÊÊ 	0ammonite/$file/`marked-BitcodeTest`.Rexpb.STARb.2>
-
-Ê
-Ê .ammonite/$file/`marked-BitcodeTest`.unshift().2D
-
-ÊÊ 4ammonite/$file/`marked-BitcodeTest`.unshift().(mark)2
-
-ÊÊ local2792A
-
-ÊÊ 1ammonite/$file/`marked-BitcodeTest`.unshift().(c)2
-
-ÊÊ  local2802B
-
-ÌÌ 2ammonite/$file/`marked-BitcodeTest`.Rexpb.NTIMESb.2
-
-ÌÌ local2812
-
-ÌÌ local2822
-
-ÌÌ local2832
-
-ÌÌ !local2842
-
-Ì"Ì $local2852
-
-ÍÍ 	local2822#
-
-Í
-Í scala/Int#`==`(+3).2B
-
-ÍÍ 2ammonite/$file/`marked-BitcodeTest`.Rexpb.NTIMESb.2
-
-ÍÍ local2812
-
-ÍÍ local2822
-
-ÍÍ "local2832
-
-Í#Í *local2842
-
-Í+Í -local2852D
+ÎÎ 	0ammonite/$file/`marked-BitcodeTest`.Rexpb.STARb.2>
 
 Î
-Î 4ammonite/$file/`marked-BitcodeTest`.unshift().(mark)2%
+Î .ammonite/$file/`marked-BitcodeTest`.unshift().2D
 
-ÎÎ scala/Boolean#`||`().2:
+ÎÎ 4ammonite/$file/`marked-BitcodeTest`.unshift().(mark)2
 
-ÎÎ *ammonite/$file/`marked-BitcodeTest`.fin().2
+ÎÎ local2792A
 
-ÎÎ local2812D
+ÎÎ 1ammonite/$file/`marked-BitcodeTest`.unshift().(c)2
 
-ÏÏ 4ammonite/$file/`marked-BitcodeTest`.unshift().(mark)2%
+ÎÎ  local2802B
 
-ÏÏ scala/Boolean#`&&`().2:
+ÐÐ 2ammonite/$file/`marked-BitcodeTest`.Rexpb.NTIMESb.2
 
-ÏÏ *ammonite/$file/`marked-BitcodeTest`.fin().2
+ÐÐ local2812
 
-ÏÏ  local2812
+ÐÐ local2822
 
-ÏÏ local2862B
+ÐÐ local2832
 
-ÐÐ 2ammonite/$file/`marked-BitcodeTest`.Rexpb.NTIMESb.2>
+ÐÐ !local2842
 
-ÐÐ .ammonite/$file/`marked-BitcodeTest`.unshift().2D
+Ð"Ð $local2852
 
-ÐÐ 4ammonite/$file/`marked-BitcodeTest`.unshift().(mark)2%
+ÑÑ 	local2822#
 
-ÐÐ scala/Boolean#`&&`().2:
+Ñ
+Ñ scala/Int#`==`(+3).2B
 
-Ð Ð #*ammonite/$file/`marked-BitcodeTest`.fin().2
+ÑÑ 2ammonite/$file/`marked-BitcodeTest`.Rexpb.NTIMESb.2
 
-Ð$Ð %local2812
+ÑÑ local2812
 
-Ð(Ð )local2812A
+ÑÑ local2822
 
-Ð+Ð ,1ammonite/$file/`marked-BitcodeTest`.unshift().(c)2
+ÑÑ "local2832
 
-Ð/Ð 0local2822
+Ñ#Ñ *local2842
 
-Ð5Ð :local2832
+Ñ+Ñ -local2852D
 
-Ð2Ð 3local2862
+Ò
+Ò 4ammonite/$file/`marked-BitcodeTest`.unshift().(mark)2%
 
-Ð;Ð Blocal2842"
+ÒÒ scala/Boolean#`||`().2:
 
-ÐBÐ Cscala/Int#`-`(+3).2
+ÒÒ *ammonite/$file/`marked-BitcodeTest`.fin().2
 
-ÐGÐ Ilocal2852B
+ÒÒ local2812D
 
-ÒÒ 2ammonite/$file/`marked-BitcodeTest`.Rexpb.NTIMESb.2>
+ÓÓ 4ammonite/$file/`marked-BitcodeTest`.unshift().(mark)2%
 
-ÒÒ .ammonite/$file/`marked-BitcodeTest`.unshift().2
+ÓÓ scala/Boolean#`&&`().2:
 
-ÒÒ  local2812A
+ÓÓ *ammonite/$file/`marked-BitcodeTest`.fin().2
 
-Ò"Ò #1ammonite/$file/`marked-BitcodeTest`.unshift().(c)2
+ÓÓ  local2812
 
-Ò&Ò 'local2822
+ÓÓ local2862B
 
-Ò,Ò 1local2832
+ÔÔ 2ammonite/$file/`marked-BitcodeTest`.Rexpb.NTIMESb.2>
 
-Ò2Ò 9local2842
+ÔÔ .ammonite/$file/`marked-BitcodeTest`.unshift().2D
 
-Ò<Ò >local2852@
+ÔÔ 4ammonite/$file/`marked-BitcodeTest`.unshift().(mark)2%
 
-ÕÕ 0ammonite/$file/`marked-BitcodeTest`.Rexpb.INITb.2
+ÔÔ scala/Boolean#`&&`().2:
 
-ÕÕ local2872
+Ô Ô #*ammonite/$file/`marked-BitcodeTest`.fin().2
 
-ÕÕ local2882@
+Ô$Ô %local2812
 
-ÕÕ 0ammonite/$file/`marked-BitcodeTest`.Rexpb.INITb.2>
+Ô(Ô )local2812A
 
-ÕÕ #.ammonite/$file/`marked-BitcodeTest`.unshift().2D
+Ô+Ô ,1ammonite/$file/`marked-BitcodeTest`.unshift().(c)2
 
-Õ$Õ (4ammonite/$file/`marked-BitcodeTest`.unshift().(mark)2
+Ô/Ô 0local2822
 
-Õ*Õ +local2872A
+Ô5Ô :local2832
 
-Õ-Õ .1ammonite/$file/`marked-BitcodeTest`.unshift().(c)2
+Ô2Ô 3local2862
 
-Õ0Õ 2local2882>
+Ô;Ô Blocal2842"
 
-¾¾ .ammonite/$file/`marked-BitcodeTest`.unshift().:Ë
+ÔBÔ Cscala/Int#`-`(+3).2
+
+ÔGÔ Ilocal2852B
+
+ÖÖ 2ammonite/$file/`marked-BitcodeTest`.Rexpb.NTIMESb.2>
+
+ÖÖ .ammonite/$file/`marked-BitcodeTest`.unshift().2
+
+ÖÖ  local2812A
+
+Ö"Ö #1ammonite/$file/`marked-BitcodeTest`.unshift().(c)2
+
+Ö&Ö 'local2822
+
+Ö,Ö 1local2832
+
+Ö2Ö 9local2842
+
+Ö<Ö >local2852@
+
+ÙÙ 0ammonite/$file/`marked-BitcodeTest`.Rexpb.INITb.2
+
+ÙÙ local2872
+
+ÙÙ local2882@
+
+ÙÙ 0ammonite/$file/`marked-BitcodeTest`.Rexpb.INITb.2>
+
+ÙÙ #.ammonite/$file/`marked-BitcodeTest`.unshift().2D
+
+Ù$Ù (4ammonite/$file/`marked-BitcodeTest`.unshift().(mark)2
+
+Ù*Ù +local2872A
+
+Ù-Ù .1ammonite/$file/`marked-BitcodeTest`.unshift().(c)2
+
+Ù0Ù 2local2882>
+
+ÂÂ .ammonite/$file/`marked-BitcodeTest`.unshift().:Ë
 
 ëë 1ºpattern's type ammonite.$file.marked-BitcodeTest.VALUE.STARV is more specialized than the right hand side expression's type ammonite.$file.marked-BitcodeTest.VALUE
 
 If the narrowing is intentional, this can be communicated by adding `: @unchecked` after the expression,
-which may result in a MatchError at runtime.PZ b07bfac1d741c24143944cab4b6d61d9ba
+which may result in a MatchError at runtime.PZ 4d430ee999d9a378da13c466248fc850ba
 	1	 5UBS
 =:;
 2
@@ -6096,10 +6089,10 @@ scala/Int#be
 ´´ +
 )scala/collection/IterableFactory#apply().scala/Nothing#b0
 
-·· $"B 
+·· ,"B 
 2
 
-·· $
+·· ,
 scala/Int#b0
 
 ·· "B 
@@ -6108,11 +6101,11 @@ scala/Int#b0
 ·· 
 scala/Int#ba
 
-·· SBQ
+·-· 1SBQ
 ?:=
 2
 
-·· +
+·-· 1+
 )scala/collection/IterableFactory#apply().
 scala/Int#be
 
@@ -6167,34 +6160,34 @@ scala/Int#b0
 Å2Å 7
 scala/Int#b0
 
-Æ>Æ C"B 
+Æ*Æ /"B 
 2
 
-Æ>Æ C
+Æ*Æ /
 scala/Int#b0
 
-Ç>Ç C"B 
+Ç*Ç /"B 
 2
 
-Ç>Ç C
+Ç*Ç /
 scala/Int#b0
 
-È,È 1"B 
+È"È '"B 
 2
 
-È,È 1
+È"È '
 scala/Int#b0
 
-ÉVÉ ["B 
+ÉLÉ Q"B 
 2
 
-ÉVÉ [
+ÉLÉ Q
 scala/Int#b0
 
-Ê,Ê 1"B 
+Ê"Ê '"B 
 2
 
-Ê,Ê 1
+Ê"Ê '
 scala/Int#bb
 
 ÓÓ TBR
@@ -6322,229 +6315,229 @@ scala/Int#be
 
 ˜˜ bN
 
-»	» @
+¼	¼ @
 >
 ,*
 (scala/LowPriorityImplicits#wrapString().2
 
-»	» bN
+¼	¼ bN
 
-…… @
+‰‰ @
 >
 ,*
 (scala/LowPriorityImplicits#intWrapper().2
 
-…… bN
+‰‰ bN
 
- @
+‘‘ @
 >
 ,*
 (scala/LowPriorityImplicits#intWrapper().2
 
- b2
-ŽŽ #B!
+‘‘ b2
+’’ #B!
 2
-ŽŽ 
+’’ 
 scala/Any#b4
 
-ŽŽ &B$
+’’ &B$
 2
 
-ŽŽ scala/Boolean#bN
+’’ scala/Boolean#bN
 
-Ž?Ž F@
+’?’ F@
 >
 ,*
 (scala/LowPriorityImplicits#wrapString().2
 
-Ž?Ž FbC
+’?’ FbC
 
-Ž?Ž B5
+’?’ B5
 3
 !
 scala/Predef.augmentString().2
 
-Ž?Ž BbP
-Ž|Ž ƒA
+’?’ BbP
+’|’ ƒA
 ?
 ,*
 (scala/LowPriorityImplicits#wrapString().2
-Ž|Ž ƒbC
+’|’ ƒbC
 
-Ž|Ž 5
+’|’ 5
 3
 !
 scala/Predef.augmentString().2
 
-Ž|Ž bN
+’|’ bN
 
-•• @
+™™ @
 >
 ,*
 (scala/LowPriorityImplicits#intWrapper().2
 
-•• b0
+™™ b0
 
-–– S"B 
+šš S"B 
 2
 
-–– S
+šš S
 scala/Any#b4
 
-–– &B$
+šš &B$
 2
 
-–– scala/Boolean#bN
+šš scala/Boolean#bN
 
-–<– C@
+š<š C@
 >
 ,*
 (scala/LowPriorityImplicits#wrapString().2
 
-–<– CbC
+š<š CbC
 
-–<– ?5
+š<š ?5
 3
 !
 scala/Predef.augmentString().2
 
-–<– ?bk
+š<š ?bk
 
-ŸŸ &]
+££ &]
 [
 IBG
 .,
 *scala/LowPriorityImplicits#wrapRefArray().java/lang/String#2
 
-ŸŸ &bi
+££ &bi
 
-¢
-¢ [BY
+¦
+¦ [BY
 @:>
 2
 
-¢
-¢ ,
+¦
+¦ ,
 *scala/collection/immutable/`::`.unapply().java/lang/String#b7
 
-¢&¢ :)B'
+¦&¦ :)B'
 2
 
-¢&¢ :java/lang/String#b7
+¦&¦ :java/lang/String#b7
 
-¢)¢ /)B'
+¦)¦ /)B'
 2
 
-¢)¢ /java/lang/String#bC
+¦)¦ /java/lang/String#bC
 
-¢0¢ 45
+¦0¦ 45
 3
 !
 scala/Predef.augmentString().2
 
-¢0¢ 4bi
+¦0¦ 4bi
 
-§
-§ [BY
+«
+« [BY
 @:>
 2
 
-§
-§ ,
+«
+« ,
 *scala/collection/immutable/`::`.unapply().java/lang/String#b7
 
-§&§ :)B'
+«&« :)B'
 2
 
-§&§ :java/lang/String#b7
+«&« :java/lang/String#b7
 
-§)§ /)B'
+«)« /)B'
 2
 
-§)§ /java/lang/String#bC
+«)« /java/lang/String#bC
 
-§0§ 45
+«0« 45
 3
 !
 scala/Predef.augmentString().2
 
-§0§ 4b•
+«0« 4b•
 
-¬¬ †Bƒ
+°° †Bƒ
 >:<
 2
 
-¬¬ *
+°° *
 (scala/collection/package.`:+`.unapply().java/lang/String#kÒh
 86
 [A]	*A€Š&$scala/Nothing#
 scala/Any#,*scala/collection/immutable/Seq#[A]=;scala/collection/immutable/Seq#scala/Predef.String#b7
 
-¬¬ /)B'
+°° /)B'
 2
 
-¬¬ /java/lang/String#b7
+°° /java/lang/String#b7
 
-¬¬ ')B'
+°° ')B'
 2
 
-¬¬ 'java/lang/String#bC
+°° 'java/lang/String#bC
 
-´´ +5
+¸¸ +5
 3
 !
 scala/Predef.augmentString().2
 
-´´ +bC
+¸¸ +bC
 
-µµ +5
+¹¹ +5
 3
 !
 scala/Predef.augmentString().2
 
-µµ +bC
+¹¹ +bC
 
-¶¶ (5
+ºº (5
 3
 !
 scala/Predef.augmentString().2
 
-¶¶ (bC
+ºº (bC
 
-·D· }5
+»D» }5
 3
 !
 scala/Predef.augmentString().2
 
-·D· }bC
+»D» }bC
 
-¸	¸ A5
+¼	¼ A5
 3
 !
 scala/Predef.augmentString().2
 
-¸	¸ AbC
+¼	¼ AbC
 
-¹¹ '5
+½½ '5
 3
 !
 scala/Predef.augmentString().2
 
-¹¹ 'b7
+½½ 'b7
 
-»» #)B'
+¿¿ #)B'
 2
 
-»» #java/lang/String#b0
+¿¿ #java/lang/String#b0
 
-Ð3Ð :"B 
+Ô3Ô :"B 
 2
 
-Ð3Ð :
+Ô3Ô :
 scala/Int#b0
 
-Ò*Ò 1"B 
+Ö*Ö 1"B 
 2
 
-Ò*Ò 1
+Ö*Ö 1
 scala/Int#

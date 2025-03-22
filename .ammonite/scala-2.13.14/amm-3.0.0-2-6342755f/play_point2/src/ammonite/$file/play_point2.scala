@@ -78,6 +78,7 @@ def fin(r: Rexp) : Boolean = r match {
   case POINT(r,tag) => fin(r) //?
 }
 
+//shift char with position
 def shift(m: Boolean, re: Rexp, cp: (Char, Int)) : Rexp = {
   val (c, pos) = cp
 
@@ -119,6 +120,8 @@ def shift(m: Boolean, re: Rexp, cp: (Char, Int)) : Rexp = {
         } // if shifted r is final, wrap in point? didn't work
 }
 }
+
+
 
 def mat(r: Rexp, s: List[Char]): Rexp = s match {
   case Nil => r
@@ -165,29 +168,20 @@ def test2() = {
   println(s"Final Reg Tree= \n ${pp(finReg)}\n")
   println(s"Raw Final Reg= ${finReg} size= ${size(finReg)}")
 
+  /*
   println(s"Points and Part expressions") 
   val extracted = extractPoints(finReg) 
   extracted.foreach { 
     case (r, point) =>
         println(s"r = $r and point = $point")
     }
+*/
 
   val inputLength = s.length        
   val stages = traverseStages(finReg, inputLength)
   stages.foreach(stage => println( pp(stage))) 
-
-  val (current,next) = popPoints(finReg)
-  println(s"1 current= ${current}\n")
- // println(s"2 next= ${next}")
-  val (current2,next2)=popPoints(next)
-  println(s"2 current2= ${current2}")
- // println(s"4 next2= ${next2}")
-  val (current3,next3) = popPoints(next2)
-  println(s"3 current= ${current3}\n")
- // println(s"2 next= ${next}")
-  val (current4,next4)=popPoints(next3)
-  println(s"4 current2= ${current4}")
- // println(s"4 next2= ${next2}")
+  val stages2 = traverseStages2(finReg, inputLength)
+  stages2.foreach(stage => println( pp(stage)))
 
 }
 
@@ -263,7 +257,7 @@ def popPoints(r: Rexp): (Rexp, Rexp) = r match {
           (currentInner, updatedNext)
         case x =>
           // Otherwise, current stage is marked: wrap the inner result with a POINT having tag x or maybe use flag 1 as positive or marked.
-          (POINT(currentInner, List(x-1)), updatedNext)
+          (POINT(currentInner, List(x)), updatedNext)
       }
     }
   case ALT(r1, r2) =>
@@ -293,11 +287,11 @@ def traverseStages(r: Rexp, inputLength: Int): List[Rexp] = {
       loop(nextState, stages :+ currentStage, remaining - 1)
     }
   }
-  loop(r, List.empty, inputLength+1)
+  loop(r, List.empty, inputLength)
 }
 
 def traverseStages2(r: Rexp, inputLength: Int): List[Rexp] = {
-  val (stages, _) = (0 until (inputLength + 1)).foldLeft((List(r), r)) { case ((acc, state), _) =>
+  val (stages, _) = (0 until inputLength).foldLeft((List[Rexp](), r)) { case ((acc, state), _) =>
     val (currentStage, nextState) = popPoints(state)
     (acc :+ currentStage, nextState)
   }

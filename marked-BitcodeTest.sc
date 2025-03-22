@@ -53,7 +53,7 @@ def shift(mark: Boolean,re: Rexpb, c: Char ): Rexpb = re match {
     case CHARb(ch,marked,bs) => {
         if(mark && ch == c)
         CHARb(ch,mark && ch == c,bs) 
-        else CHARb(ch,mark && ch == c) // maybe [] for bs ?
+        else CHARb(ch,mark && ch == c,bs) // maybe [] for bs ?
     }
     case ALTb(r1, r2,bs) => ALTb(shift(mark,r1,c),shift(mark,r2,c),bs) 
     case SEQb(r1,r2,bs) =>
@@ -181,7 +181,7 @@ def mkeps_marked2(r: Rexpb): List[Int] = r match {
         else List() //bs
 
     case STARb(r, bs) =>
-        if (fin(r)) bs ++ List(1) ++ mkeps_marked2(r) 
+        if (fin(r)) bs ++mkeps_marked2(r) ++ List(1) 
         else List() 
 
     case NTIMESb(r, n, nmark, counter, bs) =>
@@ -196,11 +196,11 @@ def mkeps_marked2(r: Rexpb): List[Int] = r match {
     case ZEROb => ZEROb
     case ONEb(bs) => ONEb(cs ++ bs)
     case CHARb(c, marked, bs) => CHARb(c, marked, cs ++ bs)
-    case ALTb(r1, r2, bs) => ALTb(fuse(cs, r1), fuse(cs, r2), cs ++ bs)
-    case SEQb(r1, r2, bs) => SEQb(fuse(cs, r1), fuse(cs, r2), cs ++ bs)
-    case STARb(r, bs) => STARb(fuse(cs, r), cs ++ bs)
-    case NTIMESb(r, n, nmark, counter, bs) => NTIMESb(fuse(cs, r), n, nmark, counter, cs ++ bs)
-    case INITb(r, bs) => INITb(fuse(cs, r), cs ++ bs)
+    case ALTb(r1, r2, bs) => ALTb(r1, r2, cs ++ bs)
+    case SEQb(r1, r2, bs) => SEQb(r1, r2, cs ++ bs)
+    case STARb(r, bs) => STARb(r, cs ++ bs)
+    case NTIMESb(r, n, nmark, counter, bs) => NTIMESb(r, n, nmark, counter, cs ++ bs)
+    case INITb(r, bs) => INITb(r, cs ++ bs)
 }
 
 
@@ -307,6 +307,7 @@ def test01() = {
 
 }
 
+//testing bitcode with STAR and SEQ
 @main
 def test02() = {
   val a=CHAR('a')
@@ -330,18 +331,21 @@ def test02() = {
 
 }
 
+//testing unshift
 @main
 def test03() = {
   val a=CHAR('a')
   val b=CHAR('b')
   val rexp=intern(SEQ(a , b))
 
+  println(s"Original Reg:$rexp \n")
   val shiftedOnce=shift(true,rexp,'a')
   val shiftedTwice=shift(true,shiftedOnce,'b')
-  println(s"Shifted Once: ${pp(shiftedTwice)}\n")
+  println(s"Shifted Once with a: ${pp(shiftedOnce)}\n")
+  println(s"Shifted twice: ${pp(shiftedTwice)}\n")
 
-  val unshiftedOnce=unshift(true,shiftedTwice,'a')
-  println(s"Unshifted Once: ${pp(unshiftedOnce)}\n")
+  val unshiftedOnce=unshift(true,shiftedTwice,'b')
+  println(s"Unshifted Once with b: ${pp(unshiftedOnce)}\n")
 
   println("\n========================\n")
   val rexp2=intern(STAR(a))
