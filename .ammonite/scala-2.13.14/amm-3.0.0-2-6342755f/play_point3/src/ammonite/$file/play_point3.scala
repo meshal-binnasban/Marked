@@ -84,20 +84,19 @@ def shift(m: Boolean, re: Rexp, cp: (Char, Int)) : Rexp = {
   re match {
   case ZERO => ZERO
   case ONE => ONE
-  case CHAR(d,bs) => if(m && d == c) 
-                    POINT(CHAR(d), List(pos+1),bs) 
-                  else CHAR(d,bs)
+  case CHAR(d,bs) =>
+    if(m && d == c) POINT(CHAR(d), List(pos+1),bs) 
+    else CHAR(d,bs)
 
-  case POINT(CHAR(d,b),tag,bs) => if(m && d == c)
-                               POINT(CHAR(d), pos+1 ::tag ,bs) 
-                             else POINT(CHAR(d), 0::tag,bs)
+  case POINT(CHAR(d,b),tag,bs) => 
+    if(m && d == c) POINT(CHAR(d), pos+1 ::tag ,bs) 
+    else POINT(CHAR(d), 0::tag,bs)
 
   case ALT(r1, r2,bs) => ALT(shift(m, r1, cp), shift(m, r2, cp) ,bs) 
-  case SEQ(r1, r2,bs) =>
-    SEQ(shift(m, r1, cp), shift((m && nullable(r1)) || fin(r1), r2, cp),bs)
+  case SEQ(r1, r2,bs) => SEQ(shift(m, r1, cp), shift((m && nullable(r1)) || fin(r1), r2, cp),bs)
   case STAR(r,bs) => 
     //bs ++ List(0)
-    STAR(shift(m || fin(r), r, cp),bs ++ List(0))
+    STAR(shift(m || fin(r), r, cp),bs ++ mkeps(r) ++ List(0))
   //case POINT(NTIMES(r, n,counter)) => NTIMES(r, n,counter)
   case POINT(NTIMES(r, n,counter,b),tag , bs) => 
     POINT(NTIMES(r, n,counter,b),tag:+pos,bs) // maybe b instead of bs
@@ -131,10 +130,10 @@ def matcher2(r: Rexp, s: List[Char]) : Rexp =
 // testing bitcodes
 @main
 def test1() = {
-    val rexp = intern(STAR( "a" | "b" ))
+    val rexp = intern(STAR( ALT( ALT("a","b") , "c" ) ))
 
     println("=============== Test ===============")
-    val s="aa".toList
+    val s="abc".toList
     println(s"String: $s\n")
     val finReg=matcher2(rexp, s)
     println(s"Original size=${size(rexp)} Result= ${fin(finReg)} \n")
