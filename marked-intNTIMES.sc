@@ -353,6 +353,7 @@ def time_needed[T](i: Int, code: => T) = {
 
 //@arg(doc = "Test (a?{n}) (a{n})")
 
+@main
 def test1() = {
   for (i <- 0 to 11000 by 1000) {
     println(f"$i: ${time_needed(2, matcher(EVIL1(i), ("a" * i).toList))}%.5f")
@@ -361,6 +362,7 @@ def test1() = {
 
 //@arg(doc = "Test (a*)* b")
 
+@main
 def test2() = {
   for (i <- 0 to 7000000 by 500000) {
     println(f"$i: ${time_needed(2, matcher(EVIL2, ("a" * i).toList))}%.5f")

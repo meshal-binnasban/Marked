@@ -1,5 +1,5 @@
 
-°º	play_point3_BIT.sc“limport scala.language.implicitConversions
+›˚play_point3_BIT.sc¿bimport scala.language.implicitConversions
 import os.size
 
 // New enum with separate BITS constructor.
@@ -321,10 +321,10 @@ def indent(ss: Seq[String]): String = ss match {
 def pp(e: Rexp): String = e match {
   case ZERO         => "0\n"
   case ONE          => "1\n"
-  case CHAR(c)      => s"$c\n"
+  case CHAR(c)      => s"$c"
   case POINT(CHAR(c), tag) =>
     if(tag.nonEmpty && tag.head > 0) s"‚Ä¢$c {tag=$tag}"
-    else s"$c {tag=$tag}\n"
+    else s"$c {tag=$tag}"
   case POINT(r, tag) => pp(r)  // delegate to inner
   case ALT(r1, r2)   => s"ALT\n" ++ pps(r1, r2)
   case SEQ(r1, r2)   => s"SEQ\n" ++ pps(r1, r2)
@@ -349,97 +349,64 @@ def intern(r: Rexp): Rexp = r match {
 }
 
 // --- Test functions ---
-
+// testing bitcodes
 @main
 def test1() = {
-  // Test with a STAR of alternatives.
-  val rexp = intern(STAR( ALT( ALT("a", "b"), "c" ) ))
-  println("=============== Test ===============")
-  val s = "abc".toList
-  println(s"String: $s\n")
-  val finReg = matcher2(rexp, s)
-  println(s"Original size=${size(rexp)} Result= ${fin(finReg)} \n")
-  for (i <- s.indices) {
+    val rexp = intern(STAR( ALT( ALT("a","b") , "c" ) ))
+
+    println("=============== Test ===============")
+    val s="abc".toList
+    println(s"String: $s\n")
+    val finReg=matcher2(rexp, s)
+    println(s"Original size=${size(rexp)} Result= ${fin(finReg)} \n")
+
+    for (i <- s.indices) {
     println(s"${i + 1}- =shift ${s(i)}=")
     val sPart = s.take(i + 1)
     println(pp(mat(rexp, sPart)))
-  }
-  println("\n=============== Final Reg ===============")
-  println(s"Size=${size(finReg)} , Tree= \n ${pp(finReg)}\n")
-  println("\n=============== bitcodes ===============")
-  val mkepsValue = mkeps(finReg)
-  println(s"mkeps= $mkepsValue")
-  val decodeValue = decode(rexp, mkepsValue)
-  println(s"decode=$decodeValue")
-  println("\n=============== popPoints ===============")
-  val inputLength = s.length        
-  val stages = traverseStages(finReg, inputLength)
-  stages.reverse.foreach(stage => println(pp(stage)))
+    }
+
+    println("\n=============== Final Reg ===============n")
+    println(s"Size=${size(finReg)} , Tree= \n ${pp(finReg)}\n")
+    println("\n=============== bitcodes ===============n")
+
+    val mkepsValue = mkeps(finReg)
+    println(s"mkeps= $mkepsValue")
+    val decodeValue=decode(rexp,mkepsValue)
+    println(s"decode=$decodeValue")  
+
+   /*  println("\n=============== EVIL ===============n")
+
+    val EVIL2 = STAR(STAR("a" | "b" ))
+
+    val finReg2=matcher2(EVIL2, "aa".toList)
+    println(pp(finReg2))
+    val mkepsEvilValue = mkeps(finReg2)
+    println(s"mkeps= $mkepsEvilValue")
+    val decodeEvilValue=decode(EVIL2,mkepsEvilValue)
+    println(s"decode=$decodeEvilValue") */
 }
+
+val EVIL2 = SEQ(STAR(STAR(CHAR('a'))), CHAR('b'))
 
 @main
 def test2() = {
-  val rexp = STAR("a" | "b")
-  println("=============== Test ===============")
-  val s = "abba".toList
-  println(s"String: $s\n")
-  val finReg = matcher2(rexp, s)
-  println(s"Original size=${size(rexp)} Result= ${fin(finReg)} \n")
-  for (i <- s.indices) {
-    println(s"${i + 1}- =shift ${s(i)}=")
-    val sPart = s.take(i + 1)
-    println(pp(mat(rexp, sPart)))
-  }
-  println("\n=============== Final Reg ===============")
-  println(s"Size=${size(finReg)} , Tree= \n ${pp(finReg)}\n")
-  println("\n=============== popPoints ===============")
-  val inputLength = s.length        
-  val stages = traverseStages(finReg, inputLength)
-  stages.reverse.foreach(stage => println(pp(stage)))
+ // for (i <- 0 to 7000000 by 500000) {
+ // }
+ //:+ 'b'
+  val i=1000
+  println(f"$i: ${time_needed(2, matcher(EVIL2, ("a" * i).toList))}%.5f")
+
+} 
+
+def time_needed[T](i: Int, code: => T) = {
+  val start = System.nanoTime()
+  for (j <- 1 to i) code
+  val end = System.nanoTime()
+  (end - start) / (i * 1.0e9)
 }
 
-@main
-def test3() = {
-  println("=====Test====")
-  val rexp = ("a" ~ "b")
-  val s = "ab".toList
-  println(s"start: $rexp")
-  println("=============\n")
-  for (n <- (1 to s.length)) {
-    val sl = s.slice(0, n)
-    println(s"shift: ${sl.last}")
-    println(pp(mat(rexp, sl)))
-  }
-  println(s"Result= ${matcher(rexp, s)}")
-  val finReg = matcher2(rexp, s)
-  println(s"Final Reg Tree= \n ${pp(finReg)}\n")
-  println(s"Raw Reg= ${finReg}")
-}
-
-@main
-def test4() = {
-  // NTIMES test
-  val n = 2
-  val rexp = (NTIMES("a" | ONE, n, 0)) ~ (NTIMES(CHAR('a'), n, 0))
-  println("=====Test====")
-  val ss = "aaaab".toList
-  println(s"String: $ss\n")
-  println(s"Result= ${matcher(rexp, ss)}\n")
-  for (i <- ss.indices) {
-    println(s"${i + 1}- =shift ${ss(i)}=")
-    val sPart = ss.take(i + 1)
-    println(pp(mat(rexp, sPart)))
-  }
-  val finReg2 = matcher2(rexp, ss)
-  println(s"Final Reg Tree= \n ${pp(finReg2)}\n")
-  println(s"Raw Final Reg= ${finReg2}")
-  println(s"Points and Regular expressions")
-  val extracted = extractPoints(finReg2)
-  extracted.foreach {
-    case (r, point) =>
-      println(s"r = $r and point = $point")
-  }
-}*w
+*w
 /ammonite/$file/play_point3_BIT.Rexp#`<init>`(). Ä@*<init>Ää., (&$ammonite/$file/play_point3_BIT.Rexp#í: *Œ
 $ammonite/$file/play_point3_BIT.Rexp# îÄ*RexpÄäê
 çjava/lang/Object#scala/reflect/Enum#(&$ammonite/$file/play_point3_BIT.Rexp#"1
@@ -1970,83 +1937,43 @@ mkepsValueÄä8"6
 scala/Int#*ò
 local205 Ä*decodeValueÄäv"t
 rpscala/Tuple2#)'%ammonite/$file/play_point3_BIT.VALUE#42 scala/collection/immutable/List#
-scala/Int#*4
-local206 Ä*inputLengthÄä"
-
-scala/Int#*o
-local207 Ä*stagesÄäR"P
-NL scala/collection/immutable/List#(&$ammonite/$file/play_point3_BIT.Rexp#*E
-local208*stageÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*h
+scala/Int#*h
 'ammonite/$file/play_point3_BIT.test1().*test1j
-mainargs/main#Ää scala/Unit#í: *G
-local209 Ä*rexpÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*Q
-local210 Ä*sÄä9"7
-53 scala/collection/immutable/List#scala/Char#*I
-local211 Ä*finRegÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*'
-local212*iÄä"
-
-scala/Int#*U
-local213 Ä*sPartÄä9"7
-53 scala/collection/immutable/List#scala/Char#*4
-local214 Ä*inputLengthÄä"
-
-scala/Int#*o
-local215 Ä*stagesÄäR"P
-NL scala/collection/immutable/List#(&$ammonite/$file/play_point3_BIT.Rexp#*E
-local216*stageÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*h
-'ammonite/$file/play_point3_BIT.test2().*test2j
-mainargs/main#Ää scala/Unit#í: *G
-local217 Ä*rexpÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*Q
-local218 Ä*sÄä9"7
-53 scala/collection/immutable/List#scala/Char#*'
-local219*nÄä"
-
-scala/Int#*R
-local220 Ä*slÄä9"7
-53 scala/collection/immutable/List#scala/Char#*I
-local221 Ä*finRegÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*h
-'ammonite/$file/play_point3_BIT.test3().*test3j
-mainargs/main#Ää scala/Unit#í: **
-local222 Ä*nÄä"
-
-scala/Int#*G
-local223 Ä*rexpÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*R
-local224 Ä*ssÄä9"7
-53 scala/collection/immutable/List#scala/Char#*'
-local225*iÄä"
-
-scala/Int#*U
-local226 Ä*sPartÄä9"7
-53 scala/collection/immutable/List#scala/Char#*J
-local227 Ä*finReg2Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*ï
-local228 Ä*	extractedÄäu"s
-qo scala/collection/immutable/List#KIscala/Tuple2#(&$ammonite/$file/play_point3_BIT.Rexp#
-scala/Int#*f
-local229*x$1ÄäO"M
-KIscala/Tuple2#(&$ammonite/$file/play_point3_BIT.Rexp#
-scala/Int#*D
-local230 Ä*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*.
-local231 Ä*pointÄä"
+mainargs/main#Ää scala/Unit#í: *j
+%ammonite/$file/play_point3_BIT.EVIL2. Ä*EVIL2Ää,"*
+(&$ammonite/$file/play_point3_BIT.Rexp#í: **
+local206 Ä*iÄä"
 
 scala/Int#*h
-'ammonite/$file/play_point3_BIT.test4().*test4j
-mainargs/main#Ää scala/Unit#í: *{
+'ammonite/$file/play_point3_BIT.test2().*test2j
+mainargs/main#Ää scala/Unit#í: *c
+0ammonite/$file/play_point3_BIT.time_needed().[T]	*TÄä&$scala/Nothing#
+scala/Any#*O
+0ammonite/$file/play_point3_BIT.time_needed().(i)*iÄä"
+
+scala/Int#*
+3ammonite/$file/play_point3_BIT.time_needed().(code)*codeÄä<":
+8j6
+420ammonite/$file/play_point3_BIT.time_needed().[T]*/
+local207 Ä*startÄä"
+scala/Long#*'
+local208*jÄä"
+
+scala/Int#*-
+local209 Ä*endÄä"
+scala/Long#*˝
+-ammonite/$file/play_point3_BIT.time_needed().*time_neededÄä≥∞
+2
+0ammonite/$file/play_point3_BIT.time_needed().[T]g
+0ammonite/$file/play_point3_BIT.time_needed().(i)
+3ammonite/$file/play_point3_BIT.time_needed().(code)scala/Double#í: *{
 'ammonite/$file/play_point3_BIT.$main().*$mainÄä>< 86scala/collection/Iterator#scala/Predef.String#í: *x
 *ammonite/$file/play_point3_BIT.toString().*toStringÄä"
 j
-java/lang/String#í: öscala/Any#toString().*»
+java/lang/String#í: öscala/Any#toString().*Ã
 ammonite/$file/play_point3_BIT.
- *play_point3_BITÄäÜ
-Éjava/lang/Object#$¢!ammonite/$file/play_point3_BIT."√
+ *play_point3_BITÄää
+ájava/lang/Object#$¢!ammonite/$file/play_point3_BIT."«
 *ammonite/$file/play_point3_BIT.`<init>`().
 $ammonite/$file/play_point3_BIT.Rexp#
 $ammonite/$file/play_point3_BIT.Rexp.
@@ -2083,9 +2010,9 @@ $ammonite/$file/play_point3_BIT.pp().
 %ammonite/$file/play_point3_BIT.pps().
 (ammonite/$file/play_point3_BIT.intern().
 'ammonite/$file/play_point3_BIT.test1().
+%ammonite/$file/play_point3_BIT.EVIL2.
 'ammonite/$file/play_point3_BIT.test2().
-'ammonite/$file/play_point3_BIT.test3().
-'ammonite/$file/play_point3_BIT.test4().
+-ammonite/$file/play_point3_BIT.time_needed().
 'ammonite/$file/play_point3_BIT.$main().
 *ammonite/$file/play_point3_BIT.toString().í: *6
 [A]	*AÄä&$scala/Nothing#
@@ -4097,29 +4024,27 @@ scala/Int#29
 
 ﬂﬂ mainargs/main#28
 
-‚‚ (ammonite/$file/play_point3_BIT.intern().29
+·· (ammonite/$file/play_point3_BIT.intern().29
 
-‚‚ )ammonite/$file/play_point3_BIT.Rexp.STAR.28
+·· )ammonite/$file/play_point3_BIT.Rexp.STAR.28
 
-‚‚ (ammonite/$file/play_point3_BIT.Rexp.ALT.28
+·· (ammonite/$file/play_point3_BIT.Rexp.ALT.28
 
-‚‚ "(ammonite/$file/play_point3_BIT.Rexp.ALT.2
+·!· $(ammonite/$file/play_point3_BIT.Rexp.ALT.2
 
-‚‚ 
-local1992)
+·· local1992)
 
-„„ 	scala/Predef.println(+1).2:
+„„ scala/Predef.println(+1).2:
 
 ‰‰ *scala/collection/IterableOnceOps#toList().2
 
-‰‰ local2002)
+‰‰ 	local2002)
 
-ÂÂ 	scala/Predef.println(+1).2(
+ÂÂ scala/Predef.println(+1).2(
 
-Â
-Â scala/StringContext#s().2
+ÂÂ scala/StringContext#s().2
 
-ÂÂ local2002:
+ÂÂ local2002:
 
 ÊÊ *ammonite/$file/play_point3_BIT.matcher2().2
 
@@ -4127,503 +4052,189 @@ scala/Int#29
 
 ÊÊ local2002
 
-ÊÊ local2012)
+ÊÊ local2012)
 
-ÁÁ 	scala/Predef.println(+1).2(
+ÁÁ scala/Predef.println(+1).2(
 
-Á
-Á scala/StringContext#s().26
+ÁÁ scala/StringContext#s().26
 
-ÁÁ  &ammonite/$file/play_point3_BIT.size().2
+ÁÁ "&ammonite/$file/play_point3_BIT.size().2
 
-Á!Á %local19925
+Á#Á 'local19925
 
-Á2Á 5%ammonite/$file/play_point3_BIT.fin().2
+Á4Á 7%ammonite/$file/play_point3_BIT.fin().2
 
-Á6Á <local2012
+Á8Á >local2012
 
-ËË local20022
+ÈÈ local20022
 
-ËË "scala/collection/SeqOps#indices().2
+ÈÈ "scala/collection/SeqOps#indices().2
 
-ËË local2022)
+È	È 
+local2022)
 
-ÈÈ scala/Predef.println(+1).2(
+ÍÍ scala/Predef.println(+1).2(
 
-ÈÈ scala/StringContext#s().2
+ÍÍ scala/StringContext#s().2
 
-ÈÈ local2022"
+ÍÍ local2022"
 
-ÈÈ scala/Int#`+`(+4).2
+ÍÍ scala/Int#`+`(+4).2
 
-È!È "local2002
+Í!Í "local2002
 
-È#È $local2022
+Í#Í $local2022
 
-ÍÍ local20027
+ÎÎ local20027
 
-ÍÍ 'scala/collection/immutable/List#take().2
+ÎÎ 'scala/collection/immutable/List#take().2
 
-ÍÍ local2022"
+ÎÎ local2022"
 
-ÍÍ scala/Int#`+`(+4).2
+ÎÎ scala/Int#`+`(+4).2
 
-ÍÍ local2032)
+ÎÎ local2032)
 
-ÎÎ scala/Predef.println(+1).24
+ÏÏ scala/Predef.println(+1).24
 
-ÎÎ $ammonite/$file/play_point3_BIT.pp().25
+ÏÏ $ammonite/$file/play_point3_BIT.pp().25
 
-ÎÎ %ammonite/$file/play_point3_BIT.mat().2
+ÏÏ %ammonite/$file/play_point3_BIT.mat().2
 
-ÎÎ local1992
+ÏÏ local1992
 
-ÎÎ local2032)
+ÏÏ local2032)
 
-ÌÌ 	scala/Predef.println(+1).2)
+ÔÔ scala/Predef.println(+1).2)
 
-ÓÓ 	scala/Predef.println(+1).2(
+ scala/Predef.println(+1).2(
 
-Ó
-Ó scala/StringContext#s().26
+ scala/StringContext#s().26
 
-ÓÓ &ammonite/$file/play_point3_BIT.size().2
+ &ammonite/$file/play_point3_BIT.size().2
 
-ÓÓ local20124
+  local20124
 
-Ó.Ó 0$ammonite/$file/play_point3_BIT.pp().2
+0 2$ammonite/$file/play_point3_BIT.pp().2
 
-Ó1Ó 7local2012)
+3 9local2012)
 
-ÔÔ 	scala/Predef.println(+1).27
+ÒÒ scala/Predef.println(+1).27
 
- 'ammonite/$file/play_point3_BIT.mkeps().2
+ÛÛ 'ammonite/$file/play_point3_BIT.mkeps().2
 
- local2012
+ÛÛ !local2012
 
- local2042)
+ÛÛ local2042)
 
-ÒÒ 	scala/Predef.println(+1).2(
+ÙÙ scala/Predef.println(+1).2(
 
-Ò
-Ò scala/StringContext#s().2
+ÙÙ scala/StringContext#s().2
 
-ÒÒ local20428
+ÙÙ  local20428
 
-ÚÚ (ammonite/$file/play_point3_BIT.decode().2
+ıı (ammonite/$file/play_point3_BIT.decode().2
 
-ÚÚ local1992
+ıı local1992
 
-Ú!Ú +local2042
+ı ı *local2042
 
-ÚÚ local2052)
+ıı local2052)
 
-ÛÛ 	scala/Predef.println(+1).2(
+ˆˆ scala/Predef.println(+1).2(
 
-Û
-Û scala/StringContext#s().2
+ˆˆ scala/StringContext#s().2
 
-ÛÛ local2052)
+ˆˆ !local20527
 
-ÙÙ 	scala/Predef.println(+1).2
+‡‡ 	'ammonite/$file/play_point3_BIT.test1().28
 
-ıı local20029
+ÑÑ (ammonite/$file/play_point3_BIT.Rexp.SEQ.29
 
-ıı )scala/collection/immutable/List#length().2
+ÑÑ )ammonite/$file/play_point3_BIT.Rexp.STAR.29
 
-ıı local2062@
+ÑÑ )ammonite/$file/play_point3_BIT.Rexp.STAR.29
 
-ˆˆ 0ammonite/$file/play_point3_BIT.traverseStages().2
+ÑÑ )ammonite/$file/play_point3_BIT.Rexp.CHAR.29
 
-ˆˆ $local2012
+Ñ'Ñ +)ammonite/$file/play_point3_BIT.Rexp.CHAR.25
 
-ˆ&ˆ 1local2062
+ÑÑ 	%ammonite/$file/play_point3_BIT.EVIL2.2
 
-ˆˆ local2072
+ÜÜ mainargs/main#2
 
-˜˜ local2072:
+ãã local2062)
 
-˜	˜ *scala/collection/immutable/List#reverse().2:
+åå 	scala/Predef.println(+1).2(
 
-˜˜ *scala/collection/immutable/List#foreach().2
+å
+å scala/StringContext#f().2
 
-˜˜ local2082)
+åå local2062=
 
-˜"˜ )scala/Predef.println(+1).24
+åå -ammonite/$file/play_point3_BIT.time_needed().29
 
-˜*˜ ,$ammonite/$file/play_point3_BIT.pp().2
+å!å ()ammonite/$file/play_point3_BIT.matcher().25
 
-˜-˜ 2local20827
+å)å .%ammonite/$file/play_point3_BIT.EVIL2.21
 
-‡‡ 	'ammonite/$file/play_point3_BIT.test1().2
+å5å 6!scala/collection/StringOps#`*`().2
 
-˙˙ mainargs/main#29
+å7å 8local2062:
 
-¸¸ )ammonite/$file/play_point3_BIT.Rexp.STAR.25
+å:å @*scala/collection/IterableOnceOps#toList().27
 
-¸¸ %ammonite/$file/play_point3_BIT.`|`().2
+áá 	'ammonite/$file/play_point3_BIT.test2().2@
 
-¸¸ 
-local2092)
+êê 0ammonite/$file/play_point3_BIT.time_needed().[T]2
 
-˝˝ 	scala/Predef.println(+1).2:
+êê 
+scala/Int#2@
 
-˛˛ *scala/collection/IterableOnceOps#toList().2
+êê 0ammonite/$file/play_point3_BIT.time_needed().(i)2@
 
-˛˛ local2102)
+ê$ê %0ammonite/$file/play_point3_BIT.time_needed().[T]2C
 
-ˇˇ 	scala/Predef.println(+1).2(
+êê 3ammonite/$file/play_point3_BIT.time_needed().(code)2!
 
-ˇ
-ˇ scala/StringContext#s().2
+ëë java/lang/System#2,
 
-ˇˇ local2102:
+ëë java/lang/System#nanoTime().2
 
-ÄÄ *ammonite/$file/play_point3_BIT.matcher2().2
+ëë local2072+
 
-ÄÄ local2092
+íí scala/runtime/RichInt#to().2@
 
-ÄÄ local2102
+íí 0ammonite/$file/play_point3_BIT.time_needed().(i)2
 
-ÄÄ local2112)
+íí local2082C
 
-ÅÅ 	scala/Predef.println(+1).2(
+íí 3ammonite/$file/play_point3_BIT.time_needed().(code)2!
 
-Å
-Å scala/StringContext#s().26
+ìì java/lang/System#2,
 
-ÅÅ  &ammonite/$file/play_point3_BIT.size().2
+ìì java/lang/System#nanoTime().2
 
-Å!Å %local20925
+ìì 	local2092
 
-Å2Å 5%ammonite/$file/play_point3_BIT.fin().2
+îî local2092#
 
-Å6Å <local2112
+îî scala/Long#`-`(+4).2
 
-ÇÇ local21022
+î	î local2072#
 
-ÇÇ "scala/collection/SeqOps#indices().2
+îî scala/Long#`/`(+6).2@
 
-ÇÇ local2122)
+îî 0ammonite/$file/play_point3_BIT.time_needed().(i)2"
 
-ÉÉ scala/Predef.println(+1).2(
+îî scala/Int#`*`(+6).2=
 
-ÉÉ scala/StringContext#s().2
-
-ÉÉ local2122"
-
-ÉÉ scala/Int#`+`(+4).2
-
-É!É "local2102
-
-É#É $local2122
-
-ÑÑ local21027
-
-ÑÑ 'scala/collection/immutable/List#take().2
-
-ÑÑ local2122"
-
-ÑÑ scala/Int#`+`(+4).2
-
-ÑÑ local2132)
-
-ÖÖ scala/Predef.println(+1).24
-
-ÖÖ $ammonite/$file/play_point3_BIT.pp().25
-
-ÖÖ %ammonite/$file/play_point3_BIT.mat().2
-
-ÖÖ local2092
-
-ÖÖ local2132)
-
-áá 	scala/Predef.println(+1).2)
-
-àà 	scala/Predef.println(+1).2(
-
-à
-à scala/StringContext#s().26
-
-àà &ammonite/$file/play_point3_BIT.size().2
-
-àà local21124
-
-à.à 0$ammonite/$file/play_point3_BIT.pp().2
-
-à1à 7local2112)
-
-ââ 	scala/Predef.println(+1).2
-
-ää local21029
-
-ää )scala/collection/immutable/List#length().2
-
-ää local2142@
-
-ãã 0ammonite/$file/play_point3_BIT.traverseStages().2
-
-ãã $local2112
-
-ã&ã 1local2142
-
-ãã local2152
-
-åå local2152:
-
-å	å *scala/collection/immutable/List#reverse().2:
-
-åå *scala/collection/immutable/List#foreach().2
-
-åå local2162)
-
-å"å )scala/Predef.println(+1).24
-
-å*å ,$ammonite/$file/play_point3_BIT.pp().2
-
-å-å 2local21627
-
-˚˚ 	'ammonite/$file/play_point3_BIT.test2().2
-
-èè mainargs/main#2)
-
-ëë 	scala/Predef.println(+1).25
-
-íí %ammonite/$file/play_point3_BIT.`~`().2
-
-íí 
-local2172:
-
-ìì *scala/collection/IterableOnceOps#toList().2
-
-ìì local2182)
-
-îî 	scala/Predef.println(+1).2(
-
-î
-î scala/StringContext#s().2
-
-îî local2172)
-
-ïï 	scala/Predef.println(+1).2+
-
-ññ scala/runtime/RichInt#to().2
-
-ññ local21829
-
-ññ )scala/collection/immutable/List#length().2;
-
-ññ +scala/collection/immutable/Range#foreach().2
-
-ññ local2192
-
-óó local21828
-
-óó (scala/collection/immutable/List#slice().2
-
-óó local2192
-
-óó 
-local2202)
-
-òò scala/Predef.println(+1).2(
-
-òò scala/StringContext#s().2
-
-òò local22027
-
-òò 'scala/collection/immutable/List#last().2)
-
-ôô scala/Predef.println(+1).24
-
-ôô $ammonite/$file/play_point3_BIT.pp().25
-
-ôô %ammonite/$file/play_point3_BIT.mat().2
-
-ôô local2172
-
-ôô local2202)
-
-õõ 	scala/Predef.println(+1).2(
-
-õ
-õ scala/StringContext#s().29
-
-õõ )ammonite/$file/play_point3_BIT.matcher().2
-
-õõ "local2172
-
-õ$õ %local2182:
-
-úú *ammonite/$file/play_point3_BIT.matcher2().2
-
-úú local2172
-
-úú local2182
-
-úú local2212)
-
-ùù 	scala/Predef.println(+1).2(
-
-ù
-ù scala/StringContext#s().24
-
-ù!ù #$ammonite/$file/play_point3_BIT.pp().2
-
-ù$ù *local2212)
-
-ûû 	scala/Predef.println(+1).2(
-
-û
-û scala/StringContext#s().2
-
-ûû local22127
-
-êê 	'ammonite/$file/play_point3_BIT.test3().2
-
-°° mainargs/main#2
-
-§§ local22225
-
-•'• (%ammonite/$file/play_point3_BIT.`~`().2;
-
-•• +ammonite/$file/play_point3_BIT.Rexp.NTIMES.25
-
-•• %ammonite/$file/play_point3_BIT.`|`().28
-
-•• (ammonite/$file/play_point3_BIT.Rexp.ONE.2
-
-• • !local2222;
-
-•*• 0+ammonite/$file/play_point3_BIT.Rexp.NTIMES.29
-
-•1• 5)ammonite/$file/play_point3_BIT.Rexp.CHAR.2
-
-•<• =local2222
-
-•• 
-local2232)
-
-¶¶ 	scala/Predef.println(+1).2:
-
-ßß *scala/collection/IterableOnceOps#toList().2
-
-ßß local2242)
-
-®® 	scala/Predef.println(+1).2(
-
-®
-® scala/StringContext#s().2
-
-®® local2242)
-
-©© 	scala/Predef.println(+1).2(
-
-©
-© scala/StringContext#s().29
-
-©© )ammonite/$file/play_point3_BIT.matcher().2
-
-©© "local2232
-
-©$© &local2242
-
-™™ local22422
-
-™™ "scala/collection/SeqOps#indices().2
-
-™™ local2252)
-
-´´ scala/Predef.println(+1).2(
-
-´´ scala/StringContext#s().2
-
-´´ local2252"
-
-´´ scala/Int#`+`(+4).2
-
-´!´ #local2242
-
-´$´ %local2252
-
-¨¨ local22427
-
-¨¨ 'scala/collection/immutable/List#take().2
-
-¨¨ local2252"
-
-¨¨ scala/Int#`+`(+4).2
-
-¨¨ local2262)
-
-≠≠ scala/Predef.println(+1).24
-
-≠≠ $ammonite/$file/play_point3_BIT.pp().25
-
-≠≠ %ammonite/$file/play_point3_BIT.mat().2
-
-≠≠ local2232
-
-≠≠ local2262:
-
-ØØ *ammonite/$file/play_point3_BIT.matcher2().2
-
-ØØ local2232
-
-ØØ !local2242
-
-ØØ local2272)
-
-∞∞ 	scala/Predef.println(+1).2(
-
-∞
-∞ scala/StringContext#s().24
-
-∞!∞ #$ammonite/$file/play_point3_BIT.pp().2
-
-∞$∞ +local2272)
-
-±± 	scala/Predef.println(+1).2(
-
-±
-± scala/StringContext#s().2
-
-±± $local2272)
-
-≤≤ 	scala/Predef.println(+1).2(
-
-≤
-≤ scala/StringContext#s().2?
-
-≥≥ /ammonite/$file/play_point3_BIT.extractPoints().2
-
-≥ ≥ 'local2272
-
-≥≥ local2282
-
-¥¥ local2282:
-
-¥¥ *scala/collection/immutable/List#foreach().2
-
-µ
-µ local2302
-
-µµ local2312)
-
-∂∂ scala/Predef.println(+1).2(
-
-∂∂ scala/StringContext#s().2
-
-∂∂ local2302
-
-∂$∂ )local23127
-
-¢¢ 	'ammonite/$file/play_point3_BIT.test4().:≈
+êê -ammonite/$file/play_point3_BIT.time_needed().:≈
 
 µµ 3¥pattern's type ammonite.$file.play_point3_BIT.VALUE.STARV is more specialized than the right hand side expression's type ammonite.$file.play_point3_BIT.VALUE
 
 If the narrowing is intentional, this can be communicated by adding `: @unchecked` after the expression,
-which may result in a MatchError at runtime.PZ 3c8c0dd97c864a541c555003ca4822ffb,
+which may result in a MatchError at runtime.PZ 4361689c7076ab496e55676e7f43bca6b,
 ( / B
 2
 
@@ -4993,56 +4604,38 @@ scala/Int#bN
 (scala/LowPriorityImplicits#wrapString().2
 
 ‰
-‰ b1
+‰ b0
 
-˜˜ #B!
+å
+å H"B 
 2
 
-˜˜ scala/Unit#bN
+å
+å H
+scala/Any#b4
 
-˛
-˛ @
+åå &B$
+2
+
+åå scala/Boolean#bN
+
+å1å 8@
 >
 ,*
 (scala/LowPriorityImplicits#wrapString().2
 
-˛
-˛ b1
+å1å 8bC
 
-åå #B!
-2
+å1å 45
+3
+!
+scala/Predef.augmentString().2
 
-åå scala/Unit#bN
+å1å 4bN
 
-ì
-ì @
->
-,*
-(scala/LowPriorityImplicits#wrapString().2
-
-ì
-ì b1
-
-ññ #B!
-2
-
-ññ scala/Unit#bN
-
-ññ @
+íí @
 >
 ,*
 (scala/LowPriorityImplicits#intWrapper().2
 
-ññ bN
-
-ßß @
->
-,*
-(scala/LowPriorityImplicits#wrapString().2
-
-ßß b1
-
-¥¥ #B!
-2
-
-¥¥ scala/Unit#
+íí 

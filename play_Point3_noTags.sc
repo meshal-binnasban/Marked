@@ -1,0 +1,284 @@
+import scala.language.implicitConversions
+import os.size
+
+enum Rexp {
+  case ZERO 
+  case ONE 
+  case CHAR(c: Char , bs:List[Int]=List())
+  case POINT(r: Rexp, bs:List[Int]=List())
+  case ALT(r1: Rexp, r2: Rexp, bs:List[Int]=List()) 
+  case SEQ(r1: Rexp, r2: Rexp, bs:List[Int]=List()) 
+  case STAR(r: Rexp, bs:List[Int]=List()) 
+  case NTIMES(r: Rexp, n: Int , counter: Int = 0, bs:List[Int]=List())
+}
+import Rexp._
+
+def nullable (r: Rexp) : Boolean = r match {
+  case ZERO => false
+  case ONE => true
+  case CHAR(_,bs) => false
+  case POINT(r,bs) => nullable(r)
+  case ALT(r1, r2,bs) => nullable(r1) || nullable(r2)
+  case SEQ(r1, r2,bs) => nullable(r1) && nullable(r2)
+  case STAR(_,bs) => true
+  case NTIMES(r, n,counter,bs) => if (n == 0) true else nullable(r)
+}
+
+def fin(r: Rexp) : Boolean = r match {
+  case ZERO => false
+  case ONE => false
+  case CHAR(_,bs) => false 
+  case POINT(CHAR(_,b),bs) => true 
+  case ALT(r1, r2,bs) => fin(r1) || fin(r2)
+  case SEQ(r1, r2,bs) => (fin(r1) && nullable(r2)) || fin(r2)
+  case STAR(r,bs) => fin(r)
+  case NTIMES(r, n,counter,bs) => counter == n && fin(r)
+  case POINT(r,bs) => fin(r) //?
+}
+
+//shift char with position
+def shift(m: Boolean, re: Rexp, c: Char) : Rexp = {
+  re match {
+  case ZERO => ZERO
+  case ONE => ONE
+  case CHAR(d,bs) =>
+    if(m && d == c) POINT(CHAR(d),bs) 
+    else CHAR(d,bs)
+
+  case POINT(CHAR(d,b),bs) => 
+    if(m && d == c) re
+    else CHAR(d,bs)
+
+  case ALT(r1, r2,bs) => ALT(shift(m, r1, c), shift(m, r2, c) ,bs) 
+  case SEQ(r1, r2,bs) => SEQ(shift(m, r1, c), shift((m && nullable(r1)) || fin(r1), r2, c),bs)
+  case STAR(r,bs) => 
+    //bs ++ List(0)
+    STAR(shift(m || fin(r), r, c),bs ++ mkeps(r) ++ List(0)) // bs ++ mkeps(r) ++ List(0) drops the performance in case of evil regex
+  case NTIMES(r, n,counter,bs) => 
+   // println(s"NTIMES: ${matchCount(re)}")
+    if (counter == n) re
+      else{
+        if (m || fin(r)) NTIMES(shift(m || fin(r), r, c), n, counter+1 , bs)
+        else NTIMES(shift(false, r, c), n, counter,bs)       
+        } // if shifted r is final, wrap in point? didn't work
+} //end match r
+}
+
+def mat(r: Rexp, s: List[Char]) : Rexp = s match {
+  case Nil => r
+  case c::cs => cs.foldLeft(shift(true, r, c))((r, c) => shift(false, r, c))
+}
+
+def matcher(r: Rexp, s: List[Char]) : Boolean =
+  if (s == Nil) nullable(r) else fin(mat(r, s))
+
+def matcher2(r: Rexp, s: List[Char]) : Rexp =
+  if (s == Nil)
+     if(nullable(r)) r else ZERO 
+     else mat(r, s)
+
+
+
+// testing bitcodes
+@main
+def test1() = {
+    val rexp = intern(STAR( ALT( ALT("a","b") , "c" ) ))
+
+    println("=============== Test ===============")
+    val s="abc".toList
+    println(s"String: $s\n")
+    val finReg=matcher2(rexp, s)
+    println(s"Original size=${size(rexp)} Result= ${fin(finReg)} \n")
+
+    for (i <- s.indices) {
+    println(s"${i + 1}- =shift ${s(i)}=")
+    val sPart = s.take(i + 1)
+    println(pp(mat(rexp, sPart)))
+    }
+
+    println("\n=============== Final Reg ===============n")
+    println(s"Size=${size(finReg)} , Tree= \n ${pp(finReg)}\n")
+    println("\n=============== bitcodes ===============n")
+
+    val mkepsValue = mkeps(finReg)
+    println(s"mkeps= $mkepsValue")
+    val decodeValue=decode(rexp,mkepsValue)
+    println(s"decode=$decodeValue")  
+
+   /*  println("\n=============== EVIL ===============n")
+
+    val EVIL2 = STAR(STAR("a" | "b" ))
+
+    val finReg2=matcher2(EVIL2, "aa".toList)
+    println(pp(finReg2))
+    val mkepsEvilValue = mkeps(finReg2)
+    println(s"mkeps= $mkepsEvilValue")
+    val decodeEvilValue=decode(EVIL2,mkepsEvilValue)
+    println(s"decode=$decodeEvilValue") */
+}
+
+val EVIL2 = SEQ(STAR(STAR(CHAR('a'))), CHAR('b'))
+
+@main
+def test2() = {
+ // for (i <- 0 to 7000000 by 500000) {
+ // }
+ //:+ 'b'
+  val i=1000
+  println(f"$i: ${time_needed(2, matcher(EVIL2, ("a" * i).toList))}%.5f")
+
+} 
+
+enum VALUE {
+  case ZEROV
+  case ONEV
+  case CHARV(c: Char)
+  case UNMARKED(s:String)
+  case SEQV(v1: VALUE, r2: VALUE )
+  case LEFT(v: VALUE)
+  case RIGHT(v: VALUE)
+  case STARV(vs: List[VALUE])
+}
+import VALUE._
+
+def decode(r: Rexp, bs: List[Int]): (VALUE, List[Int]) = r match {
+  case ONE => (ONEV, bs) // not sure this should be included
+  case CHAR(c, _) => (CHARV(c), bs) // (2) decode (c) bs = (Char(c), bs)
+  case ALT(r1, r2,_) => bs match {
+    case 0 :: bs1 => // (3) decode (r1 + r2) 0 :: bs =  (Left(v), bs')  where decode r1 bs => v,bs' 
+        val (v, bsp) = decode(r1, bs1)
+        (LEFT(v), bsp) 
+    case 1 :: bs1 => // (4) decode (r1 + r2) 1 :: bs = (Right(v), bs') where decode r2 bs => v,bs'
+        val (v, bsp) = decode(r2, bs1)
+        (RIGHT(v), bsp)
+    case x =>
+      (ZEROV, bs) // in case of something else, may need to remove it but just incase
+  }
+  case SEQ(r1, r2,_) =>  // (5) decode (r1 · r2) bs = (Seq(v1, v2), bs3) where decode r1 bs => v1,bs2 and decode r2 bs2 =>v2,bs3 
+    val (v1, bs2) = decode(r1, bs)
+    val (v2, bs3) = decode(r2, bs2)
+    (SEQV(v1, v2), bs3) 
+
+  case STAR(r,_) => bs match {
+    case 1 :: bs1 => 
+      (STARV(List()), bs1) // terminate recursion for STAR
+    case 0 :: bs1 =>   
+      val (v, bs2) = decode(r, bs1)
+      val (STARV(vs), bsv) = decode(STAR(r,bs2), bs2) 
+      (STARV(v :: vs), bsv) 
+    case _ => 
+      (STARV(List()), bs) // Edge case: No matches in STAR
+    }// end of match r
+}
+
+def mkeps(r: Rexp): List[Int] = r match {
+    case ONE => List() 
+    case CHAR(_, bs) => List() 
+    case POINT(CHAR(c,b), bs) => bs
+    case POINT(r , bs) => bs
+    case ALT(r1, r2, bs) =>
+        if (fin(r1))  bs ++ mkeps(r1) 
+        else if (fin(r2)) bs ++ mkeps(r2) 
+        else List() //bs
+    case SEQ(r1, r2, bs) =>
+      if (fin(r1) && nullable(r2)) bs ++ mkeps(r1) ++ mkeps(r2) 
+      else if (fin(r2)) bs ++  mkeps(r2)
+      else List() //bs
+    case STAR(r, bs) =>
+        //r match case point add zero else 1 ? also tag?
+        if (fin(r)) bs  ++ List(1) // ++mkeps_marked2(r)++
+        else List() 
+    case NTIMES(r, n, counter, bs) =>
+        if (counter == n && fin(r)) bs ++ mkeps(r) 
+        else List() //bs
+    case ZERO => List() 
+}
+
+def fuse(cs: List[Int], r: Rexp): Rexp = r match {
+    case ZERO => ZERO
+    case ONE => ONE
+    case CHAR(c,bs) => CHAR(c, cs ++ bs)
+    case POINT(r, bs) => POINT(r, cs ++ bs)
+    case ALT(r1, r2, bs) => ALT(r1, r2, cs ++ bs)
+    case SEQ(r1, r2, bs) => SEQ(r1, r2, cs ++ bs)
+    case STAR(r, bs) => STAR(r, cs ++ bs)
+    case NTIMES(r, n, counter, bs) => NTIMES(fuse(cs, r), n, counter, cs ++ bs)
+}
+
+def intern(r: Rexp) : Rexp = r match{
+  case ZERO => ZERO
+  case ONE => ONE
+  case CHAR(c,_) => CHAR(c,List())
+  case ALT(r1, r2,bs) => 
+    ALT(fuse(List(0), intern(r1)), fuse(List(1), intern(r2)), List())
+  case SEQ(r1, r2,bs) => SEQ(intern(r1),intern(r2),List())
+  case STAR(r,bs) => STAR(intern(r),List())
+  case NTIMES(r, n,counter,bs) => NTIMES(intern(r),n,counter, List())
+}
+
+def size(r: Rexp) : Int = r match {
+  case ZERO => 1
+  case ONE => 1
+  case CHAR(_,_) => 1
+  case ALT(r1, r2,_) => 1 + size(r1) + size(r2)
+  case SEQ(r1, r2,_) => 1 + size(r1) + size(r2)
+  case STAR(r,_) => 1 + size(r)
+  case NTIMES(r,n,counter,_) => 1 + size(r) 
+  case POINT(r,_) => 1 + size(r)}
+
+// some syntax sugar for regexes
+def charlist2rexp(s : List[Char]): Rexp = s match {
+  case Nil => ONE
+  case c::Nil => CHAR(c)
+  case c::s => SEQ(CHAR(c), charlist2rexp(s))
+}
+// strings are coerced into Rexps
+given Conversion[String, Rexp] = s => charlist2rexp(s.toList)
+
+//val ABCD : Rexp = "abcd"
+
+extension (r: Rexp) {
+  def | (s: Rexp) = ALT(r, s)
+  def % = STAR(r)
+  def ~ (s: Rexp) = SEQ(r, s)
+}
+
+// pretty-printing REGs
+def implode(ss: Seq[String]) = ss.mkString("\n")
+def explode(s: String) = s.split("\n").toList
+
+def lst(s: String) : String = explode(s) match {
+  case hd :: tl => implode(" └" ++ hd :: tl.map("  " ++ _))
+  case Nil => ""
+}
+
+def mid(s: String) : String = explode(s) match {
+  case hd :: tl => implode(" ├" ++ hd :: tl.map(" │" ++ _))
+  case Nil => ""
+}
+
+def indent(ss: Seq[String]) : String = ss match {
+  case init :+ last => implode(init.map(mid) :+ lst(last))
+  case _ => "" 
+}
+
+def pp(e: Rexp) : String = e match {
+  case ZERO => "0\n"
+  case ONE => "1\n"
+  case CHAR(c,bs) => s"$c bs=$bs\n"
+  case POINT(CHAR(c,b),bs) => s"•$c {bs=$bs , charb=$b  }" 
+  case ALT(r1, r2,bs) => s"ALT {bs=$bs}\n" ++ pps(r1, r2)
+  case SEQ(r1, r2,bs) => s"SEQ {bs=$bs}\n" ++ pps(r1, r2)
+  case STAR(r,bs) => "STAR {bs=$bs}\n" ++ pps(r)
+  case NTIMES(r, n,counter,bs) => 
+    s"NTIMES{$n} {counter=$counter bs=$bs}\n" ++ pps(r)
+  case POINT(r,bs) =>pp(r)
+}
+def pps(es: Rexp*) = indent(es.map(pp))
+
+def time_needed[T](i: Int, code: => T) = {
+  val start = System.nanoTime()
+  for (j <- 1 to i) code
+  val end = System.nanoTime()
+  (end - start) / (i * 1.0e9)
+}

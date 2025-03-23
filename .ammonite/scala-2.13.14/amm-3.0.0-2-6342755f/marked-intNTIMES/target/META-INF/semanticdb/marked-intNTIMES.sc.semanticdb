@@ -1,5 +1,5 @@
 
-‰Úmarked-intNTIMES.scâeimport scala.compiletime.ops.string
+‹Ûmarked-intNTIMES.scïeimport scala.compiletime.ops.string
 
 enum Rexp {
   case ZERO
@@ -354,6 +354,7 @@ def time_needed[T](i: Int, code: => T) = {
 
 //@arg(doc = "Test (a?{n}) (a{n})")
 
+@main
 def test1() = {
   for (i <- 0 to 11000 by 1000) {
     println(f"$i: ${time_needed(2, matcher(EVIL1(i), ("a" * i).toList))}%.5f")
@@ -362,6 +363,7 @@ def test1() = {
 
 //@arg(doc = "Test (a*)* b")
 
+@main
 def test2() = {
   for (i <- 0 to 7000000 by 500000) {
     println(f"$i: ${time_needed(2, matcher(EVIL2, ("a" * i).toList))}%.5f")
@@ -1779,12 +1781,14 @@ scala/Int#*-
 6ammonite/$file/`marked-intNTIMES`.time_needed().(code)scala/Double#í: *'
 local146*iÄä"
 
-scala/Int#*U
-*ammonite/$file/`marked-intNTIMES`.test1().*test1Ää scala/Unit#í: *'
+scala/Int#*k
+*ammonite/$file/`marked-intNTIMES`.test1().*test1j
+mainargs/main#Ää scala/Unit#í: *'
 local147*iÄä"
 
-scala/Int#*U
-*ammonite/$file/`marked-intNTIMES`.test2().*test2Ää scala/Unit#í: *Q
+scala/Int#*k
+*ammonite/$file/`marked-intNTIMES`.test2().*test2j
+mainargs/main#Ää scala/Unit#í: *Q
 (ammonite/$file/`marked-intNTIMES`.all().*allÄä scala/Unit#í: *
 0ammonite/$file/`marked-intNTIMES`.implode().(ss)*ssÄäA"?
 =;scala/collection/immutable/Seq#scala/Predef.String#*î
@@ -3545,539 +3549,525 @@ scala/Int#2C
 
 ﬁﬁ scala/Int#`*`(+6).2@
 
-⁄⁄ 0ammonite/$file/`marked-intNTIMES`.time_needed().2+
+⁄⁄ 0ammonite/$file/`marked-intNTIMES`.time_needed().2
 
-‰‰ scala/runtime/RichInt#to().26
+„„ mainargs/main#2+
 
-‰‰ &scala/collection/immutable/Range#by().2
+ÂÂ scala/runtime/RichInt#to().26
 
-‰‰ local1462)
+ÂÂ &scala/collection/immutable/Range#by().2
 
-ÂÂ scala/Predef.println(+1).2(
+ÂÂ local1462)
 
-ÂÂ scala/StringContext#f().2
+ÊÊ scala/Predef.println(+1).2(
 
-ÂÂ local1462@
+ÊÊ scala/StringContext#f().2
 
-ÂÂ 0ammonite/$file/`marked-intNTIMES`.time_needed().2<
+ÊÊ local1462@
 
-Â#Â *,ammonite/$file/`marked-intNTIMES`.matcher().2:
+ÊÊ 0ammonite/$file/`marked-intNTIMES`.time_needed().2<
 
-Â+Â 0*ammonite/$file/`marked-intNTIMES`.EVIL1().2
+Ê#Ê *,ammonite/$file/`marked-intNTIMES`.matcher().2:
 
-Â1Â 2local14621
+Ê+Ê 0*ammonite/$file/`marked-intNTIMES`.EVIL1().2
 
-Â:Â ;!scala/collection/StringOps#`*`().2
+Ê1Ê 2local14621
 
-Â<Â =local1462:
+Ê:Ê ;!scala/collection/StringOps#`*`().2
 
-Â?Â E*scala/collection/IterableOnceOps#toList().2:
+Ê<Ê =local1462:
 
-„„ 	*ammonite/$file/`marked-intNTIMES`.test1().2+
+Ê?Ê E*scala/collection/IterableOnceOps#toList().2:
 
-ÏÏ scala/runtime/RichInt#to().26
+‰‰ 	*ammonite/$file/`marked-intNTIMES`.test1().2
 
-ÏÏ &scala/collection/immutable/Range#by().2
+ÏÏ mainargs/main#2+
 
-ÏÏ local1472)
+ÓÓ scala/runtime/RichInt#to().26
 
-ÌÌ scala/Predef.println(+1).2(
+ÓÓ &scala/collection/immutable/Range#by().2
 
-ÌÌ scala/StringContext#f().2
+ÓÓ local1472)
 
-ÌÌ local1472@
+ÔÔ scala/Predef.println(+1).2(
 
-ÌÌ 0ammonite/$file/`marked-intNTIMES`.time_needed().2<
+ÔÔ scala/StringContext#f().2
 
-Ì#Ì *,ammonite/$file/`marked-intNTIMES`.matcher().28
+ÔÔ local1472@
 
-Ì+Ì 0(ammonite/$file/`marked-intNTIMES`.EVIL2.21
+ÔÔ 0ammonite/$file/`marked-intNTIMES`.time_needed().2<
 
-Ì7Ì 8!scala/collection/StringOps#`*`().2
+Ô#Ô *,ammonite/$file/`marked-intNTIMES`.matcher().28
 
-Ì9Ì :local1472:
+Ô+Ô 0(ammonite/$file/`marked-intNTIMES`.EVIL2.21
 
-Ì<Ì B*scala/collection/IterableOnceOps#toList().2:
+Ô7Ô 8!scala/collection/StringOps#`*`().2
 
-ÎÎ 	*ammonite/$file/`marked-intNTIMES`.test2().2:
+Ô9Ô :local1472:
 
-ÛÛ *ammonite/$file/`marked-intNTIMES`.test1().2:
+Ô<Ô B*scala/collection/IterableOnceOps#toList().2:
 
-ÛÛ *ammonite/$file/`marked-intNTIMES`.test2().28
+ÌÌ 	*ammonite/$file/`marked-intNTIMES`.test2().2:
 
-ÛÛ (ammonite/$file/`marked-intNTIMES`.all().2"
+ıı *ammonite/$file/`marked-intNTIMES`.test1().2:
 
-ˆˆ scala/package.Seq#2$
+ıı *ammonite/$file/`marked-intNTIMES`.test2().28
 
-ˆˆ scala/Predef.String#2@
+ıı (ammonite/$file/`marked-intNTIMES`.all().2"
 
-ˆˆ 0ammonite/$file/`marked-intNTIMES`.implode().(ss)2@
+¯¯ scala/package.Seq#2$
 
-ˆˆ !0ammonite/$file/`marked-intNTIMES`.implode().(ss)2>
+¯¯ scala/Predef.String#2@
 
-ˆ"ˆ *.scala/collection/IterableOnceOps#mkString(+1).2<
+¯¯ 0ammonite/$file/`marked-intNTIMES`.implode().(ss)2@
 
-ˆˆ ,ammonite/$file/`marked-intNTIMES`.implode().2$
+¯¯ !0ammonite/$file/`marked-intNTIMES`.implode().(ss)2>
 
-˜˜ scala/Predef.String#2?
+¯"¯ *.scala/collection/IterableOnceOps#mkString(+1).2<
 
-˜˜ /ammonite/$file/`marked-intNTIMES`.explode().(s)2?
+¯¯ ,ammonite/$file/`marked-intNTIMES`.implode().2$
 
-˜˜ /ammonite/$file/`marked-intNTIMES`.explode().(s)2+
+˘˘ scala/Predef.String#2?
 
-˜˜  java/lang/String#split(+1).2:
+˘˘ /ammonite/$file/`marked-intNTIMES`.explode().(s)2?
 
-˜'˜ -*scala/collection/IterableOnceOps#toList().2<
+˘˘ /ammonite/$file/`marked-intNTIMES`.explode().(s)2+
 
-˜˜ ,ammonite/$file/`marked-intNTIMES`.explode().2$
+˘˘  java/lang/String#split(+1).2:
 
-˘˘ scala/Predef.String#2;
+˘'˘ -*scala/collection/IterableOnceOps#toList().2<
 
-˘˘ 	+ammonite/$file/`marked-intNTIMES`.lst().(s)2$
+˘˘ ,ammonite/$file/`marked-intNTIMES`.explode().2$
 
-˘˘ scala/Predef.String#2<
+˚˚ scala/Predef.String#2;
 
-˘˘ %,ammonite/$file/`marked-intNTIMES`.explode().2;
+˚˚ 	+ammonite/$file/`marked-intNTIMES`.lst().(s)2$
 
-˘&˘ '+ammonite/$file/`marked-intNTIMES`.lst().(s)2#
+˚˚ scala/Predef.String#2<
 
-˙
-˙ scala/package.`::`.2
+˚˚ %,ammonite/$file/`marked-intNTIMES`.explode().2;
 
-˙˙ 	local1482
+˚&˚ '+ammonite/$file/`marked-intNTIMES`.lst().(s)2#
 
-˙˙ local1492<
+¸
+¸ scala/package.`::`.2
 
-˙˙ ,ammonite/$file/`marked-intNTIMES`.implode().2
+¸¸ 	local1482
 
-˙)˙ +local14926
+¸¸ local1492<
 
-˙,˙ /&scala/collection/immutable/List#map().24
+¸¸ ,ammonite/$file/`marked-intNTIMES`.implode().2
 
-˙5˙ 7$scala/collection/StringOps#`++`(+2).2"
+¸)¸ +local14926
 
-˚˚ 
+¸,¸ /&scala/collection/immutable/List#map().24
+
+¸5¸ 7$scala/collection/StringOps#`++`(+2).2"
+
+˝˝ 
 scala/package.Nil.28
 
-˘˘ (ammonite/$file/`marked-intNTIMES`.lst().2$
+˚˚ (ammonite/$file/`marked-intNTIMES`.lst().2$
 
-˛˛ scala/Predef.String#2;
+ÄÄ scala/Predef.String#2;
 
-˛˛ 	+ammonite/$file/`marked-intNTIMES`.mid().(s)2$
+ÄÄ 	+ammonite/$file/`marked-intNTIMES`.mid().(s)2$
 
-˛˛ scala/Predef.String#2<
+ÄÄ scala/Predef.String#2<
 
-˛˛ %,ammonite/$file/`marked-intNTIMES`.explode().2;
+ÄÄ %,ammonite/$file/`marked-intNTIMES`.explode().2;
 
-˛&˛ '+ammonite/$file/`marked-intNTIMES`.mid().(s)2#
+Ä&Ä '+ammonite/$file/`marked-intNTIMES`.mid().(s)2#
 
-ˇ
-ˇ scala/package.`::`.2
+Å
+Å scala/package.`::`.2
 
-ˇˇ 	local1512
+ÅÅ 	local1512
 
-ˇˇ local1522<
+ÅÅ local1522<
 
-ˇˇ ,ammonite/$file/`marked-intNTIMES`.implode().2
+ÅÅ ,ammonite/$file/`marked-intNTIMES`.implode().2
 
-ˇ)ˇ +local15226
+Å)Å +local15226
 
-ˇ,ˇ /&scala/collection/immutable/List#map().24
+Å,Å /&scala/collection/immutable/List#map().24
 
-ˇ5ˇ 7$scala/collection/StringOps#`++`(+2).2"
+Å5Å 7$scala/collection/StringOps#`++`(+2).2"
 
-ÄÄ 
+ÇÇ 
 scala/package.Nil.28
 
-˛˛ (ammonite/$file/`marked-intNTIMES`.mid().2"
+ÄÄ (ammonite/$file/`marked-intNTIMES`.mid().2"
 
-ÉÉ scala/package.Seq#2$
+ÖÖ scala/package.Seq#2$
 
-ÉÉ scala/Predef.String#2?
+ÖÖ scala/Predef.String#2?
 
-ÉÉ /ammonite/$file/`marked-intNTIMES`.indent().(ss)2$
+ÖÖ /ammonite/$file/`marked-intNTIMES`.indent().(ss)2$
 
-ÉÉ $scala/Predef.String#2?
+ÖÖ $scala/Predef.String#2?
 
-É'É )/ammonite/$file/`marked-intNTIMES`.indent().(ss)2#
+Ö'Ö )/ammonite/$file/`marked-intNTIMES`.indent().(ss)2#
 
-ÑÑ scala/package.`:+`.2
+ÜÜ scala/package.`:+`.2
 
-ÑÑ local1542
+ÜÜ local1542
 
-ÑÑ local1552<
+ÜÜ local1552<
 
-ÑÑ ,ammonite/$file/`marked-intNTIMES`.implode().2
+ÜÜ ,ammonite/$file/`marked-intNTIMES`.implode().2
 
-ÑÑ #local15423
+ÜÜ #local15423
 
-Ñ$Ñ '#scala/collection/IterableOps#map().28
+Ü$Ü '#scala/collection/IterableOps#map().28
 
-Ñ(Ñ +(ammonite/$file/`marked-intNTIMES`.mid().2/
+Ü(Ü +(ammonite/$file/`marked-intNTIMES`.mid().2/
 
-Ñ-Ñ /scala/collection/SeqOps#`:+`().28
+Ü-Ü /scala/collection/SeqOps#`:+`().28
 
-Ñ0Ñ 3(ammonite/$file/`marked-intNTIMES`.lst().2
+Ü0Ü 3(ammonite/$file/`marked-intNTIMES`.lst().2
 
-Ñ4Ñ 8local1552;
+Ü4Ü 8local1552;
 
-ÉÉ 
+ÖÖ 
 +ammonite/$file/`marked-intNTIMES`.indent().27
 
-à
-à 'ammonite/$file/`marked-intNTIMES`.Rexp#2:
+ä
+ä 'ammonite/$file/`marked-intNTIMES`.Rexp#2:
 
-àà *ammonite/$file/`marked-intNTIMES`.pp().(e)2$
+ää *ammonite/$file/`marked-intNTIMES`.pp().(e)2$
 
-àà scala/Predef.String#2:
+ää scala/Predef.String#2:
 
-àà *ammonite/$file/`marked-intNTIMES`.pp().(e)2<
+ää *ammonite/$file/`marked-intNTIMES`.pp().(e)2<
 
-ââ ,ammonite/$file/`marked-intNTIMES`.Rexp.ZERO.2;
-
-ää 
-+ammonite/$file/`marked-intNTIMES`.Rexp.ONE.2<
-
-ãã ,ammonite/$file/`marked-intNTIMES`.Rexp.CHAR.2
-
-ãã local1572
-
-ãã local1582
-
-ãã #local15824
-
-ã$ã ($scala/collection/IterableOps#head().2#
-
-ã(ã *scala/Int#`>=`(+3).2(
-
-ã-ã .scala/StringContext#s().2
-
-ã1ã 2local1572
-
-ã6ã <local1582(
-
-ãEã Fscala/StringContext#s().2
-
-ãHã Ilocal1572
-
-ãMã Slocal1582;
+ãã ,ammonite/$file/`marked-intNTIMES`.Rexp.ZERO.2;
 
 åå 
++ammonite/$file/`marked-intNTIMES`.Rexp.ONE.2<
+
+çç ,ammonite/$file/`marked-intNTIMES`.Rexp.CHAR.2
+
+çç local1572
+
+çç local1582
+
+çç #local15824
+
+ç$ç ($scala/collection/IterableOps#head().2#
+
+ç(ç *scala/Int#`>=`(+3).2(
+
+ç-ç .scala/StringContext#s().2
+
+ç1ç 2local1572
+
+ç6ç <local1582(
+
+çEç Fscala/StringContext#s().2
+
+çHç Ilocal1572
+
+çMç Slocal1582;
+
+éé 
 +ammonite/$file/`marked-intNTIMES`.Rexp.ALT.2
 
-åå local1592
+éé local1592
 
-åå local16024
+éé local16024
 
-åå  $scala/collection/StringOps#`++`(+2).28
+éé  $scala/collection/StringOps#`++`(+2).28
 
-å!å $(ammonite/$file/`marked-intNTIMES`.pps().2
+é!é $(ammonite/$file/`marked-intNTIMES`.pps().2
 
-å%å 'local1592
+é%é 'local1592
 
-å)å +local1602;
+é)é +local1602;
 
-çç 
+èè 
 +ammonite/$file/`marked-intNTIMES`.Rexp.SEQ.2
 
-çç local1612
+èè local1612
 
-çç local16224
+èè local16224
 
-çç  $scala/collection/StringOps#`++`(+2).28
+èè  $scala/collection/StringOps#`++`(+2).28
 
-ç!ç $(ammonite/$file/`marked-intNTIMES`.pps().2
+è!è $(ammonite/$file/`marked-intNTIMES`.pps().2
 
-ç%ç 'local1612
+è%è 'local1612
 
-ç)ç +local1622<
+è)è +local1622<
 
-éé ,ammonite/$file/`marked-intNTIMES`.Rexp.STAR.2
+êê ,ammonite/$file/`marked-intNTIMES`.Rexp.STAR.2
 
-éé local16324
+êê local16324
 
-éé $scala/collection/StringOps#`++`(+2).28
+êê $scala/collection/StringOps#`++`(+2).28
 
-éé !(ammonite/$file/`marked-intNTIMES`.pps().2
+êê !(ammonite/$file/`marked-intNTIMES`.pps().2
 
-é"é #local1632>
+ê"ê #local1632>
 
-èè .ammonite/$file/`marked-intNTIMES`.Rexp.NTIMES.2
+ëë .ammonite/$file/`marked-intNTIMES`.Rexp.NTIMES.2
 
-èè local1642
+ëë local1642
 
-èè local1652
+ëë local1652
 
-èè local1662
+ëë local1662
 
-èè local1672
+ëë local1672
 
-è(è )local1652#
+ë(ë )local1652#
 
-è*è ,scala/Int#`==`(+3).2%
+ë*ë ,scala/Int#`==`(+3).2%
 
-è/è 1scala/Boolean#`&&`().28
+ë/ë 1scala/Boolean#`&&`().28
 
-è2è 5(ammonite/$file/`marked-intNTIMES`.fin().2
+ë2ë 5(ammonite/$file/`marked-intNTIMES`.fin().2
 
-è6è 7local1642#
+ë6ë 7local1642#
 
-è9è ;scala/Int#`==`(+3).2(
+ë9ë ;scala/Int#`==`(+3).2(
 
-è?è @scala/StringContext#s().2
+ë?ë @scala/StringContext#s().2
 
-èMè Nlocal1652
+ëMë Nlocal1652
 
-èQè Vlocal1662
+ëQë Vlocal1662
 
-è`è glocal16724
+ë`ë glocal16724
 
-èkè m$scala/collection/StringOps#`++`(+2).28
+ëkë m$scala/collection/StringOps#`++`(+2).28
 
-ènè q(ammonite/$file/`marked-intNTIMES`.pps().2
+ënë q(ammonite/$file/`marked-intNTIMES`.pps().2
 
-èrè slocal1642(
+ërë slocal1642(
 
-ê	ê 
+í	í 
 scala/StringContext#s().2
 
-êê local1652
+íí local1652
 
-êê local1662
+íí local1662
 
-ê(ê /local16724
+í(í /local16724
 
-ê3ê 5$scala/collection/StringOps#`++`(+2).28
+í3í 5$scala/collection/StringOps#`++`(+2).28
 
-ê6ê 9(ammonite/$file/`marked-intNTIMES`.pps().2
+í6í 9(ammonite/$file/`marked-intNTIMES`.pps().2
 
-ê:ê ;local1642<
+í:í ;local1642<
 
-ëë ,ammonite/$file/`marked-intNTIMES`.Rexp.INIT.2
+ìì ,ammonite/$file/`marked-intNTIMES`.Rexp.INIT.2
 
-ëë local16824
+ìì local16824
 
-ëë $scala/collection/StringOps#`++`(+2).28
+ìì $scala/collection/StringOps#`++`(+2).28
 
-ëë !(ammonite/$file/`marked-intNTIMES`.pps().2
+ìì !(ammonite/$file/`marked-intNTIMES`.pps().2
 
-ë"ë #local16827
+ì"ì #local16827
 
-àà 'ammonite/$file/`marked-intNTIMES`.pp().27
+ää 'ammonite/$file/`marked-intNTIMES`.pp().27
 
-ìì 'ammonite/$file/`marked-intNTIMES`.Rexp#2<
+ïï 'ammonite/$file/`marked-intNTIMES`.Rexp#2<
 
-ìì 
+ïï 
 ,ammonite/$file/`marked-intNTIMES`.pps().(es)2;
 
-ìì +ammonite/$file/`marked-intNTIMES`.indent().2<
+ïï +ammonite/$file/`marked-intNTIMES`.indent().2<
 
-ìì ,ammonite/$file/`marked-intNTIMES`.pps().(es)23
+ïï ,ammonite/$file/`marked-intNTIMES`.pps().(es)23
 
-ìì "#scala/collection/IterableOps#map().27
+ïï "#scala/collection/IterableOps#map().27
 
-ì#ì %'ammonite/$file/`marked-intNTIMES`.pp().28
+ï#ï %'ammonite/$file/`marked-intNTIMES`.pp().28
 
-ìì (ammonite/$file/`marked-intNTIMES`.pps().2
+ïï (ammonite/$file/`marked-intNTIMES`.pps().2
 
-££ 
+•• 
 scala/Int#2B
 
-££ 2ammonite/$file/`marked-intNTIMES`.unshift().(mark)27
+•• 2ammonite/$file/`marked-intNTIMES`.unshift().(mark)27
 
-££ 'ammonite/$file/`marked-intNTIMES`.Rexp#2?
+•• 'ammonite/$file/`marked-intNTIMES`.Rexp#2?
 
-££ /ammonite/$file/`marked-intNTIMES`.unshift().(r)2
+•• /ammonite/$file/`marked-intNTIMES`.unshift().(r)2
 
-£#£ 'scala/Char#2?
+•#• 'scala/Char#2?
 
-£ £ !/ammonite/$file/`marked-intNTIMES`.unshift().(c)27
+• • !/ammonite/$file/`marked-intNTIMES`.unshift().(c)27
 
-£*£ .'ammonite/$file/`marked-intNTIMES`.Rexp#2?
+•*• .'ammonite/$file/`marked-intNTIMES`.Rexp#2?
 
-£1£ 2/ammonite/$file/`marked-intNTIMES`.unshift().(r)2<
+•1• 2/ammonite/$file/`marked-intNTIMES`.unshift().(r)2<
 
-§§ ,ammonite/$file/`marked-intNTIMES`.Rexp.ZERO.2<
+¶¶ ,ammonite/$file/`marked-intNTIMES`.Rexp.ZERO.2<
 
-§§ ,ammonite/$file/`marked-intNTIMES`.Rexp.ZERO.2;
+¶¶ ,ammonite/$file/`marked-intNTIMES`.Rexp.ZERO.2;
 
-•• 
+ßß 
 +ammonite/$file/`marked-intNTIMES`.Rexp.ONE.2;
 
-•• +ammonite/$file/`marked-intNTIMES`.Rexp.ONE.2<
+ßß +ammonite/$file/`marked-intNTIMES`.Rexp.ONE.2<
 
-¶¶ ,ammonite/$file/`marked-intNTIMES`.Rexp.CHAR.2
+®® ,ammonite/$file/`marked-intNTIMES`.Rexp.CHAR.2
 
-¶¶ local1702
+®® local1702
 
-¶¶ local1712
+®® local1712
 
-©© local1702$
+´´ local1702$
 
-©© scala/Char#`==`(+2).2?
+´´ scala/Char#`==`(+2).2?
 
-©© /ammonite/$file/`marked-intNTIMES`.unshift().(c)2B
+´´ /ammonite/$file/`marked-intNTIMES`.unshift().(c)2B
 
-™™ 2ammonite/$file/`marked-intNTIMES`.unshift().(mark)2#
+¨¨ 2ammonite/$file/`marked-intNTIMES`.unshift().(mark)2#
 
-™™ scala/Int#`>=`(+3).2"
+¨¨ scala/Int#`>=`(+3).2"
 
-¨¨ scala/Int#`*`(+3).2
+ÆÆ scala/Int#`*`(+3).2
 
-¨¨ !local17124
+ÆÆ !local17124
 
-¨"¨ &$scala/collection/IterableOps#head().2
+Æ"Æ &$scala/collection/IterableOps#head().2
 
-©© local1722<
+´´ local1722<
 
-∞∞ ,ammonite/$file/`marked-intNTIMES`.Rexp.CHAR.2
+≤≤ ,ammonite/$file/`marked-intNTIMES`.Rexp.CHAR.2
 
-∞	∞ local1702
+≤	≤ local1702
 
-∞∞ local17124
+≤≤ local17124
 
-∞∞ #$scala/collection/IterableOps#tail().2
+≤≤ #$scala/collection/IterableOps#tail().2
 
-∞∞ local1722;
+≤≤ local1722;
 
-±± 
+≥≥ 
 +ammonite/$file/`marked-intNTIMES`.Rexp.ALT.2
 
-±± local1732
+≥≥ local1732
 
-±± local1742;
+≥≥ local1742;
 
-±± +ammonite/$file/`marked-intNTIMES`.Rexp.ALT.2<
+≥≥ +ammonite/$file/`marked-intNTIMES`.Rexp.ALT.2<
 
-±± !,ammonite/$file/`marked-intNTIMES`.unshift().2B
+≥≥ !,ammonite/$file/`marked-intNTIMES`.unshift().2B
 
-±"± &2ammonite/$file/`marked-intNTIMES`.unshift().(mark)2
+≥"≥ &2ammonite/$file/`marked-intNTIMES`.unshift().(mark)2
 
-±(± *local1732?
+≥(≥ *local1732?
 
-±,± -/ammonite/$file/`marked-intNTIMES`.unshift().(c)2<
+≥,≥ -/ammonite/$file/`marked-intNTIMES`.unshift().(c)2<
 
-±0± 7,ammonite/$file/`marked-intNTIMES`.unshift().2B
+≥0≥ 7,ammonite/$file/`marked-intNTIMES`.unshift().2B
 
-±8± <2ammonite/$file/`marked-intNTIMES`.unshift().(mark)2
+≥8≥ <2ammonite/$file/`marked-intNTIMES`.unshift().(mark)2
 
-±>± @local1742?
+≥>≥ @local1742?
 
-±B± C/ammonite/$file/`marked-intNTIMES`.unshift().(c)2;
+≥B≥ C/ammonite/$file/`marked-intNTIMES`.unshift().(c)2;
 
-≤≤ 
+¥¥ 
 +ammonite/$file/`marked-intNTIMES`.Rexp.SEQ.2
 
-≤≤ local1752
+¥¥ local1752
 
-≤≤ local1762;
+¥¥ local1762;
 
-≥≥ 	+ammonite/$file/`marked-intNTIMES`.Rexp.SEQ.2<
+µµ 	+ammonite/$file/`marked-intNTIMES`.Rexp.SEQ.2<
 
-≥
-≥ ,ammonite/$file/`marked-intNTIMES`.unshift().2B
+µ
+µ ,ammonite/$file/`marked-intNTIMES`.unshift().2B
 
-≥≥ 2ammonite/$file/`marked-intNTIMES`.unshift().(mark)2
+µµ 2ammonite/$file/`marked-intNTIMES`.unshift().(mark)2
 
-≥≥ local1752?
+µµ local1752?
 
-≥≥ /ammonite/$file/`marked-intNTIMES`.unshift().(c)2<
+µµ /ammonite/$file/`marked-intNTIMES`.unshift().(c)2<
 
-≥ ≥ ',ammonite/$file/`marked-intNTIMES`.unshift().28
+µ µ ',ammonite/$file/`marked-intNTIMES`.unshift().28
 
-≥(≥ +(ammonite/$file/`marked-intNTIMES`.fin().2
+µ(µ +(ammonite/$file/`marked-intNTIMES`.fin().2
 
-≥,≥ .local1752
+µ,µ .local1752
 
-≥1≥ 3local1762?
+µ1µ 3local1762?
 
-≥5≥ 6/ammonite/$file/`marked-intNTIMES`.unshift().(c)2<
+µ5µ 6/ammonite/$file/`marked-intNTIMES`.unshift().(c)2<
 
-¥¥ ,ammonite/$file/`marked-intNTIMES`.Rexp.STAR.2
+∂∂ ,ammonite/$file/`marked-intNTIMES`.Rexp.STAR.2
 
-¥¥ local1772<
+∂∂ local1772<
 
-µµ ,ammonite/$file/`marked-intNTIMES`.Rexp.STAR.2<
+∑∑ ,ammonite/$file/`marked-intNTIMES`.Rexp.STAR.2<
 
-µ	µ ,ammonite/$file/`marked-intNTIMES`.unshift().2B
+∑	∑ ,ammonite/$file/`marked-intNTIMES`.unshift().2B
 
-µµ 2ammonite/$file/`marked-intNTIMES`.unshift().(mark)2
+∑∑ 2ammonite/$file/`marked-intNTIMES`.unshift().(mark)2
 
-µµ local1772?
+∑∑ local1772?
 
-µµ /ammonite/$file/`marked-intNTIMES`.unshift().(c)2>
+∑∑ /ammonite/$file/`marked-intNTIMES`.unshift().(c)2>
 
-∑∑ .ammonite/$file/`marked-intNTIMES`.Rexp.NTIMES.2
+ππ .ammonite/$file/`marked-intNTIMES`.Rexp.NTIMES.2
 
-∑∑ local1782
+ππ local1782
 
-∑∑ local1792
+ππ local1792
 
-∑∑ local1802
+ππ local1802
 
-∑∑  local1812
+ππ  local1812
 
-∏∏ 	local1792#
+∫∫ 	local1792#
 
-∏
-∏ scala/Int#`==`(+3).2>
+∫
+∫ scala/Int#`==`(+3).2>
 
-∏∏ .ammonite/$file/`marked-intNTIMES`.Rexp.NTIMES.2
+∫∫ .ammonite/$file/`marked-intNTIMES`.Rexp.NTIMES.2
 
-∏∏ local1782
+∫∫ local1782
 
-∏∏ local1792
+∫∫ local1792
 
-∏∏ !local1802
+∫∫ !local1802
 
-∏"∏ )local1812B
+∫"∫ )local1812B
 
-π
-π 2ammonite/$file/`marked-intNTIMES`.unshift().(mark)2"
+ª
+ª 2ammonite/$file/`marked-intNTIMES`.unshift().(mark)2"
 
-ππ scala/Int#`<`(+3).2%
+ªª scala/Int#`<`(+3).2%
 
-ππ scala/Boolean#`||`().28
+ªª scala/Boolean#`||`().28
 
-ππ (ammonite/$file/`marked-intNTIMES`.fin().2
+ªª (ammonite/$file/`marked-intNTIMES`.fin().2
 
-ππ local1782"
+ªª local1782"
 
-ππ scala/Int#`<`(+3).2B
+ªª scala/Int#`<`(+3).2B
 
-∫∫ 2ammonite/$file/`marked-intNTIMES`.unshift().(mark)2"
+ºº 2ammonite/$file/`marked-intNTIMES`.unshift().(mark)2"
 
-∫∫ scala/Int#`*`(+3).28
+ºº scala/Int#`*`(+3).28
 
-∫∫ (ammonite/$file/`marked-intNTIMES`.fin().2
+ºº (ammonite/$file/`marked-intNTIMES`.fin().2
 
-∫∫ local1782
+ºº local1782
 
-∫∫ local1822>
-
-ªª .ammonite/$file/`marked-intNTIMES`.Rexp.NTIMES.2<
-
-ªª ,ammonite/$file/`marked-intNTIMES`.unshift().2
-
-ªª local1822
-
-ªª local1782?
-
-ªª /ammonite/$file/`marked-intNTIMES`.unshift().(c)2
-
-ª!ª "local1792
-
-ª'ª ,local1802
-
-ª$ª %local1822
-
-ª-ª 4local1812"
-
-ª4ª 5scala/Int#`-`(+3).2>
+ºº local1822>
 
 ΩΩ .ammonite/$file/`marked-intNTIMES`.Rexp.NTIMES.2<
 
 ΩΩ ,ammonite/$file/`marked-intNTIMES`.unshift().2
+
+ΩΩ local1822
 
 ΩΩ local1782?
 
@@ -4087,108 +4077,126 @@ scala/Int#2B
 
 Ω'Ω ,local1802
 
-Ω-Ω 4local1812<
+Ω$Ω %local1822
 
-££ ,ammonite/$file/`marked-intNTIMES`.unshift().27
+Ω-Ω 4local1812"
 
-¬¬ 'ammonite/$file/`marked-intNTIMES`.Rexp#2@
+Ω4Ω 5scala/Int#`-`(+3).2>
 
-¬¬ 0ammonite/$file/`marked-intNTIMES`.unshift2().(r)27
+øø .ammonite/$file/`marked-intNTIMES`.Rexp.NTIMES.2<
 
-¬¬ 'ammonite/$file/`marked-intNTIMES`.Rexp#2@
+øø ,ammonite/$file/`marked-intNTIMES`.unshift().2
 
-¬¬ 0ammonite/$file/`marked-intNTIMES`.unshift2().(r)2<
+øø local1782?
 
-√√ ,ammonite/$file/`marked-intNTIMES`.Rexp.ZERO.2<
+øø /ammonite/$file/`marked-intNTIMES`.unshift().(c)2
 
-√√ ,ammonite/$file/`marked-intNTIMES`.Rexp.ZERO.2;
+ø!ø "local1792
 
-ƒƒ 
-+ammonite/$file/`marked-intNTIMES`.Rexp.ONE.2;
+ø'ø ,local1802
 
-ƒƒ +ammonite/$file/`marked-intNTIMES`.Rexp.ONE.2<
+ø-ø 4local1812<
 
-≈≈ ,ammonite/$file/`marked-intNTIMES`.Rexp.CHAR.2
+•• ,ammonite/$file/`marked-intNTIMES`.unshift().27
 
-≈≈ local1832
+ƒƒ 'ammonite/$file/`marked-intNTIMES`.Rexp#2@
 
-≈≈ local1842<
+ƒƒ 0ammonite/$file/`marked-intNTIMES`.unshift2().(r)27
 
-≈≈ ,ammonite/$file/`marked-intNTIMES`.Rexp.CHAR.2
+ƒƒ 'ammonite/$file/`marked-intNTIMES`.Rexp#2@
 
-≈≈ !local1832
+ƒƒ 0ammonite/$file/`marked-intNTIMES`.unshift2().(r)2<
 
-≈"≈ (local18424
+≈≈ ,ammonite/$file/`marked-intNTIMES`.Rexp.ZERO.2<
 
-≈)≈ -$scala/collection/IterableOps#tail().2;
+≈≈ ,ammonite/$file/`marked-intNTIMES`.Rexp.ZERO.2;
 
 ∆∆ 
++ammonite/$file/`marked-intNTIMES`.Rexp.ONE.2;
+
+∆∆ +ammonite/$file/`marked-intNTIMES`.Rexp.ONE.2<
+
+«« ,ammonite/$file/`marked-intNTIMES`.Rexp.CHAR.2
+
+«« local1832
+
+«« local1842<
+
+«« ,ammonite/$file/`marked-intNTIMES`.Rexp.CHAR.2
+
+«« !local1832
+
+«"« (local18424
+
+«)« -$scala/collection/IterableOps#tail().2;
+
+»» 
 +ammonite/$file/`marked-intNTIMES`.Rexp.ALT.2
 
-∆∆ local1852
+»» local1852
 
-∆∆ local1862;
+»» local1862;
 
-∆∆ +ammonite/$file/`marked-intNTIMES`.Rexp.ALT.2=
+»» +ammonite/$file/`marked-intNTIMES`.Rexp.ALT.2=
 
-∆∆ "-ammonite/$file/`marked-intNTIMES`.unshift2().2
+»» "-ammonite/$file/`marked-intNTIMES`.unshift2().2
 
-∆#∆ %local1852=
+»#» %local1852=
 
-∆(∆ 0-ammonite/$file/`marked-intNTIMES`.unshift2().2
+»(» 0-ammonite/$file/`marked-intNTIMES`.unshift2().2
 
-∆1∆ 3local1862;
+»1» 3local1862;
 
-«« 
+…… 
 +ammonite/$file/`marked-intNTIMES`.Rexp.SEQ.2
 
-«« local1872
+…… local1872
 
-«« local1882;
+…… local1882;
 
-«« +ammonite/$file/`marked-intNTIMES`.Rexp.SEQ.2=
+…… +ammonite/$file/`marked-intNTIMES`.Rexp.SEQ.2=
 
-«« "-ammonite/$file/`marked-intNTIMES`.unshift2().2
+…… "-ammonite/$file/`marked-intNTIMES`.unshift2().2
 
-«#« %local1872=
+…#… %local1872=
 
-«(« 0-ammonite/$file/`marked-intNTIMES`.unshift2().2
+…(… 0-ammonite/$file/`marked-intNTIMES`.unshift2().2
 
-«1« 3local1882<
+…1… 3local1882<
 
-»» ,ammonite/$file/`marked-intNTIMES`.Rexp.STAR.2
+   ,ammonite/$file/`marked-intNTIMES`.Rexp.STAR.2
 
-»» local1892<
+   local1892<
 
-»» ,ammonite/$file/`marked-intNTIMES`.Rexp.STAR.2=
+   ,ammonite/$file/`marked-intNTIMES`.Rexp.STAR.2=
 
-»» -ammonite/$file/`marked-intNTIMES`.unshift2().2
+   -ammonite/$file/`marked-intNTIMES`.unshift2().2
 
-» » !local1892>
+    !local1892>
 
-…… .ammonite/$file/`marked-intNTIMES`.Rexp.NTIMES.2
+ÀÀ .ammonite/$file/`marked-intNTIMES`.Rexp.NTIMES.2
 
-…… local1902
+ÀÀ local1902
 
-…… local1912
+ÀÀ local1912
 
-…… local1922
+ÀÀ local1922
 
-……  local1932>
+ÀÀ  local1932>
 
-…%… +.ammonite/$file/`marked-intNTIMES`.Rexp.NTIMES.2=
+À%À +.ammonite/$file/`marked-intNTIMES`.Rexp.NTIMES.2=
 
-…,… 4-ammonite/$file/`marked-intNTIMES`.unshift2().2
+À,À 4-ammonite/$file/`marked-intNTIMES`.unshift2().2
 
-…5… 6local1902
+À5À 6local1902
 
-…9… :local1912
+À9À :local1912
 
-…;… @local1922
+À;À @local1922
 
-…A… Hlocal1932=
+ÀAÀ Hlocal1932=
 
-¬¬ -ammonite/$file/`marked-intNTIMES`.unshift2().PZ f1a7622430f19d548c8079ec30c5af9eb]
+ƒƒ -ammonite/$file/`marked-intNTIMES`.unshift2().PZ 8f38da64f6462d513d388f77d102970ab]
 * .QBO
 =:;
 2
@@ -4298,213 +4306,213 @@ scala/Int#bq
 
 ‹‹ bN
 
-‰‰ @
+ÂÂ @
 >
 ,*
 (scala/LowPriorityImplicits#intWrapper().2
 
-‰‰ b0
+ÂÂ b0
 
-ÂÂ M"B 
+ÊÊ M"B 
 2
 
-ÂÂ M
+ÊÊ M
 scala/Any#b0
 
-ÂÂ "B 
+ÊÊ "B 
 2
 
-ÂÂ 
+ÊÊ 
 scala/Int#bN
 
-Â6Â =@
+Ê6Ê =@
 >
 ,*
 (scala/LowPriorityImplicits#wrapString().2
 
-Â6Â =bC
+Ê6Ê =bC
 
-Â6Â 95
+Ê6Ê 95
 3
 !
 scala/Predef.augmentString().2
 
-Â6Â 9bN
+Ê6Ê 9bN
 
-ÏÏ @
+ÓÓ @
 >
 ,*
 (scala/LowPriorityImplicits#intWrapper().2
 
-ÏÏ b0
+ÓÓ b0
 
-ÌÌ J"B 
+ÔÔ J"B 
 2
 
-ÌÌ J
+ÔÔ J
 scala/Any#b0
 
-ÌÌ "B 
+ÔÔ "B 
 2
 
-ÌÌ 
+ÔÔ 
 scala/Int#bN
 
-Ì3Ì :@
+Ô3Ô :@
 >
 ,*
 (scala/LowPriorityImplicits#wrapString().2
 
-Ì3Ì :bC
+Ô3Ô :bC
 
-Ì3Ì 65
+Ô3Ô 65
 3
 !
 scala/Predef.augmentString().2
 
-Ì3Ì 6bk
+Ô3Ô 6bk
 
-˜˜ &]
+˘˘ &]
 [
 IBG
 .,
 *scala/LowPriorityImplicits#wrapRefArray().java/lang/String#2
 
-˜˜ &bi
+˘˘ &bi
 
-˙
-˙ [BY
+¸
+¸ [BY
 @:>
 2
 
-˙
-˙ ,
+¸
+¸ ,
 *scala/collection/immutable/`::`.unapply().java/lang/String#b7
 
-˙&˙ :)B'
+¸&¸ :)B'
 2
 
-˙&˙ :java/lang/String#b7
+¸&¸ :java/lang/String#b7
 
-˙)˙ /)B'
+¸)¸ /)B'
 2
 
-˙)˙ /java/lang/String#bC
+¸)¸ /java/lang/String#bC
 
-˙0˙ 45
+¸0¸ 45
 3
 !
 scala/Predef.augmentString().2
 
-˙0˙ 4bi
+¸0¸ 4bi
 
-ˇ
-ˇ [BY
+Å
+Å [BY
 @:>
 2
 
-ˇ
-ˇ ,
+Å
+Å ,
 *scala/collection/immutable/`::`.unapply().java/lang/String#b7
 
-ˇ&ˇ :)B'
+Å&Å :)B'
 2
 
-ˇ&ˇ :java/lang/String#b7
+Å&Å :java/lang/String#b7
 
-ˇ)ˇ /)B'
+Å)Å /)B'
 2
 
-ˇ)ˇ /java/lang/String#bC
+Å)Å /java/lang/String#bC
 
-ˇ0ˇ 45
+Å0Å 45
 3
 !
 scala/Predef.augmentString().2
 
-ˇ0ˇ 4bï
+Å0Å 4bï
 
-ÑÑ ÜBÉ
+ÜÜ ÜBÉ
 >:<
 2
 
-ÑÑ *
+ÜÜ *
 (scala/collection/package.`:+`.unapply().java/lang/String#k“h
 86
 [A]	*AÄä&$scala/Nothing#
 scala/Any#,*scala/collection/immutable/Seq#[A]=;scala/collection/immutable/Seq#scala/Predef.String#b7
 
-ÑÑ /)B'
+ÜÜ /)B'
 2
 
-ÑÑ /java/lang/String#b7
+ÜÜ /java/lang/String#b7
 
-ÑÑ ')B'
+ÜÜ ')B'
 2
 
-ÑÑ 'java/lang/String#bC
+ÜÜ 'java/lang/String#bC
 
-åå 5
+éé 5
 3
 !
 scala/Predef.augmentString().2
 
-åå bC
+éé bC
 
-çç 5
+èè 5
 3
 !
 scala/Predef.augmentString().2
 
-çç bC
+èè bC
 
-éé 5
+êê 5
 3
 !
 scala/Predef.augmentString().2
 
-éé bC
+êê bC
 
-è?è j5
+ë?ë j5
 3
 !
 scala/Predef.augmentString().2
 
-è?è jbC
+ë?ë jbC
 
-ê	ê 25
+í	í 25
 3
 !
 scala/Predef.augmentString().2
 
-ê	ê 2bC
+í	í 2bC
 
-ëë 5
+ìì 5
 3
 !
 scala/Predef.augmentString().2
 
-ëë b7
+ìì b7
 
-ìì ")B'
+ïï ")B'
 2
 
-ìì "java/lang/String#b0
+ïï "java/lang/String#b0
 
-∞∞ #"B 
+≤≤ #"B 
 2
 
-∞∞ #
-scala/Int#b0
-
-ª%ª ,"B 
-2
-
-ª%ª ,
+≤≤ #
 scala/Int#b0
 
 Ω%Ω ,"B 
 2
 
 Ω%Ω ,
+scala/Int#b0
+
+ø%ø ,"B 
+2
+
+ø%ø ,
 scala/Int#

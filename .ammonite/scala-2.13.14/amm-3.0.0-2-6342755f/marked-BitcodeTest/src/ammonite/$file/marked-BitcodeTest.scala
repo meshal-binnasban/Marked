@@ -91,6 +91,7 @@ def OPT(r: Rexp): Rexp = ALT(r, ONE)
 def shift(mark: Boolean,re: Rexpb, c: Char ): Rexpb = re match {
     case ZEROb => ZEROb
     case ONEb(bs)=> ONEb(bs)
+
     case CHARb(ch,marked,bs) => {
         if(mark && ch == c)
         CHARb(ch,mark && ch == c,bs) 
@@ -100,19 +101,20 @@ def shift(mark: Boolean,re: Rexpb, c: Char ): Rexpb = re match {
     case SEQb(r1,r2,bs) =>
         //bs [](der c r1· r2) + fuse (mkeps r1) (der c r2) if nullable(r1)
         //ALT(SEQ(der(c, r1), r2), der(c, r2 ))
-      if (mark && nullable(r1))
-      {
-        ALTb(
-            SEQb(shift(mark, r1, c), shift(fin(r1), r2, c)) // [] as bs for the SEQ
-                , 
-            fuse(mkeps_marked(r1) ,shift(true, r2, c)) , bs)
-      }
-      else{
-        SEQb(shift(mark, r1, c), shift(fin(r1), r2, c) , bs)   
-      }  
+        SEQb(shift(mark, r1, c), shift((mark && nullable(r1)) || fin(r1), r2, c),bs)
+      // if (mark && nullable(r1))
+      // {
+      //   ALTb(
+      //       SEQb(shift(mark, r1, c), shift(fin(r1), r2, c)) // [] as bs for the SEQ
+      //           , 
+      //       fuse(mkeps_marked(r1) ,shift(true, r2, c)) , bs)
+      // }
+      // else{
+      //   SEQb(shift(mark, r1, c), shift(fin(r1), r2, c) , bs)   
+      // }  
    
 
-    case STARb(r,bs) => STARb(shift(mark || fin(r), r,c),bs ++ List(0)) // could be if fin(r) then list(0) else list(1)
+    case STARb(r,bs) => STARb(shift(mark || fin(r), r,c),bs ++mkeps_marked2(r)++ List(0)) // could be if fin(r) then list(0) else list(1)
     
     case NTIMESb(r, n,nmark,counter,bs) => // maybe shift false if n==0 or counter == n?
       if (n==0){
@@ -217,12 +219,11 @@ def mkeps_marked2(r: Rexpb): List[Int] = r match {
         else if (fin(r2)) bs ++ mkeps_marked2(r2) 
         else List() //bs
     case SEQb(r1, r2, bs) =>
-        if (fin(r1) && nullable(r2)) bs ++ mkeps_marked2(r1) ++ mkeps_marked2(r2) 
-        else if (fin(r2)) bs ++  mkeps_marked2(r2)
-        else List() //bs
-
+          if (fin(r1) && nullable(r2)) bs ++ mkeps_marked2(r1) ++ mkeps_marked2(r2) 
+          else if (fin(r2)) bs ++  mkeps_marked2(r2)
+          else List() //bs
     case STARb(r, bs) =>
-        if (fin(r)) bs ++mkeps_marked2(r) ++ List(1) 
+        if (fin(r)) bs ++ List(1) 
         else List() 
 
     case NTIMESb(r, n, nmark, counter, bs) =>
@@ -245,33 +246,35 @@ def mkeps_marked2(r: Rexpb): List[Int] = r match {
 }
 
 
+
 def decode(r: Rexp, bs: List[Int]): (VALUE, List[Int]) = r match {
   case ONE => (ONEV, bs) // not sure this should be included
   case CHAR(c, _) => (CHARV(c), bs) // (2) decode (c) bs = (Char(c), bs)
   case ALT(r1, r2) => bs match {
     case 0 :: bs1 => // (3) decode (r1 + r2) 0 :: bs =  (Left(v), bs')  where decode r1 bs => v,bs' 
-        val (v, bsp) = decode(r1, bs1)
-        (LEFT(v), bsp) 
+    val (v, bsp) = decode(r1, bs1)
+    (LEFT(v), bsp) 
     case 1 :: bs1 => // (4) decode (r1 + r2) 1 :: bs = (Right(v), bs') where decode r2 bs => v,bs'
-        val (v, bsp) = decode(r2, bs1)
-        (RIGHT(v), bsp)
+    val (v, bsp) = decode(r2, bs1)
+    (RIGHT(v), bsp)
     case x =>
-      (ZEROV, bs)
+    (ZEROV, bs) // in case of something else, may need to remove it but just incase
   }
   case SEQ(r1, r2) =>  // (5) decode (r1 · r2) bs = (Seq(v1, v2), bs3) where decode r1 bs => v1,bs2 and decode r2 bs2 =>v2,bs3 
     val (v1, bs2) = decode(r1, bs)
     val (v2, bs3) = decode(r2, bs2)
     (SEQV(v1, v2), bs3) 
+
   case STAR(r) => bs match {
     case 1 :: bs1 => 
-      (STARV(List()), bs1) // Correctly terminate recursion for STAR
+    (STARV(List()), bs1) // terminate recursion for STAR
     case 0 :: bs1 =>   
-      val (v, bs2) = decode(r, bs1)
-      val (STARV(vs), bsv) = decode(STAR(r), bs2) 
-      (STARV(v :: vs), bsv) 
+    val (v, bs2) = decode(r, bs1)
+    val (STARV(vs), bsv) = decode(STAR(r), bs2) 
+    (STARV(v :: vs), bsv) 
     case _ => 
-      (STARV(List()), bs) // Edge case: No matches in STAR
-  }
+    (STARV(List()), bs) // Edge case: No matches in STAR
+  }// end of match r
 }
 
 def intern2(r: Rexp) : Rexpb = INITb(intern(r),List())
@@ -288,79 +291,42 @@ def intern(r: Rexp) : Rexpb = r match{
 }
 
 @main
-def test00() = {
-  val a=CHAR('a')
-  val b=CHAR('b')
-  val rexp=intern2(NTIMES(   ALT(a ,ALT(a ,b)) , 3  ))
-
-  val ss="aaa".toList
-
-  println(s"\nThe Original Reg: \n${pp(rexp)} \n Input String: $ss\n")
-  val finReg=matcher2(rexp,ss)
-  println(s"\n Result=${fin(finReg)} \n\n ${pp(finReg)}\n\n")
-  
-  println("\n========================\n")
-  println(mkeps_marked(finReg))
-
-}
-
-//testing NTIMES and SEQ NTIMES.
-@main
 def test01() = {
-    val n=6
-    val rexp=intern2(EVIL1(n))
+  val rexp=STAR( ALT( ALT(CHAR('a'),CHAR('b')) , CHAR('c') ) )
+  val rexp2 = intern2(rexp)
 
-    val ss="aaaaaaaaaa".toList
-    println(s"input is $ss \n")
+    println("=============== Test ===============")
+    val s="abc".toList
+    println(s"String: $s\n")
+    val finReg=matcher2(rexp2, s)
+    println(s"Original size=${size(rexp2)} Result= ${fin(finReg)} \n")
 
-    println(s"NTIMES :\n")
-    println(s"\n Original NTIMES\n ${pp(rexp)}")
+    for (i <- s.indices) {
+    println(s"${i + 1}- =shift ${s(i)}=")
+    val sPart = s.take(i + 1)
+    println(pp(mat(rexp2, sPart)))
+    }
 
-    val result=matcher(rexp,ss)
-    val finReg=matcher2(rexp,ss)
+    println("\n=============== Final Reg ===============n")
+    println(s"Size=${size(finReg)} , Tree= \n ${pp(finReg)}\n")
+    println("\n=============== bitcodes ===============n")
 
-    println(s"\n Final NTIMES\n ${pp(finReg)}")
-    println(s"\n NTIMES Result=$result and Size=${size(finReg)} \n \n")
-
-    println("\n========================\n")
-
-    val testRexp=intern2(SeqNTIMES(EVIL1(n)))
-    println(s"input is $ss \n")
-
-    println(s"Original SEQ :\n")
-    println(s"\n ${pp(testRexp)}")
-
-    val resultSeq=matcher(testRexp,ss)
-    val finReg2=matcher2(testRexp,ss)
-
-    println(s"\n Final SEQ: \n ${pp(finReg2)}")
-    println(s"\n SEQ rexp :Result=$resultSeq Size=${size(finReg2)} \n\n")
-
-
+    val mkepsValue = mkeps_marked2(finReg)
+    println(s"mkeps= $mkepsValue")
+    val decodeValue=decode(rexp,mkepsValue)
+    println(s"decode=$decodeValue")  
 }
 
-//testing bitcode with STAR and SEQ
+val EVIL2 = SEQ(STAR(STAR(CHAR('a'))), CHAR('b'))
+
 @main
 def test02() = {
-  val a=CHAR('a')
-  val b=CHAR('b')
-  val rexp=STAR(ALT(a,SEQ(a,b)))
-  val rexpI=intern2(rexp)
-  val ss="abab".toList
-  println(s"String=$ss Reg : \n ${pp(rexpI)}\n")
-
-
-  val result=matcher(rexpI,ss)
-  println(s"Result=$result\n")
-
-  val finReg=matcher2(rexpI,ss)
-  println(s"finReg=\n${pp(finReg)}\n finReg=${finReg}\n")
-
-  println(s"mkeps_marked=${mkeps_marked(finReg)}\n")
-  println(s"mkeps_marked2=${mkeps_marked2(finReg)}\n")
-
-  println(s"decode=${decode(rexp,mkeps_marked2(finReg))}\n")
-
+  // for (i <- 0 to 7000000 by 500000) {
+ // }
+ //:+ 'b'
+  val evil2b=intern2(EVIL2)
+  val i=1000
+  println(f"$i: ${time_needed(2, matcher(evil2b, ("a" * i).toList))}%.5f")
 }
 
 //testing unshift
@@ -418,8 +384,6 @@ def SeqNTIMES(r: Rexp): Rexp = r match {
 }
 
 def EVIL1(n: Int) = SEQ(NTIMES(OPT(CHAR('a')), n), NTIMES(CHAR('a'), n))
-val EVIL2 = SEQ(STAR(STAR(CHAR('a'))), CHAR('b'))
-
 // for measuring time
 def time_needed[T](i: Int, code: => T) = {
   val start = System.nanoTime()

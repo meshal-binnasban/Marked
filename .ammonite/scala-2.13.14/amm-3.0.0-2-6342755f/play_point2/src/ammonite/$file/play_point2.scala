@@ -142,10 +142,21 @@ def matcher2(r: Rexp, s: List[Char]) : Rexp =
      else mat(r, s)
 
 
+val EVIL2 = SEQ(STAR(STAR(CHAR('a'))), CHAR('b'))
+
+def time_needed[T](i: Int, code: => T) = {
+  val start = System.nanoTime()
+  for (j <- 1 to i) code
+  val end = System.nanoTime()
+  (end - start) / (i * 1.0e9)
+}
 @main
 def test1() = {
-
+  for (i <- 0 to 7000000 by 500000) {
   
+  println(f"$i: ${time_needed(2, matcher2(EVIL2, ("a" * i).toList))}%.5f")
+
+  }
 }
 
 @main
@@ -178,66 +189,13 @@ def test2() = {
 */
 
   val inputLength = s.length        
-  val stages = traverseStages(finReg, inputLength)
-  stages.foreach(stage => println( pp(stage))) 
-  val stages2 = traverseStages2(finReg, inputLength)
-  stages2.foreach(stage => println( pp(stage)))
+  val stages = traverseStages2(finReg, inputLength)
+  stages.foreach(stage => println( pp(stage)))
 
 }
 
-//testing sequences, experimented with different sequences stuctures
-@main
-def test3() = {
-  println("=====Test====")
-  val rexp = ("a" ~ "b") 
-  val s = "ab".toList
-  println(s"start: $rexp")
-  println("=============\n")
 
-  
-  for (n <- (1 to s.length)) {
-    val sl = s.slice(0, n)
-    println(s"shift: ${sl.last}")
-    println(pp(mat(rexp, sl)))
-  }
-    
-  println(s"Result= ${matcher(rexp, s)}")
-  val finReg=matcher2(rexp, s)
-  println(s"Final Reg Tree= \n ${pp(finReg)}\n")
-  println(s"Raw Reg= ${finReg}")
-}
 
-// NTIMES test
-@main
-def test4() = {
-  //val rexp=ALT(NTIMES("a" | "b" , 2), NTIMES("c" | "d" , 2)) working
-  //val rexp=NTIMES( NTIMES("a",2) , 1) not working
-  val n=2
-  val rexp = (NTIMES("a" | ONE, n)) ~ (NTIMES(CHAR('a'), n))
-
-  println("=====Test====")
-  val ss="aaaab".toList
-  println(s"String: $ss\n")
-  println(s"Result= ${matcher(rexp, ss)}\n")
-
-  
-  for (i <- ss.indices) {
-  println(s"${i + 1}- =shift ${ss(i)}=")
-  val sPart = ss.take(i + 1)
-  println(pp(mat(rexp, sPart)))
-  }
-
-  val finReg2=matcher2(rexp, ss)
-  println(s"Final Reg Tree= \n ${pp(finReg2)}\n")
-  println(s"Raw Final Reg= ${finReg2}")
-  println(s"Points and Regular expressions")
-  val extracted = extractPoints(finReg2) 
-  extracted.foreach { 
-    case (r, point) =>
-        println(s"r = $r and point = $point")
-    }
-
-}
 
 def popPoints(r: Rexp): (Rexp, Rexp) = r match {
   case ZERO => (ZERO, ZERO)

@@ -320,10 +320,10 @@ def indent(ss: Seq[String]): String = ss match {
 def pp(e: Rexp): String = e match {
   case ZERO         => "0\n"
   case ONE          => "1\n"
-  case CHAR(c)      => s"$c\n"
+  case CHAR(c)      => s"$c"
   case POINT(CHAR(c), tag) =>
     if(tag.nonEmpty && tag.head > 0) s"•$c {tag=$tag}"
-    else s"$c {tag=$tag}\n"
+    else s"$c {tag=$tag}"
   case POINT(r, tag) => pp(r)  // delegate to inner
   case ALT(r1, r2)   => s"ALT\n" ++ pps(r1, r2)
   case SEQ(r1, r2)   => s"SEQ\n" ++ pps(r1, r2)
@@ -348,94 +348,60 @@ def intern(r: Rexp): Rexp = r match {
 }
 
 // --- Test functions ---
-
+// testing bitcodes
 @main
 def test1() = {
-  // Test with a STAR of alternatives.
-  val rexp = intern(STAR( ALT( ALT("a", "b"), "c" ) ))
-  println("=============== Test ===============")
-  val s = "abc".toList
-  println(s"String: $s\n")
-  val finReg = matcher2(rexp, s)
-  println(s"Original size=${size(rexp)} Result= ${fin(finReg)} \n")
-  for (i <- s.indices) {
+    val rexp = intern(STAR( ALT( ALT("a","b") , "c" ) ))
+
+    println("=============== Test ===============")
+    val s="abc".toList
+    println(s"String: $s\n")
+    val finReg=matcher2(rexp, s)
+    println(s"Original size=${size(rexp)} Result= ${fin(finReg)} \n")
+
+    for (i <- s.indices) {
     println(s"${i + 1}- =shift ${s(i)}=")
     val sPart = s.take(i + 1)
     println(pp(mat(rexp, sPart)))
-  }
-  println("\n=============== Final Reg ===============")
-  println(s"Size=${size(finReg)} , Tree= \n ${pp(finReg)}\n")
-  println("\n=============== bitcodes ===============")
-  val mkepsValue = mkeps(finReg)
-  println(s"mkeps= $mkepsValue")
-  val decodeValue = decode(rexp, mkepsValue)
-  println(s"decode=$decodeValue")
-  println("\n=============== popPoints ===============")
-  val inputLength = s.length        
-  val stages = traverseStages(finReg, inputLength)
-  stages.reverse.foreach(stage => println(pp(stage)))
+    }
+
+    println("\n=============== Final Reg ===============n")
+    println(s"Size=${size(finReg)} , Tree= \n ${pp(finReg)}\n")
+    println("\n=============== bitcodes ===============n")
+
+    val mkepsValue = mkeps(finReg)
+    println(s"mkeps= $mkepsValue")
+    val decodeValue=decode(rexp,mkepsValue)
+    println(s"decode=$decodeValue")  
+
+   /*  println("\n=============== EVIL ===============n")
+
+    val EVIL2 = STAR(STAR("a" | "b" ))
+
+    val finReg2=matcher2(EVIL2, "aa".toList)
+    println(pp(finReg2))
+    val mkepsEvilValue = mkeps(finReg2)
+    println(s"mkeps= $mkepsEvilValue")
+    val decodeEvilValue=decode(EVIL2,mkepsEvilValue)
+    println(s"decode=$decodeEvilValue") */
 }
+
+val EVIL2 = SEQ(STAR(STAR(CHAR('a'))), CHAR('b'))
 
 @main
 def test2() = {
-  val rexp = STAR("a" | "b")
-  println("=============== Test ===============")
-  val s = "abba".toList
-  println(s"String: $s\n")
-  val finReg = matcher2(rexp, s)
-  println(s"Original size=${size(rexp)} Result= ${fin(finReg)} \n")
-  for (i <- s.indices) {
-    println(s"${i + 1}- =shift ${s(i)}=")
-    val sPart = s.take(i + 1)
-    println(pp(mat(rexp, sPart)))
-  }
-  println("\n=============== Final Reg ===============")
-  println(s"Size=${size(finReg)} , Tree= \n ${pp(finReg)}\n")
-  println("\n=============== popPoints ===============")
-  val inputLength = s.length        
-  val stages = traverseStages(finReg, inputLength)
-  stages.reverse.foreach(stage => println(pp(stage)))
+ // for (i <- 0 to 7000000 by 500000) {
+ // }
+ //:+ 'b'
+  val i=1000
+  println(f"$i: ${time_needed(2, matcher(EVIL2, ("a" * i).toList))}%.5f")
+
+} 
+
+def time_needed[T](i: Int, code: => T) = {
+  val start = System.nanoTime()
+  for (j <- 1 to i) code
+  val end = System.nanoTime()
+  (end - start) / (i * 1.0e9)
 }
 
-@main
-def test3() = {
-  println("=====Test====")
-  val rexp = ("a" ~ "b")
-  val s = "ab".toList
-  println(s"start: $rexp")
-  println("=============\n")
-  for (n <- (1 to s.length)) {
-    val sl = s.slice(0, n)
-    println(s"shift: ${sl.last}")
-    println(pp(mat(rexp, sl)))
-  }
-  println(s"Result= ${matcher(rexp, s)}")
-  val finReg = matcher2(rexp, s)
-  println(s"Final Reg Tree= \n ${pp(finReg)}\n")
-  println(s"Raw Reg= ${finReg}")
-}
-
-@main
-def test4() = {
-  // NTIMES test
-  val n = 2
-  val rexp = (NTIMES("a" | ONE, n, 0)) ~ (NTIMES(CHAR('a'), n, 0))
-  println("=====Test====")
-  val ss = "aaaab".toList
-  println(s"String: $ss\n")
-  println(s"Result= ${matcher(rexp, ss)}\n")
-  for (i <- ss.indices) {
-    println(s"${i + 1}- =shift ${ss(i)}=")
-    val sPart = ss.take(i + 1)
-    println(pp(mat(rexp, sPart)))
-  }
-  val finReg2 = matcher2(rexp, ss)
-  println(s"Final Reg Tree= \n ${pp(finReg2)}\n")
-  println(s"Raw Final Reg= ${finReg2}")
-  println(s"Points and Regular expressions")
-  val extracted = extractPoints(finReg2)
-  extracted.foreach {
-    case (r, point) =>
-      println(s"r = $r and point = $point")
-  }
-}

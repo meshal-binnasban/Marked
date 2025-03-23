@@ -86,7 +86,8 @@ extension (r: Rexp) {
 enum REG {
   case BZERO
   case BONE
-  case BCHAR(b: Boolean, c: Char)
+  case BCHAR(c: Char)
+  case BPOINT(ch:BCHAR)
   case BALT(r1: REG, r2: REG)
   case BSEQ(r1: REG, r2: REG)
   case BSTAR(r: REG)
@@ -100,7 +101,7 @@ import REG._
 def intern(r: Rexp) : REG = r match {
   case ZERO => BZERO
   case ONE => BONE
-  case CHAR(c) => BCHAR(false, c)
+  case CHAR(c) => BCHAR(c)
   case ALT(r1, r2) => BALT(intern(r1), intern(r2))
   case SEQ(r1, r2) => BSEQ(intern(r1), intern(r2))
   case STAR(r) => BSTAR(intern(r))
@@ -114,7 +115,8 @@ def intern2(r: Rexp) : REG = BINIT(intern(r))
 def fl(r: REG) : Rexp = r match {
   case BZERO => ZERO
   case BONE => ONE
-  case BCHAR(b, d) =>  CHAR(d)
+  case BCHAR(d) =>  CHAR(d)
+  case BPOINT(BCHAR(c)) => CHAR(c)
   case BALT(r1, r2) => ALT(fl(r1), fl(r2))
   case BSEQ(r1, r2) => SEQ(fl(r1), fl(r2))
   case BSTAR(r) => STAR(fl(r))
@@ -125,7 +127,8 @@ def fl(r: REG) : Rexp = r match {
 def nullable(r: REG) : Boolean = r match {
   case BZERO => false
   case BONE => true
-  case BCHAR(b, d) =>  false
+  case BCHAR(d) =>  false
+  case BPOINT(ch) => false
   case BALT(r1, r2) => nullable(r1) || nullable(r2)
   case BSEQ(r1, r2) => nullable(r1) && nullable(r2)
   case BSTAR(r) => true
@@ -137,7 +140,8 @@ def nullable(r: REG) : Boolean = r match {
 def fin(r: REG) : Boolean = r match {
   case BZERO => false
   case BONE => false
-  case BCHAR(b, _) => b
+  case BCHAR(c) => false
+  case BPOINT(ch) => true
   case BALT(r1, r2) => fin(r1) || fin(r2)
   case BSEQ(r1, r2) => (fin(r1) && nullable(r2)) || fin(r2)
   case BSTAR(r) => fin(r)
@@ -147,7 +151,8 @@ def fin(r: REG) : Boolean = r match {
 def shift(m: Boolean, r: REG, c: Char) : REG = r match {
   case BZERO => BZERO
   case BONE => BONE
-  case BCHAR(_ , d) => BCHAR(m && d == c, d)
+  case BCHAR(d) => if (m && d == c) BPOINT(BCHAR(d)) else BCHAR(d)
+  case BPOINT(BCHAR(d)) => if(m && d == c) BPOINT(BCHAR(d)) else BCHAR(d)
   case BALT(r1, r2) => BALT(shift(m, r1, c), shift(m, r2, c))
   case BSEQ(r1, r2) =>
     BSEQ(shift(m, r1, c), shift((m && nullable(r1)) || fin(r1), r2, c))
@@ -193,7 +198,8 @@ def indent(ss: Seq[String]) : String = ss match {
 def pp(e: REG) : String = e match {
   case BZERO => "0\n"
   case BONE => "1\n"
-  case BCHAR(b, c) => if (b) s"•$c\n" else s"$c\n"
+  case BCHAR(c) =>  s"$c\n"
+  case BPOINT(BCHAR(c)) => s"•$c\n"  
   case BALT(r1, r2) => "BALT\n" ++ pps(r1, r2)
   case BSEQ(r1, r2) => "BSEQ\n" ++ pps(r1, r2)
   case BSTAR(r) => "BSTAR\n" ++ pps(r)
@@ -234,9 +240,7 @@ def test2() = {
   val rexp = SEQ(ALT("a", "ab"), ALT("bc", ZERO))
   val breg = intern2(rexp)
   val str1 = "abc".toList
-  val str2 = "abcd".toList
   println(matcher(breg, str1))
-  println(matcher(breg, str2))
   println(pp(breg))
 }
 
@@ -254,6 +258,23 @@ def test3() = {
     println(pp(mat(breg, sl)))
   }
 }
+
+val EVIL2 = intern2(SEQ(STAR(STAR(CHAR('a'))), CHAR('b')))
+
+// for measuring time
+def time_needed[T](i: Int, code: => T) = {
+  val start = System.nanoTime()
+  for (j <- 1 to i) code
+  val end = System.nanoTime()
+  (end - start) / (i * 1.0e9)
+}
+
+@main
+def test4() = {
+  for (i <- 0 to 7000000 by 500000) {
+    println(f"$i: ${time_needed(2, matcher(EVIL2, ("a" * i).toList))}%.5f")
+  }
+} 
 
 
 
