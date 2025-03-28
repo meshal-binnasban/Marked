@@ -81,7 +81,6 @@ def fin(r: Rexp) : Boolean = r match {
 //shift char with position
 def shift(m: Boolean, re: Rexp, cp: (Char, Int)) : Rexp = {
   val (c, pos) = cp
-
   re match {
   case ZERO => ZERO
   case ONE => ONE
@@ -94,7 +93,7 @@ def shift(m: Boolean, re: Rexp, cp: (Char, Int)) : Rexp = {
                              else POINT(CHAR(d), 0::tag)
 
   case ALT(r1, r2) => ALT(shift(m, r1, cp), shift(m, r2, cp)) 
-  case SEQ(r1, r2) =>
+  case SEQ(r1, r2) => // add seq normal
     if (m && nullable(r1))
       {
         ALT(
@@ -122,7 +121,6 @@ def shift(m: Boolean, re: Rexp, cp: (Char, Int)) : Rexp = {
 }
 
 
-
 def mat(r: Rexp, s: List[Char]): Rexp = s match {
   case Nil => r
   case c :: cs =>
@@ -142,28 +140,30 @@ def matcher2(r: Rexp, s: List[Char]) : Rexp =
      else mat(r, s)
 
 
-val EVIL2 = SEQ(STAR(STAR(CHAR('a'))), CHAR('b'))
 
-def time_needed[T](i: Int, code: => T) = {
-  val start = System.nanoTime()
-  for (j <- 1 to i) code
-  val end = System.nanoTime()
-  (end - start) / (i * 1.0e9)
-}
 @main
 def test1() = {
-  for (i <- 0 to 7000000 by 500000) {
+  println("===== Testing New PopPoints =====")
   
-  println(f"$i: ${time_needed(2, matcher2(EVIL2, ("a" * i).toList))}%.5f")
+  val rexp = STAR("a" | "b" )
+  val s="abba".toList
+  println(s"String: $s\n")
+  val finReg=matcher2(rexp, s)
+  println(s"Original size=${size(rexp)} Result= ${fin(finReg)} Final Size=${size(finReg)} \n")
+  println(s"finReg=${finReg}")
 
-  }
+  println("=== Old PopPoints ===")
+  val inputLength = s.length        
+  val stages = traverseStages2(finReg, inputLength)
+  stages.foreach(stage => println( pp(stage)))
 }
+
 
 @main
 def test2() = {
   val rexp = STAR("a" | "b" )
 
-  println("=====Test====")
+  println("===== Testing Tags =====")
   val s="abba".toList
   println(s"String: $s\n")
   val finReg=matcher2(rexp, s)
@@ -179,42 +179,62 @@ def test2() = {
   println(s"Final Reg Tree= \n ${pp(finReg)}\n")
   println(s"Raw Final Reg= ${finReg} size= ${size(finReg)}")
 
-  /*
-  println(s"Points and Part expressions") 
-  val extracted = extractPoints(finReg) 
-  extracted.foreach { 
-    case (r, point) =>
-        println(s"r = $r and point = $point")
-    }
-*/
-
   val inputLength = s.length        
   val stages = traverseStages2(finReg, inputLength)
   stages.foreach(stage => println( pp(stage)))
 
+  println(s"Points and Part expressions") 
+  val extracted = extractPoints(finReg) 
+  extracted.sortBy(_._2).foreach { 
+    case (r, point) =>
+        println(s"r = $r and point = $point")
+    }
+
+
+
 }
 
+val EVIL2 = SEQ(STAR(STAR(CHAR('a'))), CHAR('b'))
 
+def time_needed[T](i: Int, code: => T) = {
+  val start = System.nanoTime()
+  for (j <- 1 to i) code
+  val end = System.nanoTime()
+  (end - start) / (i * 1.0e9)
+}
+@main
+def test3() = {
+  for (i <- 0 to 7000000 by 500000) {
+  
+  println(f"$i: ${time_needed(2, matcher2(EVIL2, ("a" * i).toList))}%.5f")
 
+  }
+}
+
+def extractPoints(r: Rexp): List[(Rexp, Int)] = r match {
+  case POINT(r, pos) => pos.filter(_ != 0).map(p => (r, p-1)).reverse
+  case ALT(r1, r2)   => extractPoints(r1) ++ extractPoints(r2)
+  case SEQ(r1, r2)   => extractPoints(r1) ++ extractPoints(r2)
+  case STAR(r)       => extractPoints(r)
+  case NTIMES(r, _, _) => extractPoints(r)
+  case _             => List()
+}
 
 def popPoints(r: Rexp): (Rexp, Rexp) = r match {
   case ZERO => (ZERO, ZERO)
   case ONE  => (ONE, ONE)
   case CHAR(c) => (CHAR(c), CHAR(c)) // Return the same character for both current and next state becaue it doesnt have marks or points
+
   case POINT(inner, tags) =>
     val (currentInner, nextInner) = popPoints(inner)
     if (tags.isEmpty) {
-      // No marker left: return the inner result for both current and next state.
       (currentInner, nextInner)
     } else {
-      // Build the updated next state by removing the top marker.
       val updatedNext = POINT(inner, tags.tail)
       tags.head match {
         case 0 =>
-          // If the top marker is 0, current stage is unmarked: return the inner result.
           (currentInner, updatedNext)
         case x =>
-          // Otherwise, current stage is marked: wrap the inner result with a POINT having tag x or maybe use flag 1 as positive or marked.
           (POINT(currentInner, List(x)), updatedNext)
       }
     }
@@ -237,6 +257,7 @@ def popPoints(r: Rexp): (Rexp, Rexp) = r match {
     (NTIMES(curr, n, counter), NTIMES(next, n, counter))
 }
 
+
 def traverseStages(r: Rexp, inputLength: Int): List[Rexp] = {
   def loop(state: Rexp, stages: List[Rexp], remaining: Int): List[Rexp] = {
     if (remaining == 0) stages
@@ -249,22 +270,15 @@ def traverseStages(r: Rexp, inputLength: Int): List[Rexp] = {
 }
 
 def traverseStages2(r: Rexp, inputLength: Int): List[Rexp] = {
-  val (stages, _) = (0 until inputLength).foldLeft((List[Rexp](), r)) { case ((acc, state), _) =>
-    val (currentStage, nextState) = popPoints(state)
-    (acc :+ currentStage, nextState)
+  val (stages, _) = (0 until inputLength).foldLeft((List[Rexp](), r)) { 
+    case ((acc, state), _) =>
+      val (currentStage, nextState) = popPoints(state)
+      (acc :+ currentStage, nextState)
   }
   stages
 }
 
 
-def extractPoints(r: Rexp): List[(Rexp, Int)] = r match {
-  case POINT(r, pos) => pos.filter(_ != 0).map(p => (r, p-1)).reverse
-  case ALT(r1, r2)   => extractPoints(r1) ++ extractPoints(r2)
-  case SEQ(r1, r2)   => extractPoints(r1) ++ extractPoints(r2)
-  case STAR(r)       => extractPoints(r)
-  case NTIMES(r, _, _) => extractPoints(r)
-  case _             => List()
-}
 
 def matchCount(r: Rexp): Int = r match {
   case ZERO => 0

@@ -1,361 +1,97 @@
 
-›˚play_point3_BIT.sc¿bimport scala.language.implicitConversions
+Áˇplay_point3_BIT.scÆ@import scala.language.implicitConversions
 import os.size
 
-// New enum with separate BITS constructor.
 enum Rexp {
   case ZERO 
   case ONE 
-  case CHAR(c: Char)
-  case POINT(r: Rexp, tag: List[Int])
-  case ALT(r1: Rexp, r2: Rexp)
-  case SEQ(r1: Rexp, r2: Rexp)
-  case STAR(r: Rexp)
-  case NTIMES(r: Rexp, n: Int, counter: Int)
-  case BITS(r: Rexp, bits: List[Int])
+  case CHAR(c: Char )
+  case POINT(r: Rexp)
+  case ALT(r1: Rexp, r2: Rexp) 
+  case SEQ(r1: Rexp, r2: Rexp) 
+  case STAR(r: Rexp) 
+  case NTIMES(r: Rexp, n: Int , counter: Int = 0)
+  case BIT(r:Rexp , bs:List[Int]=List())
 }
 import Rexp._
 
-// --- Helper functions for bitcode management ---
-
-// fuse attaches new bit codes to an Rexp, wrapping it in a BITS node.
-def fuse(cs: List[Int], r: Rexp): Rexp = r match {
-  case BITS(inner, bits) => BITS(inner, bits ++ cs)
-  case _ => BITS(r, cs)
+def nullable (r: Rexp) : Boolean = r match {
+  case ZERO => false
+  case ONE => true
+  case CHAR(_) => false
+  case POINT(r) => nullable(r)
+  case BIT(r, bs) => nullable(r)
+  case ALT(r1, r2) => nullable(r1) || nullable(r2)
+  case SEQ(r1, r2) => nullable(r1) && nullable(r2)
+  case STAR(_) => true
+  case NTIMES(r, n,counter) => if (n == 0) true else nullable(r)
 }
 
-// --- Basic Rexp functions ---
-
-// Nullability is independent of bitcode wrappers.
-def nullable(r: Rexp): Boolean = r match {
-  case ZERO                     => false
-  case ONE                      => true
-  case CHAR(_)                  => false
-  case POINT(inner, _)          => nullable(inner)
-  case ALT(r1, r2)              => nullable(r1) || nullable(r2)
-  case SEQ(r1, r2)              => nullable(r1) && nullable(r2)
-  case STAR(_)                  => true
-  case NTIMES(r, n, _)          => if(n == 0) true else nullable(r)
-  case BITS(inner, _)           => nullable(inner)
+def fin(r: Rexp) : Boolean = r match {
+  case ZERO => false
+  case ONE => false
+  case CHAR(_) => false 
+  case POINT(CHAR(_)) => true 
+  case ALT(r1, r2) => fin(r1) || fin(r2)
+  case SEQ(r1, r2) => (fin(r1) && nullable(r2)) || fin(r2)
+  case STAR(r) => fin(r)
+  case NTIMES(r, n,counter) => counter == n && fin(r)
+  case BIT(r, bs) => fin(r)
 }
 
-// fin: tells whether the expression is ‚Äúfinal‚Äù (i.e. it carries a marker)
-def fin(r: Rexp): Boolean = r match {
-  case ZERO          => false
-  case ONE           => false
-  case CHAR(_)       => false
-  case POINT(inner, tag) =>
-    inner match {
-      case CHAR(_) =>
-        if(tag.nonEmpty && tag.head > 0) true else false
-      case _ => fin(inner)
-    }
-  case ALT(r1, r2)   => fin(r1) || fin(r2)
-  case SEQ(r1, r2)   => (fin(r1) && nullable(r2)) || fin(r2)
-  case STAR(r)       => fin(r)
-  case NTIMES(r, n, counter) => counter == n && fin(r)
-  case BITS(inner, _) => fin(inner)
-}
-
-// --- shift function ---
-// This function ‚Äúshifts‚Äù the regex with a given character and position.
-// It may add bit information in several ways. In cases where a bit is to be attached,
-// we now use POINT (or fuse via BITS) rather than carrying an extra parameter.
-def shift(m: Boolean, re: Rexp, cp: (Char, Int)): Rexp = {
-  val (c, pos) = cp
-  re match {
+//shift char with position
+def shift(m: Boolean, re: Rexp, c: Char,bs: List[Int]): Rexp = re match {
     case ZERO => ZERO
     case ONE  => ONE
     case CHAR(d) =>
-      if(m && d == c) POINT(CHAR(d), List(pos+1))
+      if (m && d == c) BIT(POINT(CHAR(d)), bs) 
       else CHAR(d)
-    case POINT(CHAR(d), tag) =>
-      if(m && d == c) POINT(CHAR(d), pos+1 :: tag)
-      else POINT(CHAR(d), 0 :: tag)
-    case POINT(inner, tag) =>
-      // For non-CHAR inside a POINT, shift the inner expression.
-      POINT(shift(m, inner, cp), tag)
-    case ALT(r1, r2) =>
-      ALT(shift(m, r1, cp), shift(m, r2, cp))
+
+    case POINT(CHAR(d)) => 
+      if (m && d == c) BIT(POINT(CHAR(d)), bs)
+      else BIT(CHAR(d), bs) //BIT here is to record the history, otherwise just return CHAR(d) 
+
+    case ALT(r1, r2) => ALT(shift(m,r1,c,bs:+0),shift(m,r2,c, bs:+1))
+
     case SEQ(r1, r2) =>
-      SEQ(shift(m, r1, cp), shift((m && nullable(r1)) || fin(r1), r2, cp))
+      SEQ(shift(m,r1, c,bs), shift((m && nullable(r1)) || fin(r1), r2, c,bs))
+
     case STAR(r) =>
-      // In the STAR case we ‚Äúfuse‚Äù bits computed from mkeps(r) and a trailing 0.
-      val shifted = STAR(shift(m || fin(r), r, cp))
-      fuse(mkeps(r) ++ List(0), shifted)
+      STAR(shift(m || fin(r), r, c, List(7)++bs))
+
     case NTIMES(r, n, counter) =>
       if (counter == n) NTIMES(r, n, counter)
       else {
-        if(m || fin(r))
-          NTIMES(shift(m || fin(r), r, cp), n, counter+1)
+        if (m || fin(r)){
+          NTIMES(shift(m || fin(r), r, c,bs), n,counter+1)
+        }
         else
-          NTIMES(shift(false, r, cp), n, counter)
+          NTIMES(shift(false, r, c,bs), n,counter+1)
       }
-    case BITS(r, bits) =>
-      // Propagate the bit information: shift the inner Rexp then reattach the bits.
-      fuse(bits, shift(m, r, cp))
-  }
+    case BIT(r, b) => shift(m,r,c,bs) //BIT(shift(m,r,c,bs) ,b)
 }
 
-// --- Matching functions ---
-def mat(r: Rexp, s: List[Char]): Rexp = s match {
+def mat(r: Rexp, s: List[Char]) : Rexp = s match {
   case Nil => r
-  case c :: cs =>
-    cs.zipWithIndex.foldLeft(shift(true, r, (c, 0))) {
-      case (currRexp, (c, i)) => shift(false, currRexp, (c, i + 1))
-    }
+  case c::cs => cs.foldLeft(shift(true, r, c,List()))((r, c) => shift(false, r, c,List()))
 }
 
-def matcher(r: Rexp, s: List[Char]): Boolean =
-  if (s.isEmpty) nullable(r) else fin(mat(r, s))
+def matcher(r: Rexp, s: List[Char]) : Boolean =
+  if (s == Nil) nullable(r) else fin(mat(r, s))
 
-def matcher2(r: Rexp, s: List[Char]): Rexp =
-  if (s.isEmpty)
-     if(nullable(r)) r else ZERO
-  else mat(r, s)
+def matcher2(r: Rexp, s: List[Char]) : Rexp =
+  if (s == Nil)
+     if(nullable(r)) r else ZERO 
+     else mat(r, s)
 
-// --- mkeps ---
-// Computes the bitcode that represents an ‚Äúempty match‚Äù for the regex.
-// In this version we propagate any bits stored in a BITS wrapper.
-def mkeps(r: Rexp): List[Int] = r match {
-  case ONE           => List()
-  case CHAR(_)       => List()
-  case POINT(inner, tag) => tag
-  case ALT(r1, r2)   =>
-    if (fin(r1)) mkeps(r1)
-    else if (fin(r2)) mkeps(r2)
-    else List()
-  case SEQ(r1, r2)   =>
-    if (fin(r1) && nullable(r2)) mkeps(r1) ++ mkeps(r2)
-    else if (fin(r2)) mkeps(r2)
-    else List()
-  case STAR(r)       =>
-    if (fin(r)) mkeps(r) ++ List(1)
-    else List()
-  case NTIMES(r, n, counter) =>
-    if (counter == n && fin(r)) mkeps(r)
-    else List()
-  case ZERO          => List()
-  case BITS(r, bits) => bits ++ mkeps(r)
-}
-
-// --- decode ---
-// Translates the bitcodes into a VALUE representation.
-// We ‚Äúunwrap‚Äù BITS by prepending its bit list.
-enum VALUE {
-  case ZEROV
-  case ONEV
-  case CHARV(c: Char)
-  case UNMARKED(s: String)
-  case SEQV(v1: VALUE, v2: VALUE)
-  case LEFT(v: VALUE)
-  case RIGHT(v: VALUE)
-  case STARV(vs: List[VALUE])
-}
-import VALUE._
-
-def decode(r: Rexp, bs: List[Int]): (VALUE, List[Int]) = r match {
-  case ONE          => (ONEV, bs)
-  case CHAR(c)      => (CHARV(c), bs)
-  case POINT(inner, tag) =>
-    // We ignore the tag here and simply decode the inner expression.
-    decode(inner, bs)
-  case ALT(r1, r2)  => bs match {
-      case 0 :: bs1 =>
-        val (v, bsp) = decode(r1, bs1)
-        (LEFT(v), bsp)
-      case 1 :: bs1 =>
-        val (v, bsp) = decode(r2, bs1)
-        (RIGHT(v), bsp)
-      case _ =>
-        // Fallback if bitcode is not as expected.
-        (ZEROV, bs)
-    }
-  case SEQ(r1, r2)  =>
-    val (v1, bs2) = decode(r1, bs)
-    val (v2, bs3) = decode(r2, bs2)
-    (SEQV(v1, v2), bs3)
-  case STAR(r)      => bs match {
-      case 1 :: bs1 =>
-        (STARV(List()), bs1)
-      case 0 :: bs1 =>
-        val (v, bs2) = decode(r, bs1)
-        val (STARV(vs), bsv) = decode(STAR(r), bs2)
-        (STARV(v :: vs), bsv)
-      case _ =>
-        (STARV(List()), bs)
-    }
-  case NTIMES(r, n, counter) =>
-    // For NTIMES, we simply decode the inner expression.
-    decode(r, bs)
-  case BITS(r, bits) =>
-    // Prepend the stored bits before decoding.
-    decode(r, bits ++ bs)
-}
-
-// --- Other utility functions ---
-
-def popPoints(r: Rexp): (Rexp, Rexp) = r match {
-  case ZERO => (ZERO, ZERO)
-  case ONE  => (ONE, ONE)
-  case CHAR(c) => (CHAR(c), CHAR(c))
-  case POINT(inner, tags) =>
-    val (currentInner, nextInner) = popPoints(inner)
-    if (tags.isEmpty) {
-      (currentInner, nextInner)
-    } else {
-      val updatedNext = POINT(inner, tags.tail)
-      tags.head match {
-        case 0 => (currentInner, updatedNext)
-        case x => (POINT(currentInner, List(x)), updatedNext)
-      }
-    }
-  case ALT(r1, r2) =>
-    val (curr1, next1) = popPoints(r1)
-    val (curr2, next2) = popPoints(r2)
-    (ALT(curr1, curr2), ALT(next1, next2))
-  case SEQ(r1, r2) =>
-    val (curr1, next1) = popPoints(r1)
-    val (curr2, next2) = popPoints(r2)
-    (SEQ(curr1, curr2), SEQ(next1, next2))
-  case STAR(inner) =>
-    val (curr, next) = popPoints(inner)
-    (STAR(curr), STAR(next))
-  case NTIMES(inner, n, counter) =>
-    val (curr, next) = popPoints(inner)
-    (NTIMES(curr, n, counter), NTIMES(next, n, counter))
-  case BITS(r, bits) =>
-    // Apply popPoints to the inner expression and reattach the bits.
-    val (curr, next) = popPoints(r)
-    (fuse(bits, curr), fuse(bits, next))
-}
-
-def traverseStages(r: Rexp, inputLength: Int): List[Rexp] = {
-  def loop(state: Rexp, stages: List[Rexp], remaining: Int): List[Rexp] = {
-    if (remaining == 0) stages
-    else {
-      val (currentStage, nextState) = popPoints(state)
-      loop(nextState, stages :+ currentStage, remaining - 1)
-    }
-  }
-  loop(r, List.empty, inputLength)
-}
-
-def traverseStages2(r: Rexp, inputLength: Int): List[Rexp] = {
-  val (stages, _) = (0 until inputLength).foldLeft((List[Rexp](), r)) {
-    case ((acc, state), _) =>
-      val (currentStage, nextState) = popPoints(state)
-      (acc :+ currentStage, nextState)
-  }
-  stages
-}
-
-def extractPoints(r: Rexp): List[(Rexp, Int)] = r match {
-  case POINT(r, pos) => pos.filter(_ != 0).map(p => (r, p-1)).reverse
-  case ALT(r1, r2)   => extractPoints(r1) ++ extractPoints(r2)
-  case SEQ(r1, r2)   => extractPoints(r1) ++ extractPoints(r2)
-  case STAR(r)       => extractPoints(r)
-  case NTIMES(r, _, _) => extractPoints(r)
-  case BITS(r, _)    => extractPoints(r)
-  case _             => List()
-}
-
-def matchCount(r: Rexp): Int = r match {
-  case ZERO      => 0
-  case ONE       => 0
-  case CHAR(_)   => 1
-  case POINT(r, _)  => matchCount(r)
-  case ALT(r1, r2)  => math.max(matchCount(r1), matchCount(r2))
-  case SEQ(r1, r2)  => matchCount(r1) + matchCount(r2)
-  case STAR(r)      => matchCount(r)
-  case NTIMES(r, n, _) => n * matchCount(r)
-  case BITS(r, _) => matchCount(r)
-}
-
-def size(r: Rexp): Int = r match {
-  case ZERO        => 1
-  case ONE         => 1
-  case CHAR(_)     => 1
-  case ALT(r1, r2) => 1 + size(r1) + size(r2)
-  case SEQ(r1, r2) => 1 + size(r1) + size(r2)
-  case STAR(r)     => 1 + size(r)
-  case NTIMES(r, _, _) => 1 + size(r)
-  case POINT(r, _) => 1 + size(r)
-  case BITS(r, _)  => 1 + size(r)
-}
-
-// --- Syntax sugar and pretty printing ---
-
-def charlist2rexp(s: List[Char]): Rexp = s match {
-  case Nil    => ONE
-  case c :: Nil => CHAR(c)
-  case c :: s => SEQ(CHAR(c), charlist2rexp(s))
-}
-given Conversion[String, Rexp] = s => charlist2rexp(s.toList)
-
-extension (r: Rexp) {
-  def | (s: Rexp) = ALT(r, s)
-  def % = STAR(r)
-  def ~ (s: Rexp) = SEQ(r, s)
-}
-
-// Pretty-printing functions
-def implode(ss: Seq[String]) = ss.mkString("\n")
-def explode(s: String) = s.split("\n").toList
-
-def lst(s: String): String = explode(s) match {
-  case hd :: tl => implode(" ‚îî" +: (hd :: tl.map("  " + _)))
-  case Nil      => ""
-}
-
-def mid(s: String): String = explode(s) match {
-  case hd :: tl => implode(" ‚îú" +: (hd :: tl.map(" ‚îÇ" + _)))
-  case Nil      => ""
-}
-
-def indent(ss: Seq[String]): String = ss match {
-  case init :+ last => implode(init.map(mid) :+ lst(last))
-  case _            => ""
-}
-
-def pp(e: Rexp): String = e match {
-  case ZERO         => "0\n"
-  case ONE          => "1\n"
-  case CHAR(c)      => s"$c"
-  case POINT(CHAR(c), tag) =>
-    if(tag.nonEmpty && tag.head > 0) s"‚Ä¢$c {tag=$tag}"
-    else s"$c {tag=$tag}"
-  case POINT(r, tag) => pp(r)  // delegate to inner
-  case ALT(r1, r2)   => s"ALT\n" ++ pps(r1, r2)
-  case SEQ(r1, r2)   => s"SEQ\n" ++ pps(r1, r2)
-  case STAR(r)       => "STAR\n" ++ pps(r)
-  case NTIMES(r, n, counter) => s"NTIMES{$n} {counter=$counter}\n" ++ pps(r)
-  case BITS(r, bits) => s"BITS {bits=$bits}\n" ++ pps(r)
-}
-def pps(es: Rexp*): String = indent(es.map(pp))
-
-// --- intern ---
-// Interns a regex by ‚Äúpushing in‚Äù bit markers on alternatives.
-def intern(r: Rexp): Rexp = r match {
-  case ZERO          => ZERO
-  case ONE           => ONE
-  case CHAR(c)       => CHAR(c)
-  case ALT(r1, r2)   => ALT(fuse(List(0), intern(r1)), fuse(List(1), intern(r2)))
-  case SEQ(r1, r2)   => SEQ(intern(r1), intern(r2))
-  case STAR(r)       => STAR(intern(r))
-  case NTIMES(r, n, counter) => NTIMES(intern(r), n, counter)
-  case POINT(r, tag) => POINT(intern(r), tag)
-  case BITS(r, bits) => fuse(bits, intern(r))
-}
-
-// --- Test functions ---
 // testing bitcodes
 @main
 def test1() = {
-    val rexp = intern(STAR( ALT( ALT("a","b") , "c" ) ))
+    //
+    val rexp = STAR( ALT(ALT("a","b") , ALT("c","d") )  ) 
 
     println("=============== Test ===============")
-    val s="abc".toList
+    val s="cdc".toList
     println(s"String: $s\n")
     val finReg=matcher2(rexp, s)
     println(s"Original size=${size(rexp)} Result= ${fin(finReg)} \n")
@@ -366,14 +102,15 @@ def test1() = {
     println(pp(mat(rexp, sPart)))
     }
 
-    println("\n=============== Final Reg ===============n")
+    println("\n=============== Final Reg ===============\n")
     println(s"Size=${size(finReg)} , Tree= \n ${pp(finReg)}\n")
-    println("\n=============== bitcodes ===============n")
+    println("\n=============== bitcodes ===============\n")
 
+    println(finReg)
     val mkepsValue = mkeps(finReg)
     println(s"mkeps= $mkepsValue")
-    val decodeValue=decode(rexp,mkepsValue)
-    println(s"decode=$decodeValue")  
+   // val decodeValue=decode(rexp,mkepsValue)
+   // println(s"decode=$decodeValue")  
 
    /*  println("\n=============== EVIL ===============n")
 
@@ -391,22 +128,158 @@ val EVIL2 = SEQ(STAR(STAR(CHAR('a'))), CHAR('b'))
 
 @main
 def test2() = {
- // for (i <- 0 to 7000000 by 500000) {
- // }
+  for (i <- 0 to 7000000 by 500000) {
+    println(f"$i: ${time_needed(2, matcher(EVIL2, ("a" * i).toList))}%.5f")
+    //println(matcher2(EVIL2, ("a" * i).toList))  
+  }
  //:+ 'b'
-  val i=1000
-  println(f"$i: ${time_needed(2, matcher(EVIL2, ("a" * i).toList))}%.5f")
+  //val i=1000
+ // println(f"$i: ${time_needed(2, matcher(EVIL2, ("a" * i).toList))}%.5f")
 
 } 
+
+enum VALUE {
+  case ZEROV
+  case ONEV
+  case CHARV(c: Char)
+  case UNMARKED(s:String)
+  case SEQV(v1: VALUE, r2: VALUE )
+  case LEFT(v: VALUE)
+  case RIGHT(v: VALUE)
+  case STARV(vs: List[VALUE])
+}
+import VALUE._
+
+def decode(r: Rexp, bs: List[Int]): (VALUE, List[Int]) = r match {
+  case ONE => (ONEV, bs) // not sure this should be included
+  case CHAR(c) => (CHARV(c), List(1)) // (2) decode (c) bs = (Char(c), bs)
+  case ALT(r1, r2) => bs match {
+    case 0 :: bs1 => // (3) decode (r1 + r2) 0 :: bs =  (Left(v), bs')  where decode r1 bs => v,bs' 
+        val (v, bsp) = decode(r1, bs1)
+        (LEFT(v), bsp) 
+    case 1 :: bs1 => // (4) decode (r1 + r2) 1 :: bs = (Right(v), bs') where decode r2 bs => v,bs'
+        val (v, bsp) = decode(r2, bs1)
+        (RIGHT(v), bsp)
+    case x =>
+      (ZEROV, bs) // in case of something else, may need to remove it but just incase
+  }
+  case SEQ(r1, r2) =>  // (5) decode (r1 ¬∑ r2) bs = (Seq(v1, v2), bs3) where decode r1 bs => v1,bs2 and decode r2 bs2 =>v2,bs3 
+    val (v1, bs2) = decode(r1, bs)
+    val (v2, bs3) = decode(r2, bs2)
+    (SEQV(v1, v2), bs3) 
+
+  case STAR(r) => bs match {
+    case 1 :: bs1 => 
+      (STARV(List()), bs1) // terminate recursion for STAR
+    case 0 :: bs1 =>   
+      val (v, bs2) = decode(r, bs1)
+      val (STARV(vs), bsv) = decode(STAR(r), bs2) 
+      (STARV(v :: vs), bsv) 
+    case _ => 
+      (STARV(List()), bs) // Edge case: No matches in STAR
+    }// end of match r
+}
+
+// exctract the bits from the bit constructor, maybe also fuse it into the empty normal regular expression?
+def mkeps(r: Rexp): List[Int] = r match {
+    case BIT(POINT(r), bs) => bs
+    case ONE => List() 
+    case CHAR(_) => List() 
+    case POINT(CHAR(c)) => List()
+    case ALT(r1, r2) => List()
+       /*  if (fin(r1))  List(0) ++ mkeps(r1) 
+        else if (fin(r2)) List(1) ++ mkeps(r2) 
+        else List()  */
+    case SEQ(r1, r2) =>List()
+      /* if (fin(r1) && nullable(r2)) mkeps(r1) ++ mkeps(r2) 
+      else if (fin(r2)) mkeps(r2)
+      else List() //bs */
+    case STAR(r) =>List()
+       /* if (fin(r)) List(1) // ++mkeps_marked2(r)++
+        else List()  */
+    case NTIMES(r, n, counter) =>List()
+
+/*         if (counter == n && fin(r)) mkeps(r) 
+        else List() //bs */
+    case ZERO => List() 
+    
+    //case BIT(r, bs) => bs
+}
+
+def fuse(cs: List[Int], r: Rexp): Rexp = r match {
+  case BIT(inner, bs) => BIT(inner, cs ++ bs)
+  case _              => r
+}
+//def intern(r: Rexp) : Rexp = BIT(r,List())
+
+def size(r: Rexp) : Int = r match {
+  case ZERO => 1
+  case ONE => 1
+  case CHAR(_) => 1
+  case ALT(r1, r2) => 1 + size(r1) + size(r2)
+  case SEQ(r1, r2) => 1 + size(r1) + size(r2)
+  case STAR(r) => 1 + size(r)
+  case NTIMES(r,n,counter) => 1 + size(r) 
+  case POINT(r) => 1 + size(r)
+  case BIT(r, bs) => 1 + size(r)
+}
+
+// some syntax sugar for regexes
+def charlist2rexp(s : List[Char]): Rexp = s match {
+  case Nil => ONE
+  case c::Nil => CHAR(c)
+  case c::s => SEQ(CHAR(c), charlist2rexp(s))
+}
+// strings are coerced into Rexps
+given Conversion[String, Rexp] = s => charlist2rexp(s.toList)
+
+//val ABCD : Rexp = "abcd"
+
+extension (r: Rexp) {
+  def | (s: Rexp) = ALT(r, s)
+  def % = STAR(r)
+  def ~ (s: Rexp) = SEQ(r, s)
+}
+
+// pretty-printing REGs
+def implode(ss: Seq[String]) = ss.mkString("\n")
+def explode(s: String) = s.split("\n").toList
+
+def lst(s: String) : String = explode(s) match {
+  case hd :: tl => implode(" ‚îî" ++ hd :: tl.map("  " ++ _))
+  case Nil => ""
+}
+
+def mid(s: String) : String = explode(s) match {
+  case hd :: tl => implode(" ‚îú" ++ hd :: tl.map(" ‚îÇ" ++ _))
+  case Nil => ""
+}
+
+def indent(ss: Seq[String]) : String = ss match {
+  case init :+ last => implode(init.map(mid) :+ lst(last))
+  case _ => "" 
+}
+
+def pp(e: Rexp) : String = e match {
+  case ZERO => "0\n"
+  case ONE => "1\n"
+  case CHAR(c) => s"$c\n"
+  case POINT(CHAR(c)) => s"‚Ä¢$c \n" 
+  case ALT(r1, r2) => s"ALT\n" ++ pps(r1, r2)
+  case SEQ(r1, r2) => s"SEQ\n" ++ pps(r1, r2)
+  case STAR(r) => "STAR\n" ++ pps(r)
+  case NTIMES(r, n,counter) => 
+    s"NTIMES{$n} {counter=$counter}\n" ++ pps(r)
+  case BIT(r, bs) => s"BIT {bs=:$bs}\n" ++ pps(r)
+}
+def pps(es: Rexp*) = indent(es.map(pp))
 
 def time_needed[T](i: Int, code: => T) = {
   val start = System.nanoTime()
   for (j <- 1 to i) code
   val end = System.nanoTime()
   (end - start) / (i * 1.0e9)
-}
-
-*w
+}*w
 /ammonite/$file/play_point3_BIT.Rexp#`<init>`(). Ä@*<init>Ää., (&$ammonite/$file/play_point3_BIT.Rexp#í: *Œ
 $ammonite/$file/play_point3_BIT.Rexp# îÄ*RexpÄäê
 çjava/lang/Object#scala/reflect/Enum#(&$ammonite/$file/play_point3_BIT.Rexp#"1
@@ -464,28 +337,15 @@ scala/Int#í: öscala/reflect/Enum#ordinal().*X
 3ammonite/$file/play_point3_BIT.Rexp.CHAR.unapply().
 4ammonite/$file/play_point3_BIT.Rexp.CHAR.toString().í: *m
 ,ammonite/$file/play_point3_BIT.Rexp.POINT#r. Ä*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#í: *}
-.ammonite/$file/play_point3_BIT.Rexp.POINT#tag. Ä*tagÄä8"6
-42 scala/collection/immutable/List#
-scala/Int#í: *m
+(&$ammonite/$file/play_point3_BIT.Rexp#í: *m
 4ammonite/$file/play_point3_BIT.Rexp.POINT#copy().(r)*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*}
-6ammonite/$file/play_point3_BIT.Rexp.POINT#copy().(tag)*tagÄä8"6
-42 scala/collection/immutable/List#
-scala/Int#*Í
-1ammonite/$file/play_point3_BIT.Rexp.POINT#copy().*copyÄä£†n
-4ammonite/$file/play_point3_BIT.Rexp.POINT#copy().(r)
-6ammonite/$file/play_point3_BIT.Rexp.POINT#copy().(tag).,*ammonite/$file/play_point3_BIT.Rexp.POINT#í: *√
+(&$ammonite/$file/play_point3_BIT.Rexp#*∞
+1ammonite/$file/play_point3_BIT.Rexp.POINT#copy().*copyÄäjh6
+4ammonite/$file/play_point3_BIT.Rexp.POINT#copy().(r).,*ammonite/$file/play_point3_BIT.Rexp.POINT#í: *√
 ;ammonite/$file/play_point3_BIT.Rexp.POINT#copy$default$1().*copy$default$1Ääi"g
 ejc
 aB_
 (&$ammonite/$file/play_point3_BIT.Rexp#3
-1/-scala/annotation/unchecked/uncheckedVariance#í: *œ
-;ammonite/$file/play_point3_BIT.Rexp.POINT#copy$default$2().*copy$default$2Ääu"s
-qjo
-mBk
-42 scala/collection/immutable/List#
-scala/Int#3
 1/-scala/annotation/unchecked/uncheckedVariance#í: *Ç
 4ammonite/$file/play_point3_BIT.Rexp.POINT#ordinal().*ordinalÄä"
 j
@@ -493,38 +353,23 @@ scala/Int#3
 scala/Int#í: öscala/reflect/Enum#ordinal().*r
 /ammonite/$file/play_point3_BIT.Rexp.POINT#_1().*_1Ää0".
 ,j*
-(&$ammonite/$file/play_point3_BIT.Rexp#í: *~
-/ammonite/$file/play_point3_BIT.Rexp.POINT#_2().*_2Ää<":
-8j6
-42 scala/collection/immutable/List#
-scala/Int#í: *t
+(&$ammonite/$file/play_point3_BIT.Rexp#í: *t
 8ammonite/$file/play_point3_BIT.Rexp.POINT#`<init>`().(r) Ä*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*Ñ
-:ammonite/$file/play_point3_BIT.Rexp.POINT#`<init>`().(tag) Ä*tagÄä8"6
-42 scala/collection/immutable/List#
-scala/Int#*˚
-5ammonite/$file/play_point3_BIT.Rexp.POINT#`<init>`(). Ä@*<init>Ää´®v
-8ammonite/$file/play_point3_BIT.Rexp.POINT#`<init>`().(r)
-:ammonite/$file/play_point3_BIT.Rexp.POINT#`<init>`().(tag).,*ammonite/$file/play_point3_BIT.Rexp.POINT#í: *ˇ
-*ammonite/$file/play_point3_BIT.Rexp.POINT# àÅ*POINTÄä∫
-∑(&$ammonite/$file/play_point3_BIT.Rexp#.,*ammonite/$file/play_point3_BIT.Rexp.POINT#"⁄
+(&$ammonite/$file/play_point3_BIT.Rexp#*Ω
+5ammonite/$file/play_point3_BIT.Rexp.POINT#`<init>`(). Ä@*<init>Äänl:
+8ammonite/$file/play_point3_BIT.Rexp.POINT#`<init>`().(r).,*ammonite/$file/play_point3_BIT.Rexp.POINT#í: *·
+*ammonite/$file/play_point3_BIT.Rexp.POINT# àÅ*POINTÄäú
+ô(&$ammonite/$file/play_point3_BIT.Rexp#.,*ammonite/$file/play_point3_BIT.Rexp.POINT#"º
 ,ammonite/$file/play_point3_BIT.Rexp.POINT#r.
-.ammonite/$file/play_point3_BIT.Rexp.POINT#tag.
 5ammonite/$file/play_point3_BIT.Rexp.POINT#`<init>`().
 1ammonite/$file/play_point3_BIT.Rexp.POINT#copy().
 ;ammonite/$file/play_point3_BIT.Rexp.POINT#copy$default$1().
-;ammonite/$file/play_point3_BIT.Rexp.POINT#copy$default$2().
 4ammonite/$file/play_point3_BIT.Rexp.POINT#ordinal().
-/ammonite/$file/play_point3_BIT.Rexp.POINT#_1().
-/ammonite/$file/play_point3_BIT.Rexp.POINT#_2().í: *n
+/ammonite/$file/play_point3_BIT.Rexp.POINT#_1().í: *n
 5ammonite/$file/play_point3_BIT.Rexp.POINT.apply().(r)*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*~
-7ammonite/$file/play_point3_BIT.Rexp.POINT.apply().(tag)*tagÄä8"6
-42 scala/collection/immutable/List#
-scala/Int#*Ó
-2ammonite/$file/play_point3_BIT.Rexp.POINT.apply().*applyÄä•¢p
-5ammonite/$file/play_point3_BIT.Rexp.POINT.apply().(r)
-7ammonite/$file/play_point3_BIT.Rexp.POINT.apply().(tag).,*ammonite/$file/play_point3_BIT.Rexp.POINT#í: *z
+(&$ammonite/$file/play_point3_BIT.Rexp#*≥
+2ammonite/$file/play_point3_BIT.Rexp.POINT.apply().*applyÄäki7
+5ammonite/$file/play_point3_BIT.Rexp.POINT.apply().(r).,*ammonite/$file/play_point3_BIT.Rexp.POINT#í: *z
 9ammonite/$file/play_point3_BIT.Rexp.POINT.unapply().(x$1)*x$1Ää2"0
 .,*ammonite/$file/play_point3_BIT.Rexp.POINT#*ª
 4ammonite/$file/play_point3_BIT.Rexp.POINT.unapply().*unapplyÄäom;
@@ -823,90 +668,104 @@ scala/Int#*Ø
 :ammonite/$file/play_point3_BIT.Rexp.NTIMES.unapply().(x$1)/-+ammonite/$file/play_point3_BIT.Rexp.NTIMES#í: *Ñ
 6ammonite/$file/play_point3_BIT.Rexp.NTIMES.toString().*toStringÄä"
 j
-java/lang/String#í: öscala/Any#toString().*
+java/lang/String#í: öscala/Any#toString().*ƒ
+Iammonite/$file/play_point3_BIT.Rexp.NTIMES.$lessinit$greater$default$3().*$lessinit$greater$default$3ÄäO"M
+KjI
+GBE
+
+scala/Int#3
+1/-scala/annotation/unchecked/uncheckedVariance#í: *ª
 +ammonite/$file/play_point3_BIT.Rexp.NTIMES.
- *NTIMESÄä´
-®java/lang/Object#0¢-+ammonite/$file/play_point3_BIT.Rexp.NTIMES."‹
+ *NTIMESÄäˆ
+Ûjava/lang/Object#0¢-+ammonite/$file/play_point3_BIT.Rexp.NTIMES."ß
 6ammonite/$file/play_point3_BIT.Rexp.NTIMES.`<init>`().
 3ammonite/$file/play_point3_BIT.Rexp.NTIMES.apply().
 5ammonite/$file/play_point3_BIT.Rexp.NTIMES.unapply().
-6ammonite/$file/play_point3_BIT.Rexp.NTIMES.toString().í: *l
-+ammonite/$file/play_point3_BIT.Rexp.BITS#r. Ä*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#í: *~
-.ammonite/$file/play_point3_BIT.Rexp.BITS#bits. Ä*bitsÄä8"6
+6ammonite/$file/play_point3_BIT.Rexp.NTIMES.toString().
+Iammonite/$file/play_point3_BIT.Rexp.NTIMES.$lessinit$greater$default$3().í: *k
+*ammonite/$file/play_point3_BIT.Rexp.BIT#r. Ä*rÄä,"*
+(&$ammonite/$file/play_point3_BIT.Rexp#í: *y
++ammonite/$file/play_point3_BIT.Rexp.BIT#bs. Ä*bsÄä8"6
 42 scala/collection/immutable/List#
-scala/Int#í: *l
-3ammonite/$file/play_point3_BIT.Rexp.BITS#copy().(r)*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*~
-6ammonite/$file/play_point3_BIT.Rexp.BITS#copy().(bits)*bitsÄä8"6
+scala/Int#í: *k
+2ammonite/$file/play_point3_BIT.Rexp.BIT#copy().(r)*rÄä,"*
+(&$ammonite/$file/play_point3_BIT.Rexp#*y
+3ammonite/$file/play_point3_BIT.Rexp.BIT#copy().(bs)*bsÄä8"6
 42 scala/collection/immutable/List#
-scala/Int#*Á
-0ammonite/$file/play_point3_BIT.Rexp.BITS#copy().*copyÄä°ûm
-3ammonite/$file/play_point3_BIT.Rexp.BITS#copy().(r)
-6ammonite/$file/play_point3_BIT.Rexp.BITS#copy().(bits)-+)ammonite/$file/play_point3_BIT.Rexp.BITS#í: *¬
-:ammonite/$file/play_point3_BIT.Rexp.BITS#copy$default$1().*copy$default$1Ääi"g
+scala/Int#*·
+/ammonite/$file/play_point3_BIT.Rexp.BIT#copy().*copyÄäúôi
+2ammonite/$file/play_point3_BIT.Rexp.BIT#copy().(r)
+3ammonite/$file/play_point3_BIT.Rexp.BIT#copy().(bs),*(ammonite/$file/play_point3_BIT.Rexp.BIT#í: *¡
+9ammonite/$file/play_point3_BIT.Rexp.BIT#copy$default$1().*copy$default$1Ääi"g
 ejc
 aB_
 (&$ammonite/$file/play_point3_BIT.Rexp#3
-1/-scala/annotation/unchecked/uncheckedVariance#í: *Œ
-:ammonite/$file/play_point3_BIT.Rexp.BITS#copy$default$2().*copy$default$2Ääu"s
+1/-scala/annotation/unchecked/uncheckedVariance#í: *Õ
+9ammonite/$file/play_point3_BIT.Rexp.BIT#copy$default$2().*copy$default$2Ääu"s
 qjo
 mBk
 42 scala/collection/immutable/List#
 scala/Int#3
-1/-scala/annotation/unchecked/uncheckedVariance#í: *Å
-3ammonite/$file/play_point3_BIT.Rexp.BITS#ordinal().*ordinalÄä"
+1/-scala/annotation/unchecked/uncheckedVariance#í: *Ä
+2ammonite/$file/play_point3_BIT.Rexp.BIT#ordinal().*ordinalÄä"
 j
 
-scala/Int#í: öscala/reflect/Enum#ordinal().*q
-.ammonite/$file/play_point3_BIT.Rexp.BITS#_1().*_1Ää0".
+scala/Int#í: öscala/reflect/Enum#ordinal().*p
+-ammonite/$file/play_point3_BIT.Rexp.BIT#_1().*_1Ää0".
 ,j*
-(&$ammonite/$file/play_point3_BIT.Rexp#í: *}
-.ammonite/$file/play_point3_BIT.Rexp.BITS#_2().*_2Ää<":
+(&$ammonite/$file/play_point3_BIT.Rexp#í: *|
+-ammonite/$file/play_point3_BIT.Rexp.BIT#_2().*_2Ää<":
 8j6
 42 scala/collection/immutable/List#
-scala/Int#í: *s
-7ammonite/$file/play_point3_BIT.Rexp.BITS#`<init>`().(r) Ä*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*Ö
-:ammonite/$file/play_point3_BIT.Rexp.BITS#`<init>`().(bits) Ä*bitsÄä8"6
+scala/Int#í: *r
+6ammonite/$file/play_point3_BIT.Rexp.BIT#`<init>`().(r) Ä*rÄä,"*
+(&$ammonite/$file/play_point3_BIT.Rexp#*Ä
+7ammonite/$file/play_point3_BIT.Rexp.BIT#`<init>`().(bs) Ä*bsÄä8"6
 42 scala/collection/immutable/List#
-scala/Int#*¯
-4ammonite/$file/play_point3_BIT.Rexp.BITS#`<init>`(). Ä@*<init>Ää©¶u
-7ammonite/$file/play_point3_BIT.Rexp.BITS#`<init>`().(r)
-:ammonite/$file/play_point3_BIT.Rexp.BITS#`<init>`().(bits)-+)ammonite/$file/play_point3_BIT.Rexp.BITS#í: *Ù
-)ammonite/$file/play_point3_BIT.Rexp.BITS# àÅ*BITSÄä±
-Æ(&$ammonite/$file/play_point3_BIT.Rexp#-+)ammonite/$file/play_point3_BIT.Rexp.BITS#"“
-+ammonite/$file/play_point3_BIT.Rexp.BITS#r.
-.ammonite/$file/play_point3_BIT.Rexp.BITS#bits.
-4ammonite/$file/play_point3_BIT.Rexp.BITS#`<init>`().
-0ammonite/$file/play_point3_BIT.Rexp.BITS#copy().
-:ammonite/$file/play_point3_BIT.Rexp.BITS#copy$default$1().
-:ammonite/$file/play_point3_BIT.Rexp.BITS#copy$default$2().
-3ammonite/$file/play_point3_BIT.Rexp.BITS#ordinal().
-.ammonite/$file/play_point3_BIT.Rexp.BITS#_1().
-.ammonite/$file/play_point3_BIT.Rexp.BITS#_2().í: *m
-4ammonite/$file/play_point3_BIT.Rexp.BITS.apply().(r)*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*
-7ammonite/$file/play_point3_BIT.Rexp.BITS.apply().(bits)*bitsÄä8"6
+scala/Int#*Ú
+3ammonite/$file/play_point3_BIT.Rexp.BIT#`<init>`(). Ä@*<init>Ää§°q
+6ammonite/$file/play_point3_BIT.Rexp.BIT#`<init>`().(r)
+7ammonite/$file/play_point3_BIT.Rexp.BIT#`<init>`().(bs),*(ammonite/$file/play_point3_BIT.Rexp.BIT#í: *Ê
+(ammonite/$file/play_point3_BIT.Rexp.BIT# àÅ*BITÄä•
+¢(&$ammonite/$file/play_point3_BIT.Rexp#,*(ammonite/$file/play_point3_BIT.Rexp.BIT#"«
+*ammonite/$file/play_point3_BIT.Rexp.BIT#r.
++ammonite/$file/play_point3_BIT.Rexp.BIT#bs.
+3ammonite/$file/play_point3_BIT.Rexp.BIT#`<init>`().
+/ammonite/$file/play_point3_BIT.Rexp.BIT#copy().
+9ammonite/$file/play_point3_BIT.Rexp.BIT#copy$default$1().
+9ammonite/$file/play_point3_BIT.Rexp.BIT#copy$default$2().
+2ammonite/$file/play_point3_BIT.Rexp.BIT#ordinal().
+-ammonite/$file/play_point3_BIT.Rexp.BIT#_1().
+-ammonite/$file/play_point3_BIT.Rexp.BIT#_2().í: *l
+3ammonite/$file/play_point3_BIT.Rexp.BIT.apply().(r)*rÄä,"*
+(&$ammonite/$file/play_point3_BIT.Rexp#*z
+4ammonite/$file/play_point3_BIT.Rexp.BIT.apply().(bs)*bsÄä8"6
 42 scala/collection/immutable/List#
-scala/Int#*Î
-1ammonite/$file/play_point3_BIT.Rexp.BITS.apply().*applyÄä£†o
-4ammonite/$file/play_point3_BIT.Rexp.BITS.apply().(r)
-7ammonite/$file/play_point3_BIT.Rexp.BITS.apply().(bits)-+)ammonite/$file/play_point3_BIT.Rexp.BITS#í: *x
-8ammonite/$file/play_point3_BIT.Rexp.BITS.unapply().(x$1)*x$1Ää1"/
--+)ammonite/$file/play_point3_BIT.Rexp.BITS#*∏
-3ammonite/$file/play_point3_BIT.Rexp.BITS.unapply().*unapplyÄämk:
-8ammonite/$file/play_point3_BIT.Rexp.BITS.unapply().(x$1)-+)ammonite/$file/play_point3_BIT.Rexp.BITS#í: *Ç
-4ammonite/$file/play_point3_BIT.Rexp.BITS.toString().*toStringÄä"
+scala/Int#*Â
+0ammonite/$file/play_point3_BIT.Rexp.BIT.apply().*applyÄäûõk
+3ammonite/$file/play_point3_BIT.Rexp.BIT.apply().(r)
+4ammonite/$file/play_point3_BIT.Rexp.BIT.apply().(bs),*(ammonite/$file/play_point3_BIT.Rexp.BIT#í: *v
+7ammonite/$file/play_point3_BIT.Rexp.BIT.unapply().(x$1)*x$1Ää0".
+,*(ammonite/$file/play_point3_BIT.Rexp.BIT#*µ
+2ammonite/$file/play_point3_BIT.Rexp.BIT.unapply().*unapplyÄäki9
+7ammonite/$file/play_point3_BIT.Rexp.BIT.unapply().(x$1),*(ammonite/$file/play_point3_BIT.Rexp.BIT#í: *Å
+3ammonite/$file/play_point3_BIT.Rexp.BIT.toString().*toStringÄä"
 j
-java/lang/String#í: öscala/Any#toString().*‚
-)ammonite/$file/play_point3_BIT.Rexp.BITS.
- *BITSÄä°
-ûjava/lang/Object#.¢+)ammonite/$file/play_point3_BIT.Rexp.BITS."‘
-4ammonite/$file/play_point3_BIT.Rexp.BITS.`<init>`().
-1ammonite/$file/play_point3_BIT.Rexp.BITS.apply().
-3ammonite/$file/play_point3_BIT.Rexp.BITS.unapply().
-4ammonite/$file/play_point3_BIT.Rexp.BITS.toString().í: *]
+java/lang/String#í: öscala/Any#toString().*Á
+Fammonite/$file/play_point3_BIT.Rexp.BIT.$lessinit$greater$default$2().*$lessinit$greater$default$2Ääu"s
+qjo
+mBk
+42 scala/collection/immutable/List#
+scala/Int#3
+1/-scala/annotation/unchecked/uncheckedVariance#í: *£
+(ammonite/$file/play_point3_BIT.Rexp.BIT.
+ *BITÄä‰
+·java/lang/Object#-¢*(ammonite/$file/play_point3_BIT.Rexp.BIT."ò
+3ammonite/$file/play_point3_BIT.Rexp.BIT.`<init>`().
+0ammonite/$file/play_point3_BIT.Rexp.BIT.apply().
+2ammonite/$file/play_point3_BIT.Rexp.BIT.unapply().
+3ammonite/$file/play_point3_BIT.Rexp.BIT.toString().
+Fammonite/$file/play_point3_BIT.Rexp.BIT.$lessinit$greater$default$2().í: *]
 6ammonite/$file/play_point3_BIT.Rexp.$new().(_$ordinal)*	_$ordinalÄä"
 
 scala/Int#*\
@@ -919,10 +778,10 @@ scala/Int#*\
 
 scala/Int#*π
 2ammonite/$file/play_point3_BIT.Rexp.fromOrdinal().*fromOrdinalÄäki=
-;ammonite/$file/play_point3_BIT.Rexp.fromOrdinal().(ordinal)(&$ammonite/$file/play_point3_BIT.Rexp#í: *ı	
+;ammonite/$file/play_point3_BIT.Rexp.fromOrdinal().(ordinal)(&$ammonite/$file/play_point3_BIT.Rexp#í: *Ú	
 $ammonite/$file/play_point3_BIT.Rexp.
- *RexpÄäπ	
-∂	java/lang/Object#)¢&$ammonite/$file/play_point3_BIT.Rexp."Ò
+ *RexpÄä∂	
+≥	java/lang/Object#)¢&$ammonite/$file/play_point3_BIT.Rexp."Ó
 /ammonite/$file/play_point3_BIT.Rexp.`<init>`().
 )ammonite/$file/play_point3_BIT.Rexp.ZERO.
 (ammonite/$file/play_point3_BIT.Rexp.ONE.
@@ -944,28 +803,20 @@ $ammonite/$file/play_point3_BIT.Rexp.
 +ammonite/$file/play_point3_BIT.Rexp.NTIMES#
 +ammonite/$file/play_point3_BIT.Rexp.NTIMES.
 +ammonite/$file/play_point3_BIT.Rexp.NTIMES.
-)ammonite/$file/play_point3_BIT.Rexp.BITS#
-)ammonite/$file/play_point3_BIT.Rexp.BITS.
-)ammonite/$file/play_point3_BIT.Rexp.BITS.
+(ammonite/$file/play_point3_BIT.Rexp.BIT#
+(ammonite/$file/play_point3_BIT.Rexp.BIT.
+(ammonite/$file/play_point3_BIT.Rexp.BIT.
 +ammonite/$file/play_point3_BIT.Rexp.$new().
-2ammonite/$file/play_point3_BIT.Rexp.fromOrdinal().í: *p
-*ammonite/$file/play_point3_BIT.fuse().(cs)*csÄä8"6
-42 scala/collection/immutable/List#
-scala/Int#*b
-)ammonite/$file/play_point3_BIT.fuse().(r)*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*F
-local0 Ä*innerÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*Q
-local1 Ä*bitsÄä8"6
-42 scala/collection/immutable/List#
-scala/Int#*¬
-&ammonite/$file/play_point3_BIT.fuse().*fuseÄäÜÉW
-*ammonite/$file/play_point3_BIT.fuse().(cs)
-)ammonite/$file/play_point3_BIT.fuse().(r)(&$ammonite/$file/play_point3_BIT.Rexp#í: *f
+2ammonite/$file/play_point3_BIT.Rexp.fromOrdinal().í: *f
 -ammonite/$file/play_point3_BIT.nullable().(r)*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*F
-local2 Ä*innerÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*C
+(&$ammonite/$file/play_point3_BIT.Rexp#*B
+local0 Ä*rÄä,"*
+(&$ammonite/$file/play_point3_BIT.Rexp#*B
+local1 Ä*rÄä,"*
+(&$ammonite/$file/play_point3_BIT.Rexp#*O
+local2 Ä*bsÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#*C
 local3 Ä*r1Ää,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*C
 local4 Ä*r2Ää,"*
@@ -978,118 +829,92 @@ scala/Int#*¬
 (&$ammonite/$file/play_point3_BIT.Rexp#*(
 local8 Ä*nÄä"
 
-scala/Int#*F
-local9 Ä*innerÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*c
+scala/Int#*.
+local9 Ä*counterÄä"
+
+scala/Int#*c
 *ammonite/$file/play_point3_BIT.nullable().*nullableÄä 
 local7scala/Boolean#í: *a
 (ammonite/$file/play_point3_BIT.fin().(r)*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*G
-local10 Ä*innerÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*Q
-local11 Ä*tagÄä8"6
-42 scala/collection/immutable/List#
-scala/Int#*D
+(&$ammonite/$file/play_point3_BIT.Rexp#*D
+local10 Ä*r1Ää,"*
+(&$ammonite/$file/play_point3_BIT.Rexp#*D
+local11 Ä*r2Ää,"*
+(&$ammonite/$file/play_point3_BIT.Rexp#*D
 local12 Ä*r1Ää,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*D
 local13 Ä*r2Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*D
-local14 Ä*r1Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*D
-local15 Ä*r2Ää,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*C
-local16 Ä*rÄä,"*
+local14 Ä*rÄä,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*C
-local17 Ä*rÄä,"*
+local15 Ä*rÄä,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*)
-local18 Ä*nÄä"
+local16 Ä*nÄä"
 
 scala/Int#*/
-local19 Ä*counterÄä"
+local17 Ä*counterÄä"
 
-scala/Int#*G
-local20 Ä*innerÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*Z
+scala/Int#*C
+local18 Ä*rÄä,"*
+(&$ammonite/$file/play_point3_BIT.Rexp#*P
+local19 Ä*bsÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#*Z
 %ammonite/$file/play_point3_BIT.fin().*finÄä!	
-local17scala/Boolean#í: *M
+local18scala/Boolean#í: *M
 *ammonite/$file/play_point3_BIT.shift().(m)*mÄä"
 scala/Boolean#*e
 +ammonite/$file/play_point3_BIT.shift().(re)*reÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*o
-+ammonite/$file/play_point3_BIT.shift().(cp)*cpÄä6"4
-20scala/Tuple2#scala/Char#
+(&$ammonite/$file/play_point3_BIT.Rexp#*J
+*ammonite/$file/play_point3_BIT.shift().(c)*cÄä"
+scala/Char#*q
++ammonite/$file/play_point3_BIT.shift().(bs)*bsÄä8"6
+42 scala/collection/immutable/List#
 scala/Int#**
-local21 Ä*cÄä"
-scala/Char#*+
-local22 Ä*posÄä"
-
-scala/Int#**
-local23 Ä*dÄä"
+local20 Ä*dÄä"
 scala/Char#**
-local24 Ä*dÄä"
-scala/Char#*Q
-local25 Ä*tagÄä8"6
-42 scala/collection/immutable/List#
-scala/Int#*.
-local26 Ä*elem$1Ää"
-
-scala/Int#*G
-local27 Ä*innerÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*Q
-local28 Ä*tagÄä8"6
-42 scala/collection/immutable/List#
-scala/Int#*D
-local29 Ä*r1Ää,"*
+local21 Ä*dÄä"
+scala/Char#*D
+local22 Ä*r1Ää,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*D
-local30 Ä*r2Ää,"*
+local23 Ä*r2Ää,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*D
-local31 Ä*r1Ää,"*
+local24 Ä*r1Ää,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*D
-local32 Ä*r2Ää,"*
+local25 Ä*r2Ää,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*C
-local33 Ä*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*I
-local34 Ä*shiftedÄä,"*
+local26 Ä*rÄä,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*C
-local35 Ä*rÄä,"*
+local27 Ä*rÄä,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*)
-local36 Ä*nÄä"
+local28 Ä*nÄä"
 
 scala/Int#*/
-local37 Ä*counterÄä"
+local29 Ä*counterÄä"
 
 scala/Int#*C
-local38 Ä*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*R
-local39 Ä*bitsÄä8"6
+local30 Ä*rÄä,"*
+(&$ammonite/$file/play_point3_BIT.Rexp#*O
+local31 Ä*bÄä8"6
 42 scala/collection/immutable/List#
-scala/Int#*Ù
-'ammonite/$file/play_point3_BIT.shift().*shiftÄä∂≥Ü
+scala/Int#*†
+'ammonite/$file/play_point3_BIT.shift().*shiftÄä‚ﬂ≤
 *ammonite/$file/play_point3_BIT.shift().(m)
 +ammonite/$file/play_point3_BIT.shift().(re)
-+ammonite/$file/play_point3_BIT.shift().(cp)(&$ammonite/$file/play_point3_BIT.Rexp#í: *a
+*ammonite/$file/play_point3_BIT.shift().(c)
++ammonite/$file/play_point3_BIT.shift().(bs)(&$ammonite/$file/play_point3_BIT.Rexp#í: *a
 (ammonite/$file/play_point3_BIT.mat().(r)*rÄä,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*n
 (ammonite/$file/play_point3_BIT.mat().(s)*sÄä9"7
 53 scala/collection/immutable/List#scala/Char#**
-local40 Ä*cÄä"
+local32 Ä*cÄä"
 scala/Char#*Q
-local41 Ä*csÄä9"7
-53 scala/collection/immutable/List#scala/Char#*B
-local42*x$1Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*Ö
-local43*x$2Ääo"m
-kiscala/Tuple2#HBF
-scala/Char#3
-1/-scala/annotation/unchecked/uncheckedVariance#
-scala/Int#*J
-local44 Ä*currRexpÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#**
-local45 Ä*cÄä"
-scala/Char#*)
-local46 Ä*iÄä"
-
-scala/Int#*Ω
+local33 Ä*csÄä9"7
+53 scala/collection/immutable/List#scala/Char#*@
+local34*rÄä,"*
+(&$ammonite/$file/play_point3_BIT.Rexp#*'
+local35*cÄä"
+scala/Char#*Ω
 %ammonite/$file/play_point3_BIT.mat().*matÄäÉÄT
 (ammonite/$file/play_point3_BIT.mat().(r)
 (ammonite/$file/play_point3_BIT.mat().(s)(&$ammonite/$file/play_point3_BIT.Rexp#í: *e
@@ -1106,40 +931,31 @@ scala/Int#*Ω
 53 scala/collection/immutable/List#scala/Char#*—
 *ammonite/$file/play_point3_BIT.matcher2().*matcher2Ääçä^
 -ammonite/$file/play_point3_BIT.matcher2().(r)
--ammonite/$file/play_point3_BIT.matcher2().(s)(&$ammonite/$file/play_point3_BIT.Rexp#í: *c
-*ammonite/$file/play_point3_BIT.mkeps().(r)*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*G
-local47 Ä*innerÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*Q
-local48 Ä*tagÄä8"6
-42 scala/collection/immutable/List#
-scala/Int#*D
-local49 Ä*r1Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*D
-local50 Ä*r2Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*D
-local51 Ä*r1Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*D
-local52 Ä*r2Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*C
-local53 Ä*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*C
-local54 Ä*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*)
-local55 Ä*nÄä"
+-ammonite/$file/play_point3_BIT.matcher2().(s)(&$ammonite/$file/play_point3_BIT.Rexp#í: *F
+local36 Ä*rexpÄä,"*
+(&$ammonite/$file/play_point3_BIT.Rexp#*P
+local37 Ä*sÄä9"7
+53 scala/collection/immutable/List#scala/Char#*H
+local38 Ä*finRegÄä,"*
+(&$ammonite/$file/play_point3_BIT.Rexp#*&
+local39*iÄä"
 
-scala/Int#*/
-local56 Ä*counterÄä"
-
-scala/Int#*C
-local57 Ä*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*R
-local58 Ä*bitsÄä8"6
+scala/Int#*T
+local40 Ä*sPartÄä9"7
+53 scala/collection/immutable/List#scala/Char#*X
+local41 Ä*
+mkepsValueÄä8"6
 42 scala/collection/immutable/List#
-scala/Int#*Ä
-'ammonite/$file/play_point3_BIT.mkeps().*mkepsÄäCA	
-local5742 scala/collection/immutable/List#
-scala/Int#í: *y
+scala/Int#*h
+'ammonite/$file/play_point3_BIT.test1().*test1j
+mainargs/main#Ää scala/Unit#í: *j
+%ammonite/$file/play_point3_BIT.EVIL2. Ä*EVIL2Ää,"*
+(&$ammonite/$file/play_point3_BIT.Rexp#í: *&
+local42*iÄä"
+
+scala/Int#*h
+'ammonite/$file/play_point3_BIT.test2().*test2j
+mainargs/main#Ää scala/Unit#í: *y
 0ammonite/$file/play_point3_BIT.VALUE#`<init>`(). Ä@*<init>Ää/- )'%ammonite/$file/play_point3_BIT.VALUE#í: *“
 %ammonite/$file/play_point3_BIT.VALUE# îÄ*VALUEÄäí
 èjava/lang/Object#scala/reflect/Enum#)'%ammonite/$file/play_point3_BIT.VALUE#"2
@@ -1246,15 +1062,15 @@ scala/Int#í: öscala/reflect/Enum#ordinal().*f
 9ammonite/$file/play_point3_BIT.VALUE.UNMARKED.toString().í: *p
 -ammonite/$file/play_point3_BIT.VALUE.SEQV#v1. Ä*v1Ää-"+
 )'%ammonite/$file/play_point3_BIT.VALUE#í: *p
--ammonite/$file/play_point3_BIT.VALUE.SEQV#v2. Ä*v2Ää-"+
+-ammonite/$file/play_point3_BIT.VALUE.SEQV#r2. Ä*r2Ää-"+
 )'%ammonite/$file/play_point3_BIT.VALUE#í: *p
 5ammonite/$file/play_point3_BIT.VALUE.SEQV#copy().(v1)*v1Ää-"+
 )'%ammonite/$file/play_point3_BIT.VALUE#*p
-5ammonite/$file/play_point3_BIT.VALUE.SEQV#copy().(v2)*v2Ää-"+
+5ammonite/$file/play_point3_BIT.VALUE.SEQV#copy().(r2)*r2Ää-"+
 )'%ammonite/$file/play_point3_BIT.VALUE#*Í
 1ammonite/$file/play_point3_BIT.VALUE.SEQV#copy().*copyÄä£†n
 5ammonite/$file/play_point3_BIT.VALUE.SEQV#copy().(v1)
-5ammonite/$file/play_point3_BIT.VALUE.SEQV#copy().(v2).,*ammonite/$file/play_point3_BIT.VALUE.SEQV#í: *ƒ
+5ammonite/$file/play_point3_BIT.VALUE.SEQV#copy().(r2).,*ammonite/$file/play_point3_BIT.VALUE.SEQV#í: *ƒ
 ;ammonite/$file/play_point3_BIT.VALUE.SEQV#copy$default$1().*copy$default$1Ääj"h
 fjd
 bB`
@@ -1277,15 +1093,15 @@ scala/Int#í: öscala/reflect/Enum#ordinal().*s
 )'%ammonite/$file/play_point3_BIT.VALUE#í: *w
 9ammonite/$file/play_point3_BIT.VALUE.SEQV#`<init>`().(v1) Ä*v1Ää-"+
 )'%ammonite/$file/play_point3_BIT.VALUE#*w
-9ammonite/$file/play_point3_BIT.VALUE.SEQV#`<init>`().(v2) Ä*v2Ää-"+
+9ammonite/$file/play_point3_BIT.VALUE.SEQV#`<init>`().(r2) Ä*r2Ää-"+
 )'%ammonite/$file/play_point3_BIT.VALUE#*˚
 5ammonite/$file/play_point3_BIT.VALUE.SEQV#`<init>`(). Ä@*<init>Ää´®v
 9ammonite/$file/play_point3_BIT.VALUE.SEQV#`<init>`().(v1)
-9ammonite/$file/play_point3_BIT.VALUE.SEQV#`<init>`().(v2).,*ammonite/$file/play_point3_BIT.VALUE.SEQV#í: *ˇ
+9ammonite/$file/play_point3_BIT.VALUE.SEQV#`<init>`().(r2).,*ammonite/$file/play_point3_BIT.VALUE.SEQV#í: *ˇ
 *ammonite/$file/play_point3_BIT.VALUE.SEQV# àÅ*SEQVÄäª
 ∏)'%ammonite/$file/play_point3_BIT.VALUE#.,*ammonite/$file/play_point3_BIT.VALUE.SEQV#"⁄
 -ammonite/$file/play_point3_BIT.VALUE.SEQV#v1.
--ammonite/$file/play_point3_BIT.VALUE.SEQV#v2.
+-ammonite/$file/play_point3_BIT.VALUE.SEQV#r2.
 5ammonite/$file/play_point3_BIT.VALUE.SEQV#`<init>`().
 1ammonite/$file/play_point3_BIT.VALUE.SEQV#copy().
 ;ammonite/$file/play_point3_BIT.VALUE.SEQV#copy$default$1().
@@ -1295,11 +1111,11 @@ scala/Int#í: öscala/reflect/Enum#ordinal().*s
 /ammonite/$file/play_point3_BIT.VALUE.SEQV#_2().í: *q
 6ammonite/$file/play_point3_BIT.VALUE.SEQV.apply().(v1)*v1Ää-"+
 )'%ammonite/$file/play_point3_BIT.VALUE#*q
-6ammonite/$file/play_point3_BIT.VALUE.SEQV.apply().(v2)*v2Ää-"+
+6ammonite/$file/play_point3_BIT.VALUE.SEQV.apply().(r2)*r2Ää-"+
 )'%ammonite/$file/play_point3_BIT.VALUE#*Ó
 2ammonite/$file/play_point3_BIT.VALUE.SEQV.apply().*applyÄä•¢p
 6ammonite/$file/play_point3_BIT.VALUE.SEQV.apply().(v1)
-6ammonite/$file/play_point3_BIT.VALUE.SEQV.apply().(v2).,*ammonite/$file/play_point3_BIT.VALUE.SEQV#í: *z
+6ammonite/$file/play_point3_BIT.VALUE.SEQV.apply().(r2).,*ammonite/$file/play_point3_BIT.VALUE.SEQV#í: *z
 9ammonite/$file/play_point3_BIT.VALUE.SEQV.unapply().(x$1)*x$1Ää2"0
 .,*ammonite/$file/play_point3_BIT.VALUE.SEQV#*ª
 4ammonite/$file/play_point3_BIT.VALUE.SEQV.unapply().*unapplyÄäom;
@@ -1502,288 +1318,151 @@ scala/Int#*º
 ,ammonite/$file/play_point3_BIT.decode().(bs)*bsÄä8"6
 42 scala/collection/immutable/List#
 scala/Int#**
-local59 Ä*cÄä"
-scala/Char#*G
-local60 Ä*innerÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*Q
-local61 Ä*tagÄä8"6
-42 scala/collection/immutable/List#
-scala/Int#*D
-local62 Ä*r1Ää,"*
+local43 Ä*cÄä"
+scala/Char#*D
+local44 Ä*r1Ää,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*D
-local63 Ä*r2Ää,"*
+local45 Ä*r2Ää,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*Q
-local64 Ä*bs1Ää8"6
+local46 Ä*bs1Ää8"6
 42 scala/collection/immutable/List#
 scala/Int#*D
-local65 Ä*vÄä-"+
+local47 Ä*vÄä-"+
 )'%ammonite/$file/play_point3_BIT.VALUE#*Q
-local66 Ä*bspÄä8"6
+local48 Ä*bspÄä8"6
 42 scala/collection/immutable/List#
 scala/Int#*Q
-local67 Ä*bs1Ää8"6
+local49 Ä*bs1Ää8"6
 42 scala/collection/immutable/List#
 scala/Int#*D
-local68 Ä*vÄä-"+
+local50 Ä*vÄä-"+
 )'%ammonite/$file/play_point3_BIT.VALUE#*Q
-local69 Ä*bspÄä8"6
+local51 Ä*bspÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#*O
+local52 Ä*xÄä8"6
 42 scala/collection/immutable/List#
 scala/Int#*D
-local70 Ä*r1Ää,"*
+local53 Ä*r1Ää,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*D
-local71 Ä*r2Ää,"*
+local54 Ä*r2Ää,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*E
-local72 Ä*v1Ää-"+
+local55 Ä*v1Ää-"+
 )'%ammonite/$file/play_point3_BIT.VALUE#*Q
-local73 Ä*bs2Ää8"6
+local56 Ä*bs2Ää8"6
 42 scala/collection/immutable/List#
 scala/Int#*E
-local74 Ä*v2Ää-"+
+local57 Ä*v2Ää-"+
 )'%ammonite/$file/play_point3_BIT.VALUE#*Q
-local75 Ä*bs3Ää8"6
+local58 Ä*bs3Ää8"6
 42 scala/collection/immutable/List#
 scala/Int#*C
-local76 Ä*rÄä,"*
+local59 Ä*rÄä,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*Q
-local77 Ä*bs1Ää8"6
+local60 Ä*bs1Ää8"6
 42 scala/collection/immutable/List#
 scala/Int#*Q
-local78 Ä*bs1Ää8"6
+local61 Ä*bs1Ää8"6
 42 scala/collection/immutable/List#
 scala/Int#*D
-local79 Ä*vÄä-"+
+local62 Ä*vÄä-"+
 )'%ammonite/$file/play_point3_BIT.VALUE#*Q
-local80 Ä*bs2Ää8"6
+local63 Ä*bs2Ää8"6
 42 scala/collection/immutable/List#
 scala/Int#*k
-local81 Ä*vsÄäS"Q
+local64 Ä*vsÄäS"Q
 OM scala/collection/immutable/List#)'%ammonite/$file/play_point3_BIT.VALUE#*Q
-local82 Ä*bsvÄä8"6
-42 scala/collection/immutable/List#
-scala/Int#*C
-local83 Ä*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*)
-local84 Ä*nÄä"
-
-scala/Int#*/
-local85 Ä*counterÄä"
-
-scala/Int#*C
-local86 Ä*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*R
-local87 Ä*bitsÄä8"6
+local65 Ä*bsvÄä8"6
 42 scala/collection/immutable/List#
 scala/Int#*
 (ammonite/$file/play_point3_BIT.decode().*decodeÄä∞≠7
-local86
+local59
 ,ammonite/$file/play_point3_BIT.decode().(bs)rpscala/Tuple2#)'%ammonite/$file/play_point3_BIT.VALUE#42 scala/collection/immutable/List#
-scala/Int#í: *g
-.ammonite/$file/play_point3_BIT.popPoints().(r)*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#**
-local88 Ä*cÄä"
-scala/Char#*G
-local89 Ä*innerÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*R
-local90 Ä*tagsÄä8"6
+scala/Int#í: *c
+*ammonite/$file/play_point3_BIT.mkeps().(r)*rÄä,"*
+(&$ammonite/$file/play_point3_BIT.Rexp#*C
+local66 Ä*rÄä,"*
+(&$ammonite/$file/play_point3_BIT.Rexp#*P
+local67 Ä*bsÄä8"6
 42 scala/collection/immutable/List#
-scala/Int#*N
-local91 Ä*currentInnerÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*K
-local92 Ä*	nextInnerÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*M
-local93 Ä*updatedNextÄä,"*
+scala/Int#**
+local68 Ä*cÄä"
+scala/Char#*D
+local69 Ä*r1Ää,"*
+(&$ammonite/$file/play_point3_BIT.Rexp#*D
+local70 Ä*r2Ää,"*
+(&$ammonite/$file/play_point3_BIT.Rexp#*D
+local71 Ä*r1Ää,"*
+(&$ammonite/$file/play_point3_BIT.Rexp#*D
+local72 Ä*r2Ää,"*
+(&$ammonite/$file/play_point3_BIT.Rexp#*C
+local73 Ä*rÄä,"*
+(&$ammonite/$file/play_point3_BIT.Rexp#*C
+local74 Ä*rÄä,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*)
-local94 Ä*xÄä"
+local75 Ä*nÄä"
 
-scala/Int#*D
-local95 Ä*r1Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*D
-local96 Ä*r2Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*G
-local97 Ä*curr1Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*G
-local98 Ä*next1Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*G
-local99 Ä*curr2Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*H
-local100 Ä*next2Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*E
-local101 Ä*r1Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*E
-local102 Ä*r2Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*H
-local103 Ä*curr1Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*H
-local104 Ä*next1Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*H
-local105 Ä*curr2Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*H
-local106 Ä*next2Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*H
-local107 Ä*innerÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*G
-local108 Ä*currÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*G
-local109 Ä*nextÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*H
-local110 Ä*innerÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#**
-local111 Ä*nÄä"
+scala/Int#*/
+local76 Ä*counterÄä"
 
-scala/Int#*0
-local112 Ä*counterÄä"
-
-scala/Int#*G
-local113 Ä*currÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*G
-local114 Ä*nextÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*D
-local115 Ä*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*S
-local116 Ä*bitsÄä8"6
+scala/Int#*Ä
+'ammonite/$file/play_point3_BIT.mkeps().*mkepsÄäCA	
+local7442 scala/collection/immutable/List#
+scala/Int#í: *p
+*ammonite/$file/play_point3_BIT.fuse().(cs)*csÄä8"6
 42 scala/collection/immutable/List#
-scala/Int#*G
-local117 Ä*currÄä,"*
+scala/Int#*b
+)ammonite/$file/play_point3_BIT.fuse().(r)*rÄä,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*G
-local118 Ä*nextÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*∫
-+ammonite/$file/play_point3_BIT.popPoints().*	popPointsÄäus
-
-local115ecscala/Tuple2#(&$ammonite/$file/play_point3_BIT.Rexp#(&$ammonite/$file/play_point3_BIT.Rexp#í: *l
-3ammonite/$file/play_point3_BIT.traverseStages().(r)*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*f
-=ammonite/$file/play_point3_BIT.traverseStages().(inputLength)*inputLengthÄä"
-
-scala/Int#*E
-local119*stateÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*l
-local120*stagesÄäR"P
-NL scala/collection/immutable/List#(&$ammonite/$file/play_point3_BIT.Rexp#*/
-local121*	remainingÄä"
-
-scala/Int#*O
-local122 Ä*currentStageÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*L
-local123 Ä*	nextStateÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*ä
-local124*loopÄärp
-local119
-local120
-local121NL scala/collection/immutable/List#(&$ammonite/$file/play_point3_BIT.Rexp#*ô
-0ammonite/$file/play_point3_BIT.traverseStages().*traverseStagesÄä…∆t
-3ammonite/$file/play_point3_BIT.traverseStages().(r)
-=ammonite/$file/play_point3_BIT.traverseStages().(inputLength)NL scala/collection/immutable/List#(&$ammonite/$file/play_point3_BIT.Rexp#í: *m
-4ammonite/$file/play_point3_BIT.traverseStages2().(r)*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*g
->ammonite/$file/play_point3_BIT.traverseStages2().(inputLength)*inputLengthÄä"
-
-scala/Int#*™
-local125*x$1Ääí"è
-åâscala/Tuple2#NL scala/collection/immutable/List#(&$ammonite/$file/play_point3_BIT.Rexp#(&$ammonite/$file/play_point3_BIT.Rexp#*)
-local126*x$2Ää"
-
-scala/Int#*l
-local127 Ä*accÄäR"P
-NL scala/collection/immutable/List#(&$ammonite/$file/play_point3_BIT.Rexp#*H
-local128 Ä*stateÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*O
-local129 Ä*currentStageÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*L
-local130 Ä*	nextStateÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*o
-local131 Ä*stagesÄäR"P
-NL scala/collection/immutable/List#(&$ammonite/$file/play_point3_BIT.Rexp#*ù
-1ammonite/$file/play_point3_BIT.traverseStages2().*traverseStages2ÄäÀ»v
-4ammonite/$file/play_point3_BIT.traverseStages2().(r)
->ammonite/$file/play_point3_BIT.traverseStages2().(inputLength)NL scala/collection/immutable/List#(&$ammonite/$file/play_point3_BIT.Rexp#í: *k
-2ammonite/$file/play_point3_BIT.extractPoints().(r)*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*D
-local132 Ä*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*R
-local133 Ä*posÄä8"6
+local77 Ä*innerÄä,"*
+(&$ammonite/$file/play_point3_BIT.Rexp#*P
+local78 Ä*bsÄä8"6
 42 scala/collection/immutable/List#
-scala/Int#*'
-local134*pÄä"
-
-scala/Int#*E
-local135 Ä*r1Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*E
-local136 Ä*r2Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*E
-local137 Ä*r1Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*E
-local138 Ä*r2Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*D
-local139 Ä*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*D
-local140 Ä*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*D
-local141 Ä*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*œ
-/ammonite/$file/play_point3_BIT.extractPoints().*extractPointsÄäÅ
-
-local141qo scala/collection/immutable/List#KIscala/Tuple2#(&$ammonite/$file/play_point3_BIT.Rexp#
-scala/Int#í: *h
-/ammonite/$file/play_point3_BIT.matchCount().(r)*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*D
-local142 Ä*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*E
-local143 Ä*r1Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*E
-local144 Ä*r2Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*E
-local145 Ä*r1Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*E
-local146 Ä*r2Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*D
-local147 Ä*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*D
-local148 Ä*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#**
-local149 Ä*nÄä"
-
-scala/Int#*D
-local150 Ä*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*e
-,ammonite/$file/play_point3_BIT.matchCount().*
-matchCountÄä
-
-local150
-scala/Int#í: *b
+scala/Int#*¬
+&ammonite/$file/play_point3_BIT.fuse().*fuseÄäÜÉW
+*ammonite/$file/play_point3_BIT.fuse().(cs)
+)ammonite/$file/play_point3_BIT.fuse().(r)(&$ammonite/$file/play_point3_BIT.Rexp#í: *b
 )ammonite/$file/play_point3_BIT.size().(r)*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*E
-local151 Ä*r1Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*E
-local152 Ä*r2Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*E
-local153 Ä*r1Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*E
-local154 Ä*r2Ää,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*D
-local155 Ä*rÄä,"*
+local79 Ä*r1Ää,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*D
-local156 Ä*rÄä,"*
+local80 Ä*r2Ää,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*D
-local157 Ä*rÄä,"*
+local81 Ä*r1Ää,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*D
-local158 Ä*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*Y
-&ammonite/$file/play_point3_BIT.size().*sizeÄä
-
-local158
+local82 Ä*r2Ää,"*
+(&$ammonite/$file/play_point3_BIT.Rexp#*C
+local83 Ä*rÄä,"*
+(&$ammonite/$file/play_point3_BIT.Rexp#*C
+local84 Ä*rÄä,"*
+(&$ammonite/$file/play_point3_BIT.Rexp#*)
+local85 Ä*nÄä"
+
+scala/Int#*/
+local86 Ä*counterÄä"
+
+scala/Int#*C
+local87 Ä*rÄä,"*
+(&$ammonite/$file/play_point3_BIT.Rexp#*C
+local88 Ä*rÄä,"*
+(&$ammonite/$file/play_point3_BIT.Rexp#*P
+local89 Ä*bsÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#*X
+&ammonite/$file/play_point3_BIT.size().*sizeÄä	
+local88
 scala/Int#í: *x
 2ammonite/$file/play_point3_BIT.charlist2rexp().(s)*sÄä9"7
-53 scala/collection/immutable/List#scala/Char#*+
-local159 Ä*cÄä"
-scala/Char#*+
-local160 Ä*cÄä"
-scala/Char#*Q
-local161 Ä*sÄä9"7
-53 scala/collection/immutable/List#scala/Char#*Ö
-/ammonite/$file/play_point3_BIT.charlist2rexp().*charlist2rexpÄä86
-
-local161(&$ammonite/$file/play_point3_BIT.Rexp#í: *1
-local162*sÄä"
+53 scala/collection/immutable/List#scala/Char#**
+local90 Ä*cÄä"
+scala/Char#**
+local91 Ä*cÄä"
+scala/Char#*P
+local92 Ä*sÄä9"7
+53 scala/collection/immutable/List#scala/Char#*Ñ
+/ammonite/$file/play_point3_BIT.charlist2rexp().*charlist2rexpÄä75	
+local92(&$ammonite/$file/play_point3_BIT.Rexp#í: *0
+local93*sÄä"
 scala/Predef.String#* 
 <ammonite/$file/play_point3_BIT.given_Conversion_String_Rexp. Ëà*given_Conversion_String_RexpÄä]"[
 YWscala/Conversion#scala/Predef.String#(&$ammonite/$file/play_point3_BIT.Rexp#í: *a
@@ -1814,66 +1493,62 @@ YWscala/Conversion#scala/Predef.String#(&$ammonite/$file/play_point3
 )ammonite/$file/play_point3_BIT.explode().*explodeÄäom.
 ,ammonite/$file/play_point3_BIT.explode().(s);9 scala/collection/immutable/List#java/lang/String#í: *Q
 (ammonite/$file/play_point3_BIT.lst().(s)*sÄä"
-scala/Predef.String#*2
-local163 Ä*hdÄä"
-java/lang/String#*X
-local164 Ä*tlÄä?"=
-;9 scala/collection/immutable/List#java/lang/String#*Å
+scala/Predef.String#*1
+local94 Ä*hdÄä"
+java/lang/String#*W
+local95 Ä*tlÄä?"=
+;9 scala/collection/immutable/List#java/lang/String#*8
+local96 Ä*elem$1Ää"
+scala/Predef.String#*Å
 %ammonite/$file/play_point3_BIT.lst().*lstÄäHF*
 (ammonite/$file/play_point3_BIT.lst().(s)scala/Predef.String#í: *Q
 (ammonite/$file/play_point3_BIT.mid().(s)*sÄä"
-scala/Predef.String#*2
-local165 Ä*hdÄä"
-java/lang/String#*X
-local166 Ä*tlÄä?"=
-;9 scala/collection/immutable/List#java/lang/String#*Å
+scala/Predef.String#*1
+local97 Ä*hdÄä"
+java/lang/String#*W
+local98 Ä*tlÄä?"=
+;9 scala/collection/immutable/List#java/lang/String#*8
+local99 Ä*elem$2Ää"
+scala/Predef.String#*Å
 %ammonite/$file/play_point3_BIT.mid().*midÄäHF*
 (ammonite/$file/play_point3_BIT.mid().(s)scala/Predef.String#í: *{
 ,ammonite/$file/play_point3_BIT.indent().(ss)*ssÄäA"?
 =;scala/collection/immutable/Seq#scala/Predef.String#*\
-local167 Ä*initÄäA"?
+local100 Ä*initÄäA"?
 =;scala/collection/immutable/Seq#scala/Predef.String#*4
-local168 Ä*lastÄä"
+local101 Ä*lastÄä"
 java/lang/String#*1
-local169*sÄä"
+local102*sÄä"
 scala/Predef.String#*ã
 (ammonite/$file/play_point3_BIT.indent().*indentÄäLJ.
 ,ammonite/$file/play_point3_BIT.indent().(ss)scala/Predef.String#í: *`
 'ammonite/$file/play_point3_BIT.pp().(e)*eÄä,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*+
-local170 Ä*cÄä"
+local103 Ä*cÄä"
 scala/Char#*+
-local171 Ä*cÄä"
-scala/Char#*R
-local172 Ä*tagÄä8"6
-42 scala/collection/immutable/List#
-scala/Int#*D
-local173 Ä*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*R
-local174 Ä*tagÄä8"6
-42 scala/collection/immutable/List#
-scala/Int#*E
-local175 Ä*r1Ää,"*
+local104 Ä*cÄä"
+scala/Char#*E
+local105 Ä*r1Ää,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*E
-local176 Ä*r2Ää,"*
+local106 Ä*r2Ää,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*E
-local177 Ä*r1Ää,"*
+local107 Ä*r1Ää,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*E
-local178 Ä*r2Ää,"*
+local108 Ä*r2Ää,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*D
-local179 Ä*rÄä,"*
+local109 Ä*rÄä,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*D
-local180 Ä*rÄä,"*
+local110 Ä*rÄä,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#**
-local181 Ä*nÄä"
+local111 Ä*nÄä"
 
 scala/Int#*0
-local182 Ä*counterÄä"
+local112 Ä*counterÄä"
 
 scala/Int#*D
-local183 Ä*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*S
-local184 Ä*bitsÄä8"6
+local113 Ä*rÄä,"*
+(&$ammonite/$file/play_point3_BIT.Rexp#*Q
+local114 Ä*bsÄä8"6
 42 scala/collection/immutable/List#
 scala/Int#*~
 $ammonite/$file/play_point3_BIT.pp().*ppÄäGE)
@@ -1881,72 +1556,10 @@ $ammonite/$file/play_point3_BIT.pp().*ppÄäGE)
 )ammonite/$file/play_point3_BIT.pps().(es)*esÄä0".
 ,r*
 (&$ammonite/$file/play_point3_BIT.Rexp#*A
-local185*eÄä,"*
+local115*eÄä,"*
 (&$ammonite/$file/play_point3_BIT.Rexp#*Ç
 %ammonite/$file/play_point3_BIT.pps().*ppsÄäIG+
-)ammonite/$file/play_point3_BIT.pps().(es)scala/Predef.String#í: *d
-+ammonite/$file/play_point3_BIT.intern().(r)*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*+
-local186 Ä*cÄä"
-scala/Char#*E
-local187 Ä*r1Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*E
-local188 Ä*r2Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*E
-local189 Ä*r1Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*E
-local190 Ä*r2Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*D
-local191 Ä*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*D
-local192 Ä*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#**
-local193 Ä*nÄä"
-
-scala/Int#*0
-local194 Ä*counterÄä"
-
-scala/Int#*D
-local195 Ä*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*R
-local196 Ä*tagÄä8"6
-42 scala/collection/immutable/List#
-scala/Int#*D
-local197 Ä*rÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*S
-local198 Ä*bitsÄä8"6
-42 scala/collection/immutable/List#
-scala/Int#*w
-(ammonite/$file/play_point3_BIT.intern().*internÄä86
-
-local197(&$ammonite/$file/play_point3_BIT.Rexp#í: *G
-local199 Ä*rexpÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*Q
-local200 Ä*sÄä9"7
-53 scala/collection/immutable/List#scala/Char#*I
-local201 Ä*finRegÄä,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#*'
-local202*iÄä"
-
-scala/Int#*U
-local203 Ä*sPartÄä9"7
-53 scala/collection/immutable/List#scala/Char#*Y
-local204 Ä*
-mkepsValueÄä8"6
-42 scala/collection/immutable/List#
-scala/Int#*ò
-local205 Ä*decodeValueÄäv"t
-rpscala/Tuple2#)'%ammonite/$file/play_point3_BIT.VALUE#42 scala/collection/immutable/List#
-scala/Int#*h
-'ammonite/$file/play_point3_BIT.test1().*test1j
-mainargs/main#Ää scala/Unit#í: *j
-%ammonite/$file/play_point3_BIT.EVIL2. Ä*EVIL2Ää,"*
-(&$ammonite/$file/play_point3_BIT.Rexp#í: **
-local206 Ä*iÄä"
-
-scala/Int#*h
-'ammonite/$file/play_point3_BIT.test2().*test2j
-mainargs/main#Ää scala/Unit#í: *c
+)ammonite/$file/play_point3_BIT.pps().(es)scala/Predef.String#í: *c
 0ammonite/$file/play_point3_BIT.time_needed().[T]	*TÄä&$scala/Nothing#
 scala/Any#*O
 0ammonite/$file/play_point3_BIT.time_needed().(i)*iÄä"
@@ -1955,12 +1568,12 @@ scala/Int#*
 3ammonite/$file/play_point3_BIT.time_needed().(code)*codeÄä<":
 8j6
 420ammonite/$file/play_point3_BIT.time_needed().[T]*/
-local207 Ä*startÄä"
+local116 Ä*startÄä"
 scala/Long#*'
-local208*jÄä"
+local117*jÄä"
 
 scala/Int#*-
-local209 Ä*endÄä"
+local118 Ä*endÄä"
 scala/Long#*˝
 -ammonite/$file/play_point3_BIT.time_needed().*time_neededÄä≥∞
 2
@@ -1970,31 +1583,29 @@ scala/Int#*-
 'ammonite/$file/play_point3_BIT.$main().*$mainÄä>< 86scala/collection/Iterator#scala/Predef.String#í: *x
 *ammonite/$file/play_point3_BIT.toString().*toStringÄä"
 j
-java/lang/String#í: öscala/Any#toString().*Ã
+java/lang/String#í: öscala/Any#toString().*±
 ammonite/$file/play_point3_BIT.
- *play_point3_BITÄää
-ájava/lang/Object#$¢!ammonite/$file/play_point3_BIT."«
+ *play_point3_BITÄäÔ
+Ïjava/lang/Object#$¢!ammonite/$file/play_point3_BIT."¨
 *ammonite/$file/play_point3_BIT.`<init>`().
 $ammonite/$file/play_point3_BIT.Rexp#
 $ammonite/$file/play_point3_BIT.Rexp.
 $ammonite/$file/play_point3_BIT.Rexp.
-&ammonite/$file/play_point3_BIT.fuse().
 *ammonite/$file/play_point3_BIT.nullable().
 %ammonite/$file/play_point3_BIT.fin().
 'ammonite/$file/play_point3_BIT.shift().
 %ammonite/$file/play_point3_BIT.mat().
 )ammonite/$file/play_point3_BIT.matcher().
 *ammonite/$file/play_point3_BIT.matcher2().
-'ammonite/$file/play_point3_BIT.mkeps().
+'ammonite/$file/play_point3_BIT.test1().
+%ammonite/$file/play_point3_BIT.EVIL2.
+'ammonite/$file/play_point3_BIT.test2().
 %ammonite/$file/play_point3_BIT.VALUE#
 %ammonite/$file/play_point3_BIT.VALUE.
 %ammonite/$file/play_point3_BIT.VALUE.
 (ammonite/$file/play_point3_BIT.decode().
-+ammonite/$file/play_point3_BIT.popPoints().
-0ammonite/$file/play_point3_BIT.traverseStages().
-1ammonite/$file/play_point3_BIT.traverseStages2().
-/ammonite/$file/play_point3_BIT.extractPoints().
-,ammonite/$file/play_point3_BIT.matchCount().
+'ammonite/$file/play_point3_BIT.mkeps().
+&ammonite/$file/play_point3_BIT.fuse().
 &ammonite/$file/play_point3_BIT.size().
 /ammonite/$file/play_point3_BIT.charlist2rexp().
 <ammonite/$file/play_point3_BIT.given_Conversion_String_Rexp.
@@ -2008,10 +1619,6 @@ $ammonite/$file/play_point3_BIT.Rexp.
 (ammonite/$file/play_point3_BIT.indent().
 $ammonite/$file/play_point3_BIT.pp().
 %ammonite/$file/play_point3_BIT.pps().
-(ammonite/$file/play_point3_BIT.intern().
-'ammonite/$file/play_point3_BIT.test1().
-%ammonite/$file/play_point3_BIT.EVIL2.
-'ammonite/$file/play_point3_BIT.test2().
 -ammonite/$file/play_point3_BIT.time_needed().
 'ammonite/$file/play_point3_BIT.$main().
 *ammonite/$file/play_point3_BIT.toString().í: *6
@@ -2023,2619 +1630,1697 @@ scala/Any#2
  	os/2
 
  os/size.2=
- /ammonite/$file/play_point3_BIT.Rexp#`<init>`().22
- 	$ammonite/$file/play_point3_BIT.Rexp#27
- )ammonite/$file/play_point3_BIT.Rexp.ZERO.26
- 
+ /ammonite/$file/play_point3_BIT.Rexp#`<init>`().22
+ 	$ammonite/$file/play_point3_BIT.Rexp#27
+ )ammonite/$file/play_point3_BIT.Rexp.ZERO.26
+ 
 (ammonite/$file/play_point3_BIT.Rexp.ONE.2
- scala/Char#29
- +ammonite/$file/play_point3_BIT.Rexp.CHAR#c.2B
- 4ammonite/$file/play_point3_BIT.Rexp.CHAR#`<init>`().27
- )ammonite/$file/play_point3_BIT.Rexp.CHAR#22
- $ammonite/$file/play_point3_BIT.Rexp#2:
- ,ammonite/$file/play_point3_BIT.Rexp.POINT#r.2<
- .ammonite/$file/play_point3_BIT.Rexp.POINT#tag.2!
- scala/package.List#2
-  #
-scala/Int#2C
- 5ammonite/$file/play_point3_BIT.Rexp.POINT#`<init>`().28
- *ammonite/$file/play_point3_BIT.Rexp.POINT#22
+ scala/Char#29
+ +ammonite/$file/play_point3_BIT.Rexp.CHAR#c.2B
+ 4ammonite/$file/play_point3_BIT.Rexp.CHAR#`<init>`().27
+ )ammonite/$file/play_point3_BIT.Rexp.CHAR#22
+ $ammonite/$file/play_point3_BIT.Rexp#2:
+ ,ammonite/$file/play_point3_BIT.Rexp.POINT#r.2C
+ 5ammonite/$file/play_point3_BIT.Rexp.POINT#`<init>`().28
+ *ammonite/$file/play_point3_BIT.Rexp.POINT#22
+ $ammonite/$file/play_point3_BIT.Rexp#29
+ +ammonite/$file/play_point3_BIT.Rexp.ALT#r1.22
+ $ammonite/$file/play_point3_BIT.Rexp#29
+ +ammonite/$file/play_point3_BIT.Rexp.ALT#r2.2A
+
+ 
+3ammonite/$file/play_point3_BIT.Rexp.ALT#`<init>`().26
+ 
+(ammonite/$file/play_point3_BIT.Rexp.ALT#22
 		 $ammonite/$file/play_point3_BIT.Rexp#29
-		 +ammonite/$file/play_point3_BIT.Rexp.ALT#r1.22
+		 +ammonite/$file/play_point3_BIT.Rexp.SEQ#r1.22
 		 $ammonite/$file/play_point3_BIT.Rexp#29
-		 +ammonite/$file/play_point3_BIT.Rexp.ALT#r2.2A
+		 +ammonite/$file/play_point3_BIT.Rexp.SEQ#r2.2A
 	
 	 
-3ammonite/$file/play_point3_BIT.Rexp.ALT#`<init>`().26
+3ammonite/$file/play_point3_BIT.Rexp.SEQ#`<init>`().26
 		 
-(ammonite/$file/play_point3_BIT.Rexp.ALT#22
+(ammonite/$file/play_point3_BIT.Rexp.SEQ#22
 
 
  $ammonite/$file/play_point3_BIT.Rexp#29
 
+
+ +ammonite/$file/play_point3_BIT.Rexp.STAR#r.2B
+
 
- +ammonite/$file/play_point3_BIT.Rexp.SEQ#r1.22
-
-
- $ammonite/$file/play_point3_BIT.Rexp#29
-
-
- +ammonite/$file/play_point3_BIT.Rexp.SEQ#r2.2A
-
-
-
- 
-3ammonite/$file/play_point3_BIT.Rexp.SEQ#`<init>`().26
+ 4ammonite/$file/play_point3_BIT.Rexp.STAR#`<init>`().27
 
 
- 
-(ammonite/$file/play_point3_BIT.Rexp.SEQ#22
- $ammonite/$file/play_point3_BIT.Rexp#29
- +ammonite/$file/play_point3_BIT.Rexp.STAR#r.2B
- 4ammonite/$file/play_point3_BIT.Rexp.STAR#`<init>`().27
- )ammonite/$file/play_point3_BIT.Rexp.STAR#22
- $ammonite/$file/play_point3_BIT.Rexp#2;
- -ammonite/$file/play_point3_BIT.Rexp.NTIMES#r.2
- 
+ )ammonite/$file/play_point3_BIT.Rexp.STAR#22
+ $ammonite/$file/play_point3_BIT.Rexp#2;
+ -ammonite/$file/play_point3_BIT.Rexp.NTIMES#r.2
+ 
 scala/Int#2;
- -ammonite/$file/play_point3_BIT.Rexp.NTIMES#n.2
-( +
+ -ammonite/$file/play_point3_BIT.Rexp.NTIMES#n.2
+) ,
 scala/Int#2A
- &3ammonite/$file/play_point3_BIT.Rexp.NTIMES#counter.2D
- 6ammonite/$file/play_point3_BIT.Rexp.NTIMES#`<init>`().29
- +ammonite/$file/play_point3_BIT.Rexp.NTIMES#22
- $ammonite/$file/play_point3_BIT.Rexp#29
- +ammonite/$file/play_point3_BIT.Rexp.BITS#r.2<
- .ammonite/$file/play_point3_BIT.Rexp.BITS#bits.2!
- scala/package.List#2
-  #
-scala/Int#2B
- 4ammonite/$file/play_point3_BIT.Rexp.BITS#`<init>`().27
- )ammonite/$file/play_point3_BIT.Rexp.BITS#22
- $ammonite/$file/play_point3_BIT.Rexp.2!
- scala/package.List#2
- 
-scala/Int#28
-	 *ammonite/$file/play_point3_BIT.fuse().(cs)22
- $ammonite/$file/play_point3_BIT.Rexp#27
- )ammonite/$file/play_point3_BIT.fuse().(r)22
-" &$ammonite/$file/play_point3_BIT.Rexp#27
-) *)ammonite/$file/play_point3_BIT.fuse().(r)27
- )ammonite/$file/play_point3_BIT.Rexp.BITS.2
- local02
- local127
-  )ammonite/$file/play_point3_BIT.Rexp.BITS.2
-! &local02
-( ,local122
-- /$scala/collection/IterableOps#`++`().28
-0 2*ammonite/$file/play_point3_BIT.fuse().(cs)27
- )ammonite/$file/play_point3_BIT.Rexp.BITS.27
- )ammonite/$file/play_point3_BIT.fuse().(r)28
- *ammonite/$file/play_point3_BIT.fuse().(cs)24
- &ammonite/$file/play_point3_BIT.fuse().22
- $ammonite/$file/play_point3_BIT.Rexp#2;
- -ammonite/$file/play_point3_BIT.nullable().(r)2
- scala/Boolean#2;
-! "-ammonite/$file/play_point3_BIT.nullable().(r)27
+  '3ammonite/$file/play_point3_BIT.Rexp.NTIMES#counter.2D
+ 6ammonite/$file/play_point3_BIT.Rexp.NTIMES#`<init>`().29
+ +ammonite/$file/play_point3_BIT.Rexp.NTIMES#22
+ $ammonite/$file/play_point3_BIT.Rexp#28
+ *ammonite/$file/play_point3_BIT.Rexp.BIT#r.29
+ +ammonite/$file/play_point3_BIT.Rexp.BIT#bs.2!
+ scala/package.List#2
+ 
+scala/Int#2A
+
+ 
+3ammonite/$file/play_point3_BIT.Rexp.BIT#`<init>`().26
+ 
+(ammonite/$file/play_point3_BIT.Rexp.BIT#2!
+! %scala/package.List.22
+ $ammonite/$file/play_point3_BIT.Rexp.22
+ $ammonite/$file/play_point3_BIT.Rexp#2;
+ -ammonite/$file/play_point3_BIT.nullable().(r)2
+  scala/Boolean#2;
+# $-ammonite/$file/play_point3_BIT.nullable().(r)27
+ )ammonite/$file/play_point3_BIT.Rexp.ZERO.26
+ 
+(ammonite/$file/play_point3_BIT.Rexp.ONE.27
+ )ammonite/$file/play_point3_BIT.Rexp.CHAR.28
+ *ammonite/$file/play_point3_BIT.Rexp.POINT.2
+ local028
+ *ammonite/$file/play_point3_BIT.nullable().2
+ local026
+ 
+(ammonite/$file/play_point3_BIT.Rexp.BIT.2
+ local12
+ local228
+ *ammonite/$file/play_point3_BIT.nullable().2
+ local126
+ 
+(ammonite/$file/play_point3_BIT.Rexp.ALT.2
+ local32
+ local428
+ *ammonite/$file/play_point3_BIT.nullable().2
+ !local32#
+# %scala/Boolean#`||`().28
+& .*ammonite/$file/play_point3_BIT.nullable().2
+/ 1local426
+ 
+(ammonite/$file/play_point3_BIT.Rexp.SEQ.2
+ local52
+ local628
+ *ammonite/$file/play_point3_BIT.nullable().2
+ !local52#
+# %scala/Boolean#`&&`().28
+& .*ammonite/$file/play_point3_BIT.nullable().2
+/ 1local627
+ )ammonite/$file/play_point3_BIT.Rexp.STAR.29
+ +ammonite/$file/play_point3_BIT.Rexp.NTIMES.2
+ local72
+ local82
+ local92
+# $local82!
+% 'scala/Int#`==`(+3).28
+5 =*ammonite/$file/play_point3_BIT.nullable().2
+> ?local728
+ *ammonite/$file/play_point3_BIT.nullable().22
+ $ammonite/$file/play_point3_BIT.Rexp#26
+ 	(ammonite/$file/play_point3_BIT.fin().(r)2
+ scala/Boolean#26
+ (ammonite/$file/play_point3_BIT.fin().(r)27
  )ammonite/$file/play_point3_BIT.Rexp.ZERO.26
  
 (ammonite/$file/play_point3_BIT.Rexp.ONE.27
  )ammonite/$file/play_point3_BIT.Rexp.CHAR.28
-   *ammonite/$file/play_point3_BIT.Rexp.POINT.2
-   local228
- #  +*ammonite/$file/play_point3_BIT.nullable().2
- ,  1local226
+   *ammonite/$file/play_point3_BIT.Rexp.POINT.27
+   )ammonite/$file/play_point3_BIT.Rexp.CHAR.26
 !! 
-(ammonite/$file/play_point3_BIT.Rexp.ALT.2
-!! local32
-!! local428
-!#! +*ammonite/$file/play_point3_BIT.nullable().2
-!,! .local32#
-!0! 2scala/Boolean#`||`().28
-!3! ;*ammonite/$file/play_point3_BIT.nullable().2
-!<! >local426
+(ammonite/$file/play_point3_BIT.Rexp.ALT.2
+!! local102
+!! local1123
+!! %ammonite/$file/play_point3_BIT.fin().2
+!! local102#
+!!  scala/Boolean#`||`().23
+!!! $%ammonite/$file/play_point3_BIT.fin().2
+!%! 'local1126
 "" 
-(ammonite/$file/play_point3_BIT.Rexp.SEQ.2
-"" local52
-"" local628
-"#" +*ammonite/$file/play_point3_BIT.nullable().2
-"," .local52#
-"0" 2scala/Boolean#`&&`().28
-"3" ;*ammonite/$file/play_point3_BIT.nullable().2
-"<" >local627
-## )ammonite/$file/play_point3_BIT.Rexp.STAR.29
-$$ +ammonite/$file/play_point3_BIT.Rexp.NTIMES.2
-$$ local72
-$$ local82
-$&$ 'local82!
-$($ *scala/Int#`==`(+3).28
-$8$ @*ammonite/$file/play_point3_BIT.nullable().2
-$A$ Blocal727
-%% )ammonite/$file/play_point3_BIT.Rexp.BITS.2
-%% local928
-%#% +*ammonite/$file/play_point3_BIT.nullable().2
-%,% 1local928
- *ammonite/$file/play_point3_BIT.nullable().22
-)) $ammonite/$file/play_point3_BIT.Rexp#26
-)) 	(ammonite/$file/play_point3_BIT.fin().(r)2
-)) scala/Boolean#26
-)) (ammonite/$file/play_point3_BIT.fin().(r)27
-** )ammonite/$file/play_point3_BIT.Rexp.ZERO.26
-++ 
-(ammonite/$file/play_point3_BIT.Rexp.ONE.27
-,, )ammonite/$file/play_point3_BIT.Rexp.CHAR.28
--- *ammonite/$file/play_point3_BIT.Rexp.POINT.2
--- local102
--- local112
-.. 	local1027
-// )ammonite/$file/play_point3_BIT.Rexp.CHAR.2
-00 local112:
-00 ,scala/collection/IterableOnceOps#nonEmpty().2#
-00 scala/Boolean#`&&`().2
-00 local1122
-00 #$scala/collection/IterableOps#head().2 
-0$0 %scala/Int#`>`(+3).23
-11 %ammonite/$file/play_point3_BIT.fin().2
-11 local1026
-33 
-(ammonite/$file/play_point3_BIT.Rexp.ALT.2
-33 local122
-33 local1323
-33 %ammonite/$file/play_point3_BIT.fin().2
-33 local122#
-3 3 "scala/Boolean#`||`().23
-3#3 &%ammonite/$file/play_point3_BIT.fin().2
-3'3 )local1326
-44 
 (ammonite/$file/play_point3_BIT.Rexp.SEQ.2
-44 local142
-44 local1523
-44 %ammonite/$file/play_point3_BIT.fin().2
-44 local142#
-4!4 #scala/Boolean#`&&`().28
-4$4 ,*ammonite/$file/play_point3_BIT.nullable().2
-4-4 /local152#
-424 4scala/Boolean#`||`().23
-454 8%ammonite/$file/play_point3_BIT.fin().2
-494 ;local1527
-55 )ammonite/$file/play_point3_BIT.Rexp.STAR.2
-55 local1623
-55 %ammonite/$file/play_point3_BIT.fin().2
-55 local1629
-66 +ammonite/$file/play_point3_BIT.Rexp.NTIMES.2
-66 local172
-66 local182
-66 local192
-6 6 'local192!
-6(6 *scala/Int#`==`(+3).2
-6+6 ,local182#
-6-6 /scala/Boolean#`&&`().23
-606 3%ammonite/$file/play_point3_BIT.fin().2
-646 5local1727
-77 )ammonite/$file/play_point3_BIT.Rexp.BITS.2
-77 local2023
-77 %ammonite/$file/play_point3_BIT.fin().2
-77 "local2023
-)) %ammonite/$file/play_point3_BIT.fin().2
->> scala/Boolean#28
->
-> *ammonite/$file/play_point3_BIT.shift().(m)22
->> $ammonite/$file/play_point3_BIT.Rexp#29
->> +ammonite/$file/play_point3_BIT.shift().(re)2
->%> )scala/Char#2
->+> .
+"" local122
+"" local1323
+"" %ammonite/$file/play_point3_BIT.fin().2
+"" local122#
+"" !scala/Boolean#`&&`().28
+""" **ammonite/$file/play_point3_BIT.nullable().2
+"+" -local132#
+"0" 2scala/Boolean#`||`().23
+"3" 6%ammonite/$file/play_point3_BIT.fin().2
+"7" 9local1327
+## )ammonite/$file/play_point3_BIT.Rexp.STAR.2
+## local1423
+## %ammonite/$file/play_point3_BIT.fin().2
+## local1429
+$$ +ammonite/$file/play_point3_BIT.Rexp.NTIMES.2
+$$ local152
+$$ local162
+$$ local172
+$$ &local172!
+$'$ )scala/Int#`==`(+3).2
+$*$ +local162#
+$,$ .scala/Boolean#`&&`().23
+$/$ 2%ammonite/$file/play_point3_BIT.fin().2
+$3$ 4local1526
+%% 
+(ammonite/$file/play_point3_BIT.Rexp.BIT.2
+%% local182
+%% local1923
+%% %ammonite/$file/play_point3_BIT.fin().2
+%% local1823
+ %ammonite/$file/play_point3_BIT.fin().2
+)) scala/Boolean#28
+)
+) *ammonite/$file/play_point3_BIT.shift().(m)22
+)) $ammonite/$file/play_point3_BIT.Rexp#29
+)) +ammonite/$file/play_point3_BIT.shift().(re)2
+)#) 'scala/Char#28
+) ) !*ammonite/$file/play_point3_BIT.shift().(c)2!
+),) 0scala/package.List#2
+)1) 4
 scala/Int#29
-> > "+ammonite/$file/play_point3_BIT.shift().(cp)22
->2> 6$ammonite/$file/play_point3_BIT.Rexp#29
-?? +ammonite/$file/play_point3_BIT.shift().(cp)2
-?? local212
-?
-? local2229
-@@ +ammonite/$file/play_point3_BIT.shift().(re)27
-A	A )ammonite/$file/play_point3_BIT.Rexp.ZERO.27
-AA )ammonite/$file/play_point3_BIT.Rexp.ZERO.26
-B	B (ammonite/$file/play_point3_BIT.Rexp.ONE.26
-BB (ammonite/$file/play_point3_BIT.Rexp.ONE.27
-C	C )ammonite/$file/play_point3_BIT.Rexp.CHAR.2
-CC local2328
-D	D 
-*ammonite/$file/play_point3_BIT.shift().(m)2#
-DD scala/Boolean#`&&`().2
-DD local232"
-DD scala/Char#`==`(+2).2
-DD local2128
-DD *ammonite/$file/play_point3_BIT.Rexp.POINT.27
-DD  )ammonite/$file/play_point3_BIT.Rexp.CHAR.2
-D!D "local232!
-D%D )scala/package.List.2
-D*D -local222 
-D-D .scala/Int#`+`(+4).27
-EE )ammonite/$file/play_point3_BIT.Rexp.CHAR.2
-EE local2328
-F	F *ammonite/$file/play_point3_BIT.Rexp.POINT.27
-FF )ammonite/$file/play_point3_BIT.Rexp.CHAR.2
-FF local242
-FF local2528
-G	G 
-*ammonite/$file/play_point3_BIT.shift().(m)2#
-GG scala/Boolean#`&&`().2
-GG local242"
-GG scala/Char#`==`(+2).2
-GG local2128
-GG *ammonite/$file/play_point3_BIT.Rexp.POINT.27
-GG  )ammonite/$file/play_point3_BIT.Rexp.CHAR.2
-G!G "local242
-G.G 1local2528
-HH *ammonite/$file/play_point3_BIT.Rexp.POINT.27
-HH )ammonite/$file/play_point3_BIT.Rexp.CHAR.2
-HH local242
-HH "local2528
-I	I *ammonite/$file/play_point3_BIT.Rexp.POINT.2
-II local272
-II local2828
-KK *ammonite/$file/play_point3_BIT.Rexp.POINT.25
-KK 'ammonite/$file/play_point3_BIT.shift().28
-KK *ammonite/$file/play_point3_BIT.shift().(m)2
-KK local2729
-KK +ammonite/$file/play_point3_BIT.shift().(cp)2
-K!K $local2826
-L	L (ammonite/$file/play_point3_BIT.Rexp.ALT.2
-LL local292
-LL local3026
-MM 	(ammonite/$file/play_point3_BIT.Rexp.ALT.25
-M
-M 'ammonite/$file/play_point3_BIT.shift().28
-MM *ammonite/$file/play_point3_BIT.shift().(m)2
-MM local2929
-MM +ammonite/$file/play_point3_BIT.shift().(cp)25
-MM !'ammonite/$file/play_point3_BIT.shift().28
-M"M #*ammonite/$file/play_point3_BIT.shift().(m)2
-M%M 'local3029
-M)M ++ammonite/$file/play_point3_BIT.shift().(cp)26
-N	N (ammonite/$file/play_point3_BIT.Rexp.SEQ.2
-NN local312
-NN local3226
-OO 	(ammonite/$file/play_point3_BIT.Rexp.SEQ.25
-O
-O 'ammonite/$file/play_point3_BIT.shift().28
-OO *ammonite/$file/play_point3_BIT.shift().(m)2
-OO local3129
-OO +ammonite/$file/play_point3_BIT.shift().(cp)25
-OO !'ammonite/$file/play_point3_BIT.shift().28
-O#O $*ammonite/$file/play_point3_BIT.shift().(m)2#
-O%O 'scala/Boolean#`&&`().28
-O(O 0*ammonite/$file/play_point3_BIT.nullable().2
-O1O 3local312#
-O6O 8scala/Boolean#`||`().23
-O9O <%ammonite/$file/play_point3_BIT.fin().2
-O=O ?local312
-OBO Dlocal3229
-OFO H+ammonite/$file/play_point3_BIT.shift().(cp)27
-P	P )ammonite/$file/play_point3_BIT.Rexp.STAR.2
-PP local3327
-RR )ammonite/$file/play_point3_BIT.Rexp.STAR.25
-RR 'ammonite/$file/play_point3_BIT.shift().28
-RR  *ammonite/$file/play_point3_BIT.shift().(m)2#
-R!R #scala/Boolean#`||`().23
-R$R '%ammonite/$file/play_point3_BIT.fin().2
-R(R )local332
-R,R -local3329
-R/R 1+ammonite/$file/play_point3_BIT.shift().(cp)2
-R
-R local3424
-SS 
-&ammonite/$file/play_point3_BIT.fuse().25
-SS 'ammonite/$file/play_point3_BIT.mkeps().2
-SS local3322
-SS $scala/collection/IterableOps#`++`().2!
-SS scala/package.List.2
-S S 'local3429
-T	T +ammonite/$file/play_point3_BIT.Rexp.NTIMES.2
-TT local352
-TT local362
-TT local372
-U
-U local372!
-UU scala/Int#`==`(+3).2
-UU local3629
-UU +ammonite/$file/play_point3_BIT.Rexp.NTIMES.2
-UU  local352
-U"U #local362
-U%U ,local3728
-WW *ammonite/$file/play_point3_BIT.shift().(m)2#
-WW scala/Boolean#`||`().23
-WW %ammonite/$file/play_point3_BIT.fin().2
-WW local3529
-X
-X +ammonite/$file/play_point3_BIT.Rexp.NTIMES.25
-XX 'ammonite/$file/play_point3_BIT.shift().28
-XX *ammonite/$file/play_point3_BIT.shift().(m)2#
-XX scala/Boolean#`||`().23
-XX %ammonite/$file/play_point3_BIT.fin().2
-X X !local352
-X$X %local3529
-X'X )+ammonite/$file/play_point3_BIT.shift().(cp)2
-X,X -local362
-X/X 6local372 
-X6X 7scala/Int#`+`(+4).29
-Z
-Z +ammonite/$file/play_point3_BIT.Rexp.NTIMES.25
-ZZ 'ammonite/$file/play_point3_BIT.shift().2
-ZZ local3529
-Z!Z #+ammonite/$file/play_point3_BIT.shift().(cp)2
-Z&Z 'local362
-Z)Z 0local3727
-\	\ )ammonite/$file/play_point3_BIT.Rexp.BITS.2
-\\ local382
-\\ local3924
-^^ 
-&ammonite/$file/play_point3_BIT.fuse().2
-^^ local3925
-^^ 'ammonite/$file/play_point3_BIT.shift().28
-^^ *ammonite/$file/play_point3_BIT.shift().(m)2
-^^ local3829
-^^ +ammonite/$file/play_point3_BIT.shift().(cp)25
->> 	'ammonite/$file/play_point3_BIT.shift().22
-cc $ammonite/$file/play_point3_BIT.Rexp#26
-cc 	(ammonite/$file/play_point3_BIT.mat().(r)2!
-cc scala/package.List#2
-cc scala/Char#26
-cc (ammonite/$file/play_point3_BIT.mat().(s)22
-c!c %$ammonite/$file/play_point3_BIT.Rexp#26
-c(c )(ammonite/$file/play_point3_BIT.mat().(s)2 
-dd 
+)() *+ammonite/$file/play_point3_BIT.shift().(bs)22
+)8) <$ammonite/$file/play_point3_BIT.Rexp#29
+)?) A+ammonite/$file/play_point3_BIT.shift().(re)27
+*	* )ammonite/$file/play_point3_BIT.Rexp.ZERO.27
+** )ammonite/$file/play_point3_BIT.Rexp.ZERO.26
++	+ (ammonite/$file/play_point3_BIT.Rexp.ONE.26
+++ (ammonite/$file/play_point3_BIT.Rexp.ONE.27
+,	, )ammonite/$file/play_point3_BIT.Rexp.CHAR.2
+,, local2028
+-
+- *ammonite/$file/play_point3_BIT.shift().(m)2#
+-- scala/Boolean#`&&`().2
+-- local202"
+-- scala/Char#`==`(+2).28
+-- *ammonite/$file/play_point3_BIT.shift().(c)26
+-- (ammonite/$file/play_point3_BIT.Rexp.BIT.28
+--  *ammonite/$file/play_point3_BIT.Rexp.POINT.27
+-!- %)ammonite/$file/play_point3_BIT.Rexp.CHAR.2
+-&- 'local2029
+-+- -+ammonite/$file/play_point3_BIT.shift().(bs)27
+.. )ammonite/$file/play_point3_BIT.Rexp.CHAR.2
+.. local2028
+0	0 *ammonite/$file/play_point3_BIT.Rexp.POINT.27
+00 )ammonite/$file/play_point3_BIT.Rexp.CHAR.2
+00 local2128
+1
+1 *ammonite/$file/play_point3_BIT.shift().(m)2#
+11 scala/Boolean#`&&`().2
+11 local212"
+11 scala/Char#`==`(+2).28
+11 *ammonite/$file/play_point3_BIT.shift().(c)26
+11 (ammonite/$file/play_point3_BIT.Rexp.BIT.28
+11  *ammonite/$file/play_point3_BIT.Rexp.POINT.27
+1!1 %)ammonite/$file/play_point3_BIT.Rexp.CHAR.2
+1&1 'local2129
+1+1 -+ammonite/$file/play_point3_BIT.shift().(bs)26
+22 (ammonite/$file/play_point3_BIT.Rexp.BIT.27
+22 )ammonite/$file/play_point3_BIT.Rexp.CHAR.2
+22 local2129
+22 +ammonite/$file/play_point3_BIT.shift().(bs)26
+4	4 (ammonite/$file/play_point3_BIT.Rexp.ALT.2
+44 local222
+44 local2326
+44 (ammonite/$file/play_point3_BIT.Rexp.ALT.25
+44 !'ammonite/$file/play_point3_BIT.shift().28
+4"4 #*ammonite/$file/play_point3_BIT.shift().(m)2
+4$4 &local2228
+4'4 (*ammonite/$file/play_point3_BIT.shift().(c)29
+4)4 ++ammonite/$file/play_point3_BIT.shift().(bs)2-
+4+4 -scala/collection/SeqOps#`:+`().25
+404 5'ammonite/$file/play_point3_BIT.shift().28
+464 7*ammonite/$file/play_point3_BIT.shift().(m)2
+484 :local2328
+4;4 <*ammonite/$file/play_point3_BIT.shift().(c)29
+4>4 @+ammonite/$file/play_point3_BIT.shift().(bs)2-
+4@4 Bscala/collection/SeqOps#`:+`().26
+6	6 (ammonite/$file/play_point3_BIT.Rexp.SEQ.2
+66 local242
+66 local2526
+77 	(ammonite/$file/play_point3_BIT.Rexp.SEQ.25
+7
+7 'ammonite/$file/play_point3_BIT.shift().28
+77 *ammonite/$file/play_point3_BIT.shift().(m)2
+77 local2428
+77 *ammonite/$file/play_point3_BIT.shift().(c)29
+77 +ammonite/$file/play_point3_BIT.shift().(bs)25
+77 "'ammonite/$file/play_point3_BIT.shift().28
+7$7 %*ammonite/$file/play_point3_BIT.shift().(m)2#
+7&7 (scala/Boolean#`&&`().28
+7)7 1*ammonite/$file/play_point3_BIT.nullable().2
+727 4local242#
+777 9scala/Boolean#`||`().23
+7:7 =%ammonite/$file/play_point3_BIT.fin().2
+7>7 @local242
+7C7 Elocal2528
+7G7 H*ammonite/$file/play_point3_BIT.shift().(c)29
+7I7 K+ammonite/$file/play_point3_BIT.shift().(bs)27
+9	9 )ammonite/$file/play_point3_BIT.Rexp.STAR.2
+99 local2627
+:: 
+)ammonite/$file/play_point3_BIT.Rexp.STAR.25
+:: 'ammonite/$file/play_point3_BIT.shift().28
+:: *ammonite/$file/play_point3_BIT.shift().(m)2#
+:: scala/Boolean#`||`().23
+:: %ammonite/$file/play_point3_BIT.fin().2
+:: local262
+:: local2628
+:!: "*ammonite/$file/play_point3_BIT.shift().(c)2!
+:$: (scala/package.List.22
+:+: -$scala/collection/IterableOps#`++`().29
+:-: /+ammonite/$file/play_point3_BIT.shift().(bs)29
+<	< +ammonite/$file/play_point3_BIT.Rexp.NTIMES.2
+<< local272
+<< local282
+<< local292
+=
+= local292!
+== scala/Int#`==`(+3).2
+== local2829
+== +ammonite/$file/play_point3_BIT.Rexp.NTIMES.2
+==  local272
+="= #local282
+=%= ,local2928
+?? *ammonite/$file/play_point3_BIT.shift().(m)2#
+?? scala/Boolean#`||`().23
+?? %ammonite/$file/play_point3_BIT.fin().2
+?? local2729
+@
+@ +ammonite/$file/play_point3_BIT.Rexp.NTIMES.25
+@@ 'ammonite/$file/play_point3_BIT.shift().28
+@@ *ammonite/$file/play_point3_BIT.shift().(m)2#
+@@ scala/Boolean#`||`().23
+@@ %ammonite/$file/play_point3_BIT.fin().2
+@ @ !local272
+@$@ %local2728
+@'@ (*ammonite/$file/play_point3_BIT.shift().(c)29
+@)@ ++ammonite/$file/play_point3_BIT.shift().(bs)2
+@.@ /local282
+@0@ 7local292 
+@7@ 8scala/Int#`+`(+4).29
+C
+C +ammonite/$file/play_point3_BIT.Rexp.NTIMES.25
+CC 'ammonite/$file/play_point3_BIT.shift().2
+CC local2728
+C!C "*ammonite/$file/play_point3_BIT.shift().(c)29
+C#C %+ammonite/$file/play_point3_BIT.shift().(bs)2
+C(C )local282
+C*C 1local292 
+C1C 2scala/Int#`+`(+4).26
+E	E (ammonite/$file/play_point3_BIT.Rexp.BIT.2
+EE local302
+EE local3125
+EE 'ammonite/$file/play_point3_BIT.shift().28
+EE *ammonite/$file/play_point3_BIT.shift().(m)2
+EE local3028
+E E !*ammonite/$file/play_point3_BIT.shift().(c)29
+E"E $+ammonite/$file/play_point3_BIT.shift().(bs)25
+)) 	'ammonite/$file/play_point3_BIT.shift().22
+HH $ammonite/$file/play_point3_BIT.Rexp#26
+HH 	(ammonite/$file/play_point3_BIT.mat().(r)2!
+HH scala/package.List#2
+HH scala/Char#26
+HH (ammonite/$file/play_point3_BIT.mat().(s)22
+H"H &$ammonite/$file/play_point3_BIT.Rexp#26
+H)H *(ammonite/$file/play_point3_BIT.mat().(s)2 
+II 
 scala/package.Nil.26
-dd (ammonite/$file/play_point3_BIT.mat().(r)2!
-e	e scala/package.`::`.2
-ee local402
-ee local412
-ff local412I
-ff ;scala/collection/StrictOptimizedIterableOps#zipWithIndex().27
-ff )scala/collection/LinearSeqOps#foldLeft().25
-ff "'ammonite/$file/play_point3_BIT.shift().26
-f)f *(ammonite/$file/play_point3_BIT.mat().(r)2
-f-f .local402
-gg local442
-gg local452
-gg local4625
-g!g &'ammonite/$file/play_point3_BIT.shift().2
-g.g 6local442
-g9g :local452
-g<g =local462 
-g>g ?scala/Int#`+`(+4).23
-cc %ammonite/$file/play_point3_BIT.mat().22
-kk $ammonite/$file/play_point3_BIT.Rexp#2:
-kk ,ammonite/$file/play_point3_BIT.matcher().(r)2!
-kk scala/package.List#2
-kk !scala/Char#2:
-kk ,ammonite/$file/play_point3_BIT.matcher().(s)2
-k%k ,scala/Boolean#2:
-ll ,ammonite/$file/play_point3_BIT.matcher().(s)28
-ll *scala/collection/immutable/List#isEmpty().28
-ll *ammonite/$file/play_point3_BIT.nullable().2:
-ll ,ammonite/$file/play_point3_BIT.matcher().(r)23
-l"l %%ammonite/$file/play_point3_BIT.fin().23
-l&l )%ammonite/$file/play_point3_BIT.mat().2:
-l*l +,ammonite/$file/play_point3_BIT.matcher().(r)2:
-l-l .,ammonite/$file/play_point3_BIT.matcher().(s)27
-kk )ammonite/$file/play_point3_BIT.matcher().22
-nn $ammonite/$file/play_point3_BIT.Rexp#2;
-nn -ammonite/$file/play_point3_BIT.matcher2().(r)2!
-nn scala/package.List#2
-nn "scala/Char#2;
-nn -ammonite/$file/play_point3_BIT.matcher2().(s)22
-n&n *$ammonite/$file/play_point3_BIT.Rexp#2;
-oo -ammonite/$file/play_point3_BIT.matcher2().(s)28
-oo *scala/collection/immutable/List#isEmpty().28
-pp *ammonite/$file/play_point3_BIT.nullable().2;
-pp -ammonite/$file/play_point3_BIT.matcher2().(r)2;
-pp -ammonite/$file/play_point3_BIT.matcher2().(r)27
-pp  )ammonite/$file/play_point3_BIT.Rexp.ZERO.23
-qq 
-%ammonite/$file/play_point3_BIT.mat().2;
-qq -ammonite/$file/play_point3_BIT.matcher2().(r)2;
-qq -ammonite/$file/play_point3_BIT.matcher2().(s)28
-nn *ammonite/$file/play_point3_BIT.matcher2().22
-vv $ammonite/$file/play_point3_BIT.Rexp#28
-v
-v *ammonite/$file/play_point3_BIT.mkeps().(r)2!
-vv scala/package.List#2
-vv 
-scala/Int#28
-v v !*ammonite/$file/play_point3_BIT.mkeps().(r)26
-ww 
-(ammonite/$file/play_point3_BIT.Rexp.ONE.2!
-ww scala/package.List.27
-xx )ammonite/$file/play_point3_BIT.Rexp.CHAR.2!
-xx scala/package.List.28
-yy *ammonite/$file/play_point3_BIT.Rexp.POINT.2
-yy local472
-yy local482
-yy local4826
-zz 
-(ammonite/$file/play_point3_BIT.Rexp.ALT.2
-zz local492
-zz local5023
-{{ %ammonite/$file/play_point3_BIT.fin().2
-{{ local4925
-{{ 'ammonite/$file/play_point3_BIT.mkeps().2
-{{ local4923
-|| %ammonite/$file/play_point3_BIT.fin().2
-|| local5025
-|| 'ammonite/$file/play_point3_BIT.mkeps().2
-|| local502!
-}	} scala/package.List.26
-~~ 
-(ammonite/$file/play_point3_BIT.Rexp.SEQ.2
-~~ local512
-~~ local5223
- %ammonite/$file/play_point3_BIT.fin().2
- local512#
- scala/Boolean#`&&`().28
- *ammonite/$file/play_point3_BIT.nullable().2
- local5225
-! &'ammonite/$file/play_point3_BIT.mkeps().2
-' )local5122
-+ -$scala/collection/IterableOps#`++`().25
-. 3'ammonite/$file/play_point3_BIT.mkeps().2
-4 6local5225
+II (ammonite/$file/play_point3_BIT.mat().(r)2!
+JJ 
+scala/package.`::`.2
+JJ local322
+J
+J local332
+JJ local3327
+JJ )scala/collection/LinearSeqOps#foldLeft().25
+JJ !'ammonite/$file/play_point3_BIT.shift().26
+J(J )(ammonite/$file/play_point3_BIT.mat().(r)2
+J+J ,local322!
+J-J 1scala/package.List.2
+J7J 8local342
+J:J ;local3525
+J@J E'ammonite/$file/play_point3_BIT.shift().2
+JMJ Nlocal342
+JPJ Qlocal352!
+JRJ Vscala/package.List.23
+HH %ammonite/$file/play_point3_BIT.mat().22
+MM $ammonite/$file/play_point3_BIT.Rexp#2:
+MM ,ammonite/$file/play_point3_BIT.matcher().(r)2!
+MM scala/package.List#2
+MM !scala/Char#2:
+MM ,ammonite/$file/play_point3_BIT.matcher().(s)2
+M&M -scala/Boolean#2:
+NN ,ammonite/$file/play_point3_BIT.matcher().(s)2
+NN 
+scala/Any#`==`().2 
+NN scala/package.Nil.28
+NN *ammonite/$file/play_point3_BIT.nullable().2:
+NN ,ammonite/$file/play_point3_BIT.matcher().(r)23
+N!N $%ammonite/$file/play_point3_BIT.fin().23
+N%N (%ammonite/$file/play_point3_BIT.mat().2:
+N)N *,ammonite/$file/play_point3_BIT.matcher().(r)2:
+N,N -,ammonite/$file/play_point3_BIT.matcher().(s)27
+MM )ammonite/$file/play_point3_BIT.matcher().22
+PP $ammonite/$file/play_point3_BIT.Rexp#2;
+PP -ammonite/$file/play_point3_BIT.matcher2().(r)2!
+PP scala/package.List#2
+PP "scala/Char#2;
+PP -ammonite/$file/play_point3_BIT.matcher2().(s)22
+P'P +$ammonite/$file/play_point3_BIT.Rexp#2;
+QQ -ammonite/$file/play_point3_BIT.matcher2().(s)2
+QQ 
+scala/Any#`==`().2 
+QQ scala/package.Nil.28
+RR *ammonite/$file/play_point3_BIT.nullable().2;
+RR -ammonite/$file/play_point3_BIT.matcher2().(r)2;
+RR -ammonite/$file/play_point3_BIT.matcher2().(r)27
+RR  )ammonite/$file/play_point3_BIT.Rexp.ZERO.23
+S
+S %ammonite/$file/play_point3_BIT.mat().2;
+SS -ammonite/$file/play_point3_BIT.matcher2().(r)2;
+SS -ammonite/$file/play_point3_BIT.matcher2().(s)28
+PP *ammonite/$file/play_point3_BIT.matcher2().2
+VV mainargs/main#27
+YY )ammonite/$file/play_point3_BIT.Rexp.STAR.26
+YY (ammonite/$file/play_point3_BIT.Rexp.ALT.26
+YY (ammonite/$file/play_point3_BIT.Rexp.ALT.26
+Y(Y +(ammonite/$file/play_point3_BIT.Rexp.ALT.2
+YY local362'
+[[ scala/Predef.println(+1).28
+\\ *scala/collection/IterableOnceOps#toList().2
+\\ 	local372'
+]] scala/Predef.println(+1).2&
+]] scala/StringContext#s().2
+]] local3728
+^^ *ammonite/$file/play_point3_BIT.matcher2().2
+^^ local362
+^^ local372
+^^ local382'
+__ scala/Predef.println(+1).2&
+__ scala/StringContext#s().24
+__ "&ammonite/$file/play_point3_BIT.size().2
+_#_ 'local3623
+_4_ 7%ammonite/$file/play_point3_BIT.fin().2
+_8_ >local382
+aa local3720
+aa "scala/collection/SeqOps#indices().2
+a	a 
+local392'
+bb scala/Predef.println(+1).2&
+bb scala/StringContext#s().2
+bb local392 
+bb scala/Int#`+`(+4).2
+b!b "local372
+b#b $local392
+cc local3725
+cc 'scala/collection/immutable/List#take().2
+cc local392 
+cc scala/Int#`+`(+4).2
+cc local402'
+dd scala/Predef.println(+1).22
+dd $ammonite/$file/play_point3_BIT.pp().23
+dd %ammonite/$file/play_point3_BIT.mat().2
+dd local362
+dd local402'
+gg scala/Predef.println(+1).2'
+hh scala/Predef.println(+1).2&
+hh scala/StringContext#s().24
+hh &ammonite/$file/play_point3_BIT.size().2
+hh  local3822
+h0h 2$ammonite/$file/play_point3_BIT.pp().2
+h3h 9local382'
+ii scala/Predef.println(+1).2'
+kk scala/Predef.println(+1).2
+kk local3825
+ll 'ammonite/$file/play_point3_BIT.mkeps().2
+ll !local382
+ll local412'
+mm scala/Predef.println(+1).2&
+mm scala/StringContext#s().2
+mm  local4125
+WW 	'ammonite/$file/play_point3_BIT.test1().26
+}} (ammonite/$file/play_point3_BIT.Rexp.SEQ.27
+}} )ammonite/$file/play_point3_BIT.Rexp.STAR.27
+}} )ammonite/$file/play_point3_BIT.Rexp.STAR.27
+}} )ammonite/$file/play_point3_BIT.Rexp.CHAR.27
+}'} +)ammonite/$file/play_point3_BIT.Rexp.CHAR.23
+}} 	%ammonite/$file/play_point3_BIT.EVIL2.2
+ mainargs/main#2+
 
-ÄÄ %ammonite/$file/play_point3_BIT.fin().2
+ÅÅ scala/runtime/RichInt#to().26
 
-ÄÄ local5227
+ÅÅ &scala/collection/immutable/Range#by().2
 
-ÄÄ 'ammonite/$file/play_point3_BIT.mkeps().2
+ÅÅ local422)
 
-ÄÄ local522#
+ÇÇ scala/Predef.println(+1).2(
 
-Å	Å scala/package.List.29
+ÇÇ scala/StringContext#f().2
 
-ÇÇ )ammonite/$file/play_point3_BIT.Rexp.STAR.2
+ÇÇ local422=
 
-ÇÇ local5325
+ÇÇ -ammonite/$file/play_point3_BIT.time_needed().29
 
-ÉÉ %ammonite/$file/play_point3_BIT.fin().2
+Ç#Ç *)ammonite/$file/play_point3_BIT.matcher().25
 
-ÉÉ local5327
+Ç+Ç 0%ammonite/$file/play_point3_BIT.EVIL2.21
 
-ÉÉ 'ammonite/$file/play_point3_BIT.mkeps().2
+Ç7Ç 8!scala/collection/StringOps#`*`().2
 
-ÉÉ local5324
+Ç9Ç :local422:
 
-ÉÉ $scala/collection/IterableOps#`++`().2#
+Ç<Ç B*scala/collection/IterableOnceOps#toList().27
 
-ÉÉ  scala/package.List.2#
+ÄÄ 	'ammonite/$file/play_point3_BIT.test2().2@
 
-Ñ	Ñ scala/package.List.2;
+åå 0ammonite/$file/play_point3_BIT.VALUE#`<init>`().25
 
-ÖÖ +ammonite/$file/play_point3_BIT.Rexp.NTIMES.2
-
-ÖÖ local542
-
-ÖÖ local552
-
-ÖÖ local562
-
-ÜÜ local562#
-
-ÜÜ scala/Int#`==`(+3).2
-
-ÜÜ local552%
-
-ÜÜ scala/Boolean#`&&`().25
-
-ÜÜ %ammonite/$file/play_point3_BIT.fin().2
-
-ÜÜ local5427
-
-Ü Ü %'ammonite/$file/play_point3_BIT.mkeps().2
-
-Ü&Ü 'local542#
-
-á	á scala/package.List.29
-
-àà )ammonite/$file/play_point3_BIT.Rexp.ZERO.2#
-
-àà scala/package.List.29
-
-ââ )ammonite/$file/play_point3_BIT.Rexp.BITS.2
-
-ââ local572
-
-ââ local582
-
-ââ local5824
-
-ââ $scala/collection/IterableOps#`++`().27
-
-â â %'ammonite/$file/play_point3_BIT.mkeps().2
-
-â&â 'local5725
-vv 	'ammonite/$file/play_point3_BIT.mkeps().2@
-
-êê 0ammonite/$file/play_point3_BIT.VALUE#`<init>`().25
-
-èè 
+ãã 
 %ammonite/$file/play_point3_BIT.VALUE#2;
 
-êê +ammonite/$file/play_point3_BIT.VALUE.ZEROV.2:
+åå +ammonite/$file/play_point3_BIT.VALUE.ZEROV.2:
 
-ëë *ammonite/$file/play_point3_BIT.VALUE.ONEV.2
+çç *ammonite/$file/play_point3_BIT.VALUE.ONEV.2
 
-íí scala/Char#2=
+éé scala/Char#2=
 
-íí -ammonite/$file/play_point3_BIT.VALUE.CHARV#c.2F
+éé -ammonite/$file/play_point3_BIT.VALUE.CHARV#c.2F
 
-íí 6ammonite/$file/play_point3_BIT.VALUE.CHARV#`<init>`().2;
+éé 6ammonite/$file/play_point3_BIT.VALUE.CHARV#`<init>`().2;
 
-íí +ammonite/$file/play_point3_BIT.VALUE.CHARV#2$
+éé +ammonite/$file/play_point3_BIT.VALUE.CHARV#2$
 
-ìì scala/Predef.String#2@
+èè scala/Predef.String#2@
 
-ìì 0ammonite/$file/play_point3_BIT.VALUE.UNMARKED#s.2I
+èè 0ammonite/$file/play_point3_BIT.VALUE.UNMARKED#s.2I
 
-ìì 9ammonite/$file/play_point3_BIT.VALUE.UNMARKED#`<init>`().2>
+èè 9ammonite/$file/play_point3_BIT.VALUE.UNMARKED#`<init>`().2>
 
-ìì .ammonite/$file/play_point3_BIT.VALUE.UNMARKED#25
+èè .ammonite/$file/play_point3_BIT.VALUE.UNMARKED#25
 
-îî %ammonite/$file/play_point3_BIT.VALUE#2=
+êê %ammonite/$file/play_point3_BIT.VALUE#2=
 
-îî -ammonite/$file/play_point3_BIT.VALUE.SEQV#v1.25
+êê -ammonite/$file/play_point3_BIT.VALUE.SEQV#v1.25
 
-îî  %ammonite/$file/play_point3_BIT.VALUE#2=
+êê  %ammonite/$file/play_point3_BIT.VALUE#2=
 
-îî -ammonite/$file/play_point3_BIT.VALUE.SEQV#v2.2E
+êê -ammonite/$file/play_point3_BIT.VALUE.SEQV#r2.2E
 
-îî 5ammonite/$file/play_point3_BIT.VALUE.SEQV#`<init>`().2:
+êê 5ammonite/$file/play_point3_BIT.VALUE.SEQV#`<init>`().2:
 
-îî *ammonite/$file/play_point3_BIT.VALUE.SEQV#25
+êê *ammonite/$file/play_point3_BIT.VALUE.SEQV#25
 
-ïï %ammonite/$file/play_point3_BIT.VALUE#2<
+ëë %ammonite/$file/play_point3_BIT.VALUE#2<
 
-ïï ,ammonite/$file/play_point3_BIT.VALUE.LEFT#v.2E
+ëë ,ammonite/$file/play_point3_BIT.VALUE.LEFT#v.2E
 
-ïï 5ammonite/$file/play_point3_BIT.VALUE.LEFT#`<init>`().2:
+ëë 5ammonite/$file/play_point3_BIT.VALUE.LEFT#`<init>`().2:
 
-ïï *ammonite/$file/play_point3_BIT.VALUE.LEFT#25
+ëë *ammonite/$file/play_point3_BIT.VALUE.LEFT#25
 
-ññ %ammonite/$file/play_point3_BIT.VALUE#2=
+íí %ammonite/$file/play_point3_BIT.VALUE#2=
 
-ññ -ammonite/$file/play_point3_BIT.VALUE.RIGHT#v.2F
+íí -ammonite/$file/play_point3_BIT.VALUE.RIGHT#v.2F
 
-ññ 6ammonite/$file/play_point3_BIT.VALUE.RIGHT#`<init>`().2;
+íí 6ammonite/$file/play_point3_BIT.VALUE.RIGHT#`<init>`().2;
 
-ññ +ammonite/$file/play_point3_BIT.VALUE.RIGHT#2>
+íí +ammonite/$file/play_point3_BIT.VALUE.RIGHT#2>
 
-óó .ammonite/$file/play_point3_BIT.VALUE.STARV#vs.2#
+ìì .ammonite/$file/play_point3_BIT.VALUE.STARV#vs.2#
 
-óó scala/package.List#25
+ìì scala/package.List#25
 
-óó %ammonite/$file/play_point3_BIT.VALUE#2F
+ìì %ammonite/$file/play_point3_BIT.VALUE#2F
 
-óó 6ammonite/$file/play_point3_BIT.VALUE.STARV#`<init>`().2;
+ìì 6ammonite/$file/play_point3_BIT.VALUE.STARV#`<init>`().2;
 
-óó +ammonite/$file/play_point3_BIT.VALUE.STARV#25
+ìì +ammonite/$file/play_point3_BIT.VALUE.STARV#25
 
-ôô %ammonite/$file/play_point3_BIT.VALUE.24
+ïï %ammonite/$file/play_point3_BIT.VALUE.24
 
-õõ $ammonite/$file/play_point3_BIT.Rexp#2;
+óó $ammonite/$file/play_point3_BIT.Rexp#2;
 
-õõ +ammonite/$file/play_point3_BIT.decode().(r)2#
+óó +ammonite/$file/play_point3_BIT.decode().(r)2#
 
-õõ scala/package.List#2
+óó scala/package.List#2
 
-õõ  
+óó  
 scala/Int#2<
 
-õõ ,ammonite/$file/play_point3_BIT.decode().(bs)25
+óó ,ammonite/$file/play_point3_BIT.decode().(bs)25
 
-õ%õ *%ammonite/$file/play_point3_BIT.VALUE#2#
+ó%ó *%ammonite/$file/play_point3_BIT.VALUE#2#
 
-õ,õ 0scala/package.List#2
+ó,ó 0scala/package.List#2
 
-õ1õ 4
+ó1ó 4
 scala/Int#2;
 
-õ9õ :+ammonite/$file/play_point3_BIT.decode().(r)28
+ó9ó :+ammonite/$file/play_point3_BIT.decode().(r)28
 
-úú 
+òò 
 (ammonite/$file/play_point3_BIT.Rexp.ONE.2:
 
-úú *ammonite/$file/play_point3_BIT.VALUE.ONEV.2<
+òò *ammonite/$file/play_point3_BIT.VALUE.ONEV.2<
 
-úú  ,ammonite/$file/play_point3_BIT.decode().(bs)29
+òò ,ammonite/$file/play_point3_BIT.decode().(bs)29
 
-ùù )ammonite/$file/play_point3_BIT.Rexp.CHAR.2
+ôô )ammonite/$file/play_point3_BIT.Rexp.CHAR.2
 
-ùù local592;
+ôô local432;
 
-ùù +ammonite/$file/play_point3_BIT.VALUE.CHARV.2
+ôô +ammonite/$file/play_point3_BIT.VALUE.CHARV.2
 
-ùù local592<
+ôô local432#
 
-ù"ù $,ammonite/$file/play_point3_BIT.decode().(bs)2:
+ôô !scala/package.List.28
 
-ûû *ammonite/$file/play_point3_BIT.Rexp.POINT.2
-
-ûû local602
-
-ûû local6128
-
-†† 
-(ammonite/$file/play_point3_BIT.decode().2
-
-†† local602<
-
-†† ,ammonite/$file/play_point3_BIT.decode().(bs)28
-
-°° 
+öö 
 (ammonite/$file/play_point3_BIT.Rexp.ALT.2
 
-°° local622
+öö local442
 
-°° local632<
+öö local452<
 
-°° ,ammonite/$file/play_point3_BIT.decode().(bs)2#
+öö ,ammonite/$file/play_point3_BIT.decode().(bs)2#
 
-¢¢ scala/package.`::`.2
+õõ scala/package.`::`.2
 
-¢¢ local6428
+õõ local4628
 
-££ (ammonite/$file/play_point3_BIT.decode().2
+úú (ammonite/$file/play_point3_BIT.decode().2
 
-££  local622
+úú  local442
 
-£"£ %local642
+ú"ú %local462
 
-££ local652
+úú local472
 
-££ local662:
+úú local482:
 
-§	§ *ammonite/$file/play_point3_BIT.VALUE.LEFT.2
+ù	ù *ammonite/$file/play_point3_BIT.VALUE.LEFT.2
 
-§§ local652
+ùù local472
 
-§§ local662#
+ùù local482#
 
-•• scala/package.`::`.2
+ûû scala/package.`::`.2
 
-•• local6728
+ûû local4928
 
-¶¶ (ammonite/$file/play_point3_BIT.decode().2
+üü (ammonite/$file/play_point3_BIT.decode().2
 
-¶¶  local632
+üü  local452
 
-¶"¶ %local672
+ü"ü %local492
 
-¶¶ local682
+üü local502
 
-¶¶ local692;
+üü local512;
 
-ß	ß +ammonite/$file/play_point3_BIT.VALUE.RIGHT.2
+†	† +ammonite/$file/play_point3_BIT.VALUE.RIGHT.2
 
-ßß local682
+†† local502
 
-ßß local692;
+†† local512
 
-™	™ +ammonite/$file/play_point3_BIT.VALUE.ZEROV.2<
+°	° 
+local522;
 
-™™ ,ammonite/$file/play_point3_BIT.decode().(bs)28
+¢¢ +ammonite/$file/play_point3_BIT.VALUE.ZEROV.2<
 
-¨¨ 
+¢¢ ,ammonite/$file/play_point3_BIT.decode().(bs)28
+
+§§ 
 (ammonite/$file/play_point3_BIT.Rexp.SEQ.2
 
-¨¨ local702
+§§ local532
 
-¨¨ local7128
+§§ local5428
 
-≠≠ (ammonite/$file/play_point3_BIT.decode().2
+•• (ammonite/$file/play_point3_BIT.decode().2
 
-≠≠ local702<
+•• local532<
 
-≠≠ !,ammonite/$file/play_point3_BIT.decode().(bs)2
+•• !,ammonite/$file/play_point3_BIT.decode().(bs)2
 
-≠	≠ local722
+•	• local552
 
-≠≠ local7328
+•• local5628
 
-ÆÆ (ammonite/$file/play_point3_BIT.decode().2
+¶¶ (ammonite/$file/play_point3_BIT.decode().2
 
-ÆÆ local712
+¶¶ local542
 
-ÆÆ "local732
+¶¶ "local562
 
-Æ	Æ local742
+¶	¶ local572
 
-ÆÆ local752:
+¶¶ local582:
 
-ØØ 	*ammonite/$file/play_point3_BIT.VALUE.SEQV.2
+ßß 	*ammonite/$file/play_point3_BIT.VALUE.SEQV.2
 
-Ø
-Ø local722
+ß
+ß local552
 
-ØØ local742
+ßß local572
 
-ØØ local7529
+ßß local5829
 
-∞∞ )ammonite/$file/play_point3_BIT.Rexp.STAR.2
+©© )ammonite/$file/play_point3_BIT.Rexp.STAR.2
 
-∞∞ local762<
+©© local592<
 
-∞∞ ,ammonite/$file/play_point3_BIT.decode().(bs)2#
+©© ,ammonite/$file/play_point3_BIT.decode().(bs)2#
 
-±± scala/package.`::`.2
+™™ scala/package.`::`.2
 
-±± local772;
+™™ local602;
 
-≤	≤ +ammonite/$file/play_point3_BIT.VALUE.STARV.2#
+´´ +ammonite/$file/play_point3_BIT.VALUE.STARV.2#
 
-≤≤ scala/package.List.2
+´´ scala/package.List.2
 
-≤≤ local772#
+´´ local602#
 
-≥≥ scala/package.`::`.2
+¨¨ scala/package.`::`.2
 
-≥≥ local7828
+¨¨ local6128
 
-¥¥ (ammonite/$file/play_point3_BIT.decode().2
+≠≠ (ammonite/$file/play_point3_BIT.decode().2
 
-¥¥ local762
+≠≠ local592
 
-¥!¥ $local782
+≠≠ "local612
 
-¥¥ local792
+≠≠ local622
 
-¥¥ local8028
+≠≠ local6328
 
-µµ %(ammonite/$file/play_point3_BIT.decode().29
+ÆÆ #(ammonite/$file/play_point3_BIT.decode().29
 
-µ&µ *)ammonite/$file/play_point3_BIT.Rexp.STAR.2
+Æ$Æ ()ammonite/$file/play_point3_BIT.Rexp.STAR.2
 
-µ+µ ,local762
+Æ)Æ *local592
 
-µ/µ 2local802;
+Æ-Æ 0local632;
 
-µµ +ammonite/$file/play_point3_BIT.VALUE.STARV.2
+ÆÆ +ammonite/$file/play_point3_BIT.VALUE.STARV.2
 
-µµ local812
+ÆÆ local642
 
-µµ local822;
+ÆÆ local652;
 
-∂	∂ +ammonite/$file/play_point3_BIT.VALUE.STARV.2
+ØØ +ammonite/$file/play_point3_BIT.VALUE.STARV.2
 
-∂∂ local812
+ØØ local642
 
-∂∂ local792
+ØØ local622
 
-∂∂ local822;
+ØØ local652;
 
-∏	∏ +ammonite/$file/play_point3_BIT.VALUE.STARV.2#
+±± +ammonite/$file/play_point3_BIT.VALUE.STARV.2#
 
-∏∏ scala/package.List.2<
+±± scala/package.List.2<
 
-∏∏ ,ammonite/$file/play_point3_BIT.decode().(bs)2;
+±± ,ammonite/$file/play_point3_BIT.decode().(bs)28
 
-∫∫ +ammonite/$file/play_point3_BIT.Rexp.NTIMES.2
-
-∫∫ local832
-
-∫∫ local842
-
-∫∫ local8528
-
-ºº 
-(ammonite/$file/play_point3_BIT.decode().2
-
-ºº local832<
-
-ºº ,ammonite/$file/play_point3_BIT.decode().(bs)29
-
-ΩΩ )ammonite/$file/play_point3_BIT.Rexp.BITS.2
-
-ΩΩ local862
-
-ΩΩ local8728
-
-øø 
-(ammonite/$file/play_point3_BIT.decode().2
-
-øø local862
-
-øø local8724
-
-øø $scala/collection/IterableOps#`++`().2<
-
-øø ,ammonite/$file/play_point3_BIT.decode().(bs)28
-
-õõ 
+óó 
 (ammonite/$file/play_point3_BIT.decode().24
 
-ƒƒ $ammonite/$file/play_point3_BIT.Rexp#2>
+∂∂ $ammonite/$file/play_point3_BIT.Rexp#2:
 
-ƒƒ .ammonite/$file/play_point3_BIT.popPoints().(r)24
+∂
+∂ *ammonite/$file/play_point3_BIT.mkeps().(r)2#
 
-ƒƒ $ammonite/$file/play_point3_BIT.Rexp#24
+∂∂ scala/package.List#2
 
-ƒƒ #$ammonite/$file/play_point3_BIT.Rexp#2>
+∂∂ 
+scala/Int#2:
 
-ƒ'ƒ (.ammonite/$file/play_point3_BIT.popPoints().(r)29
+∂ ∂ !*ammonite/$file/play_point3_BIT.mkeps().(r)28
 
-≈≈ )ammonite/$file/play_point3_BIT.Rexp.ZERO.29
+∑	∑ (ammonite/$file/play_point3_BIT.Rexp.BIT.2:
 
-≈≈ )ammonite/$file/play_point3_BIT.Rexp.ZERO.29
+∑∑ *ammonite/$file/play_point3_BIT.Rexp.POINT.2
 
-≈≈ )ammonite/$file/play_point3_BIT.Rexp.ZERO.28
+∑∑ local662
 
-∆∆ 
-(ammonite/$file/play_point3_BIT.Rexp.ONE.28
+∑∑ local672
 
-∆∆ (ammonite/$file/play_point3_BIT.Rexp.ONE.28
+∑∑  local6728
 
-∆∆ (ammonite/$file/play_point3_BIT.Rexp.ONE.29
+∏	∏ (ammonite/$file/play_point3_BIT.Rexp.ONE.2#
 
-«« )ammonite/$file/play_point3_BIT.Rexp.CHAR.2
+∏∏ scala/package.List.29
 
-«« local8829
+π	π )ammonite/$file/play_point3_BIT.Rexp.CHAR.2#
 
-«« )ammonite/$file/play_point3_BIT.Rexp.CHAR.2
+ππ scala/package.List.2:
 
-«« local8829
+∫	∫ *ammonite/$file/play_point3_BIT.Rexp.POINT.29
 
-««  )ammonite/$file/play_point3_BIT.Rexp.CHAR.2
+∫∫ )ammonite/$file/play_point3_BIT.Rexp.CHAR.2
 
-«!« "local882:
+∫∫ local682#
 
-»» *ammonite/$file/play_point3_BIT.Rexp.POINT.2
+∫∫ scala/package.List.28
 
-»» local892
+ª	ª (ammonite/$file/play_point3_BIT.Rexp.ALT.2
 
-»» local902;
+ªª local692
 
-…$… -+ammonite/$file/play_point3_BIT.popPoints().2
+ªª local702#
 
-….… 3local892
+ªª scala/package.List.28
 
-…	… local912
+ø	ø (ammonite/$file/play_point3_BIT.Rexp.SEQ.2
 
-……  local922
+øø local712
 
-   local902:
+øø local722#
 
-   *scala/collection/immutable/List#isEmpty().2
+øø scala/package.List.29
 
-ÀÀ local912
+√	√ )ammonite/$file/play_point3_BIT.Rexp.STAR.2
 
-ÀÀ local922:
+√√ local732#
 
-ÕÕ *ammonite/$file/play_point3_BIT.Rexp.POINT.2
+√√ scala/package.List.2;
 
-ÕÕ #local892
+∆	∆ +ammonite/$file/play_point3_BIT.Rexp.NTIMES.2
 
-Õ%Õ )local9024
+∆∆ local742
 
-Õ*Õ .$scala/collection/IterableOps#tail().2
+∆∆ local752
 
-Õ
-Õ local932
+∆∆ local762#
 
-ŒŒ 
-local9024
+∆!∆ %scala/package.List.29
 
-ŒŒ $scala/collection/IterableOps#head().2
+ 	  )ammonite/$file/play_point3_BIT.Rexp.ZERO.2#
 
-œœ local912
+   scala/package.List.27
 
-œ!œ ,local932
+∂∂ 	'ammonite/$file/play_point3_BIT.mkeps().2#
 
-–– local942:
+œœ scala/package.List#2
 
-–– *ammonite/$file/play_point3_BIT.Rexp.POINT.2
+œœ 
+scala/Int#2:
 
-–– %local912#
+œ	œ *ammonite/$file/play_point3_BIT.fuse().(cs)24
 
-–'– +scala/package.List.2
+œœ $ammonite/$file/play_point3_BIT.Rexp#29
 
-–,– -local942
+œœ )ammonite/$file/play_point3_BIT.fuse().(r)24
 
-–1– <local9328
+œ"œ &$ammonite/$file/play_point3_BIT.Rexp#29
 
-”” 
-(ammonite/$file/play_point3_BIT.Rexp.ALT.2
+œ)œ *)ammonite/$file/play_point3_BIT.fuse().(r)28
 
-”” local952
+–– 
+(ammonite/$file/play_point3_BIT.Rexp.BIT.2
 
-”” local962;
+–– local772
 
-‘‘ "+ammonite/$file/play_point3_BIT.popPoints().2
+–– local7828
 
-‘#‘ %local952
+–– (ammonite/$file/play_point3_BIT.Rexp.BIT.2
 
-‘	‘ local972
+–– "local772:
 
-‘‘ local982;
+–$– &*ammonite/$file/play_point3_BIT.fuse().(cs)24
 
-’’ "+ammonite/$file/play_point3_BIT.popPoints().2
+–'– )$scala/collection/IterableOps#`++`().2
 
-’#’ %local962
+–*– ,local7829
 
-’	’ local992
+—— )ammonite/$file/play_point3_BIT.fuse().(r)26
 
-’’ local10028
+œœ &ammonite/$file/play_point3_BIT.fuse().24
 
-÷÷ (ammonite/$file/play_point3_BIT.Rexp.ALT.2
+’’ $ammonite/$file/play_point3_BIT.Rexp#29
 
-÷	÷ local972
+’	’ 
+)ammonite/$file/play_point3_BIT.size().(r)2
 
-÷÷ local9928
+’’ 
+scala/Int#29
 
-÷÷ (ammonite/$file/play_point3_BIT.Rexp.ALT.2
+’’ )ammonite/$file/play_point3_BIT.size().(r)29
 
-÷÷ !local982
-
-÷#÷ (local10028
+÷÷ )ammonite/$file/play_point3_BIT.Rexp.ZERO.28
 
 ◊◊ 
-(ammonite/$file/play_point3_BIT.Rexp.SEQ.2
+(ammonite/$file/play_point3_BIT.Rexp.ONE.29
 
-◊◊ local1012
+ÿÿ )ammonite/$file/play_point3_BIT.Rexp.CHAR.28
 
-◊◊ local1022;
+ŸŸ 
+(ammonite/$file/play_point3_BIT.Rexp.ALT.2
 
-ÿÿ "+ammonite/$file/play_point3_BIT.popPoints().2
+ŸŸ local792
 
-ÿ#ÿ %local1012
+ŸŸ local802"
 
-ÿ	ÿ local1032
+ŸŸ scala/Int#`+`(+4).26
 
-ÿÿ local1042;
+ŸŸ &ammonite/$file/play_point3_BIT.size().2
 
-ŸŸ "+ammonite/$file/play_point3_BIT.popPoints().2
+ŸŸ !local792"
 
-Ÿ#Ÿ %local1022
+Ÿ#Ÿ $scala/Int#`+`(+4).26
 
-Ÿ	Ÿ local1052
+Ÿ%Ÿ )&ammonite/$file/play_point3_BIT.size().2
 
-ŸŸ local10628
+Ÿ*Ÿ ,local8028
 
-⁄⁄ (ammonite/$file/play_point3_BIT.Rexp.SEQ.2
+⁄⁄ 
+(ammonite/$file/play_point3_BIT.Rexp.SEQ.2
 
-⁄	⁄ local1032
+⁄⁄ local812
 
-⁄⁄ local10528
+⁄⁄ local822"
 
-⁄⁄ (ammonite/$file/play_point3_BIT.Rexp.SEQ.2
+⁄⁄ scala/Int#`+`(+4).26
 
-⁄⁄ !local1042
+⁄⁄ &ammonite/$file/play_point3_BIT.size().2
 
-⁄#⁄ (local10629
+⁄⁄ !local812"
 
-€€ )ammonite/$file/play_point3_BIT.Rexp.STAR.2
+⁄#⁄ $scala/Int#`+`(+4).26
 
-€€ local1072;
+⁄%⁄ )&ammonite/$file/play_point3_BIT.size().2
 
-‹‹  +ammonite/$file/play_point3_BIT.popPoints().2
+⁄*⁄ ,local8229
 
-‹!‹ &local1072
+€€ )ammonite/$file/play_point3_BIT.Rexp.STAR.2
 
-‹	‹ local1082
+€€ local832"
 
-‹‹ local10929
+€€ scala/Int#`+`(+4).26
 
-›› 	)ammonite/$file/play_point3_BIT.Rexp.STAR.2
+€€ &ammonite/$file/play_point3_BIT.size().2
 
-›
-› local10829
+€€ local832;
 
-›› )ammonite/$file/play_point3_BIT.Rexp.STAR.2
+‹‹ +ammonite/$file/play_point3_BIT.Rexp.NTIMES.2
 
-›› local1092;
+‹‹ local842
 
-ﬁﬁ +ammonite/$file/play_point3_BIT.Rexp.NTIMES.2
+‹‹ local852
 
-ﬁﬁ local1102
+‹‹ local862"
 
-ﬁﬁ local1112
+‹ ‹ !scala/Int#`+`(+4).26
 
-ﬁﬁ local1122;
+‹"‹ &&ammonite/$file/play_point3_BIT.size().2
 
-ﬂﬂ  +ammonite/$file/play_point3_BIT.popPoints().2
+‹'‹ (local842:
 
-ﬂ!ﬂ &local1102
+›› *ammonite/$file/play_point3_BIT.Rexp.POINT.2
 
-ﬂ	ﬂ local1132
+›› local872"
 
-ﬂﬂ local1142;
+›› scala/Int#`+`(+4).26
 
-‡‡ +ammonite/$file/play_point3_BIT.Rexp.NTIMES.2
+›› &ammonite/$file/play_point3_BIT.size().2
 
-‡‡ local1132
+›› local8728
 
-‡‡ local1112
+ﬁﬁ 
+(ammonite/$file/play_point3_BIT.Rexp.BIT.2
 
-‡‡ local1122;
+ﬁﬁ local882
 
-‡‡ %+ammonite/$file/play_point3_BIT.Rexp.NTIMES.2
+ﬁﬁ local892"
 
-‡&‡ *local1142
+ﬁﬁ scala/Int#`+`(+4).26
 
-‡,‡ -local1112
+ﬁﬁ &ammonite/$file/play_point3_BIT.size().2
 
-‡/‡ 6local11229
+ﬁﬁ local8826
 
-·· )ammonite/$file/play_point3_BIT.Rexp.BITS.2
+’’ &ammonite/$file/play_point3_BIT.size().2#
 
-·· local1152
+‚‚ scala/package.List#2
 
-·· local1162;
+‚‚ scala/Char#2B
 
-„„  +ammonite/$file/play_point3_BIT.popPoints().2
+‚‚ 2ammonite/$file/play_point3_BIT.charlist2rexp().(s)24
 
-„!„ "local1152
+‚#‚ '$ammonite/$file/play_point3_BIT.Rexp#2B
 
-„	„ local1172
+‚*‚ +2ammonite/$file/play_point3_BIT.charlist2rexp().(s)2"
 
-„„ local11826
+„„ 
+scala/package.Nil.28
 
-‰‰ 	&ammonite/$file/play_point3_BIT.fuse().2
+„„ (ammonite/$file/play_point3_BIT.Rexp.ONE.2#
+
+‰‰ 
+scala/package.`::`.2
+
+‰‰ local902"
 
 ‰
-‰ local1162
+‰ scala/package.Nil.29
 
-‰‰ local11726
+‰‰ )ammonite/$file/play_point3_BIT.Rexp.CHAR.2
 
-‰‰ &ammonite/$file/play_point3_BIT.fuse().2
+‰‰ local902#
 
-‰‰  local1162
+ÂÂ 
+scala/package.`::`.2
 
-‰"‰ &local1182;
+ÂÂ local912
 
-ƒƒ +ammonite/$file/play_point3_BIT.popPoints().24
+Â
+Â local9228
 
-ÁÁ $ammonite/$file/play_point3_BIT.Rexp#2C
+ÂÂ (ammonite/$file/play_point3_BIT.Rexp.SEQ.29
 
-ÁÁ 3ammonite/$file/play_point3_BIT.traverseStages().(r)2
+ÂÂ )ammonite/$file/play_point3_BIT.Rexp.CHAR.2
 
-Á)Á ,
-scala/Int#2M
+ÂÂ local912?
 
-ÁÁ '=ammonite/$file/play_point3_BIT.traverseStages().(inputLength)2#
+ÂÂ )/ammonite/$file/play_point3_BIT.charlist2rexp().2
 
-Á/Á 3scala/package.List#24
+Â*Â +local922?
 
-Á4Á 8$ammonite/$file/play_point3_BIT.Rexp#24
+‚‚ /ammonite/$file/play_point3_BIT.charlist2rexp().2!
 
-ËË $ammonite/$file/play_point3_BIT.Rexp#2
+ËË scala/Conversion#2$
 
-ËË local1192#
+ËË scala/Predef.String#24
 
-Ë Ë $scala/package.List#24
+ËË $ammonite/$file/play_point3_BIT.Rexp#2
 
-Ë%Ë )$ammonite/$file/play_point3_BIT.Rexp#2
+Ë!Ë "local932?
 
-ËË local1202
+Ë&Ë 3/ammonite/$file/play_point3_BIT.charlist2rexp().2
 
-Ë7Ë :
-scala/Int#2
+Ë4Ë 5local932:
 
-Ë,Ë 5local1212#
+Ë6Ë <*scala/collection/IterableOnceOps#toList().24
 
-Ë=Ë Ascala/package.List#24
+ÏÏ $ammonite/$file/play_point3_BIT.Rexp#28
 
-ËBË F$ammonite/$file/play_point3_BIT.Rexp#2
+ÏÏ (ammonite/$file/play_point3_BIT.`|`().(r)24
 
-ÈÈ local1212#
+ÌÌ $ammonite/$file/play_point3_BIT.Rexp#28
 
-ÈÈ scala/Int#`==`(+3).2
+Ì	Ì 
+(ammonite/$file/play_point3_BIT.`|`().(s)28
 
-ÈÈ local1202;
+ÌÌ (ammonite/$file/play_point3_BIT.Rexp.ALT.28
 
-Î&Î /+ammonite/$file/play_point3_BIT.popPoints().2
+ÌÌ (ammonite/$file/play_point3_BIT.`|`().(r)28
 
-Î0Î 5local1192
+ÌÌ (ammonite/$file/play_point3_BIT.`|`().(s)25
 
-ÎÎ local1222
+ÌÌ %ammonite/$file/play_point3_BIT.`|`().28
 
-ÎÎ "local1232
+ÏÏ (ammonite/$file/play_point3_BIT.`%`().(r)29
 
-ÏÏ 
-local1242
+Ó
+Ó )ammonite/$file/play_point3_BIT.Rexp.STAR.28
 
-ÏÏ local1232
+ÓÓ (ammonite/$file/play_point3_BIT.`%`().(r)25
 
-ÏÏ local1202/
+ÓÓ %ammonite/$file/play_point3_BIT.`%`().28
 
-ÏÏ scala/collection/SeqOps#`:+`().2
+ÏÏ (ammonite/$file/play_point3_BIT.`~`().(r)24
 
-Ï Ï ,local1222
+ÔÔ $ammonite/$file/play_point3_BIT.Rexp#28
 
-Ï.Ï 7local1212"
+Ô	Ô 
+(ammonite/$file/play_point3_BIT.`~`().(s)28
 
-Ï8Ï 9scala/Int#`-`(+3).2
+ÔÔ (ammonite/$file/play_point3_BIT.Rexp.SEQ.28
 
-ËË 
-local1242
+ÔÔ (ammonite/$file/play_point3_BIT.`~`().(r)28
 
-ÔÔ local1242C
+ÔÔ (ammonite/$file/play_point3_BIT.`~`().(s)25
 
-ÔÔ 3ammonite/$file/play_point3_BIT.traverseStages().(r)2#
+ÔÔ %ammonite/$file/play_point3_BIT.`~`().2"
 
-Ô
-Ô scala/package.List.28
+ÛÛ scala/package.Seq#2$
 
-ÔÔ (scala/collection/immutable/List.empty().2M
+ÛÛ scala/Predef.String#2=
 
-ÔÔ !=ammonite/$file/play_point3_BIT.traverseStages().(inputLength)2@
+ÛÛ -ammonite/$file/play_point3_BIT.implode().(ss)2=
 
-ÁÁ 0ammonite/$file/play_point3_BIT.traverseStages().24
+ÛÛ !-ammonite/$file/play_point3_BIT.implode().(ss)2>
 
-ÚÚ $ammonite/$file/play_point3_BIT.Rexp#2D
+Û"Û *.scala/collection/IterableOnceOps#mkString(+1).29
 
-ÚÚ 4ammonite/$file/play_point3_BIT.traverseStages2().(r)2
+ÛÛ )ammonite/$file/play_point3_BIT.implode().2$
 
-Ú*Ú -
-scala/Int#2N
+ÙÙ scala/Predef.String#2<
 
-ÚÚ (>ammonite/$file/play_point3_BIT.traverseStages2().(inputLength)2#
+ÙÙ ,ammonite/$file/play_point3_BIT.explode().(s)2<
 
-Ú0Ú 4scala/package.List#24
+ÙÙ ,ammonite/$file/play_point3_BIT.explode().(s)2+
 
-Ú5Ú 9$ammonite/$file/play_point3_BIT.Rexp#2.
+ÙÙ  java/lang/String#split(+1).2:
 
-ÛÛ scala/runtime/RichInt#until().2N
+Ù'Ù -*scala/collection/IterableOnceOps#toList().29
 
-ÛÛ (>ammonite/$file/play_point3_BIT.traverseStages2().(inputLength)2<
+ÙÙ )ammonite/$file/play_point3_BIT.explode().2$
 
-Û*Û 2,scala/collection/IterableOnceOps#foldLeft().2#
+ˆˆ scala/Predef.String#28
 
-Û4Û 8scala/package.List.24
+ˆˆ 	(ammonite/$file/play_point3_BIT.lst().(s)2$
 
-Û9Û =$ammonite/$file/play_point3_BIT.Rexp#2D
+ˆˆ scala/Predef.String#29
 
-ÛBÛ C4ammonite/$file/play_point3_BIT.traverseStages2().(r)2
+ˆˆ %)ammonite/$file/play_point3_BIT.explode().28
 
-ÙÙ local1272
+ˆ&ˆ '(ammonite/$file/play_point3_BIT.lst().(s)2#
 
-ÙÙ local1282;
+˜
+˜ scala/package.`::`.2
 
-ı&ı /+ammonite/$file/play_point3_BIT.popPoints().2
+˜˜ 	local942
 
-ı0ı 5local1282
+˜˜ local9529
 
-ıı local1292
+˜˜ )ammonite/$file/play_point3_BIT.implode().2
 
-ıı "local1302
+˜)˜ +local9526
 
-ˆˆ 
-local1272/
+˜,˜ /&scala/collection/immutable/List#map().24
 
-ˆˆ scala/collection/SeqOps#`:+`().2
+˜5˜ 7$scala/collection/StringOps#`++`(+2).2"
 
-ˆˆ local1292
+¯¯ 
+scala/package.Nil.25
 
-ˆˆ %local1302
+ˆˆ %ammonite/$file/play_point3_BIT.lst().2$
 
-ÛÛ local1312
+˚˚ scala/Predef.String#28
 
-¯¯ local1312A
+˚˚ 	(ammonite/$file/play_point3_BIT.mid().(s)2$
 
-ÚÚ 1ammonite/$file/play_point3_BIT.traverseStages2().24
+˚˚ scala/Predef.String#29
 
-˚˚ $ammonite/$file/play_point3_BIT.Rexp#2B
+˚˚ %)ammonite/$file/play_point3_BIT.explode().28
 
-˚˚ 2ammonite/$file/play_point3_BIT.extractPoints().(r)2#
+˚&˚ '(ammonite/$file/play_point3_BIT.mid().(s)2#
 
-˚˚  scala/package.List#24
+¸
+¸ scala/package.`::`.2
 
-˚"˚ &$ammonite/$file/play_point3_BIT.Rexp#2
+¸¸ 	local972
 
-˚(˚ +
-scala/Int#2B
+¸¸ local9829
 
-˚0˚ 12ammonite/$file/play_point3_BIT.extractPoints().(r)2:
+¸¸ )ammonite/$file/play_point3_BIT.implode().2
 
-¸¸ *ammonite/$file/play_point3_BIT.Rexp.POINT.2
+¸)¸ +local9826
 
-¸¸ local1322
+¸,¸ /&scala/collection/immutable/List#map().24
 
-¸¸ local1332
-
-¸¸ local13329
-
-¸¸ ")scala/collection/immutable/List#filter().2#
-
-¸%¸ 'scala/Int#`!=`(+3).26
-
-¸+¸ .&scala/collection/immutable/List#map().2
-
-¸/¸ 0local1342
-
-¸5¸ 6local1322
-
-¸8¸ 9local1342"
-
-¸9¸ :scala/Int#`-`(+3).2:
-
-¸>¸ E*scala/collection/immutable/List#reverse().28
+¸5¸ 7$scala/collection/StringOps#`++`(+2).2"
 
 ˝˝ 
-(ammonite/$file/play_point3_BIT.Rexp.ALT.2
+scala/package.Nil.25
 
-˝˝ local1352
+˚˚ %ammonite/$file/play_point3_BIT.mid().2"
 
-˝˝ local1362?
+ÄÄ scala/package.Seq#2$
 
-˝˝ %/ammonite/$file/play_point3_BIT.extractPoints().2
+ÄÄ scala/Predef.String#2<
 
-˝&˝ (local13524
+ÄÄ ,ammonite/$file/play_point3_BIT.indent().(ss)2$
 
-˝*˝ ,$scala/collection/IterableOps#`++`().2?
+ÄÄ $scala/Predef.String#2<
 
-˝-˝ :/ammonite/$file/play_point3_BIT.extractPoints().2
+Ä'Ä ),ammonite/$file/play_point3_BIT.indent().(ss)2#
 
-˝;˝ =local13628
+ÅÅ scala/package.`:+`.2
 
-˛˛ 
-(ammonite/$file/play_point3_BIT.Rexp.SEQ.2
+ÅÅ local1002
 
-˛˛ local1372
+ÅÅ local10129
 
-˛˛ local1382?
+ÅÅ )ammonite/$file/play_point3_BIT.implode().2
 
-˛˛ %/ammonite/$file/play_point3_BIT.extractPoints().2
+ÅÅ #local10023
 
-˛&˛ (local13724
+Å$Å '#scala/collection/IterableOps#map().25
 
-˛*˛ ,$scala/collection/IterableOps#`++`().2?
+Å(Å +%ammonite/$file/play_point3_BIT.mid().2/
 
-˛-˛ :/ammonite/$file/play_point3_BIT.extractPoints().2
+Å-Å /scala/collection/SeqOps#`:+`().25
 
-˛;˛ =local13829
+Å0Å 3%ammonite/$file/play_point3_BIT.lst().2
 
-ˇˇ )ammonite/$file/play_point3_BIT.Rexp.STAR.2
+Å4Å 8local10128
 
-ˇˇ local1392?
+ÄÄ 
+(ammonite/$file/play_point3_BIT.indent().24
 
-ˇˇ %/ammonite/$file/play_point3_BIT.extractPoints().2
+Ö
+Ö $ammonite/$file/play_point3_BIT.Rexp#27
 
-ˇ&ˇ 'local1392;
+ÖÖ 'ammonite/$file/play_point3_BIT.pp().(e)2$
 
-ÄÄ +ammonite/$file/play_point3_BIT.Rexp.NTIMES.2
+ÖÖ scala/Predef.String#27
 
-ÄÄ local1402?
-
-ÄÄ '/ammonite/$file/play_point3_BIT.extractPoints().2
-
-Ä(Ä )local14029
-
-ÅÅ )ammonite/$file/play_point3_BIT.Rexp.BITS.2
-
-ÅÅ local1412?
-
-ÅÅ %/ammonite/$file/play_point3_BIT.extractPoints().2
-
-Å&Å 'local1412#
-
-ÇÇ scala/package.List.2?
-
-˚˚ /ammonite/$file/play_point3_BIT.extractPoints().24
-
-ÖÖ $ammonite/$file/play_point3_BIT.Rexp#2?
-
-ÖÖ /ammonite/$file/play_point3_BIT.matchCount().(r)2
-
-ÖÖ 
-scala/Int#2?
-
-ÖÖ  /ammonite/$file/play_point3_BIT.matchCount().(r)29
+ÖÖ 'ammonite/$file/play_point3_BIT.pp().(e)29
 
 ÜÜ )ammonite/$file/play_point3_BIT.Rexp.ZERO.28
 
 áá 
 (ammonite/$file/play_point3_BIT.Rexp.ONE.29
 
-àà )ammonite/$file/play_point3_BIT.Rexp.CHAR.2:
+àà )ammonite/$file/play_point3_BIT.Rexp.CHAR.2
 
-ââ *ammonite/$file/play_point3_BIT.Rexp.POINT.2
+àà local1032(
 
-ââ local1422<
+àà scala/StringContext#s().2
 
-ââ !,ammonite/$file/play_point3_BIT.matchCount().2
+àà local1032:
 
-â"â #local14228
+ââ *ammonite/$file/play_point3_BIT.Rexp.POINT.29
+
+ââ )ammonite/$file/play_point3_BIT.Rexp.CHAR.2
+
+ââ local1042(
+
+ââ scala/StringContext#s().2
+
+ââ local10428
 
 ää 
 (ammonite/$file/play_point3_BIT.Rexp.ALT.2
 
-ää local1432
+ää local1052
 
-ää local1442
+ää local1062(
 
-ää scala/math/2)
+ää scala/StringContext#s().24
 
-ää scala/math/package.max().2<
+ää !$scala/collection/StringOps#`++`(+2).25
 
-ä ä *,ammonite/$file/play_point3_BIT.matchCount().2
+ä"ä %%ammonite/$file/play_point3_BIT.pps().2
 
-ä+ä -local1432<
+ä&ä (local1052
 
-ä0ä :,ammonite/$file/play_point3_BIT.matchCount().2
-
-ä;ä =local14428
+ä*ä ,local10628
 
 ãã 
 (ammonite/$file/play_point3_BIT.Rexp.SEQ.2
 
-ãã local1452
+ãã local1072
 
-ãã local1462<
+ãã local1082(
 
-ãã !,ammonite/$file/play_point3_BIT.matchCount().2
+ãã scala/StringContext#s().24
 
-ã"ã $local1452"
+ãã !$scala/collection/StringOps#`++`(+2).25
 
-ã&ã 'scala/Int#`+`(+4).2<
+ã"ã %%ammonite/$file/play_point3_BIT.pps().2
 
-ã(ã 2,ammonite/$file/play_point3_BIT.matchCount().2
+ã&ã (local1072
 
-ã3ã 5local14629
+ã*ã ,local10829
 
 åå )ammonite/$file/play_point3_BIT.Rexp.STAR.2
 
-åå local1472<
+åå local10924
 
-åå !,ammonite/$file/play_point3_BIT.matchCount().2
+åå $scala/collection/StringOps#`++`(+2).25
 
-å"å #local1472;
+åå !%ammonite/$file/play_point3_BIT.pps().2
+
+å"å #local1092;
 
 çç +ammonite/$file/play_point3_BIT.Rexp.NTIMES.2
 
-çç local1482
+çç local1102
 
-çç local1492
+çç local1112
 
-çç local1492"
+çç local1122(
 
-çç scala/Int#`*`(+3).2<
+éé scala/StringContext#s().2
 
-çç (,ammonite/$file/play_point3_BIT.matchCount().2
+éé local1112
 
-ç)ç *local14829
+éé "local11224
 
-éé )ammonite/$file/play_point3_BIT.Rexp.BITS.2
+é'é )$scala/collection/StringOps#`++`(+2).25
 
-éé local1502<
+é*é -%ammonite/$file/play_point3_BIT.pps().2
 
-éé ,ammonite/$file/play_point3_BIT.matchCount().2
+é.é /local11028
 
-é é !local1502<
+èè 
+(ammonite/$file/play_point3_BIT.Rexp.BIT.2
 
-ÖÖ ,ammonite/$file/play_point3_BIT.matchCount().24
+èè local1132
+
+èè local1142(
+
+èè scala/StringContext#s().2
+
+è!è #local11424
+
+è(è *$scala/collection/StringOps#`++`(+2).25
+
+è+è .%ammonite/$file/play_point3_BIT.pps().2
+
+è/è 0local11324
+
+ÖÖ $ammonite/$file/play_point3_BIT.pp().24
 
 ëë $ammonite/$file/play_point3_BIT.Rexp#29
 
-ë	ë 
-)ammonite/$file/play_point3_BIT.size().(r)2
+ëë 
+)ammonite/$file/play_point3_BIT.pps().(es)28
 
-ëë 
-scala/Int#29
+ëë (ammonite/$file/play_point3_BIT.indent().29
 
-ëë )ammonite/$file/play_point3_BIT.size().(r)29
+ëë )ammonite/$file/play_point3_BIT.pps().(es)23
 
-íí )ammonite/$file/play_point3_BIT.Rexp.ZERO.28
+ëë "#scala/collection/IterableOps#map().24
 
-ìì 
-(ammonite/$file/play_point3_BIT.Rexp.ONE.29
+ë#ë %$ammonite/$file/play_point3_BIT.pp().25
 
-îî )ammonite/$file/play_point3_BIT.Rexp.CHAR.28
+ëë %ammonite/$file/play_point3_BIT.pps().2@
 
-ïï 
-(ammonite/$file/play_point3_BIT.Rexp.ALT.2
+ìì 0ammonite/$file/play_point3_BIT.time_needed().[T]2
 
-ïï local1512
-
-ïï local1522"
-
-ïï scala/Int#`+`(+4).26
-
-ïï &ammonite/$file/play_point3_BIT.size().2
-
-ïï !local1512"
-
-ï#ï $scala/Int#`+`(+4).26
-
-ï%ï )&ammonite/$file/play_point3_BIT.size().2
-
-ï*ï ,local15228
-
-ññ 
-(ammonite/$file/play_point3_BIT.Rexp.SEQ.2
-
-ññ local1532
-
-ññ local1542"
-
-ññ scala/Int#`+`(+4).26
-
-ññ &ammonite/$file/play_point3_BIT.size().2
-
-ññ !local1532"
-
-ñ#ñ $scala/Int#`+`(+4).26
-
-ñ%ñ )&ammonite/$file/play_point3_BIT.size().2
-
-ñ*ñ ,local15429
-
-óó )ammonite/$file/play_point3_BIT.Rexp.STAR.2
-
-óó local1552"
-
-óó scala/Int#`+`(+4).26
-
-óó &ammonite/$file/play_point3_BIT.size().2
-
-óó  local1552;
-
-òò +ammonite/$file/play_point3_BIT.Rexp.NTIMES.2
-
-òò local1562"
-
-òò scala/Int#`+`(+4).26
-
-òò "&ammonite/$file/play_point3_BIT.size().2
-
-ò#ò $local1562:
-
-ôô *ammonite/$file/play_point3_BIT.Rexp.POINT.2
-
-ôô local1572"
-
-ôô scala/Int#`+`(+4).26
-
-ôô &ammonite/$file/play_point3_BIT.size().2
-
-ôô  local15729
-
-öö )ammonite/$file/play_point3_BIT.Rexp.BITS.2
-
-öö local1582"
-
-öö scala/Int#`+`(+4).26
-
-öö &ammonite/$file/play_point3_BIT.size().2
-
-öö  local15826
-
-ëë &ammonite/$file/play_point3_BIT.size().2#
-
-üü scala/package.List#2
-
-üü scala/Char#2B
-
-üü 2ammonite/$file/play_point3_BIT.charlist2rexp().(s)24
-
-ü"ü &$ammonite/$file/play_point3_BIT.Rexp#2B
-
-ü)ü *2ammonite/$file/play_point3_BIT.charlist2rexp().(s)2"
-
-†† 
-scala/package.Nil.28
-
-†† (ammonite/$file/play_point3_BIT.Rexp.ONE.2#
-
-°	° scala/package.`::`.2
-
-°° local1592"
-
-°° scala/package.Nil.29
-
-°° )ammonite/$file/play_point3_BIT.Rexp.CHAR.2
-
-°° local1592#
-
-¢	¢ scala/package.`::`.2
-
-¢¢ local1602
-
-¢¢ local16128
-
-¢¢ (ammonite/$file/play_point3_BIT.Rexp.SEQ.29
-
-¢¢ )ammonite/$file/play_point3_BIT.Rexp.CHAR.2
-
-¢¢ local1602?
-
-¢¢ +/ammonite/$file/play_point3_BIT.charlist2rexp().2
-
-¢,¢ -local1612?
-
-üü /ammonite/$file/play_point3_BIT.charlist2rexp().2!
-
-§§ scala/Conversion#2$
-
-§§ scala/Predef.String#24
-
-§§ $ammonite/$file/play_point3_BIT.Rexp#2
-
-§!§ "local1622?
-
-§&§ 3/ammonite/$file/play_point3_BIT.charlist2rexp().2
-
-§4§ 5local1622:
-
-§6§ <*scala/collection/IterableOnceOps#toList().24
-
-¶¶ $ammonite/$file/play_point3_BIT.Rexp#28
-
-¶¶ (ammonite/$file/play_point3_BIT.`|`().(r)24
-
-ßß $ammonite/$file/play_point3_BIT.Rexp#28
-
-ß	ß 
-(ammonite/$file/play_point3_BIT.`|`().(s)28
-
-ßß (ammonite/$file/play_point3_BIT.Rexp.ALT.28
-
-ßß (ammonite/$file/play_point3_BIT.`|`().(r)28
-
-ßß (ammonite/$file/play_point3_BIT.`|`().(s)25
-
-ßß %ammonite/$file/play_point3_BIT.`|`().28
-
-¶¶ (ammonite/$file/play_point3_BIT.`%`().(r)29
-
-®
-® )ammonite/$file/play_point3_BIT.Rexp.STAR.28
-
-®® (ammonite/$file/play_point3_BIT.`%`().(r)25
-
-®® %ammonite/$file/play_point3_BIT.`%`().28
-
-¶¶ (ammonite/$file/play_point3_BIT.`~`().(r)24
-
-©© $ammonite/$file/play_point3_BIT.Rexp#28
-
-©	© 
-(ammonite/$file/play_point3_BIT.`~`().(s)28
-
-©© (ammonite/$file/play_point3_BIT.Rexp.SEQ.28
-
-©© (ammonite/$file/play_point3_BIT.`~`().(r)28
-
-©© (ammonite/$file/play_point3_BIT.`~`().(s)25
-
-©© %ammonite/$file/play_point3_BIT.`~`().2"
-
-≠≠ scala/package.Seq#2$
-
-≠≠ scala/Predef.String#2=
-
-≠≠ -ammonite/$file/play_point3_BIT.implode().(ss)2=
-
-≠≠ !-ammonite/$file/play_point3_BIT.implode().(ss)2>
-
-≠"≠ *.scala/collection/IterableOnceOps#mkString(+1).29
-
-≠≠ )ammonite/$file/play_point3_BIT.implode().2$
-
-ÆÆ scala/Predef.String#2<
-
-ÆÆ ,ammonite/$file/play_point3_BIT.explode().(s)2<
-
-ÆÆ ,ammonite/$file/play_point3_BIT.explode().(s)2+
-
-ÆÆ  java/lang/String#split(+1).2:
-
-Æ'Æ -*scala/collection/IterableOnceOps#toList().29
-
-ÆÆ )ammonite/$file/play_point3_BIT.explode().2$
-
-∞∞ scala/Predef.String#28
-
-∞∞ 	(ammonite/$file/play_point3_BIT.lst().(s)2$
-
-∞∞ scala/Predef.String#29
-
-∞∞ $)ammonite/$file/play_point3_BIT.explode().28
-
-∞%∞ &(ammonite/$file/play_point3_BIT.lst().(s)2#
-
-±
-± scala/package.`::`.2
-
-±± 	local1632
-
-±± local16429
-
-±± )ammonite/$file/play_point3_BIT.implode().2
-
-±*± ,local16426
-
-±-± 0&scala/collection/immutable/List#map().2'
-
-±6± 7java/lang/String#`+`().2
-
-±$± &local1632/
-
-± ± "scala/collection/SeqOps#`+:`().2"
-
-≤≤ 
-scala/package.Nil.25
-
-∞∞ %ammonite/$file/play_point3_BIT.lst().2$
-
-µµ scala/Predef.String#28
-
-µµ 	(ammonite/$file/play_point3_BIT.mid().(s)2$
-
-µµ scala/Predef.String#29
-
-µµ $)ammonite/$file/play_point3_BIT.explode().28
-
-µ%µ &(ammonite/$file/play_point3_BIT.mid().(s)2#
-
-∂
-∂ scala/package.`::`.2
-
-∂∂ 	local1652
-
-∂∂ local16629
-
-∂∂ )ammonite/$file/play_point3_BIT.implode().2
-
-∂*∂ ,local16626
-
-∂-∂ 0&scala/collection/immutable/List#map().2'
-
-∂6∂ 7java/lang/String#`+`().2
-
-∂$∂ &local1652/
-
-∂ ∂ "scala/collection/SeqOps#`+:`().2"
-
-∑∑ 
-scala/package.Nil.25
-
-µµ %ammonite/$file/play_point3_BIT.mid().2"
-
-∫∫ scala/package.Seq#2$
-
-∫∫ scala/Predef.String#2<
-
-∫∫ ,ammonite/$file/play_point3_BIT.indent().(ss)2$
-
-∫∫ #scala/Predef.String#2<
-
-∫&∫ (,ammonite/$file/play_point3_BIT.indent().(ss)2#
-
-ªª scala/package.`:+`.2
-
-ªª local1672
-
-ªª local16829
-
-ªª )ammonite/$file/play_point3_BIT.implode().2
-
-ªª #local16723
-
-ª$ª '#scala/collection/IterableOps#map().25
-
-ª(ª +%ammonite/$file/play_point3_BIT.mid().2/
-
-ª-ª /scala/collection/SeqOps#`:+`().25
-
-ª0ª 3%ammonite/$file/play_point3_BIT.lst().2
-
-ª4ª 8local16828
-
-∫∫ 
-(ammonite/$file/play_point3_BIT.indent().24
-
-ø
-ø $ammonite/$file/play_point3_BIT.Rexp#27
-
-øø 'ammonite/$file/play_point3_BIT.pp().(e)2$
-
-øø scala/Predef.String#27
-
-øø 'ammonite/$file/play_point3_BIT.pp().(e)29
-
-¿¿ )ammonite/$file/play_point3_BIT.Rexp.ZERO.28
-
-¡¡ 
-(ammonite/$file/play_point3_BIT.Rexp.ONE.29
-
-¬¬ )ammonite/$file/play_point3_BIT.Rexp.CHAR.2
-
-¬¬ local1702(
-
-¬¬ scala/StringContext#s().2
-
-¬¬ local1702:
-
-√√ *ammonite/$file/play_point3_BIT.Rexp.POINT.29
-
-√√ )ammonite/$file/play_point3_BIT.Rexp.CHAR.2
-
-√√ local1712
-
-√√ local1722
-
-ƒƒ 
-local1722<
-
-ƒƒ ,scala/collection/IterableOnceOps#nonEmpty().2%
-
-ƒƒ scala/Boolean#`&&`().2
-
-ƒƒ local17224
-
-ƒƒ $scala/collection/IterableOps#head().2"
-
-ƒ ƒ !scala/Int#`>`(+3).2(
-
-ƒ%ƒ &scala/StringContext#s().2
-
-ƒ)ƒ *local1712
-
-ƒ1ƒ 4local1722(
-
-≈	≈ 
-scala/StringContext#s().2
-
-≈≈ local1712
-
-≈≈ local1722:
-
-∆∆ *ammonite/$file/play_point3_BIT.Rexp.POINT.2
-
-∆∆ local1732
-
-∆∆ local17424
-
-∆∆ $ammonite/$file/play_point3_BIT.pp().2
-
-∆∆ local17328
-
-«« 
-(ammonite/$file/play_point3_BIT.Rexp.ALT.2
-
-«« local1752
-
-«« local1762(
-
-«« scala/StringContext#s().24
-
-«!« #$scala/collection/StringOps#`++`(+2).25
-
-«$« '%ammonite/$file/play_point3_BIT.pps().2
-
-«(« *local1752
-
-«,« .local17628
-
-»» 
-(ammonite/$file/play_point3_BIT.Rexp.SEQ.2
-
-»» local1772
-
-»» local1782(
-
-»» scala/StringContext#s().24
-
-»!» #$scala/collection/StringOps#`++`(+2).25
-
-»$» '%ammonite/$file/play_point3_BIT.pps().2
-
-»(» *local1772
-
-»,» .local17829
-
-…… )ammonite/$file/play_point3_BIT.Rexp.STAR.2
-
-…… local17924
-
-…!… #$scala/collection/StringOps#`++`(+2).25
-
-…$… '%ammonite/$file/play_point3_BIT.pps().2
-
-…(… )local1792;
-
-   +ammonite/$file/play_point3_BIT.Rexp.NTIMES.2
-
-   local1802
-
-   local1812
-
-   local1822(
-
-    !scala/StringContext#s().2
-
- *  +local1812
-
- 7  >local18224
-
- C  E$scala/collection/StringOps#`++`(+2).25
-
- F  I%ammonite/$file/play_point3_BIT.pps().2
-
- J  Klocal18029
-
-ÀÀ )ammonite/$file/play_point3_BIT.Rexp.BITS.2
-
-ÀÀ local1832
-
-ÀÀ local1842(
-
-ÀÀ scala/StringContext#s().2
-
-À&À *local18424
-
-À/À 1$scala/collection/StringOps#`++`(+2).25
-
-À2À 5%ammonite/$file/play_point3_BIT.pps().2
-
-À6À 7local18324
-
-øø $ammonite/$file/play_point3_BIT.pp().24
-
-ÕÕ $ammonite/$file/play_point3_BIT.Rexp#29
-
-ÕÕ 
-)ammonite/$file/play_point3_BIT.pps().(es)2$
-
-ÕÕ scala/Predef.String#28
-
-ÕÕ #(ammonite/$file/play_point3_BIT.indent().29
-
-Õ$Õ &)ammonite/$file/play_point3_BIT.pps().(es)23
-
-Õ'Õ *#scala/collection/IterableOps#map().24
-
-Õ+Õ -$ammonite/$file/play_point3_BIT.pp().25
-
-ÕÕ %ammonite/$file/play_point3_BIT.pps().24
-
-—— $ammonite/$file/play_point3_BIT.Rexp#2;
-
-—— +ammonite/$file/play_point3_BIT.intern().(r)24
-
-—— $ammonite/$file/play_point3_BIT.Rexp#2;
-
-—— +ammonite/$file/play_point3_BIT.intern().(r)29
-
-““ )ammonite/$file/play_point3_BIT.Rexp.ZERO.29
-
-““ )ammonite/$file/play_point3_BIT.Rexp.ZERO.28
-
-”” 
-(ammonite/$file/play_point3_BIT.Rexp.ONE.28
-
-”” (ammonite/$file/play_point3_BIT.Rexp.ONE.29
-
-‘‘ )ammonite/$file/play_point3_BIT.Rexp.CHAR.2
-
-‘‘ local18629
-
-‘‘ )ammonite/$file/play_point3_BIT.Rexp.CHAR.2
-
-‘‘ local18628
-
-’’ 
-(ammonite/$file/play_point3_BIT.Rexp.ALT.2
-
-’’ local1872
-
-’’ local18828
-
-’’ (ammonite/$file/play_point3_BIT.Rexp.ALT.26
-
-’’  &ammonite/$file/play_point3_BIT.fuse().2#
-
-’!’ %scala/package.List.28
-
-’*’ 0(ammonite/$file/play_point3_BIT.intern().2
-
-’1’ 3local18726
-
-’7’ ;&ammonite/$file/play_point3_BIT.fuse().2#
-
-’<’ @scala/package.List.28
-
-’E’ K(ammonite/$file/play_point3_BIT.intern().2
-
-’L’ Nlocal18828
-
-÷÷ 
-(ammonite/$file/play_point3_BIT.Rexp.SEQ.2
-
-÷÷ local1892
-
-÷÷ local19028
-
-÷÷ (ammonite/$file/play_point3_BIT.Rexp.SEQ.28
-
-÷÷ "(ammonite/$file/play_point3_BIT.intern().2
-
-÷#÷ %local18928
-
-÷(÷ .(ammonite/$file/play_point3_BIT.intern().2
-
-÷/÷ 1local19029
-
-◊◊ )ammonite/$file/play_point3_BIT.Rexp.STAR.2
-
-◊◊ local19129
-
-◊◊ )ammonite/$file/play_point3_BIT.Rexp.STAR.28
-
-◊◊ #(ammonite/$file/play_point3_BIT.intern().2
-
-◊$◊ %local1912;
-
-ÿÿ +ammonite/$file/play_point3_BIT.Rexp.NTIMES.2
-
-ÿÿ local1922
-
-ÿÿ local1932
-
-ÿÿ local1942;
-
-ÿ ÿ &+ammonite/$file/play_point3_BIT.Rexp.NTIMES.28
-
-ÿ'ÿ -(ammonite/$file/play_point3_BIT.intern().2
-
-ÿ.ÿ /local1922
-
-ÿ2ÿ 3local1932
-
-ÿ5ÿ <local1942:
-
-ŸŸ *ammonite/$file/play_point3_BIT.Rexp.POINT.2
-
-ŸŸ local1952
-
-ŸŸ local1962:
-
-ŸŸ *ammonite/$file/play_point3_BIT.Rexp.POINT.28
-
-ŸŸ $(ammonite/$file/play_point3_BIT.intern().2
-
-Ÿ%Ÿ &local1952
-
-Ÿ)Ÿ ,local19629
-
-⁄⁄ )ammonite/$file/play_point3_BIT.Rexp.BITS.2
-
-⁄⁄ local1972
-
-⁄⁄ local19826
-
-⁄⁄ &ammonite/$file/play_point3_BIT.fuse().2
-
-⁄⁄ !local19828
-
-⁄#⁄ )(ammonite/$file/play_point3_BIT.intern().2
-
-⁄*⁄ +local19728
-
-—— 
-(ammonite/$file/play_point3_BIT.intern().2
-
-ﬂﬂ mainargs/main#28
-
-·· (ammonite/$file/play_point3_BIT.intern().29
-
-·· )ammonite/$file/play_point3_BIT.Rexp.STAR.28
-
-·· (ammonite/$file/play_point3_BIT.Rexp.ALT.28
-
-·!· $(ammonite/$file/play_point3_BIT.Rexp.ALT.2
-
-·· local1992)
-
-„„ scala/Predef.println(+1).2:
-
-‰‰ *scala/collection/IterableOnceOps#toList().2
-
-‰‰ 	local2002)
-
-ÂÂ scala/Predef.println(+1).2(
-
-ÂÂ scala/StringContext#s().2
-
-ÂÂ local2002:
-
-ÊÊ *ammonite/$file/play_point3_BIT.matcher2().2
-
-ÊÊ local1992
-
-ÊÊ local2002
-
-ÊÊ local2012)
-
-ÁÁ scala/Predef.println(+1).2(
-
-ÁÁ scala/StringContext#s().26
-
-ÁÁ "&ammonite/$file/play_point3_BIT.size().2
-
-Á#Á 'local19925
-
-Á4Á 7%ammonite/$file/play_point3_BIT.fin().2
-
-Á8Á >local2012
-
-ÈÈ local20022
-
-ÈÈ "scala/collection/SeqOps#indices().2
-
-È	È 
-local2022)
-
-ÍÍ scala/Predef.println(+1).2(
-
-ÍÍ scala/StringContext#s().2
-
-ÍÍ local2022"
-
-ÍÍ scala/Int#`+`(+4).2
-
-Í!Í "local2002
-
-Í#Í $local2022
-
-ÎÎ local20027
-
-ÎÎ 'scala/collection/immutable/List#take().2
-
-ÎÎ local2022"
-
-ÎÎ scala/Int#`+`(+4).2
-
-ÎÎ local2032)
-
-ÏÏ scala/Predef.println(+1).24
-
-ÏÏ $ammonite/$file/play_point3_BIT.pp().25
-
-ÏÏ %ammonite/$file/play_point3_BIT.mat().2
-
-ÏÏ local1992
-
-ÏÏ local2032)
-
-ÔÔ scala/Predef.println(+1).2)
-
- scala/Predef.println(+1).2(
-
- scala/StringContext#s().26
-
- &ammonite/$file/play_point3_BIT.size().2
-
-  local20124
-
-0 2$ammonite/$file/play_point3_BIT.pp().2
-
-3 9local2012)
-
-ÒÒ scala/Predef.println(+1).27
-
-ÛÛ 'ammonite/$file/play_point3_BIT.mkeps().2
-
-ÛÛ !local2012
-
-ÛÛ local2042)
-
-ÙÙ scala/Predef.println(+1).2(
-
-ÙÙ scala/StringContext#s().2
-
-ÙÙ  local20428
-
-ıı (ammonite/$file/play_point3_BIT.decode().2
-
-ıı local1992
-
-ı ı *local2042
-
-ıı local2052)
-
-ˆˆ scala/Predef.println(+1).2(
-
-ˆˆ scala/StringContext#s().2
-
-ˆˆ !local20527
-
-‡‡ 	'ammonite/$file/play_point3_BIT.test1().28
-
-ÑÑ (ammonite/$file/play_point3_BIT.Rexp.SEQ.29
-
-ÑÑ )ammonite/$file/play_point3_BIT.Rexp.STAR.29
-
-ÑÑ )ammonite/$file/play_point3_BIT.Rexp.STAR.29
-
-ÑÑ )ammonite/$file/play_point3_BIT.Rexp.CHAR.29
-
-Ñ'Ñ +)ammonite/$file/play_point3_BIT.Rexp.CHAR.25
-
-ÑÑ 	%ammonite/$file/play_point3_BIT.EVIL2.2
-
-ÜÜ mainargs/main#2
-
-ãã local2062)
-
-åå 	scala/Predef.println(+1).2(
-
-å
-å scala/StringContext#f().2
-
-åå local2062=
-
-åå -ammonite/$file/play_point3_BIT.time_needed().29
-
-å!å ()ammonite/$file/play_point3_BIT.matcher().25
-
-å)å .%ammonite/$file/play_point3_BIT.EVIL2.21
-
-å5å 6!scala/collection/StringOps#`*`().2
-
-å7å 8local2062:
-
-å:å @*scala/collection/IterableOnceOps#toList().27
-
-áá 	'ammonite/$file/play_point3_BIT.test2().2@
-
-êê 0ammonite/$file/play_point3_BIT.time_needed().[T]2
-
-êê 
+ìì 
 scala/Int#2@
 
-êê 0ammonite/$file/play_point3_BIT.time_needed().(i)2@
+ìì 0ammonite/$file/play_point3_BIT.time_needed().(i)2@
 
-ê$ê %0ammonite/$file/play_point3_BIT.time_needed().[T]2C
+ì$ì %0ammonite/$file/play_point3_BIT.time_needed().[T]2C
 
-êê 3ammonite/$file/play_point3_BIT.time_needed().(code)2!
+ìì 3ammonite/$file/play_point3_BIT.time_needed().(code)2!
 
-ëë java/lang/System#2,
+îî java/lang/System#2,
 
-ëë java/lang/System#nanoTime().2
+îî java/lang/System#nanoTime().2
 
-ëë local2072+
+îî local1162+
 
-íí scala/runtime/RichInt#to().2@
+ïï scala/runtime/RichInt#to().2@
 
-íí 0ammonite/$file/play_point3_BIT.time_needed().(i)2
+ïï 0ammonite/$file/play_point3_BIT.time_needed().(i)2
 
-íí local2082C
+ïï local1172C
 
-íí 3ammonite/$file/play_point3_BIT.time_needed().(code)2!
+ïï 3ammonite/$file/play_point3_BIT.time_needed().(code)2!
 
-ìì java/lang/System#2,
+ññ java/lang/System#2,
 
-ìì java/lang/System#nanoTime().2
+ññ java/lang/System#nanoTime().2
 
-ìì 	local2092
+ññ 	local1182
 
-îî local2092#
+óó local1182#
 
-îî scala/Long#`-`(+4).2
+óó scala/Long#`-`(+4).2
 
-î	î local2072#
+ó	ó local1162#
 
-îî scala/Long#`/`(+6).2@
+óó scala/Long#`/`(+6).2@
 
-îî 0ammonite/$file/play_point3_BIT.time_needed().(i)2"
+óó 0ammonite/$file/play_point3_BIT.time_needed().(i)2"
 
-îî scala/Int#`*`(+6).2=
+óó scala/Int#`*`(+6).2=
 
-êê -ammonite/$file/play_point3_BIT.time_needed().:≈
+ìì -ammonite/$file/play_point3_BIT.time_needed().:≈
 
-µµ 3¥pattern's type ammonite.$file.play_point3_BIT.VALUE.STARV is more specialized than the right hand side expression's type ammonite.$file.play_point3_BIT.VALUE
+ÆÆ 1¥pattern's type ammonite.$file.play_point3_BIT.VALUE.STARV is more specialized than the right hand side expression's type ammonite.$file.play_point3_BIT.VALUE
 
 If the narrowing is intentional, this can be communicated by adding `: @unchecked` after the expression,
-which may result in a MatchError at runtime.PZ 4361689c7076ab496e55676e7f43bca6b,
-( / B
-2
-
-( /
-scala/Int#b]
-D%D )QBO
+which may result in a MatchError at runtime.PZ b2bf453155b3c9b8cf150b63476025b9ba
+! %UBS
 =:;
 2
 
-D%D )+
-)scala/collection/IterableFactory#apply().
-scala/Int#b,
-G+G 1 B
+! %+
+)scala/collection/IterableFactory#apply().scala/Nothing#b,
+4)4 - B
 2
 
-G+G 1
+4)4 -
 scala/Int#b,
-HH " B
+4>4 B B
 2
 
-HH "
+4>4 B
 scala/Int#b,
-SS  B
+:$: - B
 2
 
-SS 
+:$: -
 scala/Int#b]
-SS QBO
+:$: (QBO
 =:;
 2
 
-SS +
+:$: (+
 )scala/collection/IterableFactory#apply().
 scala/Int#b_
-e	e SBQ
+JJ 
+SBQ
 >:<
 2
 
-e	e ,
+JJ 
+,
 *scala/collection/immutable/`::`.unapply().scala/Char#ba
-ww UBS
+J-J 1UBS
 =:;
 2
 
-ww +
+J-J 1+
 )scala/collection/IterableFactory#apply().scala/Nothing#ba
-xx UBS
+JRJ VUBS
 =:;
 2
 
-xx +
-)scala/collection/IterableFactory#apply().scala/Nothing#ba
-}	} UBS
-=:;
-2
+JRJ V+
+)scala/collection/IterableFactory#apply().scala/Nothing#bJ
+\
+\ >
+<
+,*
+(scala/LowPriorityImplicits#wrapString().2
 
-}	} +
-)scala/collection/IterableFactory#apply().scala/Nothing#b,
-! - B
-2
+\
+\ bN
 
-! -
-scala/Int#be
-
-Å	Å WBU
-?:=
-2
-
-Å	Å +
-)scala/collection/IterableFactory#apply().scala/Nothing#b0
-
-ÉÉ "B 
-2
-
-ÉÉ 
-scala/Int#ba
-
-ÉÉ  SBQ
-?:=
-2
-
-ÉÉ  +
-)scala/collection/IterableFactory#apply().
-scala/Int#be
-
-Ñ	Ñ WBU
-?:=
-2
-
-Ñ	Ñ +
-)scala/collection/IterableFactory#apply().scala/Nothing#be
-
-á	á WBU
-?:=
-2
-
-á	á +
-)scala/collection/IterableFactory#apply().scala/Nothing#be
-
-àà WBU
-?:=
-2
-
-àà +
-)scala/collection/IterableFactory#apply().scala/Nothing#b0
-
-ââ "B 
-2
-
-ââ 
-scala/Int#bb
-
-¢¢ TBR
-@:>
-2
-
-¢¢ ,
-*scala/collection/immutable/`::`.unapply().
-scala/Int#bb
-
-•• TBR
-@:>
-2
-
-•• ,
-*scala/collection/immutable/`::`.unapply().
-scala/Int#bb
-
-±± TBR
-@:>
-2
-
-±± ,
-*scala/collection/immutable/`::`.unapply().
-scala/Int#be
-
-≤≤ WBU
-?:=
-2
-
-≤≤ +
-)scala/collection/IterableFactory#apply().scala/Nothing#bb
-
-≥≥ TBR
-@:>
-2
-
-≥≥ ,
-*scala/collection/immutable/`::`.unapply().
-scala/Int#be
-
-∏∏ WBU
-?:=
-2
-
-∏∏ +
-)scala/collection/IterableFactory#apply().scala/Nothing#b0
-
-øø "B 
-2
-
-øø 
-scala/Int#ba
-
-–'– +SBQ
-?:=
-2
-
-–'– ++
-)scala/collection/IterableFactory#apply().
-scala/Int#b±
-
-ÛÛ 2¢Bü
-2
-
-ÛÛ 2åâscala/Tuple2#NL scala/collection/immutable/List#(&$ammonite/$file/play_point3_BIT.Rexp#(&$ammonite/$file/play_point3_BIT.Rexp#bN
-
-ÛÛ @
+ÅÅ @
 >
 ,*
 (scala/LowPriorityImplicits#intWrapper().2
 
-ÛÛ bm
+ÅÅ b0
 
-¸¸ ._B]
+ÇÇ J"B 
 2
 
-¸¸ .KIscala/Tuple2#(&$ammonite/$file/play_point3_BIT.Rexp#
-scala/Int#bm
+ÇÇ J
+scala/Any#b4
 
-˝˝ ,_B]
+ÇÇ &B$
 2
 
-˝˝ ,KIscala/Tuple2#(&$ammonite/$file/play_point3_BIT.Rexp#
-scala/Int#bm
+ÇÇ scala/Boolean#bN
 
-˛˛ ,_B]
-2
-
-˛˛ ,KIscala/Tuple2#(&$ammonite/$file/play_point3_BIT.Rexp#
-scala/Int#be
-
-ÇÇ WBU
-?:=
-2
-
-ÇÇ +
-)scala/collection/IterableFactory#apply().scala/Nothing#bc
-
-°	° UBS
-@:>
-2
-
-°	° ,
-*scala/collection/immutable/`::`.unapply().scala/Char#bc
-
-¢	¢ UBS
-@:>
-2
-
-¢	¢ ,
-*scala/collection/immutable/`::`.unapply().scala/Char#bN
-
-§4§ 5@
+Ç3Ç :@
 >
 ,*
 (scala/LowPriorityImplicits#wrapString().2
 
-§4§ 5bk
+Ç3Ç :bC
 
-ÆÆ &]
+Ç3Ç 65
+3
+!
+scala/Predef.augmentString().2
+
+Ç3Ç 6ba
+
+ôô !SBQ
+?:=
+2
+
+ôô !+
+)scala/collection/IterableFactory#apply().
+scala/Int#bb
+
+õõ TBR
+@:>
+2
+
+õõ ,
+*scala/collection/immutable/`::`.unapply().
+scala/Int#bb
+
+ûû TBR
+@:>
+2
+
+ûû ,
+*scala/collection/immutable/`::`.unapply().
+scala/Int#bb
+
+™™ TBR
+@:>
+2
+
+™™ ,
+*scala/collection/immutable/`::`.unapply().
+scala/Int#be
+
+´´ WBU
+?:=
+2
+
+´´ +
+)scala/collection/IterableFactory#apply().scala/Nothing#bb
+
+¨¨ TBR
+@:>
+2
+
+¨¨ ,
+*scala/collection/immutable/`::`.unapply().
+scala/Int#be
+
+±± WBU
+?:=
+2
+
+±± +
+)scala/collection/IterableFactory#apply().scala/Nothing#be
+
+∏∏ WBU
+?:=
+2
+
+∏∏ +
+)scala/collection/IterableFactory#apply().scala/Nothing#be
+
+ππ WBU
+?:=
+2
+
+ππ +
+)scala/collection/IterableFactory#apply().scala/Nothing#be
+
+∫∫ WBU
+?:=
+2
+
+∫∫ +
+)scala/collection/IterableFactory#apply().scala/Nothing#be
+
+ªª WBU
+?:=
+2
+
+ªª +
+)scala/collection/IterableFactory#apply().scala/Nothing#be
+
+øø WBU
+?:=
+2
+
+øø +
+)scala/collection/IterableFactory#apply().scala/Nothing#be
+
+√√ WBU
+?:=
+2
+
+√√ +
+)scala/collection/IterableFactory#apply().scala/Nothing#be
+
+∆!∆ %WBU
+?:=
+2
+
+∆!∆ %+
+)scala/collection/IterableFactory#apply().scala/Nothing#be
+
+   WBU
+?:=
+2
+
+   +
+)scala/collection/IterableFactory#apply().scala/Nothing#b0
+
+–$– )"B 
+2
+
+–$– )
+scala/Int#bc
+
+‰‰ 
+UBS
+@:>
+2
+
+‰‰ 
+,
+*scala/collection/immutable/`::`.unapply().scala/Char#bc
+
+ÂÂ 
+UBS
+@:>
+2
+
+ÂÂ 
+,
+*scala/collection/immutable/`::`.unapply().scala/Char#bN
+
+Ë4Ë 5@
+>
+,*
+(scala/LowPriorityImplicits#wrapString().2
+
+Ë4Ë 5bk
+
+ÙÙ &]
 [
 IBG
 .,
 *scala/LowPriorityImplicits#wrapRefArray().java/lang/String#2
 
-ÆÆ &bi
+ÙÙ &bi
 
-±
-± [BY
+˜
+˜ [BY
 @:>
 2
 
-±
-± ,
+˜
+˜ ,
 *scala/collection/immutable/`::`.unapply().java/lang/String#b7
 
-± ± ;)B'
+˜&˜ :)B'
 2
 
-± ± ;java/lang/String#b7
+˜&˜ :java/lang/String#b7
 
-±'± :)B'
+˜)˜ /)B'
 2
 
-±'± :java/lang/String#b7
+˜)˜ /java/lang/String#bC
 
-±*± 0)B'
-2
+˜0˜ 45
+3
+!
+scala/Predef.augmentString().2
 
-±*± 0java/lang/String#bi
+˜0˜ 4bi
 
-∂
-∂ [BY
+¸
+¸ [BY
 @:>
 2
 
-∂
-∂ ,
+¸
+¸ ,
 *scala/collection/immutable/`::`.unapply().java/lang/String#b7
 
-∂ ∂ ;)B'
+¸&¸ :)B'
 2
 
-∂ ∂ ;java/lang/String#b7
+¸&¸ :java/lang/String#b7
 
-∂'∂ :)B'
+¸)¸ /)B'
 2
 
-∂'∂ :java/lang/String#b7
+¸)¸ /java/lang/String#bC
 
-∂*∂ 0)B'
-2
+¸0¸ 45
+3
+!
+scala/Predef.augmentString().2
 
-∂*∂ 0java/lang/String#bï
+¸0¸ 4bï
 
-ªª ÜBÉ
+ÅÅ ÜBÉ
 >:<
 2
 
-ªª *
+ÅÅ *
 (scala/collection/package.`:+`.unapply().java/lang/String#k“h
 86
 [A]	*AÄä&$scala/Nothing#
 scala/Any#,*scala/collection/immutable/Seq#[A]=;scala/collection/immutable/Seq#scala/Predef.String#b7
 
-ªª /)B'
+ÅÅ /)B'
 2
 
-ªª /java/lang/String#b7
+ÅÅ /java/lang/String#b7
 
-ªª ')B'
+ÅÅ ')B'
 2
 
-ªª 'java/lang/String#bC
+ÅÅ 'java/lang/String#bC
 
-««  5
+ää 5
 3
 !
 scala/Predef.augmentString().2
 
-««  bC
+ää bC
 
-»»  5
+ãã 5
 3
 !
 scala/Predef.augmentString().2
 
-»»  bC
+ãã bC
 
-……  5
+åå 5
 3
 !
 scala/Predef.augmentString().2
 
-……  bC
+åå bC
 
-    B5
+éé &5
 3
 !
 scala/Predef.augmentString().2
 
-    BbC
+éé &bC
 
-ÀÀ .5
+èè '5
 3
 !
 scala/Predef.augmentString().2
 
-ÀÀ .b7
+èè 'b7
 
-Õ$Õ *)B'
+ëë ")B'
 2
 
-Õ$Õ *java/lang/String#ba
+ëë "java/lang/String#bN
 
-’!’ %SBQ
-?:=
-2
-
-’!’ %+
-)scala/collection/IterableFactory#apply().
-scala/Int#ba
-
-’<’ @SBQ
-?:=
-2
-
-’<’ @+
-)scala/collection/IterableFactory#apply().
-scala/Int#bN
-
-‰
-‰ @
->
-,*
-(scala/LowPriorityImplicits#wrapString().2
-
-‰
-‰ b0
-
-å
-å H"B 
-2
-
-å
-å H
-scala/Any#b4
-
-åå &B$
-2
-
-åå scala/Boolean#bN
-
-å1å 8@
->
-,*
-(scala/LowPriorityImplicits#wrapString().2
-
-å1å 8bC
-
-å1å 45
-3
-!
-scala/Predef.augmentString().2
-
-å1å 4bN
-
-íí @
+ïï @
 >
 ,*
 (scala/LowPriorityImplicits#intWrapper().2
 
-íí 
+ïï 

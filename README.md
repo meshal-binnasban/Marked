@@ -23,6 +23,8 @@ A function popPoints is introduced here, which receives the final marked regular
 
 11- play_point3.sc combines play_point.sc (Point constructor) and play_point2.sc (tag list), and adds bitcode implementation by attaching a list of bits to each regular expression constructor.
 
-12- play_Point3_noTags.sc is the same as play_point3.sc, but without the tags—only the bitcodes implementation remains.
+12- play_Point3_noTags.sc is the same as play_point3.sc, but without the tags — only the bitcodes implementation remains.
 
 13- play_point3_BIT.sc is an attempt to implement a new constructor BIT, which is the only constructor that holds bit information. It is responsible for collecting bits, instead of having bit lists in all constructors.
+
+14- play_tags.sc uses tags to record the history of character matches. The CHAR constructor now holds both a boolean marked flag and a list of integers as tags. Each time a character is matched or unmatched, the shift function updates the boolean value accordingly and appends a corresponding entry to the tags list. The popPoints2 function pops the top value from the tag list and updates the boolean flag based on the next value. It essentially "unshifts" the effect of the last shift call, reversing one step of the match history.

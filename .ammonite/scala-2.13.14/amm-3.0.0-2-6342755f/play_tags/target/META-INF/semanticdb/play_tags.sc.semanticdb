@@ -1,0 +1,3015 @@
+
+«ùplay_tags.sc„Aimport scala.language.implicitConversions
+import os.size
+
+enum Rexp {
+  case ZERO 
+  case ONE 
+  case CHAR(c: Char, marked: Boolean = false, tags: List[Int] = List())
+  case ALT(r1: Rexp, r2: Rexp) 
+  case SEQ(r1: Rexp, r2: Rexp) 
+  case STAR(r: Rexp) 
+  case NTIMES(r: Rexp, n: Int , counter: Int = 0)
+}
+import Rexp._
+
+def nullable (r: Rexp) : Boolean = r match {
+  case ZERO => false
+  case ONE => true
+  case CHAR(_,_,_) => false
+  case ALT(r1, r2) => nullable(r1) || nullable(r2)
+  case SEQ(r1, r2) => nullable(r1) && nullable(r2)
+  case STAR(_) => true
+  case NTIMES(r, n,counter) => if (n == 0) true else nullable(r)
+}
+
+def fin(r: Rexp) : Boolean = r match {
+  case ZERO => false
+  case ONE => false
+  case CHAR(c,marked,tags) => marked 
+  case ALT(r1, r2) => fin(r1) || fin(r2)
+  case SEQ(r1, r2) => (fin(r1) && nullable(r2)) || fin(r2)
+  case STAR(r) => fin(r)
+  case NTIMES(r, n,counter) => counter == n && fin(r)
+}
+
+//shift char with position
+def shift(m: Boolean, re: Rexp, cp: (Char, Int)) : Rexp = {
+  val (c, pos) = cp
+  re match {
+  case ZERO => ZERO
+  case ONE => ONE
+  case CHAR(d,marked,tags) => 
+    if(m && d == c) 
+    CHAR(d,true, pos+1 :: tags)
+    else CHAR(d,false, 0 :: tags)
+  case ALT(r1, r2) => ALT(shift(m, r1, cp), shift(m, r2, cp)) 
+  case SEQ(r1, r2) => // add seq normal
+    if (m && nullable(r1))
+      {
+        ALT(
+            SEQ(shift(m, r1, cp), shift(fin(r1), r2, cp)) 
+                , 
+            shift(true, r2, cp))
+      }
+      else{
+        SEQ(shift(m, r1, cp), shift(fin(r1), r2, cp))   
+      }  
+    //SEQ(shift(m, r1, cp), shift((m && nullable(r1)) || fin(r1), r2, cp))
+  case STAR(r) => STAR(shift(m || fin(r), r, cp))
+  case NTIMES(r, n,counter) => 
+   // println(s"NTIMES: ${matchCount(re)}")
+    if (counter == n) re
+      else{
+        if (m || fin(r)) NTIMES(shift(m || fin(r), r, cp), n, counter+1)
+        else NTIMES(shift(false, r, cp), n, counter)       
+        } // if shifted r is final, wrap in point? didn't work
+}
+}
+
+def mat(r: Rexp, s: List[Char]): Rexp = s match {
+  case Nil => r
+  case c :: cs =>
+    cs.zipWithIndex.foldLeft(shift(true, r, (c, 0))) {
+      case (currRexp, (c, i)) =>
+        shift(false, currRexp, (c, i + 1)) 
+    }
+}
+
+
+def matcher(r: Rexp, s: List[Char]) : Boolean =
+  if (s == Nil) nullable(r) else fin(mat(r, s))
+
+def matcher2(r: Rexp, s: List[Char]) : Rexp =
+  if (s == Nil)
+     if(nullable(r)) r else ZERO 
+     else mat(r, s)
+
+
+
+@main
+def test1() = {
+  println("\n===== Testing New PopPoints =====\n")
+  
+  val rexp = STAR("a" | "b" | "c" )
+  val s="abc".toList
+  println(s"String: $s\n")
+  val finReg=matcher2(rexp, s)
+  println(s"Original size=${size(rexp)} Result= ${fin(finReg)} Final Size=${size(finReg)}")
+  
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  val sPart = s.take(i + 1)
+  println(pp(mat(rexp, sPart)))
+  }
+
+  println(s"finReg=${finReg}")
+
+  println("\n=== New PopPoints ===\n")
+  val stages=collectStages(finReg)
+  stages.foreach(stage => println(pp(stage)))
+
+  println("\n=== Testing popPoints with shift ===\n")
+  val r=STAR("a" | "b" | "c" )
+  val shiftedR=shift(true,r,('a',0))
+  val shiftedRTwice=shift(true,shiftedR,('b',1))
+  val shiftedThrice=shift(true,shiftedRTwice,('c',2))
+  println(r)
+  println(s"original r=\n${pp(r)}")
+  println(s"1- Shifted with 'c', r=\n${pp(shiftedR)}")
+  println(s"2- Shifted with 'd', r=\n${pp(shiftedRTwice)}")
+  println(s"3- Shifted with 'c', r=\n${pp(shiftedThrice)}")
+  val popedOnce=popPoints2(shiftedThrice)
+  val popedTwice=popPoints2(popedOnce)
+  val popedThrice=popPoints2(popedTwice)
+  val finalPop=popPoints2(popedThrice)
+  println(s"1- popedOnce  r=\n${pp(popedOnce)}")
+  println(s"2- popedTwice  r=\n${pp(popedTwice)}")
+  println(s"3- popedThrice  r=\n${pp(popedThrice)}")
+}
+
+
+@main
+def test2() = {
+  val rexp = STAR("a" | "b" )
+
+  println("===== Testing Tags =====")
+  val s="abba".toList
+  println(s"String: $s\n")
+  val finReg=matcher2(rexp, s)
+  println(s"Original size=${size(rexp)} Result= ${fin(finReg)} \n")
+
+
+  for (i <- s.indices) {
+  println(s"${i + 1}- =shift ${s(i)}=")
+  val sPart = s.take(i + 1)
+  println(pp(mat(rexp, sPart)))
+  }
+
+  println(s"Final Reg Tree= \n ${pp(finReg)}\n")
+  println(s"Raw Final Reg= ${finReg} size= ${size(finReg)}")
+
+
+
+  println(s"Points and Part expressions") 
+  val extracted = extractPoints(finReg) 
+  extracted.sortBy(_._2).foreach { 
+    case (r, point) =>
+        println(s"r = $r and point = $point")
+    } 
+}
+
+val EVIL2 = SEQ(STAR(STAR(CHAR('a'))), CHAR('b'))
+
+def time_needed[T](i: Int, code: => T) = {
+  val start = System.nanoTime()
+  for (j <- 1 to i) code
+  val end = System.nanoTime()
+  (end - start) / (i * 1.0e9)
+}
+// testing the evil regular expression
+@main
+def test3() = {
+  for (i <- 0 to 7000000 by 500000) {
+  
+  println(f"$i: ${time_needed(2, matcher2(EVIL2, ("a" * i).toList))}%.5f")
+
+  }
+}
+
+
+def popPoints2(r: Rexp): Rexp = r match {
+  case ZERO => ZERO
+  case ONE  => ONE
+    /* case CHAR(c, _, tags) =>
+        tags match {
+            case Nil => CHAR(c, false, Nil) 
+            case h :: tail =>CHAR(c, h > 0, tail)
+            } */
+  case CHAR(c, _, tags) => tags match {
+    case Nil => CHAR(c, false, Nil)
+    case _ :: next :: rest => CHAR(c, next > 0, next :: rest)
+    case _ :: Nil => CHAR(c, false, Nil)
+    }         
+  case ALT(r1, r2) => ALT(popPoints2(r1),popPoints2(r2))
+  case SEQ(r1, r2) => SEQ(popPoints2(r1), popPoints2(r2))
+  case STAR(inner) => STAR(popPoints2(inner))
+  case NTIMES(inner, n, counter) =>NTIMES(popPoints2(inner), n, counter)
+}
+
+// helper function to check if any CHAR in the regex still has tags left
+def containsTags(r: Rexp): Boolean = r match {
+  case CHAR(_, _, tags) => tags.nonEmpty
+  case ALT(r1, r2)      => containsTags(r1) || containsTags(r2)
+  case SEQ(r1, r2)      => containsTags(r1) || containsTags(r2)
+  case STAR(r1)         => containsTags(r1)
+  case NTIMES(r1, _, _) => containsTags(r1)
+  case _                => false
+}
+
+// repeatedly calling popPoints2 until there is no tags left 
+def collectStages(finReg: Rexp): List[Rexp] = {
+  def loop(current: Rexp, stages: List[Rexp]): List[Rexp] = {
+    if (!containsTags(current)) stages
+    else {
+      val next = popPoints2(current)
+      loop(next, stages :+ next)
+    }
+  }
+
+  //val first = popPoints2(finReg)
+  loop(finReg, List())
+}
+
+
+
+
+def extractPoints(r: Rexp): List[(Rexp, Int)] = r match {
+  case CHAR(c,marked,tags) => tags.filter(_ != 0).map(p => (r, p-1)).reverse
+  case ALT(r1, r2)   => extractPoints(r1) ++ extractPoints(r2)
+  case SEQ(r1, r2)   => extractPoints(r1) ++ extractPoints(r2)
+  case STAR(r)       => extractPoints(r)
+  case NTIMES(r, _, _) => extractPoints(r)
+  case _             => List()
+}
+
+def size(r: Rexp) : Int = r match {
+  case ZERO => 1
+  case ONE => 1
+  case CHAR(_,_,_) => 1
+  case ALT(r1, r2) => 1 + size(r1) + size(r2)
+  case SEQ(r1, r2) => 1 + size(r1) + size(r2)
+  case STAR(r) => 1 + size(r)
+  case NTIMES(r,n,counter) => 1 + size(r) 
+}
+
+// some syntax sugar for regexes
+def charlist2rexp(s : List[Char]): Rexp = s match {
+  case Nil => ONE
+  case c::Nil => CHAR(c)
+  case c::s => SEQ(CHAR(c), charlist2rexp(s))
+}
+// strings are coerced into Rexps
+given Conversion[String, Rexp] = s => charlist2rexp(s.toList)
+
+//val ABCD : Rexp = "abcd"
+
+extension (r: Rexp) {
+  def | (s: Rexp) = ALT(r, s)
+  def % = STAR(r)
+  def ~ (s: Rexp) = SEQ(r, s)
+}
+
+// pretty-printing REGs
+def implode(ss: Seq[String]) = ss.mkString("\n")
+def explode(s: String) = s.split("\n").toList
+
+def lst(s: String) : String = explode(s) match {
+  case hd :: tl => implode(" ‚îî" ++ hd :: tl.map("  " ++ _))
+  case Nil => ""
+}
+
+def mid(s: String) : String = explode(s) match {
+  case hd :: tl => implode(" ‚îú" ++ hd :: tl.map(" ‚îÇ" ++ _))
+  case Nil => ""
+}
+
+def indent(ss: Seq[String]) : String = ss match {
+  case init :+ last => implode(init.map(mid) :+ lst(last))
+  case _ => "" 
+}
+
+def pp(e: Rexp) : String = e match {
+  case ZERO => "0\n"
+  case ONE => "1\n"
+  case CHAR(c,marked,tags) => if(marked) s"‚Ä¢$c tags={$tags}\n" else s"$c tags={$tags}\n"
+  case ALT(r1, r2) => s"ALT\n" ++ pps(r1, r2)
+  case SEQ(r1, r2) => s"SEQ\n" ++ pps(r1, r2)
+  case STAR(r) => "STAR\n" ++ pps(r)
+  case NTIMES(r, n,counter) => 
+    s"NTIMES{$n}{fin r=${fin(r)}, null r=${nullable(r)} counter=$counter}\n" ++ pps(r)
+    s"‚Ä¢ NTIMES {$n}{fin r=${fin(r)}, null r=${nullable(r)}, counter=$counter}\n" ++ pps(r) 
+}
+def pps(es: Rexp*) = indent(es.map(pp))
+*k
+)ammonite/$file/play_tags.Rexp#`<init>`(). Ä@*<init>Ää(& " ammonite/$file/play_tags.Rexp#í: *º
+ammonite/$file/play_tags.Rexp# îÄ*RexpÄäÑ
+Åjava/lang/Object#scala/reflect/Enum#" ammonite/$file/play_tags.Rexp#"+
+)ammonite/$file/play_tags.Rexp#`<init>`().í: *b
+#ammonite/$file/play_tags.Rexp.ZERO. Ä©*ZEROÄä&"$
+" ammonite/$file/play_tags.Rexp#í: *`
+"ammonite/$file/play_tags.Rexp.ONE. Ä©*ONEÄä&"$
+" ammonite/$file/play_tags.Rexp#í: *M
+%ammonite/$file/play_tags.Rexp.CHAR#c. Ä*cÄä"
+scala/Char#í: *Z
+*ammonite/$file/play_tags.Rexp.CHAR#marked. Ä*markedÄä"
+scala/Boolean#í: *x
+(ammonite/$file/play_tags.Rexp.CHAR#tags. Ä*tagsÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#í: *M
+-ammonite/$file/play_tags.Rexp.CHAR#copy().(c)*cÄä"
+scala/Char#*Z
+2ammonite/$file/play_tags.Rexp.CHAR#copy().(marked)*markedÄä"
+scala/Boolean#*x
+0ammonite/$file/play_tags.Rexp.CHAR#copy().(tags)*tagsÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#*Ñ
+*ammonite/$file/play_tags.Rexp.CHAR#copy().*copyÄäƒ¡ï
+-ammonite/$file/play_tags.Rexp.CHAR#copy().(c)
+2ammonite/$file/play_tags.Rexp.CHAR#copy().(marked)
+0ammonite/$file/play_tags.Rexp.CHAR#copy().(tags)'%#ammonite/$file/play_tags.Rexp.CHAR#í: *£
+4ammonite/$file/play_tags.Rexp.CHAR#copy$default$1().*copy$default$1ÄäP"N
+LjJ
+HBF
+scala/Char#3
+1/-scala/annotation/unchecked/uncheckedVariance#í: *¶
+4ammonite/$file/play_tags.Rexp.CHAR#copy$default$2().*copy$default$2ÄäS"Q
+OjM
+KBI
+scala/Boolean#3
+1/-scala/annotation/unchecked/uncheckedVariance#í: *»
+4ammonite/$file/play_tags.Rexp.CHAR#copy$default$3().*copy$default$3Ääu"s
+qjo
+mBk
+42 scala/collection/immutable/List#
+scala/Int#3
+1/-scala/annotation/unchecked/uncheckedVariance#í: *{
+-ammonite/$file/play_tags.Rexp.CHAR#ordinal().*ordinalÄä"
+j
+
+scala/Int#í: öscala/reflect/Enum#ordinal().*R
+(ammonite/$file/play_tags.Rexp.CHAR#_1().*_1Ää"
+j
+scala/Char#í: *U
+(ammonite/$file/play_tags.Rexp.CHAR#_2().*_2Ää"
+j
+scala/Boolean#í: *w
+(ammonite/$file/play_tags.Rexp.CHAR#_3().*_3Ää<":
+8j6
+42 scala/collection/immutable/List#
+scala/Int#í: *T
+1ammonite/$file/play_tags.Rexp.CHAR#`<init>`().(c) Ä*cÄä"
+scala/Char#*a
+6ammonite/$file/play_tags.Rexp.CHAR#`<init>`().(marked) Ä*markedÄä"
+scala/Boolean#*
+4ammonite/$file/play_tags.Rexp.CHAR#`<init>`().(tags) Ä*tagsÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#*ô
+.ammonite/$file/play_tags.Rexp.CHAR#`<init>`(). Ä@*<init>Ää–Õ°
+1ammonite/$file/play_tags.Rexp.CHAR#`<init>`().(c)
+6ammonite/$file/play_tags.Rexp.CHAR#`<init>`().(marked)
+4ammonite/$file/play_tags.Rexp.CHAR#`<init>`().(tags)'%#ammonite/$file/play_tags.Rexp.CHAR#í: *∏
+#ammonite/$file/play_tags.Rexp.CHAR# àÅ*CHARÄä˚
+¯" ammonite/$file/play_tags.Rexp#'%#ammonite/$file/play_tags.Rexp.CHAR#"®
+%ammonite/$file/play_tags.Rexp.CHAR#c.
+*ammonite/$file/play_tags.Rexp.CHAR#marked.
+(ammonite/$file/play_tags.Rexp.CHAR#tags.
+.ammonite/$file/play_tags.Rexp.CHAR#`<init>`().
+*ammonite/$file/play_tags.Rexp.CHAR#copy().
+4ammonite/$file/play_tags.Rexp.CHAR#copy$default$1().
+4ammonite/$file/play_tags.Rexp.CHAR#copy$default$2().
+4ammonite/$file/play_tags.Rexp.CHAR#copy$default$3().
+-ammonite/$file/play_tags.Rexp.CHAR#ordinal().
+(ammonite/$file/play_tags.Rexp.CHAR#_1().
+(ammonite/$file/play_tags.Rexp.CHAR#_2().
+(ammonite/$file/play_tags.Rexp.CHAR#_3().í: *N
+.ammonite/$file/play_tags.Rexp.CHAR.apply().(c)*cÄä"
+scala/Char#*[
+3ammonite/$file/play_tags.Rexp.CHAR.apply().(marked)*markedÄä"
+scala/Boolean#*y
+1ammonite/$file/play_tags.Rexp.CHAR.apply().(tags)*tagsÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#*â
++ammonite/$file/play_tags.Rexp.CHAR.apply().*applyÄä«ƒò
+.ammonite/$file/play_tags.Rexp.CHAR.apply().(c)
+3ammonite/$file/play_tags.Rexp.CHAR.apply().(marked)
+1ammonite/$file/play_tags.Rexp.CHAR.apply().(tags)'%#ammonite/$file/play_tags.Rexp.CHAR#í: *l
+2ammonite/$file/play_tags.Rexp.CHAR.unapply().(x$1)*x$1Ää+")
+'%#ammonite/$file/play_tags.Rexp.CHAR#*¶
+-ammonite/$file/play_tags.Rexp.CHAR.unapply().*unapplyÄäa_4
+2ammonite/$file/play_tags.Rexp.CHAR.unapply().(x$1)'%#ammonite/$file/play_tags.Rexp.CHAR#í: *|
+.ammonite/$file/play_tags.Rexp.CHAR.toString().*toStringÄä"
+j
+java/lang/String#í: öscala/Any#toString().*¿
+Aammonite/$file/play_tags.Rexp.CHAR.$lessinit$greater$default$2().*$lessinit$greater$default$2ÄäS"Q
+OjM
+KBI
+scala/Boolean#3
+1/-scala/annotation/unchecked/uncheckedVariance#í: *‚
+Aammonite/$file/play_tags.Rexp.CHAR.$lessinit$greater$default$3().*$lessinit$greater$default$3Ääu"s
+qjo
+mBk
+42 scala/collection/immutable/List#
+scala/Int#3
+1/-scala/annotation/unchecked/uncheckedVariance#í: *ƒ
+#ammonite/$file/play_tags.Rexp.CHAR.
+ *CHARÄäâ
+Üjava/lang/Object#(¢%#ammonite/$file/play_tags.Rexp.CHAR."¬
+.ammonite/$file/play_tags.Rexp.CHAR.`<init>`().
++ammonite/$file/play_tags.Rexp.CHAR.apply().
+-ammonite/$file/play_tags.Rexp.CHAR.unapply().
+.ammonite/$file/play_tags.Rexp.CHAR.toString().
+Aammonite/$file/play_tags.Rexp.CHAR.$lessinit$greater$default$2().
+Aammonite/$file/play_tags.Rexp.CHAR.$lessinit$greater$default$3().í: *a
+%ammonite/$file/play_tags.Rexp.ALT#r1. Ä*r1Ää&"$
+" ammonite/$file/play_tags.Rexp#í: *a
+%ammonite/$file/play_tags.Rexp.ALT#r2. Ä*r2Ää&"$
+" ammonite/$file/play_tags.Rexp#í: *a
+-ammonite/$file/play_tags.Rexp.ALT#copy().(r1)*r1Ää&"$
+" ammonite/$file/play_tags.Rexp#*a
+-ammonite/$file/play_tags.Rexp.ALT#copy().(r2)*r2Ää&"$
+" ammonite/$file/play_tags.Rexp#* 
+)ammonite/$file/play_tags.Rexp.ALT#copy().*copyÄäãà^
+-ammonite/$file/play_tags.Rexp.ALT#copy().(r1)
+-ammonite/$file/play_tags.Rexp.ALT#copy().(r2)&$"ammonite/$file/play_tags.Rexp.ALT#í: *µ
+3ammonite/$file/play_tags.Rexp.ALT#copy$default$1().*copy$default$1Ääc"a
+_j]
+[BY
+" ammonite/$file/play_tags.Rexp#3
+1/-scala/annotation/unchecked/uncheckedVariance#í: *µ
+3ammonite/$file/play_tags.Rexp.ALT#copy$default$2().*copy$default$2Ääc"a
+_j]
+[BY
+" ammonite/$file/play_tags.Rexp#3
+1/-scala/annotation/unchecked/uncheckedVariance#í: *z
+,ammonite/$file/play_tags.Rexp.ALT#ordinal().*ordinalÄä"
+j
+
+scala/Int#í: öscala/reflect/Enum#ordinal().*d
+'ammonite/$file/play_tags.Rexp.ALT#_1().*_1Ää*"(
+&j$
+" ammonite/$file/play_tags.Rexp#í: *d
+'ammonite/$file/play_tags.Rexp.ALT#_2().*_2Ää*"(
+&j$
+" ammonite/$file/play_tags.Rexp#í: *h
+1ammonite/$file/play_tags.Rexp.ALT#`<init>`().(r1) Ä*r1Ää&"$
+" ammonite/$file/play_tags.Rexp#*h
+1ammonite/$file/play_tags.Rexp.ALT#`<init>`().(r2) Ä*r2Ää&"$
+" ammonite/$file/play_tags.Rexp#*€
+-ammonite/$file/play_tags.Rexp.ALT#`<init>`(). Ä@*<init>Ääìêf
+1ammonite/$file/play_tags.Rexp.ALT#`<init>`().(r1)
+1ammonite/$file/play_tags.Rexp.ALT#`<init>`().(r2)&$"ammonite/$file/play_tags.Rexp.ALT#í: *ü
+"ammonite/$file/play_tags.Rexp.ALT# àÅ*ALTÄä‰
+·" ammonite/$file/play_tags.Rexp#&$"ammonite/$file/play_tags.Rexp.ALT#"í
+%ammonite/$file/play_tags.Rexp.ALT#r1.
+%ammonite/$file/play_tags.Rexp.ALT#r2.
+-ammonite/$file/play_tags.Rexp.ALT#`<init>`().
+)ammonite/$file/play_tags.Rexp.ALT#copy().
+3ammonite/$file/play_tags.Rexp.ALT#copy$default$1().
+3ammonite/$file/play_tags.Rexp.ALT#copy$default$2().
+,ammonite/$file/play_tags.Rexp.ALT#ordinal().
+'ammonite/$file/play_tags.Rexp.ALT#_1().
+'ammonite/$file/play_tags.Rexp.ALT#_2().í: *b
+.ammonite/$file/play_tags.Rexp.ALT.apply().(r1)*r1Ää&"$
+" ammonite/$file/play_tags.Rexp#*b
+.ammonite/$file/play_tags.Rexp.ALT.apply().(r2)*r2Ää&"$
+" ammonite/$file/play_tags.Rexp#*Œ
+*ammonite/$file/play_tags.Rexp.ALT.apply().*applyÄäçä`
+.ammonite/$file/play_tags.Rexp.ALT.apply().(r1)
+.ammonite/$file/play_tags.Rexp.ALT.apply().(r2)&$"ammonite/$file/play_tags.Rexp.ALT#í: *j
+1ammonite/$file/play_tags.Rexp.ALT.unapply().(x$1)*x$1Ää*"(
+&$"ammonite/$file/play_tags.Rexp.ALT#*£
+,ammonite/$file/play_tags.Rexp.ALT.unapply().*unapplyÄä_]3
+1ammonite/$file/play_tags.Rexp.ALT.unapply().(x$1)&$"ammonite/$file/play_tags.Rexp.ALT#í: *{
+-ammonite/$file/play_tags.Rexp.ALT.toString().*toStringÄä"
+j
+java/lang/String#í: öscala/Any#toString().*∑
+"ammonite/$file/play_tags.Rexp.ALT.
+ *ALTÄä˛
+˚java/lang/Object#'¢$"ammonite/$file/play_tags.Rexp.ALT."∏
+-ammonite/$file/play_tags.Rexp.ALT.`<init>`().
+*ammonite/$file/play_tags.Rexp.ALT.apply().
+,ammonite/$file/play_tags.Rexp.ALT.unapply().
+-ammonite/$file/play_tags.Rexp.ALT.toString().í: *a
+%ammonite/$file/play_tags.Rexp.SEQ#r1. Ä*r1Ää&"$
+" ammonite/$file/play_tags.Rexp#í: *a
+%ammonite/$file/play_tags.Rexp.SEQ#r2. Ä*r2Ää&"$
+" ammonite/$file/play_tags.Rexp#í: *a
+-ammonite/$file/play_tags.Rexp.SEQ#copy().(r1)*r1Ää&"$
+" ammonite/$file/play_tags.Rexp#*a
+-ammonite/$file/play_tags.Rexp.SEQ#copy().(r2)*r2Ää&"$
+" ammonite/$file/play_tags.Rexp#* 
+)ammonite/$file/play_tags.Rexp.SEQ#copy().*copyÄäãà^
+-ammonite/$file/play_tags.Rexp.SEQ#copy().(r1)
+-ammonite/$file/play_tags.Rexp.SEQ#copy().(r2)&$"ammonite/$file/play_tags.Rexp.SEQ#í: *µ
+3ammonite/$file/play_tags.Rexp.SEQ#copy$default$1().*copy$default$1Ääc"a
+_j]
+[BY
+" ammonite/$file/play_tags.Rexp#3
+1/-scala/annotation/unchecked/uncheckedVariance#í: *µ
+3ammonite/$file/play_tags.Rexp.SEQ#copy$default$2().*copy$default$2Ääc"a
+_j]
+[BY
+" ammonite/$file/play_tags.Rexp#3
+1/-scala/annotation/unchecked/uncheckedVariance#í: *z
+,ammonite/$file/play_tags.Rexp.SEQ#ordinal().*ordinalÄä"
+j
+
+scala/Int#í: öscala/reflect/Enum#ordinal().*d
+'ammonite/$file/play_tags.Rexp.SEQ#_1().*_1Ää*"(
+&j$
+" ammonite/$file/play_tags.Rexp#í: *d
+'ammonite/$file/play_tags.Rexp.SEQ#_2().*_2Ää*"(
+&j$
+" ammonite/$file/play_tags.Rexp#í: *h
+1ammonite/$file/play_tags.Rexp.SEQ#`<init>`().(r1) Ä*r1Ää&"$
+" ammonite/$file/play_tags.Rexp#*h
+1ammonite/$file/play_tags.Rexp.SEQ#`<init>`().(r2) Ä*r2Ää&"$
+" ammonite/$file/play_tags.Rexp#*€
+-ammonite/$file/play_tags.Rexp.SEQ#`<init>`(). Ä@*<init>Ääìêf
+1ammonite/$file/play_tags.Rexp.SEQ#`<init>`().(r1)
+1ammonite/$file/play_tags.Rexp.SEQ#`<init>`().(r2)&$"ammonite/$file/play_tags.Rexp.SEQ#í: *ü
+"ammonite/$file/play_tags.Rexp.SEQ# àÅ*SEQÄä‰
+·" ammonite/$file/play_tags.Rexp#&$"ammonite/$file/play_tags.Rexp.SEQ#"í
+%ammonite/$file/play_tags.Rexp.SEQ#r1.
+%ammonite/$file/play_tags.Rexp.SEQ#r2.
+-ammonite/$file/play_tags.Rexp.SEQ#`<init>`().
+)ammonite/$file/play_tags.Rexp.SEQ#copy().
+3ammonite/$file/play_tags.Rexp.SEQ#copy$default$1().
+3ammonite/$file/play_tags.Rexp.SEQ#copy$default$2().
+,ammonite/$file/play_tags.Rexp.SEQ#ordinal().
+'ammonite/$file/play_tags.Rexp.SEQ#_1().
+'ammonite/$file/play_tags.Rexp.SEQ#_2().í: *b
+.ammonite/$file/play_tags.Rexp.SEQ.apply().(r1)*r1Ää&"$
+" ammonite/$file/play_tags.Rexp#*b
+.ammonite/$file/play_tags.Rexp.SEQ.apply().(r2)*r2Ää&"$
+" ammonite/$file/play_tags.Rexp#*Œ
+*ammonite/$file/play_tags.Rexp.SEQ.apply().*applyÄäçä`
+.ammonite/$file/play_tags.Rexp.SEQ.apply().(r1)
+.ammonite/$file/play_tags.Rexp.SEQ.apply().(r2)&$"ammonite/$file/play_tags.Rexp.SEQ#í: *j
+1ammonite/$file/play_tags.Rexp.SEQ.unapply().(x$1)*x$1Ää*"(
+&$"ammonite/$file/play_tags.Rexp.SEQ#*£
+,ammonite/$file/play_tags.Rexp.SEQ.unapply().*unapplyÄä_]3
+1ammonite/$file/play_tags.Rexp.SEQ.unapply().(x$1)&$"ammonite/$file/play_tags.Rexp.SEQ#í: *{
+-ammonite/$file/play_tags.Rexp.SEQ.toString().*toStringÄä"
+j
+java/lang/String#í: öscala/Any#toString().*∑
+"ammonite/$file/play_tags.Rexp.SEQ.
+ *SEQÄä˛
+˚java/lang/Object#'¢$"ammonite/$file/play_tags.Rexp.SEQ."∏
+-ammonite/$file/play_tags.Rexp.SEQ.`<init>`().
+*ammonite/$file/play_tags.Rexp.SEQ.apply().
+,ammonite/$file/play_tags.Rexp.SEQ.unapply().
+-ammonite/$file/play_tags.Rexp.SEQ.toString().í: *`
+%ammonite/$file/play_tags.Rexp.STAR#r. Ä*rÄä&"$
+" ammonite/$file/play_tags.Rexp#í: *`
+-ammonite/$file/play_tags.Rexp.STAR#copy().(r)*rÄä&"$
+" ammonite/$file/play_tags.Rexp#*õ
+*ammonite/$file/play_tags.Rexp.STAR#copy().*copyÄä\Z/
+-ammonite/$file/play_tags.Rexp.STAR#copy().(r)'%#ammonite/$file/play_tags.Rexp.STAR#í: *∂
+4ammonite/$file/play_tags.Rexp.STAR#copy$default$1().*copy$default$1Ääc"a
+_j]
+[BY
+" ammonite/$file/play_tags.Rexp#3
+1/-scala/annotation/unchecked/uncheckedVariance#í: *{
+-ammonite/$file/play_tags.Rexp.STAR#ordinal().*ordinalÄä"
+j
+
+scala/Int#í: öscala/reflect/Enum#ordinal().*e
+(ammonite/$file/play_tags.Rexp.STAR#_1().*_1Ää*"(
+&j$
+" ammonite/$file/play_tags.Rexp#í: *g
+1ammonite/$file/play_tags.Rexp.STAR#`<init>`().(r) Ä*rÄä&"$
+" ammonite/$file/play_tags.Rexp#*®
+.ammonite/$file/play_tags.Rexp.STAR#`<init>`(). Ä@*<init>Ää`^3
+1ammonite/$file/play_tags.Rexp.STAR#`<init>`().(r)'%#ammonite/$file/play_tags.Rexp.STAR#í: *¢
+#ammonite/$file/play_tags.Rexp.STAR# àÅ*STARÄäÂ
+‚" ammonite/$file/play_tags.Rexp#'%#ammonite/$file/play_tags.Rexp.STAR#"í
+%ammonite/$file/play_tags.Rexp.STAR#r.
+.ammonite/$file/play_tags.Rexp.STAR#`<init>`().
+*ammonite/$file/play_tags.Rexp.STAR#copy().
+4ammonite/$file/play_tags.Rexp.STAR#copy$default$1().
+-ammonite/$file/play_tags.Rexp.STAR#ordinal().
+(ammonite/$file/play_tags.Rexp.STAR#_1().í: *a
+.ammonite/$file/play_tags.Rexp.STAR.apply().(r)*rÄä&"$
+" ammonite/$file/play_tags.Rexp#*û
++ammonite/$file/play_tags.Rexp.STAR.apply().*applyÄä][0
+.ammonite/$file/play_tags.Rexp.STAR.apply().(r)'%#ammonite/$file/play_tags.Rexp.STAR#í: *l
+2ammonite/$file/play_tags.Rexp.STAR.unapply().(x$1)*x$1Ää+")
+'%#ammonite/$file/play_tags.Rexp.STAR#*¶
+-ammonite/$file/play_tags.Rexp.STAR.unapply().*unapplyÄäa_4
+2ammonite/$file/play_tags.Rexp.STAR.unapply().(x$1)'%#ammonite/$file/play_tags.Rexp.STAR#í: *|
+.ammonite/$file/play_tags.Rexp.STAR.toString().*toStringÄä"
+j
+java/lang/String#í: öscala/Any#toString().*æ
+#ammonite/$file/play_tags.Rexp.STAR.
+ *STARÄäÉ
+Äjava/lang/Object#(¢%#ammonite/$file/play_tags.Rexp.STAR."º
+.ammonite/$file/play_tags.Rexp.STAR.`<init>`().
++ammonite/$file/play_tags.Rexp.STAR.apply().
+-ammonite/$file/play_tags.Rexp.STAR.unapply().
+.ammonite/$file/play_tags.Rexp.STAR.toString().í: *b
+'ammonite/$file/play_tags.Rexp.NTIMES#r. Ä*rÄä&"$
+" ammonite/$file/play_tags.Rexp#í: *N
+'ammonite/$file/play_tags.Rexp.NTIMES#n. Ä*nÄä"
+
+scala/Int#í: *Z
+-ammonite/$file/play_tags.Rexp.NTIMES#counter. Ä*counterÄä"
+
+scala/Int#í: *b
+/ammonite/$file/play_tags.Rexp.NTIMES#copy().(r)*rÄä&"$
+" ammonite/$file/play_tags.Rexp#*N
+/ammonite/$file/play_tags.Rexp.NTIMES#copy().(n)*nÄä"
+
+scala/Int#*Z
+5ammonite/$file/play_tags.Rexp.NTIMES#copy().(counter)*counterÄä"
+
+scala/Int#*å
+,ammonite/$file/play_tags.Rexp.NTIMES#copy().*copyÄä «ô
+/ammonite/$file/play_tags.Rexp.NTIMES#copy().(r)
+/ammonite/$file/play_tags.Rexp.NTIMES#copy().(n)
+5ammonite/$file/play_tags.Rexp.NTIMES#copy().(counter))'%ammonite/$file/play_tags.Rexp.NTIMES#í: *∏
+6ammonite/$file/play_tags.Rexp.NTIMES#copy$default$1().*copy$default$1Ääc"a
+_j]
+[BY
+" ammonite/$file/play_tags.Rexp#3
+1/-scala/annotation/unchecked/uncheckedVariance#í: *§
+6ammonite/$file/play_tags.Rexp.NTIMES#copy$default$2().*copy$default$2ÄäO"M
+KjI
+GBE
+
+scala/Int#3
+1/-scala/annotation/unchecked/uncheckedVariance#í: *§
+6ammonite/$file/play_tags.Rexp.NTIMES#copy$default$3().*copy$default$3ÄäO"M
+KjI
+GBE
+
+scala/Int#3
+1/-scala/annotation/unchecked/uncheckedVariance#í: *}
+/ammonite/$file/play_tags.Rexp.NTIMES#ordinal().*ordinalÄä"
+j
+
+scala/Int#í: öscala/reflect/Enum#ordinal().*g
+*ammonite/$file/play_tags.Rexp.NTIMES#_1().*_1Ää*"(
+&j$
+" ammonite/$file/play_tags.Rexp#í: *S
+*ammonite/$file/play_tags.Rexp.NTIMES#_2().*_2Ää"
+j
+
+scala/Int#í: *S
+*ammonite/$file/play_tags.Rexp.NTIMES#_3().*_3Ää"
+j
+
+scala/Int#í: *i
+3ammonite/$file/play_tags.Rexp.NTIMES#`<init>`().(r) Ä*rÄä&"$
+" ammonite/$file/play_tags.Rexp#*U
+3ammonite/$file/play_tags.Rexp.NTIMES#`<init>`().(n) Ä*nÄä"
+
+scala/Int#*a
+9ammonite/$file/play_tags.Rexp.NTIMES#`<init>`().(counter) Ä*counterÄä"
+
+scala/Int#*°
+0ammonite/$file/play_tags.Rexp.NTIMES#`<init>`(). Ä@*<init>Ää÷”•
+3ammonite/$file/play_tags.Rexp.NTIMES#`<init>`().(r)
+3ammonite/$file/play_tags.Rexp.NTIMES#`<init>`().(n)
+9ammonite/$file/play_tags.Rexp.NTIMES#`<init>`().(counter))'%ammonite/$file/play_tags.Rexp.NTIMES#í: *‘
+%ammonite/$file/play_tags.Rexp.NTIMES# àÅ*NTIMESÄäì
+ê" ammonite/$file/play_tags.Rexp#)'%ammonite/$file/play_tags.Rexp.NTIMES#"æ
+'ammonite/$file/play_tags.Rexp.NTIMES#r.
+'ammonite/$file/play_tags.Rexp.NTIMES#n.
+-ammonite/$file/play_tags.Rexp.NTIMES#counter.
+0ammonite/$file/play_tags.Rexp.NTIMES#`<init>`().
+,ammonite/$file/play_tags.Rexp.NTIMES#copy().
+6ammonite/$file/play_tags.Rexp.NTIMES#copy$default$1().
+6ammonite/$file/play_tags.Rexp.NTIMES#copy$default$2().
+6ammonite/$file/play_tags.Rexp.NTIMES#copy$default$3().
+/ammonite/$file/play_tags.Rexp.NTIMES#ordinal().
+*ammonite/$file/play_tags.Rexp.NTIMES#_1().
+*ammonite/$file/play_tags.Rexp.NTIMES#_2().
+*ammonite/$file/play_tags.Rexp.NTIMES#_3().í: *c
+0ammonite/$file/play_tags.Rexp.NTIMES.apply().(r)*rÄä&"$
+" ammonite/$file/play_tags.Rexp#*O
+0ammonite/$file/play_tags.Rexp.NTIMES.apply().(n)*nÄä"
+
+scala/Int#*[
+6ammonite/$file/play_tags.Rexp.NTIMES.apply().(counter)*counterÄä"
+
+scala/Int#*ë
+-ammonite/$file/play_tags.Rexp.NTIMES.apply().*applyÄäÕ ú
+0ammonite/$file/play_tags.Rexp.NTIMES.apply().(r)
+0ammonite/$file/play_tags.Rexp.NTIMES.apply().(n)
+6ammonite/$file/play_tags.Rexp.NTIMES.apply().(counter))'%ammonite/$file/play_tags.Rexp.NTIMES#í: *p
+4ammonite/$file/play_tags.Rexp.NTIMES.unapply().(x$1)*x$1Ää-"+
+)'%ammonite/$file/play_tags.Rexp.NTIMES#*¨
+/ammonite/$file/play_tags.Rexp.NTIMES.unapply().*unapplyÄäec6
+4ammonite/$file/play_tags.Rexp.NTIMES.unapply().(x$1))'%ammonite/$file/play_tags.Rexp.NTIMES#í: *~
+0ammonite/$file/play_tags.Rexp.NTIMES.toString().*toStringÄä"
+j
+java/lang/String#í: öscala/Any#toString().*æ
+Cammonite/$file/play_tags.Rexp.NTIMES.$lessinit$greater$default$3().*$lessinit$greater$default$3ÄäO"M
+KjI
+GBE
+
+scala/Int#3
+1/-scala/annotation/unchecked/uncheckedVariance#í: *ë
+%ammonite/$file/play_tags.Rexp.NTIMES.
+ *NTIMESÄä“
+œjava/lang/Object#*¢'%ammonite/$file/play_tags.Rexp.NTIMES."â
+0ammonite/$file/play_tags.Rexp.NTIMES.`<init>`().
+-ammonite/$file/play_tags.Rexp.NTIMES.apply().
+/ammonite/$file/play_tags.Rexp.NTIMES.unapply().
+0ammonite/$file/play_tags.Rexp.NTIMES.toString().
+Cammonite/$file/play_tags.Rexp.NTIMES.$lessinit$greater$default$3().í: *W
+0ammonite/$file/play_tags.Rexp.$new().(_$ordinal)*	_$ordinalÄä"
+
+scala/Int#*V
+,ammonite/$file/play_tags.Rexp.$new().($name)*$nameÄä"
+java/lang/String#*ƒ
+%ammonite/$file/play_tags.Rexp.$new().*$newÄäâÜ`
+0ammonite/$file/play_tags.Rexp.$new().(_$ordinal)
+,ammonite/$file/play_tags.Rexp.$new().($name)" ammonite/$file/play_tags.Rexp#í *Z
+5ammonite/$file/play_tags.Rexp.fromOrdinal().(ordinal)*ordinalÄä"
+
+scala/Int#*ß
+,ammonite/$file/play_tags.Rexp.fromOrdinal().*fromOrdinalÄä_]7
+5ammonite/$file/play_tags.Rexp.fromOrdinal().(ordinal)" ammonite/$file/play_tags.Rexp#í: *Ï
+ammonite/$file/play_tags.Rexp.
+ *RexpÄä∂
+≥java/lang/Object##¢ ammonite/$file/play_tags.Rexp."Ù
+)ammonite/$file/play_tags.Rexp.`<init>`().
+#ammonite/$file/play_tags.Rexp.ZERO.
+"ammonite/$file/play_tags.Rexp.ONE.
+#ammonite/$file/play_tags.Rexp.CHAR#
+#ammonite/$file/play_tags.Rexp.CHAR.
+#ammonite/$file/play_tags.Rexp.CHAR.
+"ammonite/$file/play_tags.Rexp.ALT#
+"ammonite/$file/play_tags.Rexp.ALT.
+"ammonite/$file/play_tags.Rexp.ALT.
+"ammonite/$file/play_tags.Rexp.SEQ#
+"ammonite/$file/play_tags.Rexp.SEQ.
+"ammonite/$file/play_tags.Rexp.SEQ.
+#ammonite/$file/play_tags.Rexp.STAR#
+#ammonite/$file/play_tags.Rexp.STAR.
+#ammonite/$file/play_tags.Rexp.STAR.
+%ammonite/$file/play_tags.Rexp.NTIMES#
+%ammonite/$file/play_tags.Rexp.NTIMES.
+%ammonite/$file/play_tags.Rexp.NTIMES.
+%ammonite/$file/play_tags.Rexp.$new().
+,ammonite/$file/play_tags.Rexp.fromOrdinal().í: *Z
+'ammonite/$file/play_tags.nullable().(r)*rÄä&"$
+" ammonite/$file/play_tags.Rexp#*=
+local0 Ä*r1Ää&"$
+" ammonite/$file/play_tags.Rexp#*=
+local1 Ä*r2Ää&"$
+" ammonite/$file/play_tags.Rexp#*=
+local2 Ä*r1Ää&"$
+" ammonite/$file/play_tags.Rexp#*=
+local3 Ä*r2Ää&"$
+" ammonite/$file/play_tags.Rexp#*<
+local4 Ä*rÄä&"$
+" ammonite/$file/play_tags.Rexp#*(
+local5 Ä*nÄä"
+
+scala/Int#*.
+local6 Ä*counterÄä"
+
+scala/Int#*]
+$ammonite/$file/play_tags.nullable().*nullableÄä 
+local4scala/Boolean#í: *U
+"ammonite/$file/play_tags.fin().(r)*rÄä&"$
+" ammonite/$file/play_tags.Rexp#*)
+local7 Ä*cÄä"
+scala/Char#*1
+local8 Ä*markedÄä"
+scala/Boolean#*Q
+local9 Ä*tagsÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#*>
+local10 Ä*r1Ää&"$
+" ammonite/$file/play_tags.Rexp#*>
+local11 Ä*r2Ää&"$
+" ammonite/$file/play_tags.Rexp#*>
+local12 Ä*r1Ää&"$
+" ammonite/$file/play_tags.Rexp#*>
+local13 Ä*r2Ää&"$
+" ammonite/$file/play_tags.Rexp#*=
+local14 Ä*rÄä&"$
+" ammonite/$file/play_tags.Rexp#*=
+local15 Ä*rÄä&"$
+" ammonite/$file/play_tags.Rexp#*)
+local16 Ä*nÄä"
+
+scala/Int#*/
+local17 Ä*counterÄä"
+
+scala/Int#*T
+ammonite/$file/play_tags.fin().*finÄä!	
+local15scala/Boolean#í: *G
+$ammonite/$file/play_tags.shift().(m)*mÄä"
+scala/Boolean#*Y
+%ammonite/$file/play_tags.shift().(re)*reÄä&"$
+" ammonite/$file/play_tags.Rexp#*i
+%ammonite/$file/play_tags.shift().(cp)*cpÄä6"4
+20scala/Tuple2#scala/Char#
+scala/Int#**
+local18 Ä*cÄä"
+scala/Char#*+
+local19 Ä*posÄä"
+
+scala/Int#**
+local20 Ä*dÄä"
+scala/Char#*2
+local21 Ä*markedÄä"
+scala/Boolean#*R
+local22 Ä*tagsÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#*.
+local23 Ä*elem$1Ää"
+
+scala/Int#*>
+local24 Ä*r1Ää&"$
+" ammonite/$file/play_tags.Rexp#*>
+local25 Ä*r2Ää&"$
+" ammonite/$file/play_tags.Rexp#*>
+local26 Ä*r1Ää&"$
+" ammonite/$file/play_tags.Rexp#*>
+local27 Ä*r2Ää&"$
+" ammonite/$file/play_tags.Rexp#*=
+local28 Ä*rÄä&"$
+" ammonite/$file/play_tags.Rexp#*=
+local29 Ä*rÄä&"$
+" ammonite/$file/play_tags.Rexp#*)
+local30 Ä*nÄä"
+
+scala/Int#*/
+local31 Ä*counterÄä"
+
+scala/Int#*’
+!ammonite/$file/play_tags.shift().*shiftÄäùöt
+$ammonite/$file/play_tags.shift().(m)
+%ammonite/$file/play_tags.shift().(re)
+%ammonite/$file/play_tags.shift().(cp)" ammonite/$file/play_tags.Rexp#í: *U
+"ammonite/$file/play_tags.mat().(r)*rÄä&"$
+" ammonite/$file/play_tags.Rexp#*h
+"ammonite/$file/play_tags.mat().(s)*sÄä9"7
+53 scala/collection/immutable/List#scala/Char#**
+local32 Ä*cÄä"
+scala/Char#*Q
+local33 Ä*csÄä9"7
+53 scala/collection/immutable/List#scala/Char#*<
+local34*x$1Ää&"$
+" ammonite/$file/play_tags.Rexp#*Ö
+local35*x$2Ääo"m
+kiscala/Tuple2#HBF
+scala/Char#3
+1/-scala/annotation/unchecked/uncheckedVariance#
+scala/Int#*D
+local36 Ä*currRexpÄä&"$
+" ammonite/$file/play_tags.Rexp#**
+local37 Ä*cÄä"
+scala/Char#*)
+local38 Ä*iÄä"
+
+scala/Int#*£
+ammonite/$file/play_tags.mat().*matÄäpnH
+"ammonite/$file/play_tags.mat().(r)
+"ammonite/$file/play_tags.mat().(s)" ammonite/$file/play_tags.Rexp#í: *Y
+&ammonite/$file/play_tags.matcher().(r)*rÄä&"$
+" ammonite/$file/play_tags.Rexp#*l
+&ammonite/$file/play_tags.matcher().(s)*sÄä9"7
+53 scala/collection/immutable/List#scala/Char#*£
+#ammonite/$file/play_tags.matcher().*matcherÄähfP
+&ammonite/$file/play_tags.matcher().(r)
+&ammonite/$file/play_tags.matcher().(s)scala/Boolean#í: *Z
+'ammonite/$file/play_tags.matcher2().(r)*rÄä&"$
+" ammonite/$file/play_tags.Rexp#*m
+'ammonite/$file/play_tags.matcher2().(s)*sÄä9"7
+53 scala/collection/immutable/List#scala/Char#*∑
+$ammonite/$file/play_tags.matcher2().*matcher2ÄäzxR
+'ammonite/$file/play_tags.matcher2().(r)
+'ammonite/$file/play_tags.matcher2().(s)" ammonite/$file/play_tags.Rexp#í: *@
+local39 Ä*rexpÄä&"$
+" ammonite/$file/play_tags.Rexp#*P
+local40 Ä*sÄä9"7
+53 scala/collection/immutable/List#scala/Char#*B
+local41 Ä*finRegÄä&"$
+" ammonite/$file/play_tags.Rexp#*&
+local42*iÄä"
+
+scala/Int#*T
+local43 Ä*sPartÄä9"7
+53 scala/collection/immutable/List#scala/Char#*h
+local44 Ä*stagesÄäL"J
+HF scala/collection/immutable/List#" ammonite/$file/play_tags.Rexp#*>
+local45*stageÄä&"$
+" ammonite/$file/play_tags.Rexp#*=
+local46 Ä*rÄä&"$
+" ammonite/$file/play_tags.Rexp#*D
+local47 Ä*shiftedRÄä&"$
+" ammonite/$file/play_tags.Rexp#*I
+local48 Ä*shiftedRTwiceÄä&"$
+" ammonite/$file/play_tags.Rexp#*I
+local49 Ä*shiftedThriceÄä&"$
+" ammonite/$file/play_tags.Rexp#*E
+local50 Ä*	popedOnceÄä&"$
+" ammonite/$file/play_tags.Rexp#*F
+local51 Ä*
+popedTwiceÄä&"$
+" ammonite/$file/play_tags.Rexp#*G
+local52 Ä*popedThriceÄä&"$
+" ammonite/$file/play_tags.Rexp#*D
+local53 Ä*finalPopÄä&"$
+" ammonite/$file/play_tags.Rexp#*b
+!ammonite/$file/play_tags.test1().*test1j
+mainargs/main#Ää scala/Unit#í: *@
+local54 Ä*rexpÄä&"$
+" ammonite/$file/play_tags.Rexp#*P
+local55 Ä*sÄä9"7
+53 scala/collection/immutable/List#scala/Char#*B
+local56 Ä*finRegÄä&"$
+" ammonite/$file/play_tags.Rexp#*&
+local57*iÄä"
+
+scala/Int#*T
+local58 Ä*sPartÄä9"7
+53 scala/collection/immutable/List#scala/Char#*é
+local59 Ä*	extractedÄäo"m
+ki scala/collection/immutable/List#ECscala/Tuple2#" ammonite/$file/play_tags.Rexp#
+scala/Int#*_
+local60*x$1ÄäI"G
+ECscala/Tuple2#" ammonite/$file/play_tags.Rexp#
+scala/Int#*=
+local61 Ä*rÄä&"$
+" ammonite/$file/play_tags.Rexp#*-
+local62 Ä*pointÄä"
+
+scala/Int#*b
+!ammonite/$file/play_tags.test2().*test2j
+mainargs/main#Ää scala/Unit#í: *^
+ammonite/$file/play_tags.EVIL2. Ä*EVIL2Ää&"$
+" ammonite/$file/play_tags.Rexp#í: *]
+*ammonite/$file/play_tags.time_needed().[T]	*TÄä&$scala/Nothing#
+scala/Any#*I
+*ammonite/$file/play_tags.time_needed().(i)*iÄä"
+
+scala/Int#*s
+-ammonite/$file/play_tags.time_needed().(code)*codeÄä6"4
+2j0
+.,*ammonite/$file/play_tags.time_needed().[T]*.
+local63 Ä*startÄä"
+scala/Long#*&
+local64*jÄä"
+
+scala/Int#*,
+local65 Ä*endÄä"
+scala/Long#*Â
+'ammonite/$file/play_tags.time_needed().*time_neededÄä°û
+,
+*ammonite/$file/play_tags.time_needed().[T][
+*ammonite/$file/play_tags.time_needed().(i)
+-ammonite/$file/play_tags.time_needed().(code)scala/Double#í: *&
+local66*iÄä"
+
+scala/Int#*b
+!ammonite/$file/play_tags.test3().*test3j
+mainargs/main#Ää scala/Unit#í: *\
+)ammonite/$file/play_tags.popPoints2().(r)*rÄä&"$
+" ammonite/$file/play_tags.Rexp#**
+local67 Ä*cÄä"
+scala/Char#*R
+local68 Ä*tagsÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#*,
+local69 Ä*nextÄä"
+
+scala/Int#*R
+local70 Ä*restÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#*>
+local71 Ä*r1Ää&"$
+" ammonite/$file/play_tags.Rexp#*>
+local72 Ä*r2Ää&"$
+" ammonite/$file/play_tags.Rexp#*>
+local73 Ä*r1Ää&"$
+" ammonite/$file/play_tags.Rexp#*>
+local74 Ä*r2Ää&"$
+" ammonite/$file/play_tags.Rexp#*A
+local75 Ä*innerÄä&"$
+" ammonite/$file/play_tags.Rexp#*A
+local76 Ä*innerÄä&"$
+" ammonite/$file/play_tags.Rexp#*)
+local77 Ä*nÄä"
+
+scala/Int#*/
+local78 Ä*counterÄä"
+
+scala/Int#*î
+&ammonite/$file/play_tags.popPoints2().*
+popPoints2ÄäSQ+
+)ammonite/$file/play_tags.popPoints2().(r)" ammonite/$file/play_tags.Rexp#í: *^
++ammonite/$file/play_tags.containsTags().(r)*rÄä&"$
+" ammonite/$file/play_tags.Rexp#*R
+local79 Ä*tagsÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#*>
+local80 Ä*r1Ää&"$
+" ammonite/$file/play_tags.Rexp#*>
+local81 Ä*r2Ää&"$
+" ammonite/$file/play_tags.Rexp#*>
+local82 Ä*r1Ää&"$
+" ammonite/$file/play_tags.Rexp#*>
+local83 Ä*r2Ää&"$
+" ammonite/$file/play_tags.Rexp#*>
+local84 Ä*r1Ää&"$
+" ammonite/$file/play_tags.Rexp#*>
+local85 Ä*r1Ää&"$
+" ammonite/$file/play_tags.Rexp#*ä
+(ammonite/$file/play_tags.containsTags().*containsTagsÄäEC-
++ammonite/$file/play_tags.containsTags().(r)scala/Boolean#í: *i
+1ammonite/$file/play_tags.collectStages().(finReg)*finRegÄä&"$
+" ammonite/$file/play_tags.Rexp#*@
+local86*currentÄä&"$
+" ammonite/$file/play_tags.Rexp#*e
+local87*stagesÄäL"J
+HF scala/collection/immutable/List#" ammonite/$file/play_tags.Rexp#*@
+local88 Ä*nextÄä&"$
+" ammonite/$file/play_tags.Rexp#*w
+local89*loopÄä`^
+local86
+local87HF scala/collection/immutable/List#" ammonite/$file/play_tags.Rexp#*…
+)ammonite/$file/play_tags.collectStages().*collectStagesÄäÅ3
+1ammonite/$file/play_tags.collectStages().(finReg)HF scala/collection/immutable/List#" ammonite/$file/play_tags.Rexp#í: *_
+,ammonite/$file/play_tags.extractPoints().(r)*rÄä&"$
+" ammonite/$file/play_tags.Rexp#**
+local90 Ä*cÄä"
+scala/Char#*2
+local91 Ä*markedÄä"
+scala/Boolean#*R
+local92 Ä*tagsÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#*&
+local93*pÄä"
+
+scala/Int#*>
+local94 Ä*r1Ää&"$
+" ammonite/$file/play_tags.Rexp#*>
+local95 Ä*r2Ää&"$
+" ammonite/$file/play_tags.Rexp#*>
+local96 Ä*r1Ää&"$
+" ammonite/$file/play_tags.Rexp#*>
+local97 Ä*r2Ää&"$
+" ammonite/$file/play_tags.Rexp#*=
+local98 Ä*rÄä&"$
+" ammonite/$file/play_tags.Rexp#*=
+local99 Ä*rÄä&"$
+" ammonite/$file/play_tags.Rexp#*¡
+)ammonite/$file/play_tags.extractPoints().*extractPointsÄäzx	
+local99ki scala/collection/immutable/List#ECscala/Tuple2#" ammonite/$file/play_tags.Rexp#
+scala/Int#í: *V
+#ammonite/$file/play_tags.size().(r)*rÄä&"$
+" ammonite/$file/play_tags.Rexp#*?
+local100 Ä*r1Ää&"$
+" ammonite/$file/play_tags.Rexp#*?
+local101 Ä*r2Ää&"$
+" ammonite/$file/play_tags.Rexp#*?
+local102 Ä*r1Ää&"$
+" ammonite/$file/play_tags.Rexp#*?
+local103 Ä*r2Ää&"$
+" ammonite/$file/play_tags.Rexp#*>
+local104 Ä*rÄä&"$
+" ammonite/$file/play_tags.Rexp#*>
+local105 Ä*rÄä&"$
+" ammonite/$file/play_tags.Rexp#**
+local106 Ä*nÄä"
+
+scala/Int#*0
+local107 Ä*counterÄä"
+
+scala/Int#*S
+ ammonite/$file/play_tags.size().*sizeÄä
+
+local105
+scala/Int#í: *r
+,ammonite/$file/play_tags.charlist2rexp().(s)*sÄä9"7
+53 scala/collection/immutable/List#scala/Char#*+
+local108 Ä*cÄä"
+scala/Char#*+
+local109 Ä*cÄä"
+scala/Char#*Q
+local110 Ä*sÄä9"7
+53 scala/collection/immutable/List#scala/Char#*y
+)ammonite/$file/play_tags.charlist2rexp().*charlist2rexpÄä20
+
+local110" ammonite/$file/play_tags.Rexp#í: *1
+local111*sÄä"
+scala/Predef.String#*æ
+6ammonite/$file/play_tags.given_Conversion_String_Rexp. Ëà*given_Conversion_String_RexpÄäW"U
+SQscala/Conversion#scala/Predef.String#" ammonite/$file/play_tags.Rexp#í: *U
+"ammonite/$file/play_tags.`|`().(r)*rÄä&"$
+" ammonite/$file/play_tags.Rexp#*U
+"ammonite/$file/play_tags.`|`().(s)*sÄä&"$
+" ammonite/$file/play_tags.Rexp#*£
+ammonite/$file/play_tags.`|`().*|Äärp$
+"ammonite/$file/play_tags.`|`().(r)$
+"ammonite/$file/play_tags.`|`().(s)" ammonite/$file/play_tags.Rexp#í: *U
+"ammonite/$file/play_tags.`%`().(r)*rÄä&"$
+" ammonite/$file/play_tags.Rexp#*}
+ammonite/$file/play_tags.`%`().*%ÄäLJ$
+"ammonite/$file/play_tags.`%`().(r)" ammonite/$file/play_tags.Rexp#í: *U
+"ammonite/$file/play_tags.`~`().(r)*rÄä&"$
+" ammonite/$file/play_tags.Rexp#*U
+"ammonite/$file/play_tags.`~`().(s)*sÄä&"$
+" ammonite/$file/play_tags.Rexp#*£
+ammonite/$file/play_tags.`~`().*~Äärp$
+"ammonite/$file/play_tags.`~`().(r)$
+"ammonite/$file/play_tags.`~`().(s)" ammonite/$file/play_tags.Rexp#í: *v
+'ammonite/$file/play_tags.implode().(ss)*ssÄäA"?
+=;scala/collection/immutable/Seq#scala/Predef.String#*Ç
+#ammonite/$file/play_tags.implode().*implodeÄäGE)
+'ammonite/$file/play_tags.implode().(ss)scala/Predef.String#í: *O
+&ammonite/$file/play_tags.explode().(s)*sÄä"
+scala/Predef.String#*§
+#ammonite/$file/play_tags.explode().*explodeÄäig(
+&ammonite/$file/play_tags.explode().(s);9 scala/collection/immutable/List#java/lang/String#í: *K
+"ammonite/$file/play_tags.lst().(s)*sÄä"
+scala/Predef.String#*2
+local112 Ä*hdÄä"
+java/lang/String#*X
+local113 Ä*tlÄä?"=
+;9 scala/collection/immutable/List#java/lang/String#*9
+local114 Ä*elem$2Ää"
+scala/Predef.String#*u
+ammonite/$file/play_tags.lst().*lstÄäB@$
+"ammonite/$file/play_tags.lst().(s)scala/Predef.String#í: *K
+"ammonite/$file/play_tags.mid().(s)*sÄä"
+scala/Predef.String#*2
+local115 Ä*hdÄä"
+java/lang/String#*X
+local116 Ä*tlÄä?"=
+;9 scala/collection/immutable/List#java/lang/String#*9
+local117 Ä*elem$3Ää"
+scala/Predef.String#*u
+ammonite/$file/play_tags.mid().*midÄäB@$
+"ammonite/$file/play_tags.mid().(s)scala/Predef.String#í: *u
+&ammonite/$file/play_tags.indent().(ss)*ssÄäA"?
+=;scala/collection/immutable/Seq#scala/Predef.String#*\
+local118 Ä*initÄäA"?
+=;scala/collection/immutable/Seq#scala/Predef.String#*4
+local119 Ä*lastÄä"
+java/lang/String#*1
+local120*sÄä"
+scala/Predef.String#*
+"ammonite/$file/play_tags.indent().*indentÄäFD(
+&ammonite/$file/play_tags.indent().(ss)scala/Predef.String#í: *T
+!ammonite/$file/play_tags.pp().(e)*eÄä&"$
+" ammonite/$file/play_tags.Rexp#*+
+local121 Ä*cÄä"
+scala/Char#*3
+local122 Ä*markedÄä"
+scala/Boolean#*S
+local123 Ä*tagsÄä8"6
+42 scala/collection/immutable/List#
+scala/Int#*?
+local124 Ä*r1Ää&"$
+" ammonite/$file/play_tags.Rexp#*?
+local125 Ä*r2Ää&"$
+" ammonite/$file/play_tags.Rexp#*?
+local126 Ä*r1Ää&"$
+" ammonite/$file/play_tags.Rexp#*?
+local127 Ä*r2Ää&"$
+" ammonite/$file/play_tags.Rexp#*>
+local128 Ä*rÄä&"$
+" ammonite/$file/play_tags.Rexp#*>
+local129 Ä*rÄä&"$
+" ammonite/$file/play_tags.Rexp#**
+local130 Ä*nÄä"
+
+scala/Int#*0
+local131 Ä*counterÄä"
+
+scala/Int#*r
+ammonite/$file/play_tags.pp().*ppÄäA?#
+!ammonite/$file/play_tags.pp().(e)scala/Predef.String#í: *[
+#ammonite/$file/play_tags.pps().(es)*esÄä*"(
+&r$
+" ammonite/$file/play_tags.Rexp#*;
+local132*eÄä&"$
+" ammonite/$file/play_tags.Rexp#*v
+ammonite/$file/play_tags.pps().*ppsÄäCA%
+#ammonite/$file/play_tags.pps().(es)scala/Predef.String#í: *u
+!ammonite/$file/play_tags.$main().*$mainÄä>< 86scala/collection/Iterator#scala/Predef.String#í: *r
+$ammonite/$file/play_tags.toString().*toStringÄä"
+j
+java/lang/String#í: öscala/Any#toString().*Ã
+
+ammonite/$file/play_tags.
+ *	play_tagsÄäñ
+
+ì
+java/lang/Object#¢ammonite/$file/play_tags."Ÿ	
+$ammonite/$file/play_tags.`<init>`().
+ammonite/$file/play_tags.Rexp#
+ammonite/$file/play_tags.Rexp.
+ammonite/$file/play_tags.Rexp.
+$ammonite/$file/play_tags.nullable().
+ammonite/$file/play_tags.fin().
+!ammonite/$file/play_tags.shift().
+ammonite/$file/play_tags.mat().
+#ammonite/$file/play_tags.matcher().
+$ammonite/$file/play_tags.matcher2().
+!ammonite/$file/play_tags.test1().
+!ammonite/$file/play_tags.test2().
+ammonite/$file/play_tags.EVIL2.
+'ammonite/$file/play_tags.time_needed().
+!ammonite/$file/play_tags.test3().
+&ammonite/$file/play_tags.popPoints2().
+(ammonite/$file/play_tags.containsTags().
+)ammonite/$file/play_tags.collectStages().
+)ammonite/$file/play_tags.extractPoints().
+ ammonite/$file/play_tags.size().
+)ammonite/$file/play_tags.charlist2rexp().
+6ammonite/$file/play_tags.given_Conversion_String_Rexp.
+ammonite/$file/play_tags.`|`().
+ammonite/$file/play_tags.`%`().
+ammonite/$file/play_tags.`~`().
+#ammonite/$file/play_tags.implode().
+#ammonite/$file/play_tags.explode().
+ammonite/$file/play_tags.lst().
+ammonite/$file/play_tags.mid().
+"ammonite/$file/play_tags.indent().
+ammonite/$file/play_tags.pp().
+ammonite/$file/play_tags.pps().
+!ammonite/$file/play_tags.$main().
+$ammonite/$file/play_tags.toString().í: *6
+[A]	*AÄä&$scala/Nothing#
+scala/Any#2
+ scala/2
+ scala/language.2-
+ )#scala/language.implicitConversions.2
+ 	os/2
+
+ os/size.27
+ )ammonite/$file/play_tags.Rexp#`<init>`().2,
+ 	ammonite/$file/play_tags.Rexp#21
+ #ammonite/$file/play_tags.Rexp.ZERO.20
+ 
+"ammonite/$file/play_tags.Rexp.ONE.2
+ scala/Char#23
+ %ammonite/$file/play_tags.Rexp.CHAR#c.2
+ $scala/Boolean#28
+ *ammonite/$file/play_tags.Rexp.CHAR#marked.26
+. 2(ammonite/$file/play_tags.Rexp.CHAR#tags.2!
+4 8scala/package.List#2
+9 <
+scala/Int#2<
+ .ammonite/$file/play_tags.Rexp.CHAR#`<init>`().21
+ #ammonite/$file/play_tags.Rexp.CHAR#2!
+@ Dscala/package.List.2,
+ ammonite/$file/play_tags.Rexp#23
+ %ammonite/$file/play_tags.Rexp.ALT#r1.2,
+ ammonite/$file/play_tags.Rexp#23
+ %ammonite/$file/play_tags.Rexp.ALT#r2.2;
+
+ 
+-ammonite/$file/play_tags.Rexp.ALT#`<init>`().20
+ 
+"ammonite/$file/play_tags.Rexp.ALT#2,
+ ammonite/$file/play_tags.Rexp#23
+ %ammonite/$file/play_tags.Rexp.SEQ#r1.2,
+ ammonite/$file/play_tags.Rexp#23
+ %ammonite/$file/play_tags.Rexp.SEQ#r2.2;
+
+ 
+-ammonite/$file/play_tags.Rexp.SEQ#`<init>`().20
+ 
+"ammonite/$file/play_tags.Rexp.SEQ#2,
+		 ammonite/$file/play_tags.Rexp#23
+		 %ammonite/$file/play_tags.Rexp.STAR#r.2<
+		 .ammonite/$file/play_tags.Rexp.STAR#`<init>`().21
+		 #ammonite/$file/play_tags.Rexp.STAR#2,
+
+
+ ammonite/$file/play_tags.Rexp#25
+
+
+ 'ammonite/$file/play_tags.Rexp.NTIMES#r.2
+
+
+ 
+scala/Int#25
+
+
+ 'ammonite/$file/play_tags.Rexp.NTIMES#n.2
+
+)
+ ,
+scala/Int#2;
+
+ 
+ '-ammonite/$file/play_tags.Rexp.NTIMES#counter.2>
+
+
+ 0ammonite/$file/play_tags.Rexp.NTIMES#`<init>`().23
+
+
+ %ammonite/$file/play_tags.Rexp.NTIMES#2,
+ ammonite/$file/play_tags.Rexp.2,
+ ammonite/$file/play_tags.Rexp#25
+ 'ammonite/$file/play_tags.nullable().(r)2
+  scala/Boolean#25
+# $'ammonite/$file/play_tags.nullable().(r)21
+ #ammonite/$file/play_tags.Rexp.ZERO.20
+ 
+"ammonite/$file/play_tags.Rexp.ONE.21
+ #ammonite/$file/play_tags.Rexp.CHAR.20
+ 
+"ammonite/$file/play_tags.Rexp.ALT.2
+ local02
+ local122
+ $ammonite/$file/play_tags.nullable().2
+ !local02#
+# %scala/Boolean#`||`().22
+& .$ammonite/$file/play_tags.nullable().2
+/ 1local120
+ 
+"ammonite/$file/play_tags.Rexp.SEQ.2
+ local22
+ local322
+ $ammonite/$file/play_tags.nullable().2
+ !local22#
+# %scala/Boolean#`&&`().22
+& .$ammonite/$file/play_tags.nullable().2
+/ 1local321
+ #ammonite/$file/play_tags.Rexp.STAR.23
+ %ammonite/$file/play_tags.Rexp.NTIMES.2
+ local42
+ local52
+ local62
+# $local52!
+% 'scala/Int#`==`(+3).22
+5 =$ammonite/$file/play_tags.nullable().2
+> ?local422
+ $ammonite/$file/play_tags.nullable().2,
+ ammonite/$file/play_tags.Rexp#20
+ 	"ammonite/$file/play_tags.fin().(r)2
+ scala/Boolean#20
+ "ammonite/$file/play_tags.fin().(r)21
+ #ammonite/$file/play_tags.Rexp.ZERO.20
+ 
+"ammonite/$file/play_tags.Rexp.ONE.21
+ #ammonite/$file/play_tags.Rexp.CHAR.2
+ local72
+ local82
+ local92
+ $local820
+ 
+"ammonite/$file/play_tags.Rexp.ALT.2
+ local102
+ local112-
+ ammonite/$file/play_tags.fin().2
+ local102#
+  scala/Boolean#`||`().2-
+! $ammonite/$file/play_tags.fin().2
+% 'local1120
+ 
+"ammonite/$file/play_tags.Rexp.SEQ.2
+ local122
+ local132-
+ ammonite/$file/play_tags.fin().2
+ local122#
+ !scala/Boolean#`&&`().22
+" *$ammonite/$file/play_tags.nullable().2
++ -local132#
+0 2scala/Boolean#`||`().2-
+3 6ammonite/$file/play_tags.fin().2
+7 9local1321
+ #ammonite/$file/play_tags.Rexp.STAR.2
+ local142-
+ ammonite/$file/play_tags.fin().2
+ local1423
+ %ammonite/$file/play_tags.Rexp.NTIMES.2
+ local152
+ local162
+ local172
+ &local172!
+' )scala/Int#`==`(+3).2
+* +local162#
+, .scala/Boolean#`&&`().2-
+/ 2ammonite/$file/play_tags.fin().2
+3 4local152-
+ ammonite/$file/play_tags.fin().2
+## scala/Boolean#22
+#
+# $ammonite/$file/play_tags.shift().(m)2,
+## ammonite/$file/play_tags.Rexp#23
+## %ammonite/$file/play_tags.shift().(re)2
+#%# )scala/Char#2
+#+# .
+scala/Int#23
+# # "%ammonite/$file/play_tags.shift().(cp)2,
+#3# 7ammonite/$file/play_tags.Rexp#23
+$$ %ammonite/$file/play_tags.shift().(cp)2
+$$ local182
+$
+$ local1923
+%% %ammonite/$file/play_tags.shift().(re)21
+&& #ammonite/$file/play_tags.Rexp.ZERO.21
+&& #ammonite/$file/play_tags.Rexp.ZERO.20
+'' 
+"ammonite/$file/play_tags.Rexp.ONE.20
+'' "ammonite/$file/play_tags.Rexp.ONE.21
+(( #ammonite/$file/play_tags.Rexp.CHAR.2
+(( local202
+(( local212
+(( local2222
+)) $ammonite/$file/play_tags.shift().(m)2#
+)	) scala/Boolean#`&&`().2
+)) local202"
+)) scala/Char#`==`(+2).2
+)) local1821
+** #ammonite/$file/play_tags.Rexp.CHAR.2
+*	* 
+local202
+** local2221
++	+ #ammonite/$file/play_tags.Rexp.CHAR.2
+++ local202
+++  local2220
+,, 
+"ammonite/$file/play_tags.Rexp.ALT.2
+,, local242
+,, local2520
+,, "ammonite/$file/play_tags.Rexp.ALT.2/
+,, !ammonite/$file/play_tags.shift().22
+, , !$ammonite/$file/play_tags.shift().(m)2
+,#, %local2423
+,', )%ammonite/$file/play_tags.shift().(cp)2/
+,,, 1!ammonite/$file/play_tags.shift().22
+,2, 3$ammonite/$file/play_tags.shift().(m)2
+,5, 7local2523
+,9, ;%ammonite/$file/play_tags.shift().(cp)20
+-- 
+"ammonite/$file/play_tags.Rexp.SEQ.2
+-- local262
+-- local2722
+.. 	$ammonite/$file/play_tags.shift().(m)2#
+.
+. scala/Boolean#`&&`().22
+.. $ammonite/$file/play_tags.nullable().2
+.. local2620
+00 "ammonite/$file/play_tags.Rexp.ALT.20
+11 "ammonite/$file/play_tags.Rexp.SEQ.2/
+11 !ammonite/$file/play_tags.shift().22
+11 $ammonite/$file/play_tags.shift().(m)2
+11 local2623
+11 %ammonite/$file/play_tags.shift().(cp)2/
+1"1 '!ammonite/$file/play_tags.shift().2-
+1(1 +ammonite/$file/play_tags.fin().2
+1,1 .local262
+111 3local2723
+151 7%ammonite/$file/play_tags.shift().(cp)2/
+33 !ammonite/$file/play_tags.shift().2
+33 local2723
+33 %ammonite/$file/play_tags.shift().(cp)20
+66 "ammonite/$file/play_tags.Rexp.SEQ.2/
+66 !ammonite/$file/play_tags.shift().22
+66 $ammonite/$file/play_tags.shift().(m)2
+66 local2623
+66 %ammonite/$file/play_tags.shift().(cp)2/
+66 #!ammonite/$file/play_tags.shift().2-
+6$6 'ammonite/$file/play_tags.fin().2
+6(6 *local262
+6-6 /local2723
+616 3%ammonite/$file/play_tags.shift().(cp)21
+99 #ammonite/$file/play_tags.Rexp.STAR.2
+99 local2821
+99 #ammonite/$file/play_tags.Rexp.STAR.2/
+99 !ammonite/$file/play_tags.shift().22
+99 $ammonite/$file/play_tags.shift().(m)2#
+99 !scala/Boolean#`||`().2-
+9"9 %ammonite/$file/play_tags.fin().2
+9&9 'local282
+9*9 +local2823
+9-9 /%ammonite/$file/play_tags.shift().(cp)23
+:: %ammonite/$file/play_tags.Rexp.NTIMES.2
+:: local292
+:: local302
+:: local312
+<< local312!
+<< scala/Int#`==`(+3).2
+<< local3023
+<< %ammonite/$file/play_tags.shift().(re)22
+>> $ammonite/$file/play_tags.shift().(m)2#
+>> scala/Boolean#`||`().2-
+>> ammonite/$file/play_tags.fin().2
+>> local2923
+>> %ammonite/$file/play_tags.Rexp.NTIMES.2/
+> > %!ammonite/$file/play_tags.shift().22
+>&> '$ammonite/$file/play_tags.shift().(m)2#
+>(> *scala/Boolean#`||`().2-
+>+> .ammonite/$file/play_tags.fin().2
+>/> 0local292
+>3> 4local2923
+>6> 8%ammonite/$file/play_tags.shift().(cp)2
+>;> <local302
+>>> Elocal312 
+>E> Fscala/Int#`+`(+4).23
+?? %ammonite/$file/play_tags.Rexp.NTIMES.2/
+?? !ammonite/$file/play_tags.shift().2
+?!? "local2923
+?$? &%ammonite/$file/play_tags.shift().(cp)2
+?)? *local302
+?,? 3local312/
+## 	!ammonite/$file/play_tags.shift().2,
+DD ammonite/$file/play_tags.Rexp#20
+DD 	"ammonite/$file/play_tags.mat().(r)2!
+DD scala/package.List#2
+DD scala/Char#20
+DD "ammonite/$file/play_tags.mat().(s)2,
+D!D %ammonite/$file/play_tags.Rexp#20
+D(D )"ammonite/$file/play_tags.mat().(s)2 
+EE 
+scala/package.Nil.20
+EE "ammonite/$file/play_tags.mat().(r)2!
+F	F scala/package.`::`.2
+FF local322
+FF local332
+GG local332I
+GG ;scala/collection/StrictOptimizedIterableOps#zipWithIndex().27
+GG )scala/collection/LinearSeqOps#foldLeft().2/
+GG "!ammonite/$file/play_tags.shift().20
+G)G *"ammonite/$file/play_tags.mat().(r)2
+G-G .local322
+HH local362
+HH local372
+HH local382/
+II !ammonite/$file/play_tags.shift().2
+II local362
+I I !local372
+I#I $local382 
+I%I &scala/Int#`+`(+4).2-
+DD ammonite/$file/play_tags.mat().2,
+NN ammonite/$file/play_tags.Rexp#24
+NN &ammonite/$file/play_tags.matcher().(r)2!
+NN scala/package.List#2
+NN !scala/Char#24
+NN &ammonite/$file/play_tags.matcher().(s)2
+N&N -scala/Boolean#24
+OO &ammonite/$file/play_tags.matcher().(s)2
+OO 
+scala/Any#`==`().2 
+OO scala/package.Nil.22
+OO $ammonite/$file/play_tags.nullable().24
+OO &ammonite/$file/play_tags.matcher().(r)2-
+O!O $ammonite/$file/play_tags.fin().2-
+O%O (ammonite/$file/play_tags.mat().24
+O)O *&ammonite/$file/play_tags.matcher().(r)24
+O,O -&ammonite/$file/play_tags.matcher().(s)21
+NN #ammonite/$file/play_tags.matcher().2,
+QQ ammonite/$file/play_tags.Rexp#25
+QQ 'ammonite/$file/play_tags.matcher2().(r)2!
+QQ scala/package.List#2
+QQ "scala/Char#25
+QQ 'ammonite/$file/play_tags.matcher2().(s)2,
+Q'Q +ammonite/$file/play_tags.Rexp#25
+RR 'ammonite/$file/play_tags.matcher2().(s)2
+RR 
+scala/Any#`==`().2 
+RR scala/package.Nil.22
+SS $ammonite/$file/play_tags.nullable().25
+SS 'ammonite/$file/play_tags.matcher2().(r)25
+SS 'ammonite/$file/play_tags.matcher2().(r)21
+SS  #ammonite/$file/play_tags.Rexp.ZERO.2-
+T
+T ammonite/$file/play_tags.mat().25
+TT 'ammonite/$file/play_tags.matcher2().(r)25
+TT 'ammonite/$file/play_tags.matcher2().(s)22
+QQ $ammonite/$file/play_tags.matcher2().2
+XX mainargs/main#2'
+ZZ 	scala/Predef.println(+1).21
+\\ #ammonite/$file/play_tags.Rexp.STAR.2-
+\\ ammonite/$file/play_tags.`|`().2-
+\\ ammonite/$file/play_tags.`|`().2
+\\ 
+local3928
+]] *scala/collection/IterableOnceOps#toList().2
+]] local402'
+^^ 	scala/Predef.println(+1).2&
+^
+^ scala/StringContext#s().2
+^^ local4022
+__ $ammonite/$file/play_tags.matcher2().2
+__ local392
+__ local402
+__ local412'
+`` 	scala/Predef.println(+1).2&
+`
+` scala/StringContext#s().2.
+``   ammonite/$file/play_tags.size().2
+`!` %local392-
+`2` 5ammonite/$file/play_tags.fin().2
+`6` <local412.
+`L` P ammonite/$file/play_tags.size().2
+`Q` Wlocal412
+bb local4020
+bb "scala/collection/SeqOps#indices().2
+bb local422'
+cc 	scala/Predef.println(+1).2&
+c
+c scala/StringContext#s().2
+cc local422 
+cc scala/Int#`+`(+4).2
+c"c #local402
+c$c %local422
+dd local4025
+dd 'scala/collection/immutable/List#take().2
+dd local422 
+dd scala/Int#`+`(+4).2
+dd local432'
+ee 	scala/Predef.println(+1).2,
+e
+e ammonite/$file/play_tags.pp().2-
+ee ammonite/$file/play_tags.mat().2
+ee local392
+ee local432'
+hh 	scala/Predef.println(+1).2&
+h
+h scala/StringContext#s().2
+hh local412'
+jj 	scala/Predef.println(+1).27
+kk )ammonite/$file/play_tags.collectStages().2
+kk !local412
+kk local442
+ll local4428
+l	l *scala/collection/immutable/List#foreach().2
+ll local452'
+ll !scala/Predef.println(+1).2,
+l"l $ammonite/$file/play_tags.pp().2
+l%l *local452'
+nn 	scala/Predef.println(+1).21
+oo #ammonite/$file/play_tags.Rexp.STAR.2-
+oo ammonite/$file/play_tags.`|`().2-
+oo ammonite/$file/play_tags.`|`().2
+oo local462/
+pp !ammonite/$file/play_tags.shift().2
+pp local462
+pp local472/
+qq !ammonite/$file/play_tags.shift().2
+qq 'local472
+qq local482/
+rr !ammonite/$file/play_tags.shift().2
+rr ,local482
+rr local492'
+ss 	scala/Predef.println(+1).2
+s
+s local462'
+tt 	scala/Predef.println(+1).2&
+t
+t scala/StringContext#s().2,
+tt ammonite/$file/play_tags.pp().2
+tt local462'
+uu 	scala/Predef.println(+1).2&
+u
+u scala/StringContext#s().2,
+u'u )ammonite/$file/play_tags.pp().2
+u*u 2local472'
+vv 	scala/Predef.println(+1).2&
+v
+v scala/StringContext#s().2,
+v'v )ammonite/$file/play_tags.pp().2
+v*v 7local482'
+ww 	scala/Predef.println(+1).2&
+w
+w scala/StringContext#s().2,
+w'w )ammonite/$file/play_tags.pp().2
+w*w 7local4924
+xx &ammonite/$file/play_tags.popPoints2().2
+xx (local492
+xx local5024
+yy &ammonite/$file/play_tags.popPoints2().2
+yy %local502
+yy local5124
+zz &ammonite/$file/play_tags.popPoints2().2
+zz 'local512
+zz local5224
+{{ &ammonite/$file/play_tags.popPoints2().2
+{{ %local522
+{{ local532'
+|| 	scala/Predef.println(+1).2&
+|
+| scala/StringContext#s().2,
+| | "ammonite/$file/play_tags.pp().2
+|#| ,local502'
+}} 	scala/Predef.println(+1).2&
+}
+} scala/StringContext#s().2,
+}!} #ammonite/$file/play_tags.pp().2
+}$} .local512'
+~~ 	scala/Predef.println(+1).2&
+~
+~ scala/StringContext#s().2,
+~"~ $ammonite/$file/play_tags.pp().2
+~%~ 0local522/
+YY 	!ammonite/$file/play_tags.test1().2
+
+ÇÇ mainargs/main#23
+
+ÑÑ #ammonite/$file/play_tags.Rexp.STAR.2/
+
+ÑÑ ammonite/$file/play_tags.`|`().2
+
+ÑÑ 
+local542)
+
+ÜÜ 	scala/Predef.println(+1).2:
+
+áá *scala/collection/IterableOnceOps#toList().2
+
+áá local552)
+
+àà 	scala/Predef.println(+1).2(
+
+à
+à scala/StringContext#s().2
+
+àà local5524
+
+ââ $ammonite/$file/play_tags.matcher2().2
+
+ââ local542
+
+ââ local552
+
+ââ local562)
+
+ää 	scala/Predef.println(+1).2(
+
+ä
+ä scala/StringContext#s().20
+
+ää   ammonite/$file/play_tags.size().2
+
+ä!ä %local542/
+
+ä2ä 5ammonite/$file/play_tags.fin().2
+
+ä6ä <local562
+
+çç local5522
+
+çç "scala/collection/SeqOps#indices().2
+
+çç local572)
+
+éé 	scala/Predef.println(+1).2(
+
+é
+é scala/StringContext#s().2
+
+éé local572"
+
+éé scala/Int#`+`(+4).2
+
+éé  local552
+
+é!é "local572
+
+èè local5527
+
+èè 'scala/collection/immutable/List#take().2
+
+èè local572"
+
+èè scala/Int#`+`(+4).2
+
+èè local582)
+
+êê 	scala/Predef.println(+1).2.
+
+ê
+ê ammonite/$file/play_tags.pp().2/
+
+êê ammonite/$file/play_tags.mat().2
+
+êê local542
+
+êê local582)
+
+ìì 	scala/Predef.println(+1).2(
+
+ì
+ì scala/StringContext#s().2.
+
+ì!ì #ammonite/$file/play_tags.pp().2
+
+ì$ì *local562)
+
+îî 	scala/Predef.println(+1).2(
+
+î
+î scala/StringContext#s().2
+
+îî #local5620
+
+î-î 1 ammonite/$file/play_tags.size().2
+
+î2î 8local562)
+
+òò 	scala/Predef.println(+1).2(
+
+ò
+ò scala/StringContext#s().29
+
+ôô )ammonite/$file/play_tags.extractPoints().2
+
+ô ô &local562
+
+ôô local592
+
+öö local5921
+
+öö !scala/collection/SeqOps#sortBy().2 
+
+öö scala/Tuple2#_2.2:
+
+öö  *scala/collection/immutable/List#foreach().2
+
+õ
+õ local612
+
+õõ local622)
+
+úú scala/Predef.println(+1).2(
+
+úú scala/StringContext#s().2
+
+úú local612
+
+ú&ú +local6221
+
+ÉÉ 	!ammonite/$file/play_tags.test2().22
+
+†† "ammonite/$file/play_tags.Rexp.SEQ.23
+
+†† #ammonite/$file/play_tags.Rexp.STAR.23
+
+†† #ammonite/$file/play_tags.Rexp.STAR.23
+
+†† #ammonite/$file/play_tags.Rexp.CHAR.23
+
+†'† +#ammonite/$file/play_tags.Rexp.CHAR.2/
+
+†† 	ammonite/$file/play_tags.EVIL2.2:
+
+¢¢ *ammonite/$file/play_tags.time_needed().[T]2
+
+¢¢ 
+scala/Int#2:
+
+¢¢ *ammonite/$file/play_tags.time_needed().(i)2:
+
+¢$¢ %*ammonite/$file/play_tags.time_needed().[T]2=
+
+¢¢ -ammonite/$file/play_tags.time_needed().(code)2!
+
+££ java/lang/System#2,
+
+££ java/lang/System#nanoTime().2
+
+££ local632+
+
+§§ scala/runtime/RichInt#to().2:
+
+§§ *ammonite/$file/play_tags.time_needed().(i)2
+
+§§ local642=
+
+§§ -ammonite/$file/play_tags.time_needed().(code)2!
+
+•• java/lang/System#2,
+
+•• java/lang/System#nanoTime().2
+
+•• 	local652
+
+¶¶ local652#
+
+¶¶ scala/Long#`-`(+4).2
+
+¶	¶ local632#
+
+¶¶ scala/Long#`/`(+6).2:
+
+¶¶ *ammonite/$file/play_tags.time_needed().(i)2"
+
+¶¶ scala/Int#`*`(+6).27
+
+¢¢ 'ammonite/$file/play_tags.time_needed().2
+
+©© mainargs/main#2+
+
+´´ scala/runtime/RichInt#to().26
+
+´´ &scala/collection/immutable/Range#by().2
+
+´´ local662)
+
+≠≠ 	scala/Predef.println(+1).2(
+
+≠
+≠ scala/StringContext#f().2
+
+≠≠ local6627
+
+≠≠ 'ammonite/$file/play_tags.time_needed().24
+
+≠!≠ )$ammonite/$file/play_tags.matcher2().2/
+
+≠*≠ /ammonite/$file/play_tags.EVIL2.21
+
+≠6≠ 7!scala/collection/StringOps#`*`().2
+
+≠8≠ 9local662:
+
+≠;≠ A*scala/collection/IterableOnceOps#toList().21
+
+™™ 	!ammonite/$file/play_tags.test3().2.
+
+≥≥ ammonite/$file/play_tags.Rexp#29
+
+≥≥ )ammonite/$file/play_tags.popPoints2().(r)2.
+
+≥≥ ammonite/$file/play_tags.Rexp#29
+
+≥ ≥ !)ammonite/$file/play_tags.popPoints2().(r)23
+
+¥¥ #ammonite/$file/play_tags.Rexp.ZERO.23
+
+¥¥ #ammonite/$file/play_tags.Rexp.ZERO.22
+
+µµ 
+"ammonite/$file/play_tags.Rexp.ONE.22
+
+µµ "ammonite/$file/play_tags.Rexp.ONE.23
+
+ªª #ammonite/$file/play_tags.Rexp.CHAR.2
+
+ªª local672
+
+ªª local682
+
+ªª local682"
+
+º	º scala/package.Nil.23
+
+ºº #ammonite/$file/play_tags.Rexp.CHAR.2
+
+ºº local672"
+
+ºº "scala/package.Nil.2#
+
+ΩΩ scala/package.`::`.2#
+
+ΩΩ scala/package.`::`.2
+
+ΩΩ local692
+
+ΩΩ local7023
+
+ΩΩ "#ammonite/$file/play_tags.Rexp.CHAR.2
+
+Ω#Ω $local672
+
+Ω&Ω *local692"
+
+Ω+Ω ,scala/Int#`>`(+3).2
+
+Ω8Ω <local702
+
+Ω0Ω 4local692#
+
+ææ scala/package.`::`.2"
+
+ææ scala/package.Nil.23
+
+ææ #ammonite/$file/play_tags.Rexp.CHAR.2
+
+ææ local672"
+
+æ$æ 'scala/package.Nil.22
+
+¿¿ 
+"ammonite/$file/play_tags.Rexp.ALT.2
+
+¿¿ local712
+
+¿¿ local7222
+
+¿¿ "ammonite/$file/play_tags.Rexp.ALT.26
+
+¿¿ $&ammonite/$file/play_tags.popPoints2().2
+
+¿%¿ 'local7126
+
+¿)¿ 3&ammonite/$file/play_tags.popPoints2().2
+
+¿4¿ 6local7222
+
+¡¡ 
+"ammonite/$file/play_tags.Rexp.SEQ.2
+
+¡¡ local732
+
+¡¡ local7422
+
+¡¡ "ammonite/$file/play_tags.Rexp.SEQ.26
+
+¡¡ $&ammonite/$file/play_tags.popPoints2().2
+
+¡%¡ 'local7326
+
+¡*¡ 4&ammonite/$file/play_tags.popPoints2().2
+
+¡5¡ 7local7423
+
+¬¬ #ammonite/$file/play_tags.Rexp.STAR.2
+
+¬¬ local7523
+
+¬¬ #ammonite/$file/play_tags.Rexp.STAR.26
+
+¬¬ %&ammonite/$file/play_tags.popPoints2().2
+
+¬&¬ +local7525
+
+√√ %ammonite/$file/play_tags.Rexp.NTIMES.2
+
+√√ local762
+
+√√ local772
+
+√√ local7825
+
+√#√ )%ammonite/$file/play_tags.Rexp.NTIMES.26
+
+√*√ 4&ammonite/$file/play_tags.popPoints2().2
+
+√5√ :local762
+
+√=√ >local772
+
+√@√ Glocal7826
+
+≥≥ &ammonite/$file/play_tags.popPoints2().2.
+
+«« ammonite/$file/play_tags.Rexp#2;
+
+«« +ammonite/$file/play_tags.containsTags().(r)2
+
+«« "scala/Boolean#2;
+
+«%« &+ammonite/$file/play_tags.containsTags().(r)23
+
+»» #ammonite/$file/play_tags.Rexp.CHAR.2
+
+»» local792
+
+»» local792<
+
+» » (,scala/collection/IterableOnceOps#nonEmpty().22
+
+…… 
+"ammonite/$file/play_tags.Rexp.ALT.2
+
+…… local802
+
+…… local8128
+
+…… '(ammonite/$file/play_tags.containsTags().2
+
+…(… *local802%
+
+…,… .scala/Boolean#`||`().28
+
+…/… ;(ammonite/$file/play_tags.containsTags().2
+
+…<… >local8122
+
+   
+"ammonite/$file/play_tags.Rexp.SEQ.2
+
+   local822
+
+   local8328
+
+   '(ammonite/$file/play_tags.containsTags().2
+
+ (  *local822%
+
+ ,  .scala/Boolean#`||`().28
+
+ /  ;(ammonite/$file/play_tags.containsTags().2
+
+ <  >local8323
+
+ÀÀ #ammonite/$file/play_tags.Rexp.STAR.2
+
+ÀÀ local8428
+
+ÀÀ '(ammonite/$file/play_tags.containsTags().2
+
+À(À *local8425
+
+ÃÃ %ammonite/$file/play_tags.Rexp.NTIMES.2
+
+ÃÃ local8528
+
+ÃÃ '(ammonite/$file/play_tags.containsTags().2
+
+Ã(Ã *local8528
+
+«« (ammonite/$file/play_tags.containsTags().2.
+
+—— ammonite/$file/play_tags.Rexp#2A
+
+—— 1ammonite/$file/play_tags.collectStages().(finReg)2#
+
+—!— %scala/package.List#2.
+
+—&— *ammonite/$file/play_tags.Rexp#2.
+
+““ ammonite/$file/play_tags.Rexp#2
+
+““ local862#
+
+“"“ &scala/package.List#2.
+
+“'“ +ammonite/$file/play_tags.Rexp#2
+
+““  local872#
+
+“/“ 3scala/package.List#2.
+
+“4“ 8ammonite/$file/play_tags.Rexp#28
+
+”	” (ammonite/$file/play_tags.containsTags().2
+
+”” local862
+
+” ” &local8726
+
+’’ &ammonite/$file/play_tags.popPoints2().2
+
+’’ #local862
+
+’
+’ local882
+
+÷÷ 
+local892
+
+÷÷ local882
+
+÷÷ local872/
+
+÷÷ scala/collection/SeqOps#`:+`().2
+
+÷÷ local882
+
+““ 
+local892
+
+€€ local892A
+
+€€ 1ammonite/$file/play_tags.collectStages().(finReg)2#
+
+€€ scala/package.List.29
+
+—— )ammonite/$file/play_tags.collectStages().2.
+
+·· ammonite/$file/play_tags.Rexp#2<
+
+·· ,ammonite/$file/play_tags.extractPoints().(r)2#
+
+··  scala/package.List#2.
+
+·"· &ammonite/$file/play_tags.Rexp#2
+
+·(· +
+scala/Int#2<
+
+·0· 1,ammonite/$file/play_tags.extractPoints().(r)23
+
+‚‚ #ammonite/$file/play_tags.Rexp.CHAR.2
+
+‚‚ local902
+
+‚‚ local912
+
+‚‚ local922
+
+‚‚ "local9229
+
+‚#‚ ))scala/collection/immutable/List#filter().2#
+
+‚,‚ .scala/Int#`!=`(+3).26
+
+‚2‚ 5&scala/collection/immutable/List#map().2
+
+‚6‚ 7local932<
+
+‚<‚ =,ammonite/$file/play_tags.extractPoints().(r)2
+
+‚?‚ @local932"
+
+‚@‚ Ascala/Int#`-`(+3).2:
+
+‚E‚ L*scala/collection/immutable/List#reverse().22
+
+„„ 
+"ammonite/$file/play_tags.Rexp.ALT.2
+
+„„ local942
+
+„„ local9529
+
+„„ %)ammonite/$file/play_tags.extractPoints().2
+
+„&„ (local9424
+
+„*„ ,$scala/collection/IterableOps#`++`().29
+
+„-„ :)ammonite/$file/play_tags.extractPoints().2
+
+„;„ =local9522
+
+‰‰ 
+"ammonite/$file/play_tags.Rexp.SEQ.2
+
+‰‰ local962
+
+‰‰ local9729
+
+‰‰ %)ammonite/$file/play_tags.extractPoints().2
+
+‰&‰ (local9624
+
+‰*‰ ,$scala/collection/IterableOps#`++`().29
+
+‰-‰ :)ammonite/$file/play_tags.extractPoints().2
+
+‰;‰ =local9723
+
+ÂÂ #ammonite/$file/play_tags.Rexp.STAR.2
+
+ÂÂ local9829
+
+ÂÂ %)ammonite/$file/play_tags.extractPoints().2
+
+Â&Â 'local9825
+
+ÊÊ %ammonite/$file/play_tags.Rexp.NTIMES.2
+
+ÊÊ local9929
+
+ÊÊ ')ammonite/$file/play_tags.extractPoints().2
+
+Ê(Ê )local992#
+
+ÁÁ scala/package.List.29
+
+·· )ammonite/$file/play_tags.extractPoints().2.
+
+ÍÍ ammonite/$file/play_tags.Rexp#23
+
+Í	Í 
+#ammonite/$file/play_tags.size().(r)2
+
+ÍÍ 
+scala/Int#23
+
+ÍÍ #ammonite/$file/play_tags.size().(r)23
+
+ÎÎ #ammonite/$file/play_tags.Rexp.ZERO.22
+
+ÏÏ 
+"ammonite/$file/play_tags.Rexp.ONE.23
+
+ÌÌ #ammonite/$file/play_tags.Rexp.CHAR.22
+
+ÓÓ 
+"ammonite/$file/play_tags.Rexp.ALT.2
+
+ÓÓ local1002
+
+ÓÓ local1012"
+
+ÓÓ scala/Int#`+`(+4).20
+
+ÓÓ  ammonite/$file/play_tags.size().2
+
+ÓÓ !local1002"
+
+Ó#Ó $scala/Int#`+`(+4).20
+
+Ó%Ó ) ammonite/$file/play_tags.size().2
+
+Ó*Ó ,local10122
+
+ÔÔ 
+"ammonite/$file/play_tags.Rexp.SEQ.2
+
+ÔÔ local1022
+
+ÔÔ local1032"
+
+ÔÔ scala/Int#`+`(+4).20
+
+ÔÔ  ammonite/$file/play_tags.size().2
+
+ÔÔ !local1022"
+
+Ô#Ô $scala/Int#`+`(+4).20
+
+Ô%Ô ) ammonite/$file/play_tags.size().2
+
+Ô*Ô ,local10323
+
+ #ammonite/$file/play_tags.Rexp.STAR.2
+
+ local1042"
+
+ scala/Int#`+`(+4).20
+
+  ammonite/$file/play_tags.size().2
+
+ local10425
+
+ÒÒ %ammonite/$file/play_tags.Rexp.NTIMES.2
+
+ÒÒ local1052
+
+ÒÒ local1062
+
+ÒÒ local1072"
+
+Ò Ò !scala/Int#`+`(+4).20
+
+Ò"Ò & ammonite/$file/play_tags.size().2
+
+Ò'Ò (local10520
+
+ÍÍ  ammonite/$file/play_tags.size().2#
+
+ıı scala/package.List#2
+
+ıı scala/Char#2<
+
+ıı ,ammonite/$file/play_tags.charlist2rexp().(s)2.
+
+ı#ı 'ammonite/$file/play_tags.Rexp#2<
+
+ı*ı +,ammonite/$file/play_tags.charlist2rexp().(s)2"
+
+ˆˆ 
+scala/package.Nil.22
+
+ˆˆ "ammonite/$file/play_tags.Rexp.ONE.2#
+
+˜˜ 
+scala/package.`::`.2
+
+˜˜ local1082"
+
+˜
+˜ scala/package.Nil.23
+
+˜˜ #ammonite/$file/play_tags.Rexp.CHAR.2
+
+˜˜ local1082#
+
+¯¯ 
+scala/package.`::`.2
+
+¯¯ local1092
+
+¯
+¯ local11022
+
+¯¯ "ammonite/$file/play_tags.Rexp.SEQ.23
+
+¯¯ #ammonite/$file/play_tags.Rexp.CHAR.2
+
+¯¯ local10929
+
+¯¯ ))ammonite/$file/play_tags.charlist2rexp().2
+
+¯*¯ +local11029
+
+ıı )ammonite/$file/play_tags.charlist2rexp().2!
+
+˚˚ scala/Conversion#2$
+
+˚˚ scala/Predef.String#2.
+
+˚˚ ammonite/$file/play_tags.Rexp#2
+
+˚!˚ "local11129
+
+˚&˚ 3)ammonite/$file/play_tags.charlist2rexp().2
+
+˚4˚ 5local1112:
+
+˚6˚ <*scala/collection/IterableOnceOps#toList().2.
+
+ˇˇ ammonite/$file/play_tags.Rexp#22
+
+ˇˇ "ammonite/$file/play_tags.`|`().(r)2.
+
+ÄÄ ammonite/$file/play_tags.Rexp#22
+
+Ä	Ä 
+"ammonite/$file/play_tags.`|`().(s)22
+
+ÄÄ "ammonite/$file/play_tags.Rexp.ALT.22
+
+ÄÄ "ammonite/$file/play_tags.`|`().(r)22
+
+ÄÄ "ammonite/$file/play_tags.`|`().(s)2/
+
+ÄÄ ammonite/$file/play_tags.`|`().22
+
+ˇˇ "ammonite/$file/play_tags.`%`().(r)23
+
+Å
+Å #ammonite/$file/play_tags.Rexp.STAR.22
+
+ÅÅ "ammonite/$file/play_tags.`%`().(r)2/
+
+ÅÅ ammonite/$file/play_tags.`%`().22
+
+ˇˇ "ammonite/$file/play_tags.`~`().(r)2.
+
+ÇÇ ammonite/$file/play_tags.Rexp#22
+
+Ç	Ç 
+"ammonite/$file/play_tags.`~`().(s)22
+
+ÇÇ "ammonite/$file/play_tags.Rexp.SEQ.22
+
+ÇÇ "ammonite/$file/play_tags.`~`().(r)22
+
+ÇÇ "ammonite/$file/play_tags.`~`().(s)2/
+
+ÇÇ ammonite/$file/play_tags.`~`().2"
+
+ÜÜ scala/package.Seq#2$
+
+ÜÜ scala/Predef.String#27
+
+ÜÜ 'ammonite/$file/play_tags.implode().(ss)27
+
+ÜÜ !'ammonite/$file/play_tags.implode().(ss)2>
+
+Ü"Ü *.scala/collection/IterableOnceOps#mkString(+1).23
+
+ÜÜ #ammonite/$file/play_tags.implode().2$
+
+áá scala/Predef.String#26
+
+áá &ammonite/$file/play_tags.explode().(s)26
+
+áá &ammonite/$file/play_tags.explode().(s)2+
+
+áá  java/lang/String#split(+1).2:
+
+á'á -*scala/collection/IterableOnceOps#toList().23
+
+áá #ammonite/$file/play_tags.explode().2$
+
+ââ scala/Predef.String#22
+
+ââ 	"ammonite/$file/play_tags.lst().(s)2$
+
+ââ scala/Predef.String#23
+
+ââ %#ammonite/$file/play_tags.explode().22
+
+â&â '"ammonite/$file/play_tags.lst().(s)2#
+
+ä
+ä scala/package.`::`.2
+
+ää 	local1122
+
+ää local11323
+
+ää #ammonite/$file/play_tags.implode().2
+
+ä)ä +local11326
+
+ä,ä /&scala/collection/immutable/List#map().24
+
+ä5ä 7$scala/collection/StringOps#`++`(+2).2"
+
+ãã 
+scala/package.Nil.2/
+
+ââ ammonite/$file/play_tags.lst().2$
+
+éé scala/Predef.String#22
+
+éé 	"ammonite/$file/play_tags.mid().(s)2$
+
+éé scala/Predef.String#23
+
+éé %#ammonite/$file/play_tags.explode().22
+
+é&é '"ammonite/$file/play_tags.mid().(s)2#
+
+è
+è scala/package.`::`.2
+
+èè 	local1152
+
+èè local11623
+
+èè #ammonite/$file/play_tags.implode().2
+
+è)è +local11626
+
+è,è /&scala/collection/immutable/List#map().24
+
+è5è 7$scala/collection/StringOps#`++`(+2).2"
+
+êê 
+scala/package.Nil.2/
+
+éé ammonite/$file/play_tags.mid().2"
+
+ìì scala/package.Seq#2$
+
+ìì scala/Predef.String#26
+
+ìì &ammonite/$file/play_tags.indent().(ss)2$
+
+ìì $scala/Predef.String#26
+
+ì'ì )&ammonite/$file/play_tags.indent().(ss)2#
+
+îî scala/package.`:+`.2
+
+îî local1182
+
+îî local11923
+
+îî #ammonite/$file/play_tags.implode().2
+
+îî #local11823
+
+î$î '#scala/collection/IterableOps#map().2/
+
+î(î +ammonite/$file/play_tags.mid().2/
+
+î-î /scala/collection/SeqOps#`:+`().2/
+
+î0î 3ammonite/$file/play_tags.lst().2
+
+î4î 8local11922
+
+ìì 
+"ammonite/$file/play_tags.indent().2.
+
+ò
+ò ammonite/$file/play_tags.Rexp#21
+
+òò !ammonite/$file/play_tags.pp().(e)2$
+
+òò scala/Predef.String#21
+
+òò !ammonite/$file/play_tags.pp().(e)23
+
+ôô #ammonite/$file/play_tags.Rexp.ZERO.22
+
+öö 
+"ammonite/$file/play_tags.Rexp.ONE.23
+
+õõ #ammonite/$file/play_tags.Rexp.CHAR.2
+
+õõ local1212
+
+õõ local1222
+
+õõ local1232
+
+õ!õ 'local1222(
+
+õ)õ *scala/StringContext#s().2
+
+õ-õ .local1212
+
+õ6õ :local1232(
+
+õDõ Escala/StringContext#s().2
+
+õGõ Hlocal1212
+
+õPõ Tlocal12322
+
+úú 
+"ammonite/$file/play_tags.Rexp.ALT.2
+
+úú local1242
+
+úú local1252(
+
+úú scala/StringContext#s().24
+
+úú !$scala/collection/StringOps#`++`(+2).2/
+
+ú"ú %ammonite/$file/play_tags.pps().2
+
+ú&ú (local1242
+
+ú*ú ,local12522
+
+ùù 
+"ammonite/$file/play_tags.Rexp.SEQ.2
+
+ùù local1262
+
+ùù local1272(
+
+ùù scala/StringContext#s().24
+
+ùù !$scala/collection/StringOps#`++`(+2).2/
+
+ù"ù %ammonite/$file/play_tags.pps().2
+
+ù&ù (local1262
+
+ù*ù ,local12723
+
+ûû #ammonite/$file/play_tags.Rexp.STAR.2
+
+ûû local12824
+
+ûû $scala/collection/StringOps#`++`(+2).2/
+
+ûû !ammonite/$file/play_tags.pps().2
+
+û"û #local12825
+
+üü %ammonite/$file/play_tags.Rexp.NTIMES.2
+
+üü local1292
+
+üü local1302
+
+üü local1312(
+
+†† scala/StringContext#s().2
+
+†† local1302/
+
+†† ammonite/$file/play_tags.fin().2
+
+†† local12924
+
+†+† 3$ammonite/$file/play_tags.nullable().2
+
+†4† 5local1292
+
+†A† Hlocal13124
+
+†M† O$scala/collection/StringOps#`++`(+2).2/
+
+†P† Sammonite/$file/play_tags.pps().2
+
+†T† Ulocal1292(
+
+°° scala/StringContext#s().2
+
+°° local1302/
+
+°° ammonite/$file/play_tags.fin().2
+
+° ° !local12924
+
+°.° 6$ammonite/$file/play_tags.nullable().2
+
+°7° 8local1292
+
+°E° Llocal13124
+
+°Q° S$scala/collection/StringOps#`++`(+2).2/
+
+°T° Wammonite/$file/play_tags.pps().2
+
+°X° Ylocal1292.
+
+òò ammonite/$file/play_tags.pp().2.
+
+££ ammonite/$file/play_tags.Rexp#23
+
+££ 
+#ammonite/$file/play_tags.pps().(es)22
+
+££ "ammonite/$file/play_tags.indent().23
+
+££ #ammonite/$file/play_tags.pps().(es)23
+
+££ "#scala/collection/IterableOps#map().2.
+
+£#£ %ammonite/$file/play_tags.pp().2/
+
+££ ammonite/$file/play_tags.pps().PZ 8d0e1c38caf48e9b15e2651fc8421637ba
+@ DUBS
+=:;
+2
+
+@ D+
+)scala/collection/IterableFactory#apply().scala/Nothing#b,
+**  B
+2
+
+** 
+scala/Int#b,
+++   B
+2
+
+++  
+scala/Int#b_
+F	F SBQ
+>:<
+2
+
+F	F ,
+*scala/collection/immutable/`::`.unapply().scala/Char#bJ
+]] >
+<
+,*
+(scala/LowPriorityImplicits#wrapString().2
+
+]] b-
+ll !B
+2
+
+ll scala/Unit#bN
+
+áá @
+>
+,*
+(scala/LowPriorityImplicits#wrapString().2
+
+áá b1
+
+öö  #B!
+2
+
+öö  scala/Unit#b0
+
+öö "B 
+2
+
+öö 
+scala/Int#b>
+
+öö 0
+.
+2
+
+öö 
+scala/math/Ordering.Int.bN
+
+§§ @
+>
+,*
+(scala/LowPriorityImplicits#intWrapper().2
+
+§§ bN
+
+´´ @
+>
+,*
+(scala/LowPriorityImplicits#intWrapper().2
+
+´´ b0
+
+≠
+≠ I"B 
+2
+
+≠
+≠ I
+scala/Any#bN
+
+≠2≠ 9@
+>
+,*
+(scala/LowPriorityImplicits#wrapString().2
+
+≠2≠ 9bC
+
+≠2≠ 55
+3
+!
+scala/Predef.augmentString().2
+
+≠2≠ 5bb
+
+ΩΩ TBR
+@:>
+2
+
+ΩΩ ,
+*scala/collection/immutable/`::`.unapply().
+scala/Int#bb
+
+ΩΩ TBR
+@:>
+2
+
+ΩΩ ,
+*scala/collection/immutable/`::`.unapply().
+scala/Int#b0
+
+Ω5Ω <"B 
+2
+
+Ω5Ω <
+scala/Int#bb
+
+ææ TBR
+@:>
+2
+
+ææ ,
+*scala/collection/immutable/`::`.unapply().
+scala/Int#be
+
+€€ WBU
+?:=
+2
+
+€€ +
+)scala/collection/IterableFactory#apply().scala/Nothing#bg
+
+‚‚ 5YBW
+2
+
+‚‚ 5ECscala/Tuple2#" ammonite/$file/play_tags.Rexp#
+scala/Int#bg
+
+„„ ,YBW
+2
+
+„„ ,ECscala/Tuple2#" ammonite/$file/play_tags.Rexp#
+scala/Int#bg
+
+‰‰ ,YBW
+2
+
+‰‰ ,ECscala/Tuple2#" ammonite/$file/play_tags.Rexp#
+scala/Int#be
+
+ÁÁ WBU
+?:=
+2
+
+ÁÁ +
+)scala/collection/IterableFactory#apply().scala/Nothing#bc
+
+˜˜ 
+UBS
+@:>
+2
+
+˜˜ 
+,
+*scala/collection/immutable/`::`.unapply().scala/Char#bc
+
+¯¯ 
+UBS
+@:>
+2
+
+¯¯ 
+,
+*scala/collection/immutable/`::`.unapply().scala/Char#bN
+
+˚4˚ 5@
+>
+,*
+(scala/LowPriorityImplicits#wrapString().2
+
+˚4˚ 5bk
+
+áá &]
+[
+IBG
+.,
+*scala/LowPriorityImplicits#wrapRefArray().java/lang/String#2
+
+áá &bi
+
+ä
+ä [BY
+@:>
+2
+
+ä
+ä ,
+*scala/collection/immutable/`::`.unapply().java/lang/String#b7
+
+ä&ä :)B'
+2
+
+ä&ä :java/lang/String#b7
+
+ä)ä /)B'
+2
+
+ä)ä /java/lang/String#bC
+
+ä0ä 45
+3
+!
+scala/Predef.augmentString().2
+
+ä0ä 4bi
+
+è
+è [BY
+@:>
+2
+
+è
+è ,
+*scala/collection/immutable/`::`.unapply().java/lang/String#b7
+
+è&è :)B'
+2
+
+è&è :java/lang/String#b7
+
+è)è /)B'
+2
+
+è)è /java/lang/String#bC
+
+è0è 45
+3
+!
+scala/Predef.augmentString().2
+
+è0è 4bï
+
+îî ÜBÉ
+>:<
+2
+
+îî *
+(scala/collection/package.`:+`.unapply().java/lang/String#k“h
+86
+[A]	*AÄä&$scala/Nothing#
+scala/Any#,*scala/collection/immutable/Seq#[A]=;scala/collection/immutable/Seq#scala/Predef.String#b7
+
+îî /)B'
+2
+
+îî /java/lang/String#b7
+
+îî ')B'
+2
+
+îî 'java/lang/String#bC
+
+úú 5
+3
+!
+scala/Predef.augmentString().2
+
+úú bC
+
+ùù 5
+3
+!
+scala/Predef.augmentString().2
+
+ùù bC
+
+ûû 5
+3
+!
+scala/Predef.augmentString().2
+
+ûû bC
+
+†† L5
+3
+!
+scala/Predef.augmentString().2
+
+†† LbC
+
+°° P5
+3
+!
+scala/Predef.augmentString().2
+
+°° Pb7
+
+££ ")B'
+2
+
+££ "java/lang/String#
