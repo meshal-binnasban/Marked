@@ -84,28 +84,12 @@ def shift(m: Boolean, re: Rexp, cp: (Char, Int)) : Rexp = {
     CHAR(d,true, pos+1 :: tags)
     else CHAR(d,false, 0 :: tags)
   case ALT(r1, r2) => ALT(shift(m, r1, cp), shift(m, r2, cp)) 
-  case SEQ(r1, r2) => // add seq normal
-    if (m && nullable(r1))
-      {
-        ALT(
-            SEQ(shift(m, r1, cp), shift(fin(r1), r2, cp)) 
-                , 
-            shift(true, r2, cp))
-      }
-      else{
-        SEQ(shift(m, r1, cp), shift(fin(r1), r2, cp))   
-      }  
-    //SEQ(shift(m, r1, cp), shift((m && nullable(r1)) || fin(r1), r2, cp))
+  case SEQ(r1, r2) => SEQ(shift(m, r1, cp), shift((m && nullable(r1)) || fin(r1), r2, cp))
   case STAR(r) => STAR(shift(m || fin(r), r, cp))
-  case NTIMES(r, n,counter) => 
-   // println(s"NTIMES: ${matchCount(re)}")
-    if (counter == n) re
-      else{
+  case NTIMES(r, n,counter) => if (counter == n) re else{
         if (m || fin(r)) NTIMES(shift(m || fin(r), r, cp), n, counter+1)
         else NTIMES(shift(false, r, cp), n, counter)       
-        } // if shifted r is final, wrap in point? didn't work
-}
-}
+        }  } }
 
 def mat(r: Rexp, s: List[Char]): Rexp = s match {
   case Nil => r
