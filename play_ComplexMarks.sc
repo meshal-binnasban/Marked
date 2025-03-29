@@ -48,35 +48,38 @@ def fin(r: Rexp) : Boolean = r match {
 }
 
 //shift char with position
-def shift(m: Mark, re: Rexp, c: Char) : Rexp = {
+def shift(m: Boolean, re: Rexp, c: Char, bits:List[Int]) : Rexp = {
   re match {
   case ZERO => ZERO
   case ONE => ONE
-  case CHAR(d,mark) => 
-    CHAR(d, Mark(marked = m.marked && d == c, bs = m.bs, color = m.color))
+  case CHAR(d,mark) =>
+    val newMark=m && d == c
+    if(newMark) 
+    CHAR(d, Mark(marked = newMark, bs = mark.bs ++ bits , color = mark.color))
+    else  CHAR(d, Mark(marked = newMark, bs = mark.bs, color = mark.color))
+
   case ALT(r1, r2) => 
-    ALT(shift(Mark(m.marked,0::m.bs,m.color), r1, c)
-        , shift(Mark(m.marked,1::m.bs,m.color), r2, c)) 
+    ALT(shift(m, r1, c,0::bits)
+        , shift(m, r2, c,1::bits) )
   case SEQ(r1, r2) => 
-    SEQ(shift(Mark(m.marked,m.bs,Color.RED), r1, c)
-        , shift(Mark( (m.marked && nullable(r1)) || fin(r1) ,m.bs,Color.GREEN), r2, c))
+    SEQ(shift(m, r1, c,bits)
+        , shift(m && nullable(r1) || fin(r1) ,r2, c, bits))
   case STAR(r) => 
-    STAR(shift(Mark(m.marked || fin(r),7::m.bs,m.color), r, c))
+    STAR(shift(m || fin(r), r, c,7::bits))
   case NTIMES(r, n,counter) => 
     if (counter == n) re else{
-        if (m.marked || fin(r)) NTIMES(shift(Mark(m.marked || fin(r),m.bs,m.color), r, c), n, counter+1)
-        else NTIMES(shift(Mark(false,m.bs,m.color), r, c), n, counter)       
+        if (m || fin(r)) NTIMES(shift(m || fin(r), r, c,bits), n, counter+1)
+        else NTIMES(shift(false, r, c, bits), n, counter)       
         }  
   case INIT(r) => 
     println("in Here")
-    shift(Mark(true,m.bs,m.color), r, c)  
-
+    shift(true, r, c,bits)  
     } 
     }
 
 def mat(r: Rexp, s: List[Char]) : Rexp = s match {
   case Nil => r
-  case c::cs => mat(shift(Mark(false,List(),Color.WHITE), r, c), cs)
+  case c::cs => mat(shift(false, r, c,List()), cs)
 }
 
 def matcher(r: Rexp, s: List[Char]) : Boolean =
@@ -89,23 +92,104 @@ def matcher2(r: Rexp, s: List[Char]) : Rexp =
 
 def intern2(r: Rexp) : Rexp = INIT(r)
 
+enum VALUE {
+    case EMPTY  
+    case UNMARKED(c: Char)
+    case SEQV(v1: VALUE, r2: VALUE )
+    case LEFT(v: VALUE)
+    case RIGHT(v: VALUE)
+    case STARV(vs: List[VALUE])
+    case ERRORVALUE
+}
+import VALUE._
+
+def mkeps(r: Rexp): List[Int] = r match {
+  case ONE => Nil
+  case CHAR(_, mark) =>
+    if (mark.marked) mark.bs else Nil
+  case ALT(r1, r2) =>
+    if (fin(r1)) mkeps(r1)  
+    else mkeps(r2)
+  case SEQ(r1, r2) =>
+    mkeps(r1) ++ mkeps(r2)
+  case STAR(r) =>
+    mkeps(r)++List(8)
+  case NTIMES(r1, _, _) =>
+    mkeps(r1)
+  case INIT(r1) =>
+    mkeps(r1)
+  case _ => Nil
+}
+
+def decode(r:Rexp , bits:List[Int]): (VALUE,List[Int]) = r match {
+/*     case CHAR(c,mark) => 
+        if(mark.marked) (EMPTY,bits) else (UNMARKED(c),bits) // case of 1 as in matched and case of CHAR combined from original decode
+ */
+    case CHAR(c, _) =>
+        if bits.isEmpty then
+            (EMPTY, bits)
+        else 
+            (UNMARKED(c), List())
+
+    case ALT(r1, r2) => bits match {
+        case 0::bs => 
+            val (v,bsp)= decode(r1,bs)
+            (LEFT(v),bsp)
+        case 1::bs =>
+            val (v,bsp)= decode(r2,bs)
+            (RIGHT(v),bsp)
+    }
+    case SEQ(r1, r2) =>
+        val (v1, bs1) = decode(r1, bits)
+        val (v2, bs2) = decode(r2, bs1)
+        (SEQV(v1, v2), bs2)
+
+    case STAR(r) => bits match {
+        case 8 :: bs1 => 
+            (STARV(List()), bs1) // terminate recursion for STAR
+
+        case 7 :: bs1 =>   
+            val (v, bs2) = decode(r, bs1)
+            val (STARV(vs), bsv) = decode(STAR(r), bs2) 
+            (STARV(v :: vs), bsv) 
+        case _ => 
+        (STARV(List()), bits)
+    
+    }// end of match r   
+
+    case _ => (ERRORVALUE, bits) 
+    
+}
+
+
 @main
 def test1() = {
   println("\n===== Testing New PopPoints =====\n")
-  
-  val rexp = intern2(STAR("a"))
-  val s="aaa".toList
+  //1 + ((1 + 1) + 1)
+  val rexp = ("a" | ( ("b"|"c")  | "d") )
+  val initRexp=intern2(rexp)
+  val s="c".toList
   println(s"String: $s\n")
-  val finReg=matcher2(rexp, s)
-  println(s"Original size=${size(rexp)} Result= ${fin(finReg)} Final Size=${size(finReg)}")
+  val finReg=matcher2(initRexp, s)
+  println(s"Original size=${size(initRexp)} Result= ${fin(finReg)} Final Size=${size(finReg)}")
   
   for (i <- s.indices) {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
   val sPart = s.take(i + 1)
-  println(pp(mat(rexp, sPart)))
+  println(pp(mat(initRexp, sPart)))
   }
 
-  println(s"finReg=${finReg}")
+  println(s"\nfinReg=${finReg}\n")
+
+  println("\n ====== Testing Decode  ======\n")
+
+
+  //val bits=List(1,0,1)
+  val bits=mkeps(finReg)
+  println(s"mkeps value= $bits")
+  
+  val (decodeValue,remainingBits)=decode(rexp,bits)
+  println(s"Dcode: \nvalue=$decodeValue \nremaining bits=$remainingBits")
 
   /* println("\n=== Testing popPoints with shift ===\n")
   val r=STAR("a" | "b" | "c" )
@@ -123,24 +207,7 @@ def test1() = {
 
 @main
 def test2() = {
-  val rexp = STAR("a" | "b" )
-
-  println("===== Testing Tags =====")
-  val s="abba".toList
-  println(s"String: $s\n")
-  val finReg=matcher2(rexp, s)
-  println(s"Original size=${size(rexp)} Result= ${fin(finReg)} \n")
-
-
-  for (i <- s.indices) {
-  println(s"${i + 1}- =shift ${s(i)}=")
-  val sPart = s.take(i + 1)
-  println(pp(mat(rexp, sPart)))
-  }
-
-  println(s"Final Reg Tree= \n ${pp(finReg)}\n")
-  println(s"Raw Final Reg= ${finReg} size= ${size(finReg)}")
-
+  // test and fix star case
 }
 
 val EVIL2 = SEQ(STAR(STAR(CHAR('a'))), CHAR('b'))
