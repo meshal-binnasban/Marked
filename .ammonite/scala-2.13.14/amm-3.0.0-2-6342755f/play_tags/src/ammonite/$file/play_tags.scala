@@ -140,8 +140,8 @@ def test1() = {
   val shiftedThrice=shift(true,shiftedRTwice,('c',2))
   println(r)
   println(s"original r=\n${pp(r)}")
-  println(s"1- Shifted with 'c', r=\n${pp(shiftedR)}")
-  println(s"2- Shifted with 'd', r=\n${pp(shiftedRTwice)}")
+  println(s"1- Shifted with 'a', r=\n${pp(shiftedR)}")
+  println(s"2- Shifted with 'b', r=\n${pp(shiftedRTwice)}")
   println(s"3- Shifted with 'c', r=\n${pp(shiftedThrice)}")
   val popedOnce=popPoints2(shiftedThrice)
   val popedTwice=popPoints2(popedOnce)
@@ -151,7 +151,6 @@ def test1() = {
   println(s"2- popedTwice  r=\n${pp(popedTwice)}")
   println(s"3- popedThrice  r=\n${pp(popedThrice)}")
 }
-
 
 @main
 def test2() = {
