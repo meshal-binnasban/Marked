@@ -187,7 +187,7 @@ def test1() = {
   //val bits=List(1,0,1)
   val bits=mkeps(finReg)
   println(s"mkeps value= $bits")
-  
+
   val (decodeValue,remainingBits)=decode(rexp,bits)
   println(s"Dcode: \nvalue=$decodeValue \nremaining bits=$remainingBits")
 
@@ -207,7 +207,7 @@ def test1() = {
 
 @main
 def test2() = {
-  // test and fix star case
+  // test and fix star case and seq
 }
 
 val EVIL2 = SEQ(STAR(STAR(CHAR('a'))), CHAR('b'))

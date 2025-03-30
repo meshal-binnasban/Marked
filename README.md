@@ -28,3 +28,5 @@ A function popPoints is introduced here, which receives the final marked regular
 13- play_point3_BIT.sc is an attempt to implement a new constructor BIT, which is the only constructor that holds bit information. It is responsible for collecting bits, instead of having bit lists in all constructors.
 
 14- play_tags.sc uses tags to record the history of character matches. The CHAR constructor now holds both a boolean marked flag and a list of integers as tags. Each time a character is matched or unmatched, the shift function updates the boolean value accordingly and appends a corresponding entry to the tags list. The popPoints2 function pops the top value from the tag list and updates the boolean flag based on the next value. It essentially "unshifts" the effect of the last shift call, reversing one step of the match history.
+
+15- play_ComplexMark.sc: This file implements the marked approach, with the mark object storing a boolean flag and a list of bitcodes (both working for simple cases), along with a color attribute for later experimentation.
