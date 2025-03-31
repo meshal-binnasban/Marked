@@ -125,7 +125,6 @@ def mkeps(r: Rexp): List[Int] = r match {
     if(hasMarks(r1) && nullable(r2) && !fin(r2))
       mkeps(r1)
     else
-      println(s"in seq, mkeps1=${mkeps(r1)} and mkeps2= ${(2::mkeps(r2))}")
       (2::mkeps(r1)) ++ (3::(mkeps(r2)))
       //(2 :: mkeps(r1)) ++ (3 :: mkeps(r2)) //++ or :: 3 again to indicate the end and treat like a star ? 
   case STAR(r) =>
@@ -259,8 +258,8 @@ def test2() = {
 
   println("\n===== Testing New Bitcodes =====\n")
   //1 + ((1 + 1) + 1)
-  val rexp = SEQ(("a" | ( ("b"|"c")  | "d") ) , "a")
-  //val rexp = ALT("a"|"b" , SEQ("a","a"))
+  //val rexp = SEQ(("a" | ( ("b"|"c")  | "d") ) , "a")
+  val rexp = ALT("a"|"b" , SEQ("a","a"))
   println(s"original rexp=$rexp \n")
   val initRexp=intern2(rexp)
   val s="aa".toList
@@ -283,8 +282,8 @@ def test2() = {
   val bits=mkeps(finReg)
   println(s"mkeps value= $bits")
 
-  //val (decodeValue,remainingBits)=decode(rexp,bits)
-  //println(s"Dcode: \nvalue=$decodeValue \nremaining bits=$remainingBits")
+  val (decodeValue,remainingBits)=decode(rexp,bits)
+  println(s"Dcode: \nvalue=$decodeValue \nremaining bits=$remainingBits")
 
 }
 
