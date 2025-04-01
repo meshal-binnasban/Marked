@@ -56,7 +56,7 @@ def shift(m: Boolean, re: Rexp, c: Char, bits:List[Int]) : Rexp = {
   case CHAR(d,mark) =>
     val newMark=m && d == c
     if(newMark) 
-      CHAR(d, Mark(marked = newMark, bs = mark.bs ++ bits  , color = Color.GREEN))
+      CHAR(d, Mark(marked = newMark, bs = bits:::mark.bs   , color = Color.GREEN))
     else  CHAR(d, Mark(marked = newMark, bs = mark.bs, color = mark.color))
 
   case ALT(r1, r2) => 
@@ -64,7 +64,7 @@ def shift(m: Boolean, re: Rexp, c: Char, bits:List[Int]) : Rexp = {
         , shift(m, r2, c,bits:+1) )
   case SEQ(r1, r2) => 
     SEQ(shift(m, r1, c, bits)
-        , shift(m && nullable(r1) || fin(r1) ,r2, c,bits))
+        , shift(m && nullable(r1) || fin(r1) ,r2, c,2::bits))
   case STAR(r) => 
     STAR(shift(m || fin(r), r, c,bits:+7))
   case NTIMES(r, n,counter) => 
@@ -113,7 +113,7 @@ def mkeps(r: Rexp): List[Int] = r match {
     //mkeps(r1) ++ mkeps(r2) 
     val mkeps1=mkeps(r1)
     val mkeps2=mkeps(r2)
-    if(fin(r1) || hasMarks(r1)){
+    if((fin(r1) || hasMarks(r1))){
         mkeps1
     }else
       {
@@ -125,7 +125,7 @@ def mkeps(r: Rexp): List[Int] = r match {
     if(hasMarks(r1) && nullable(r2) && !fin(r2))
       mkeps(r1)
     else
-      (2::mkeps(r1)) ++ (3::(mkeps(r2)))
+      (mkeps(r1)) ::: ((mkeps(r2)))
       //(2 :: mkeps(r1)) ++ (3 :: mkeps(r2)) //++ or :: 3 again to indicate the end and treat like a star ? 
   case STAR(r) =>
     mkeps(r)++List(8)
@@ -175,33 +175,17 @@ def decode(r:Rexp , bits:List[Int]): (VALUE,List[Int]) =
     }
 
     case SEQ(r1, r2) =>
-        val (bs, rest) = bits.span(_ != 3)
-        bs match {
-        case 2 :: bs1 =>
-        val (v1, bs1p) = decode(r1, bs1)
+        val (bs, rest) = bits.span(_ != 2)
+        println(s"bs=$bs and rest=$rest")
+        val (v1, bs1) = decode(r1, bs)
 
         rest match {
-          case 3::bs2 =>
-            val (v2, bs2p) = decode(r2, bs2)
-            (SEQV(v1, v2), bs2p)
-          case _ =>
-            (SEQV(v1, EMPTYSTRING), bs1p)
+            case 2 :: bs2 =>
+              val (v2, bs2p) = decode(r2, bs2)
+              (SEQV(v1, v2), bs2p)
+            case _ =>
+              (SEQV(v1, EMPTYSTRING), rest)
         }
-      }
-
-/*           val (bs1, rest) = bits.span(_ != 2)
-          println(s"here in seq, bs1=$bs1 , rest=$rest")
-              rest match {
-                case 2 :: bs2 =>
-                  val (v1, bs1p) = decode(r, bs1)
-                  val (v2, bs2p) = decode(r2, bs2)
-                  (SEQV(v1, v2), bs2p)
-
-                case _ =>
-                  val (v1, bs1p) = decode(r1, bs1)
-                  (SEQV(v1, EMPTYSTRING), bs1p)
-              } */
-        
 
 
     case STAR(r) => bits match {
@@ -227,7 +211,7 @@ def test1() = {
   //1 + ((1 + 1) + 1)
   val rexp = (("a"|"bc") ~ ( ("bc"|"c")) )
   val initRexp=intern2(rexp)
-  val s="ac".toList
+  val s="bcbc".toList
   println(s"String: $s\n")
   val finReg=matcher2(initRexp, s)
   println(s"Original size=${size(initRexp)} Result= ${fin(finReg)} Final Size=${size(finReg)}")
@@ -259,7 +243,7 @@ def test2() = {
   println("\n===== Testing New Bitcodes =====\n")
   //1 + ((1 + 1) + 1)
   //val rexp = SEQ(("a" | ( ("b"|"c")  | "d") ) , "a")
-  val rexp = ALT("a"|"b" , SEQ("a","a"))
+  val rexp =  ("b"|"a") | SEQ("a","a")
   println(s"original rexp=$rexp \n")
   val initRexp=intern2(rexp)
   val s="aa".toList
