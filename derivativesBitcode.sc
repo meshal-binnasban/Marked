@@ -1,11 +1,18 @@
-abstract class Rexp
-case object ZERO extends Rexp
-case object ONE extends Rexp
-case class CHAR(c: Char) extends Rexp
-case class ALT(r1: Rexp, r2: Rexp) extends Rexp 
-case class SEQ(r1: Rexp, r2: Rexp) extends Rexp 
-case class STAR(r: Rexp) extends Rexp 
-case class NTIMES(r: Rexp, n: Int) extends Rexp 
+import $file.rexp, rexp._
+import rexp.Rexp._
+/* 
+enum Rexp {
+  case ZERO 
+  case ONE 
+  case CHAR(c: Char) 
+  case ALT(r1: Rexp, r2: Rexp) 
+  case SEQ(r1: Rexp, r2: Rexp) 
+  case STAR(r: Rexp)
+  case NTIMES(r:Rexp,n:Int)
+  case NOT(r: Rexp) 
+}
+
+import Rexp._ */
 
 abstract class BRegExp
 case class BZERO() extends BRegExp
@@ -15,6 +22,28 @@ case class BALTs(bs: List[Int], r1: BRegExp, r2: BRegExp) extends BRegExp
 case class BSEQ(bs: List[Int], r1: BRegExp, r2: BRegExp) extends BRegExp
 case class BSTAR(bs: List[Int], r: BRegExp) extends BRegExp
 case class BNTIMES(bs: List[Int], r: BRegExp, n: Int) extends BRegExp
+
+
+// some syntax sugar for regexes
+import scala.language.implicitConversions
+
+def charlist2rexp(s : List[Char]): Rexp = s match {
+  case Nil => ONE
+  case c::Nil => CHAR(c)
+  case c::s => SEQ(CHAR(c), charlist2rexp(s))
+}
+
+// strings are coerced into Rexps
+given Conversion[String, Rexp] = s => charlist2rexp(s.toList)
+
+//val ABCD : Rexp = "abcd"
+
+extension (r: Rexp) {
+  def | (s: Rexp) = ALT(r, s)
+  def % = STAR(r)
+  def ~ (s: Rexp) = SEQ(r, s)
+}
+
 
 // Convert standard regex to bitcoded regex
 def fuse(bs: List[Int], r: BRegExp): BRegExp = r match {
@@ -27,6 +56,16 @@ def fuse(bs: List[Int], r: BRegExp): BRegExp = r match {
   case BNTIMES(bs2, r, n) => BNTIMES(bs ++ bs2, r, n)
 }
 
+/* def internalize(r: Rexp): BRegExp = r match {
+  case ZERO => BZERO()
+  case ONE => BONE(List())
+  case CHAR(c) => BCHAR(List(), c)
+  case ALT(r1, r2) => BALTs(List(), fuse(List(0), internalize(r1)), fuse(List(1), internalize(r2)))
+  case SEQ(r1, r2) => BSEQ(List(), internalize(r1), internalize(r2))
+  case STAR(r) => BSTAR(List(), internalize(r))
+  case NTIMES(r, n) => BNTIMES(List(), internalize(r), n)
+} */
+
 def internalize(r: Rexp): BRegExp = r match {
   case ZERO => BZERO()
   case ONE => BONE(List())
@@ -36,6 +75,7 @@ def internalize(r: Rexp): BRegExp = r match {
   case STAR(r) => BSTAR(List(), internalize(r))
   case NTIMES(r, n) => BNTIMES(List(), internalize(r), n)
 }
+
 
 // Nullable function
 def bnullable(r: BRegExp): Boolean = r match {
@@ -113,12 +153,16 @@ def bmatcher(r: Rexp, s: String): Boolean = {
 @main
 def test1() = {
 // Run tests
-val regex = STAR(ALT(CHAR('a'), CHAR('b')))
-val input = "abab"
-val br = internalize(regex)
+val regex1=ALT(ALT(CHAR('b'),CHAR('a')), SEQ(CHAR('a') ,CHAR('b') ))
+
+val regex2=("a" | "ab") ~ ("c" | "bc")
+val regex3=STAR("a")
+val input = "aaaa"
+val br = internalize(regex3)
+
 val finalR = bders(input.toList, br)
 val bitcode = bmkeps(finalR)
-val decoded = decode(bitcode, regex)
+val decoded = decode(bitcode, regex3)
 
 println(s"Matched: ${bnullable(finalR)}")
 println(s"Bitcode: $bitcode")
@@ -126,3 +170,4 @@ println(s"Decoded structure: ${decoded._1}")
 
 
 }
+

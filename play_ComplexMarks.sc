@@ -54,17 +54,26 @@ def shift(m: Boolean, re: Rexp, c: Char, bits:List[Int]) : Rexp = {
   case ZERO => ZERO
   case ONE => ONE
   case CHAR(d,mark) =>
-    val newMark=m && d == c
-    if(newMark) 
-      CHAR(d, Mark(marked = newMark, bs = bits:::mark.bs   , color = Color.GREEN))
-    else  CHAR(d, Mark(marked = newMark, bs = mark.bs, color = mark.color))
+    val bi=mark.bs
+     if(m && d == c) 
+      CHAR(d, Mark(marked = m && d == c, bs = bits   , color = Color.GREEN))
+      else
+        CHAR(d, Mark())
 
   case ALT(r1, r2) => 
     ALT(shift(m, r1, c,bits:+0)
         , shift(m, r2, c,bits:+1) )
-  case SEQ(r1, r2) => 
+/*   case SEQ(r1, r2) => 
     SEQ(shift(m, r1, c, bits)
-        , shift(m && nullable(r1) || fin(r1) ,r2, c,2::bits))
+        , shift(m && nullable(r1) || fin(r1) ,r2, c,2::bits)) */
+
+  case SEQ(r1, r2) if m && nullable(r1) => 
+    SEQ(shift(m, r1, c, bits), shift(true, r2, c ,  ( bits ::: mkeps(r1) )   ) )
+  case SEQ(r1, r2) if fin(r1) =>
+     SEQ(shift(m, r1, c, bits), shift(true,r2, c, ( mkfin(r1) )  )  ) 
+  case SEQ(r1, r2) => 
+     SEQ(shift(m, r1, c, bits), shift(false,r2, c, Nil ))
+
   case STAR(r) => 
     STAR(shift(m || fin(r), r, c,bits:+7))
   case NTIMES(r, n,counter) => 
@@ -94,7 +103,8 @@ def matcher2(r: Rexp, s: List[Char]) : Rexp =
 def intern2(r: Rexp) : Rexp = INIT(r)
 
 enum VALUE {
-    case EMPTY  
+    case EMPTY
+    case CHARV(c: Char)  
     case UNMARKED
     case SEQV(v1: VALUE, r2: VALUE )
     case LEFT(v: VALUE)
@@ -107,33 +117,21 @@ import VALUE._
 
 def mkeps(r: Rexp): List[Int] = r match {
   case ONE => Nil
-  case CHAR(_, mark) =>
-    if (mark.marked || mark.color==Color.GREEN) mark.bs else Nil
-  case ALT(r1, r2) =>
-    //mkeps(r1) ++ mkeps(r2) 
-    val mkeps1=mkeps(r1)
-    val mkeps2=mkeps(r2)
-    if((fin(r1) || hasMarks(r1))){
-        mkeps1
-    }else
-      {
-        mkeps2
-      }
-/*     if (fin(r1) || hasMarks(r1)) mkeps(r1)  // doesn't distingues cases where marks have been marked before
-    else mkeps(r2)  */
-  case SEQ(r1, r2) =>
-    if(hasMarks(r1) && nullable(r2) && !fin(r2))
-      mkeps(r1)
-    else
-      (mkeps(r1)) ::: ((mkeps(r2)))
-      //(2 :: mkeps(r1)) ++ (3 :: mkeps(r2)) //++ or :: 3 again to indicate the end and treat like a star ? 
-  case STAR(r) =>
-    mkeps(r)++List(8)
-  case NTIMES(r1, _, _) =>
-    mkeps(r1)
-  case INIT(r1) =>
-    mkeps(r1)
+  case CHAR(_, mark) => if (mark.marked) mark.bs else Nil
+  case ALT(r1, r2) => if(nullable(r1)) mkeps(r1) else mkeps(r2)
+  case SEQ(r1, r2) => (mkeps(r1)) ::: ((mkeps(r2)))
+  case STAR(r) => mkeps(r)++List(8)
+  case NTIMES(r1, _, _) =>mkeps(r1)
+  case INIT(r1) =>mkeps(r1)
   case _ => Nil
+}
+
+def mkfin(r: Rexp) : List[Int] = r match {
+  case CHAR(_, mark) => mark.bs
+  case ALT(r1, r2) => if (fin(r1)) mkfin(r1) else mkfin(r2)  
+  case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
+  case SEQ(r1, r2) => mkfin(r2)
+  case STAR(r) => Nil
 }
 
 def hasMarks(r:Rexp): Boolean = r match {
@@ -158,13 +156,7 @@ def decode(r:Rexp , bits:List[Int]): (VALUE,List[Int]) =
 /*     case CHAR(c,mark) => 
         if(mark.marked) (EMPTY,bits) else (UNMARKED(c),bits) // case of 1 as in matched and case of CHAR combined from original decode
  */
-    case CHAR(c, mark) =>
-        if (bits.isEmpty )
-            (EMPTY, bits)
-        else{
-          (UNMARKED, List())
-          }
-    
+    case CHAR(c, mark) =>(CHARV(c), bits ) // to consume bits?
     case ALT(r1, r2) => bits match {
         case 0::bs => 
             val (v,bsp)= decode(r1,bs)
@@ -175,19 +167,22 @@ def decode(r:Rexp , bits:List[Int]): (VALUE,List[Int]) =
     }
 
     case SEQ(r1, r2) =>
+      val (v1, bs1) = decode(r1, bits)
+      val (v2, bs2) = decode(r2, bs1)
+      (SEQV(v1, v2), bs2) 
+
+    /* case SEQ(r1, r2) =>
         val (bs, rest) = bits.span(_ != 2)
         println(s"bs=$bs and rest=$rest")
         val (v1, bs1) = decode(r1, bs)
 
-        rest match {
+        bits match {
             case 2 :: bs2 =>
               val (v2, bs2p) = decode(r2, bs2)
               (SEQV(v1, v2), bs2p)
             case _ =>
               (SEQV(v1, EMPTYSTRING), rest)
-        }
-
-
+        }  */
     case STAR(r) => bits match {
         case 8 :: bs1 => 
             (STARV(List()), bs1) // terminate recursion for STAR
@@ -208,10 +203,10 @@ def decode(r:Rexp , bits:List[Int]): (VALUE,List[Int]) =
 @main
 def test1() = {
   println("\n===== Testing New BitCodes =====\n")
-  //1 + ((1 + 1) + 1)
-  val rexp = (("a"|"bc") ~ ( ("bc"|"c")) )
+  val rexp = ("a" | "ab") ~ ("c" | "bc")
+  val s="abc".toList
   val initRexp=intern2(rexp)
-  val s="bcbc".toList
+
   println(s"String: $s\n")
   val finReg=matcher2(initRexp, s)
   println(s"Original size=${size(initRexp)} Result= ${fin(finReg)} Final Size=${size(finReg)}")
@@ -226,10 +221,8 @@ def test1() = {
 
   println("\n ====== Testing Decode  ======\n")
 
-
-  //val bits=List(1,0,1)
-  val bits=mkeps(finReg)
-  println(s"mkeps value= $bits")
+  val bits=mkfin(finReg)
+  println(s"mkeps value= ${mkeps(finReg)}} and mkfin=${mkfin(finReg)}")
 
   val (decodeValue,remainingBits)=decode(rexp,bits)
   println(s"Dcode: \nvalue=$decodeValue \nremaining bits=$remainingBits")
@@ -243,28 +236,30 @@ def test2() = {
   println("\n===== Testing New Bitcodes =====\n")
   //1 + ((1 + 1) + 1)
   //val rexp = SEQ(("a" | ( ("b"|"c")  | "d") ) , "a")
-  val rexp =  ("b"|"a") | SEQ("a","a")
+
+  val rexp =  ("b"|"a")| ("a"~"cc")
+  //val rexp = ("a" | "ab")
   println(s"original rexp=$rexp \n")
   val initRexp=intern2(rexp)
-  val s="aa".toList
+
+  val s="acc".toList
   println(s"String: $s\n")
+
   val finReg=matcher2(initRexp, s)
   println(s"Original size=${size(initRexp)} Result= ${fin(finReg)} Final Size=${size(finReg)}")
   
-  for (i <- s.indices) {
+   for (i <- s.indices) {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
   val sPart = s.take(i + 1)
   println(pp(mat(initRexp, sPart)))
-  }
+  } 
 
   println(s"\nfinReg=${finReg}\n")
 
   println("\n ====== Testing Decode  ======\n")
 
-
-  //val bits=List(1,0,1)
-  val bits=mkeps(finReg)
-  println(s"mkeps value= $bits")
+  val bits=mkfin(finReg)
+  println(s"mkeps value= ${mkeps(finReg)}} and mkfin=${mkfin(finReg)}")
 
   val (decodeValue,remainingBits)=decode(rexp,bits)
   println(s"Dcode: \nvalue=$decodeValue \nremaining bits=$remainingBits")

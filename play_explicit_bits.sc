@@ -94,6 +94,7 @@ def mkfin(r: Rexp) : Bits = r match {
 }
 
 
+
 // shift function from the paper
 def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = (r: @unchecked) match {
   case ZERO => ZERO
@@ -102,10 +103,12 @@ def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = (r: @unchecked) match
   case POINT(bs1, CHAR(d)) => if (m && d == c) POINT(bs ::: bs1, CHAR(d)) else CHAR(d)
   case ALT(r1, r2) => ALT(shift(m, bs :+ Z, r1, c), shift(m, bs :+ S, r2, c))
   case SEQ(r1, r2) if m && nullable(r1) => SEQ(shift(m, bs, r1, c), shift(true, bs ::: mkeps(r1), r2, c))
-  case SEQ(r1, r2) if fin(r1) => SEQ(shift(m, bs, r1, c), shift(true, bs ::: mkfin(r1), r2, c))
-  case SEQ(r1, r2) => SEQ(shift(m, bs, r1, c), shift(false, bs, r2, c))
+  case SEQ(r1, r2) if fin(r1) => SEQ(shift(m, bs, r1, c), shift(true, mkfin(r1), r2, c))
+  case SEQ(r1, r2) => SEQ(shift(m, bs, r1, c), shift(false, Nil, r2, c))
   case STAR(r) => STAR(shift(m || fin(r), bs, r, c))
 }
+
+
 
 
 // the main matching function (by using BINIT only in 
@@ -158,6 +161,8 @@ def pps(es: Rexp*) = indent(es.map(pp))
 def test1() = {
   println("=====Test====")
   val br2 = ("a" | "ab") ~ ("c" | "bc")
+  
+  
   val s = "abc".toList
   println("=string=")
   println(s)
@@ -170,6 +175,8 @@ def test1() = {
   println(s"=shift ${s(2)}=")
   println(pp(mat(br2, s.take(3))))
 
+  println(matcher(br2,s))
+
 /*   println(s"=shift ${s(3)}=")
   println(pp(mat(br2, s.take(4)))) */
 }
@@ -177,22 +184,26 @@ def test1() = {
 @main
 def test2() = {
   println("=====Test2====")
-  val rexp = ALT("b"|"a" , SEQ("a","a"))
-  val br2 = ("a" | "ab")
-  val s = "aa".toList
+  //val rexp = ALT(("b"|"a") , SEQ("a","a"))
+ //val rexp =  ("b"|"a") | (("a"|"b") ~ ("a"|"c"))
+  //val rexp =  ("a"~"cc")| ("a"|"cc")
+
+  val rexp = (("bc"|"a") ~ ( ("a"|"bc")) )
+  val s = "bcbc".toList
   println("=string=")
   println(s)
   println(s"=shift ${s(0)}=")
   println(pp(mat(rexp, s.take(1))))
 
-  println(s"=shift ${s(1)}=")
-  println(pp(mat(br2, s.take(2))))
+    println(s"=shift ${s(1)}=")
+  println(pp(mat(rexp, s.take(2)))) 
 
-/*   println(s"=shift ${s(2)}=")
-  println(pp(mat(br2, s.take(3)))) */
 
-/*   println(s"=shift ${s(3)}=")
-  println(pp(mat(br2, s.take(4)))) */
+  println(s"=shift ${s(2)}=")
+  println(pp(mat(rexp, s.take(3)))) 
+
+  println(s"=shift ${s(3)}=")
+  println(pp(mat(rexp, s.take(4))))  
 }
 
 
