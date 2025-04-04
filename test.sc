@@ -19,7 +19,7 @@ given rexp_cdata: CDATA[Rexp] = List(
   (0, _ => CHAR('a')),
   (0, _ => CHAR('b')),
   (0, _ => CHAR('c')),
-
+  (1, cs => STAR(cs(0))),
   (2, cs => ALT(cs(0), cs(1))),
   (2, cs => SEQ(cs(0), cs(1)))
 )
@@ -30,7 +30,7 @@ given rexp_cdata: CDATA[Rexp] = List(
 //
 //
 
-val numRegexes = 1000
+val numRegexes = 100
 val maxStringsPerRegex = 5
 
 @main

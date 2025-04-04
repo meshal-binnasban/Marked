@@ -1,3 +1,14 @@
+error id: _empty_/Rexp.CHAR.
+file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/rexp.sc
+empty definition using pc, found symbol in pc: 
+empty definition using semanticdb
+empty definition using fallback
+non-local guesses:
+
+offset: 1513
+uri: file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/rexp.sc
+text:
+```scala
 //
 // Algorithm from "A Play on Regular Expressions"
 //
@@ -69,9 +80,8 @@ def nullable(r: Rexp) : Boolean = r match {
 }
 
 def mkeps(r: Rexp) : Bits = r match {
-  case ZERO => Nil
   case ONE => Nil
-  case CHAR(c) => Nil
+    case CHAR(c) @@=> Nil
   case POINT(bs, CHAR(_)) => bs
   case ALT(r1, r2) => 
     if (nullable(r1)) mkeps(r1) else mkeps(r2)  
@@ -101,8 +111,6 @@ def mkfin(r: Rexp) : Bits = r match {
   case SEQ(r1, r2) => mkfin(r2)
   case STAR(r) => mkfin(r) ++ List(S)
   case NTIMES(r: Rexp, n: Int) => Nil
-  case ZERO => Nil
-  case ONE => Nil
   case CHAR(c) => Nil
   }
 
@@ -243,3 +251,10 @@ def test2() = {
 
 
 
+
+```
+
+
+#### Short summary: 
+
+empty definition using pc, found symbol in pc: 
