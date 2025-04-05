@@ -1,3 +1,22 @@
+error id: _empty_/Rexp.STAR.
+file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/rexp.sc
+empty definition using pc, found symbol in pc: 
+empty definition using semanticdb
+empty definition using fallback
+non-local guesses:
+	 -Rexp.STAR.
+	 -Rexp.STAR#
+	 -Rexp.STAR().
+	 -STAR.
+	 -STAR#
+	 -STAR().
+	 -scala/Predef.STAR.
+	 -scala/Predef.STAR#
+	 -scala/Predef.STAR().
+offset: 2114
+uri: file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/rexp.sc
+text:
+```scala
 //
 // Algorithm from "A Play on Regular Expressions"
 //
@@ -79,6 +98,15 @@ def fin(r: Rexp) : Boolean = (r: @unchecked) match {
   case SEQ(r1, r2) => (fin(r1) && nullable(r2)) || fin(r2)
   case STAR(r) => fin(r)
   case NTIMES(r: Rexp, n: Int) => fin(r)
+}
+def fin(r: Rexp) : Boolean = (r: @unchecked) match {
+  case ZERO => false
+  case ONE => false
+  case CHAR(_) => false
+  case POINT(_, CHAR(_)) => true
+  case ALT(r1, r2) => fin(r1) || fin(r2)
+  case SEQ(r1, r2) => (fin(r1) && nullable(r2)) || fin(r2)
+  case S@@TAR(r) => fin(r)
 }
 
 def mkeps(r: Rexp) : Bits = r match {
@@ -239,3 +267,10 @@ def test2() = {
 
 
 
+
+```
+
+
+#### Short summary: 
+
+empty definition using pc, found symbol in pc: 

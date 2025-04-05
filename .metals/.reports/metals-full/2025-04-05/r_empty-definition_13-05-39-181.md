@@ -1,3 +1,22 @@
+error id: _empty_/Rexp.POINT.
+file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/rexp.sc
+empty definition using pc, found symbol in pc: 
+empty definition using semanticdb
+empty definition using fallback
+non-local guesses:
+	 -Rexp.POINT.
+	 -Rexp.POINT#
+	 -Rexp.POINT().
+	 -POINT.
+	 -POINT#
+	 -POINT().
+	 -scala/Predef.POINT.
+	 -scala/Predef.POINT#
+	 -scala/Predef.POINT().
+offset: 2814
+uri: file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/rexp.sc
+text:
+```scala
 //
 // Algorithm from "A Play on Regular Expressions"
 //
@@ -68,6 +87,19 @@ def nullable(r: Rexp) : Boolean = r match {
     if (n == 0) true else nullable(r)
 }
 
+def mkeps(r: Rexp) : Bits = r match {
+  case ZERO => Nil
+  case ONE => Nil
+  case CHAR(c) => Nil
+  case POINT(bs, CHAR(_)) => bs
+  case ALT(r1, r2) => 
+    if (nullable(r1)) mkeps(r1) else mkeps(r2)  
+  case SEQ(r1, r2) => mkeps(r1) ++ mkeps(r2)
+  case STAR(r) => mkeps(r) ++ List(S)
+  case NTIMES(r: Rexp, n: Int) => Nil
+
+}
+
 // fin function from the paper
 // checks whether a mark is in "final" position
 def fin(r: Rexp) : Boolean = (r: @unchecked) match {
@@ -81,18 +113,6 @@ def fin(r: Rexp) : Boolean = (r: @unchecked) match {
   case NTIMES(r: Rexp, n: Int) => fin(r)
 }
 
-def mkeps(r: Rexp) : Bits = r match {
-  case ZERO => Nil
-  case ONE => Nil
-  case CHAR(c) => Nil
-  case POINT(bs, CHAR(_)) => bs
-  case ALT(r1, r2) => 
-    if (nullable(r1)) Z :: mkeps(r1) else S :: mkeps(r2)  
-  case SEQ(r1, r2) => mkeps(r1) ++ mkeps(r2)
-  case STAR(r) => mkeps(r) ++ List(S)
-  case NTIMES(r: Rexp, n: Int) => Nil
-}
-
 def mkfin(r: Rexp) : Bits = r match {
   case POINT(bs, CHAR(_)) => bs
   case ALT(r1, r2) => if (fin(r1)) mkfin(r1) else mkfin(r2)  
@@ -103,7 +123,7 @@ def mkfin(r: Rexp) : Bits = r match {
   case ZERO => Nil
   case ONE => Nil
   case CHAR(c) => Nil
-}
+  }
 
 
 
@@ -112,7 +132,7 @@ def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = (r: @unchecked) match
   case ZERO => ZERO
   case ONE => ONE
   case CHAR(d) => if (m && d == c) POINT(bs, CHAR(d)) else CHAR(d)
-  case POINT(_, CHAR(d)) => if (m && d == c) POINT(bs, CHAR(d)) else CHAR(d)
+  case @@POINT(_, CHAR(d)) => if (m && d == c) POINT(bs, CHAR(d)) else CHAR(d)
   case ALT(r1, r2) => ALT(shift(m, bs :+ Z, r1, c), shift(m, bs :+ S, r2, c))
   case SEQ(r1, r2) if m && nullable(r1) => SEQ(shift(m, bs, r1, c), shift(true, bs ::: mkeps(r1), r2, c))
   case SEQ(r1, r2) if fin(r1) => SEQ(shift(m, bs, r1, c), shift(true, mkfin(r1), r2, c))
@@ -121,6 +141,8 @@ def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = (r: @unchecked) match
   case STAR(r) if fin(r) => STAR(shift(true, mkfin(r) :+ Z, r, c)) 
   case STAR(r) if m => STAR(shift(m, bs, r, c))
   case STAR(r) => STAR(shift(false, Nil, r, c))
+}
+
   case NTIMES(r, n) => 
     if (n == 0) r else {
       if (m || fin(r)) NTIMES(shift(m || fin(r), bs, r, c), n)
@@ -142,12 +164,13 @@ def matcher2(r: Rexp, s: List[Char]) : Rexp =
   if (s == Nil)
      if(nullable(r)) r else ZERO 
   else mat(r, s)
-  
-def lex(r: Rexp, s: List[Char]) : Option[Bits] = {
-  if matcher(r, s)
-  then Some(if (s == Nil) mkeps(r) else mkfin(mat(r, s)))
+
+def lex(r: Rexp, s: List[Char]) : Option[Bits] =
+  if (matcher(r, s))
+  Some (if (s == Nil) mkeps(r) else mkfin (mat(r, s) ))
   else None
-}
+  
+
 
 // pretty-printing Rexps
 
@@ -239,3 +262,10 @@ def test2() = {
 
 
 
+
+```
+
+
+#### Short summary: 
+
+empty definition using pc, found symbol in pc: 

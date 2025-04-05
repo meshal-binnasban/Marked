@@ -4201,3 +4201,536 @@ WARNING: Unmatched cancel notification for request id 5498
 2025.04.04 23:02:39 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
 2025.04.04 23:02:42 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
 2025.04.04 23:03:28 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:03:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:04:03 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:04:03 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:04:03 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:29 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:29 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:31 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:31 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:33 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:33 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:33 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:34 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:35 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Apr 05, 2025 1:05:36 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5529
+Apr 05, 2025 1:05:36 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5533
+2025.04.05 13:05:35 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Apr 05, 2025 1:05:36 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5534
+2025.04.05 13:05:35 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Apr 05, 2025 1:05:36 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5536
+2025.04.05 13:05:36 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:36 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:37 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:37 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:37 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:38 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:38 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:37 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:38 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Exception in thread "pool-1495-thread-1" java.lang.InterruptedException
+	at scala.meta.internal.metals.FutureCancelToken.checkCanceled(FutureCancelToken.scala:29)
+	at scala.meta.internal.pc.CompilerAccess.onCompilerJobQueue$$anonfun$1(CompilerAccess.scala:244)
+	at scala.meta.internal.pc.CompilerJobQueue$Job.run(CompilerJobQueue.scala:153)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2025.04.05 13:05:37 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Apr 05, 2025 1:05:39 PM scala.meta.internal.metals.StdReporter $anonfun$create$1
+WARNING: empty definition using pc, found symbol in pc:  (full report at: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/.metals/.reports/metals-full/2025-04-05/r_empty-definition_13-05-39-181.md)
+2025.04.05 13:05:39 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:39 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:39 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:40 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:40 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Apr 05, 2025 1:05:40 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5559
+2025.04.05 13:05:40 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:40 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:41 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:41 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:42 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:42 INFO  time: code lens generation in 2.21s
+2025.04.05 13:05:43 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:43 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:43 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:43 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:44 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:44 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc
+2025.04.05 13:05:44 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:44 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:44 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:45 INFO  time: code lens generation in 1.79s
+2025.04.05 13:05:46 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:51 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:51 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:52 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:53 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:05:54 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:06:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:06:16 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc
+2025.04.05 13:06:16 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:06:18 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:06:30 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:06:30 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:06:31 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc
+Apr 05, 2025 1:06:31 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5608
+2025.04.05 13:06:31 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:06:31 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:06:31 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:06:32 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:06:35 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:06:35 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc
+2025.04.05 13:06:35 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:06:38 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:06:38 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:06:38 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:07:14 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:07:14 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:07:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:07:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:07:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:07:16 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc
+2025.04.05 13:07:17 INFO  time: code lens generation in 1.59s
+2025.04.05 13:07:17 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:07:18 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:07:18 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:07:18 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:07:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:18 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:18 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:18 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:19 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:19 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Exception in thread "pool-1532-thread-1" 2025.04.05 13:08:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+java.lang.InterruptedException
+	at scala.meta.internal.metals.FutureCancelToken.checkCanceled(FutureCancelToken.scala:29)
+	at scala.meta.internal.pc.CompilerAccess.onCompilerJobQueue$$anonfun$1(CompilerAccess.scala:244)
+	at scala.meta.internal.pc.CompilerJobQueue$Job.run(CompilerJobQueue.scala:153)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2025.04.05 13:08:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:21 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Apr 05, 2025 1:08:22 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5741
+Apr 05, 2025 1:08:22 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5740
+2025.04.05 13:08:21 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:21 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Apr 05, 2025 1:08:22 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5744
+Apr 05, 2025 1:08:22 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5743
+2025.04.05 13:08:21 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:22 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:22 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:22 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc
+2025.04.05 13:08:23 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:24 INFO  time: code lens generation in 1.41s
+2025.04.05 13:08:23 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:23 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:25 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:25 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:25 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:25 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:25 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:25 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:26 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:26 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc
+2025.04.05 13:08:26 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:26 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:33 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:33 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:33 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:33 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:34 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:34 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:08:52 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:03 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/play_explicit_bits.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:03 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Apr 05, 2025 1:09:04 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5785
+2025.04.05 13:09:03 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:03 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:04 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc
+2025.04.05 13:09:04 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:04 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:29 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:33 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:33 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:33 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:35 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:36 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:36 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:36 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:36 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:37 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:37 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:38 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:38 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:38 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:39 INFO  time: code lens generation in 1.61s
+2025.04.05 13:09:39 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:39 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:41 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:41 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:41 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:41 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:43 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:43 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:43 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:43 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:45 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:45 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:46 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc
+2025.04.05 13:09:46 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:46 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:47 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:46 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:47 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:47 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:47 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:49 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:49 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:49 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:49 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:49 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:49 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:51 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc
+2025.04.05 13:09:51 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:51 INFO  time: code lens generation in 1.71s
+Apr 05, 2025 1:09:51 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5858
+2025.04.05 13:09:51 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:51 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:52 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:59 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:59 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:09:59 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:03 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:03 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:03 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:04 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:04 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:05 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Apr 05, 2025 1:10:05 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5889
+Apr 05, 2025 1:10:06 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5888
+2025.04.05 13:10:05 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Apr 05, 2025 1:10:06 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5893
+Apr 05, 2025 1:10:06 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5892
+2025.04.05 13:10:06 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:06 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:07 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:07 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:07 INFO  time: code lens generation in 1.82s
+2025.04.05 13:10:07 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:07 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:08 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:09 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Apr 05, 2025 1:10:09 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5907
+Apr 05, 2025 1:10:09 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5909
+2025.04.05 13:10:08 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:09 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:09 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:10 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:10 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:10 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:12 INFO  time: code lens generation in 1.67s
+2025.04.05 13:10:13 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:13 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:13 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:14 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:14 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Exception in thread "pool-1595-thread-1" java.lang.InterruptedException
+	at scala.meta.internal.metals.FutureCancelToken.checkCanceled(FutureCancelToken.scala:29)
+	at scala.meta.internal.pc.CompilerAccess.onCompilerJobQueue$$anonfun$1(CompilerAccess.scala:244)
+	at scala.meta.internal.pc.CompilerJobQueue$Job.run(CompilerJobQueue.scala:153)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2025.04.05 13:10:15 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc
+2025.04.05 13:10:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:17 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:19 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:19 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Exception in thread "pool-1600-thread-1" java.lang.InterruptedException
+	at scala.meta.internal.metals.FutureCancelToken.checkCanceled(FutureCancelToken.scala:29)
+	at scala.meta.internal.pc.CompilerAccess.onCompilerJobQueue$$anonfun$1(CompilerAccess.scala:244)
+	at scala.meta.internal.pc.CompilerJobQueue$Job.run(CompilerJobQueue.scala:153)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2025.04.05 13:10:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Apr 05, 2025 1:10:21 PM scala.meta.internal.metals.StdReporter $anonfun$create$1
+WARNING: empty definition using pc, found symbol in pc: `<none>`. (full report at: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/.metals/.reports/metals-full/2025-03-22/r_empty-definition_(play_point3.sc)_22-18-44-886.md)
+2025.04.05 13:10:21 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:21 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:21 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:22 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Apr 05, 2025 1:10:22 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5966
+2025.04.05 13:10:22 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:22 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Apr 05, 2025 1:10:22 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5970
+2025.04.05 13:10:22 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Apr 05, 2025 1:10:22 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5972
+2025.04.05 13:10:22 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:23 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:23 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:24 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Apr 05, 2025 1:10:24 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5983
+2025.04.05 13:10:24 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:24 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:24 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:24 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:25 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:26 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:26 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:26 INFO  time: code lens generation in 3.11s
+Apr 05, 2025 1:10:26 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5989
+Apr 05, 2025 1:10:26 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5982
+2025.04.05 13:10:26 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc
+2025.04.05 13:10:26 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:26 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:27 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:27 INFO  time: code lens generation in 1.04s
+2025.04.05 13:10:28 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:29 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:29 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:30 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:30 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:30 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Exception in thread "pool-1616-thread-1" java.lang.InterruptedException
+	at scala.meta.internal.metals.FutureCancelToken.checkCanceled(FutureCancelToken.scala:29)
+	at scala.meta.internal.pc.CompilerAccess.onCompilerJobQueue$$anonfun$1(CompilerAccess.scala:244)
+	at scala.meta.internal.pc.CompilerJobQueue$Job.run(CompilerJobQueue.scala:153)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2025.04.05 13:10:30 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:30 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:30 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:31 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:31 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:31 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:31 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:32 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:33 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:33 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Apr 05, 2025 1:10:33 PM scala.meta.internal.metals.StdReporter $anonfun$create$1
+WARNING: empty definition using pc, found symbol in pc:  (full report at: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/.metals/.reports/metals-full/2025-04-04/r_empty-definition_23-02-06-780.md)
+Apr 05, 2025 1:10:33 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 6017
+2025.04.05 13:10:33 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc
+2025.04.05 13:10:34 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:10:35 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:08 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc
+2025.04.05 13:11:08 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:24 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:25 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:25 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:25 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:26 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:26 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:27 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:27 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:32 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:32 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:33 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:33 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:33 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:34 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:34 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:35 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc
+2025.04.05 13:11:35 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:35 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:36 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:36 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:36 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:37 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:37 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:37 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc
+2025.04.05 13:11:37 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:37 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/enumerate.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:37 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/enumerate.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:38 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/enumerate.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:37 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/enumerate.sc
+2025.04.05 13:11:38 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/enumerate.sc
+2025.04.05 13:11:38 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/enumerate.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:39 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:39 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc
+2025.04.05 13:11:39 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Apr 05, 2025 1:11:41 PM scala.meta.internal.metals.StdReporter $anonfun$create$1
+WARNING: empty definition using pc, found symbol in pc: `<none>`. (full report at: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/.metals/.reports/metals-full/2025-03-22/r_empty-definition_(play_point3.sc)_22-18-44-886.md)
+2025.04.05 13:11:46 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:49 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:50 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:50 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:50 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:52 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:11:52 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:01 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:02 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:02 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc
+2025.04.05 13:12:02 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:03 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc
+2025.04.05 13:12:02 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:03 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Apr 05, 2025 1:12:03 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 6096
+2025.04.05 13:12:02 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:05 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:14 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:14 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:14 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:14 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:16 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:16 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:16 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:16 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:16 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:17 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:17 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc
+2025.04.05 13:12:17 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:26 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:41 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:41 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:41 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:42 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:43 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:42 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:44 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:45 INFO  time: code lens generation in 2.25s
+2025.04.05 13:12:45 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:45 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:46 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc
+2025.04.05 13:12:47 INFO  time: code lens generation in 1.65s
+2025.04.05 13:12:46 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:47 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:47 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Exception in thread "pool-1663-thread-1" java.lang.InterruptedException
+	at scala.meta.internal.metals.FutureCancelToken.checkCanceled(FutureCancelToken.scala:29)
+	at scala.meta.internal.pc.CompilerAccess.onCompilerJobQueue$$anonfun$1(CompilerAccess.scala:244)
+	at scala.meta.internal.pc.CompilerJobQueue$Job.run(CompilerJobQueue.scala:153)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+Apr 05, 2025 1:12:47 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 6166
+2025.04.05 13:12:47 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:48 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:55 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:55 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:55 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Apr 05, 2025 1:12:56 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 6175
+2025.04.05 13:12:56 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:56 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:57 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:57 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:58 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:58 INFO  time: code lens generation in 1.92s
+2025.04.05 13:12:58 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:12:58 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:14:10 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:14:10 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc
+2025.04.05 13:14:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:14:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:14:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:14:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:14:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Exception in thread "pool-1673-thread-1" java.lang.InterruptedException
+	at scala.meta.internal.metals.FutureCancelToken.checkCanceled(FutureCancelToken.scala:29)
+	at scala.meta.internal.pc.CompilerAccess.onCompilerJobQueue$$anonfun$1(CompilerAccess.scala:244)
+	at scala.meta.internal.pc.CompilerJobQueue$Job.run(CompilerJobQueue.scala:153)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2025.04.05 13:14:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Exception in thread "pool-1674-thread-1" java.lang.InterruptedException
+	at scala.meta.internal.metals.FutureCancelToken.checkCanceled(FutureCancelToken.scala:29)
+	at scala.meta.internal.pc.CompilerAccess.onCompilerJobQueue$$anonfun$1(CompilerAccess.scala:244)
+	at scala.meta.internal.pc.CompilerJobQueue$Job.run(CompilerJobQueue.scala:153)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2025.04.05 13:14:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Exception in thread "pool-1675-thread-1" java.lang.InterruptedException
+	at scala.meta.internal.metals.FutureCancelToken.checkCanceled(FutureCancelToken.scala:29)
+	at scala.meta.internal.pc.CompilerAccess.onCompilerJobQueue$$anonfun$1(CompilerAccess.scala:244)
+	at scala.meta.internal.pc.CompilerJobQueue$Job.run(CompilerJobQueue.scala:153)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2025.04.05 13:14:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Exception in thread "pool-1676-thread-1" java.lang.InterruptedException
+	at scala.meta.internal.metals.FutureCancelToken.checkCanceled(FutureCancelToken.scala:29)
+	at scala.meta.internal.pc.CompilerAccess.onCompilerJobQueue$$anonfun$1(CompilerAccess.scala:244)
+	at scala.meta.internal.pc.CompilerJobQueue$Job.run(CompilerJobQueue.scala:153)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2025.04.05 13:14:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:14:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Apr 05, 2025 1:14:13 PM scala.meta.internal.metals.StdReporter $anonfun$create$1
+WARNING: empty definition using pc, found symbol in pc:  (full report at: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/.metals/.reports/metals-full/2025-04-05/r_empty-definition_13-14-13-421.md)
+2025.04.05 13:14:13 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:14:13 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:14:13 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:14:13 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:14:14 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:14:14 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc
+2025.04.05 13:14:14 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Apr 05, 2025 1:14:14 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 6213
+2025.04.05 13:14:14 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:14:14 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:14:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Apr 05, 2025 1:14:15 PM scala.meta.internal.metals.StdReporter $anonfun$create$1
+WARNING: empty definition using pc, found symbol in pc:  (full report at: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/.metals/.reports/metals-full/2025-04-04/r_empty-definition_23-02-06-780.md)
+2025.04.05 13:14:16 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:14:16 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:14:16 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:14:17 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:14:17 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:14:17 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:14:17 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc
+2025.04.05 13:14:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.05 13:14:21 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/rexp.sc. Using presentation compiler with project's scala-library version: 3.6.3

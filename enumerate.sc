@@ -73,6 +73,7 @@ def test00() = {
         (0, _ => CHAR('a')),
         (0, _ => CHAR('b')),
         (0, _ => CHAR('c')),
+        
         (2, cs => ALT(cs(0), cs(1))),
         (2, cs => SEQ(cs(0), cs(1)))
       )
