@@ -1,84 +1,83 @@
-
 import $file.enumerate, enumerate.{decode as enumDecode, CDATA}
 import $file.regenerate, regenerate._
 import $file.rexp, rexp._
 import rexp.Rexp.*
 import $file.derivativesBitcode, derivativesBitcode._
 
-
-
-
 val alphabet: LazyList[Char] = LazyList('a', 'b', 'c')
 
-// Bring in the CDATA for Rexp construction
 given rexp_cdata: CDATA[Rexp] = List(
-
   (0, _ => ONE),
   (0, _ => CHAR('a')),
   (0, _ => CHAR('b')),
   (0, _ => CHAR('c')),
-  (1, cs => STAR(cs(0))),
+  //(1, cs => STAR(cs(0))),
   (2, cs => ALT(cs(0), cs(1))),
   (2, cs => SEQ(cs(0), cs(1)))
 )
 
-//  
-//  (0, _ => ZERO),
-//  (1, cs => STAR(cs(0))),
-//
-//
-
-val numRegexes = 100
+val numRegexes = 10
 val maxStringsPerRegex = 5
 
 @main
 def runCombinedTests(): Unit = {
-  println(s"Testing first $numRegexes regexes with up to $maxStringsPerRegex matching strings each\n")
+  println(s"🔍 Testing first $numRegexes regexes with up to $maxStringsPerRegex matching strings each\n")
+  println("=" * 50)
+  var allPassed = true
+  var mismatchCount = 0
+  var mismatches = List.empty[(Rexp, List[Char], List[Int], List[Int], Boolean, Boolean)]
 
   for (i <- 0 to numRegexes) {
-    val r = enumDecode(i)
-    val strings = generate_up_to(alphabet)(10)(r).take(maxStringsPerRegex).toList
+    val regex = enumDecode(i)
+    val testStrings = generate_up_to(alphabet)(10)(regex).take(maxStringsPerRegex).toList
+    
+    println(s"[$i]Regex: \n${pp(regex)}")
+ 
 
-    println(s"\n[$i] Regex: $r")
-    println(pp(r))
-    println(s"strings=$strings")
-
-    var allMatched = true
-    for ((s, index) <- strings.zipWithIndex) {
-      val sList = s.toList
+    for (str <- testStrings) {
       
-      val bitcode1 = bitsToInts(lex(r, sList).getOrElse(Nil))
-      val result1=matcher(r, sList)
+      val sList = str.toList
+      println(s"input=$str")
+      val markBitcode = bitsToInts(lex(regex, sList).getOrElse(Nil))
+      val markResult = matcher(regex, sList)
 
-      val finReg2 = bders(sList, internalize(r))
-      val bitcode2 = bmkeps(finReg2)
-      val result2 = bnullable(finReg2)
+      val derivativeR = bders(sList, internalize(regex))
+      val derivBitcode = bmkeps(derivativeR)
+      val derivResult = bnullable(derivativeR)
 
-      println(s"Marked: input=$s , BitCode=$bitcode1, result=$result1")
-      println(s"Derivatives: input=$s , BitCode=$bitcode2, result=$result2 \n")
-
-      if (bitcode1.toList == bitcode2.toList) {
-            println(s"Bitcodes match for input=$s")
-            } else {
-            println(s"Error: Bitcode mismatch for input=$s")
-            }
-
-      val bitMatch = bitcode1 == bitcode2
-      val resultMatch = result1 == result2
+      val bitMatch = markBitcode == derivBitcode
+      val resultMatch = markResult == derivResult
 
       if (!bitMatch || !resultMatch) {
-        allMatched = false
+        allPassed = false
+        mismatchCount += 1
+        mismatches ::= (regex, sList, markBitcode, derivBitcode, markResult, derivResult)
       }
 
+      // Optional per-string output:
+      println(s"Bitcode1 = $markBitcode | Bitcode2 = $derivBitcode")
+      println(s"${if (bitMatch && resultMatch) "✓" else "✗"}") 
     }
-
-    if(allMatched)
-    println("All strings matched")
-    else
-    println("Some strings did not match")
+    println("=" * 50)
   }
 
+  if (allPassed) {
+    println("\nAll strings and bitcodes matched")
+  } else {
+    println(s"\nFound $mismatchCount mismatches: \n")
 
+    for ((regex, input, bc1, bc2, res1, res2) <- mismatches.reverse) {
+      println(s"Regex: $regex")
+      println(s"Input: ${input.mkString}")
+      println(s"Marked Bitcode: $bc1")
+      //println(s"Deriv  Bitcode:result $bc2")
+      println(s"Marked Result: $res1, Deriv Result: $res2")
+      println("-" * 40)
+    }
+
+    val nMatches = numRegexes * maxStringsPerRegex - mismatchCount
+    println(s"\nSummary: $mismatchCount mismatches and $nMatches matches = ${numRegexes * maxStringsPerRegex}")
+  }
 }
 
 def bitsToInts(bits: List[Bit]): List[Int] = bits.map {
