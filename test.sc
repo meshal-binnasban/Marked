@@ -80,6 +80,49 @@ def runCombinedTests(): Unit = {
   }
 }
 
+@main
+def checkTest(): Unit = {
+  println(s"🔍 Testing first $numRegexes regexes with up to $maxStringsPerRegex matching strings each\n")
+  println("=" * 50)
+  var allPassed = true
+  var mismatchCount = 0
+
+  for (i <- 0 to numRegexes) {
+    val regex = enumDecode(i)
+    val testStrings = generate_up_to(alphabet)(10)(regex).take(maxStringsPerRegex).toList
+    
+    println(s"[$i]Regex: \n${pp(regex)}")
+    for (str <- testStrings) {
+      
+      val sList = str.toList
+      println(s"input=$str")
+      val markBitcode = bitsToInts(lex(regex, sList).getOrElse(Nil))
+      val markResult = matcher(regex, sList)
+
+      val derivativeR = bders(sList, internalize(regex))
+      val derivBitcode = bmkeps(derivativeR)
+      val derivResult = bnullable(derivativeR)
+
+      val bitMatch = markBitcode == derivBitcode
+      val resultMatch = markResult == derivResult
+
+      if (!bitMatch || !resultMatch) {
+        allPassed = false
+        mismatchCount += 1
+        println(s"Not matched X, Bitcode1 = $markBitcode | Bitcode2 = $derivBitcode")
+      }
+
+     
+    }
+    println("=" * 50)
+  }
+
+  if (allPassed) 
+    println("\nAll strings and bitcodes matched")
+   else 
+    println(s"\nFound $mismatchCount mismatches: \n")
+}
+
 def bitsToInts(bits: List[Bit]): List[Int] = bits.map {
   case Z => 0
   case S => 1
