@@ -6,23 +6,11 @@
 
 
 import scala.language.implicitConversions
-import $file.rexp, rexp._
 import $file.enumerate, enumerate._
 import $file.regenerate//, regenerate._
-//import $file.rebit
-
-abstract class Bit
-case object Z extends Bit {
-  override def toString = "0"
-}
-case object S extends Bit {
-  override def toString = "1"
-}
 
 
-type Bits = List[Bit]
 
-/*
 abstract class Bit
 case object Z extends Bit {
   override def toString = "0"
@@ -78,7 +66,7 @@ def nullable(r: Rexp) : Boolean = r match {
   case STAR(r) => true
   case POINT(_, r) => nullable(r)
 }
-*/ 
+
 
 def mkeps(r: Rexp) : Bits = r match {
   case ONE => Nil
@@ -181,7 +169,7 @@ def pps(es: Rexp*) = indent(es.map(pp))
 def test1() = {
   println("=====Test====")
   val br2 = ("a" | "ab") ~ ("c" | "bc")
-  val s = "abcd".toList
+  val s = "abbc".toList
   println("=string=")
   println(s)
   println(s"=shift ${s(0)}=")
@@ -224,7 +212,7 @@ def test2() = {
   println(s"=final list=")
   println(lex(br2, s.take(3)))
 }
-
+/* 
 @main
 def test3() = {
   given rexp_cdata : CDATA[Rexp] = List(
@@ -251,7 +239,7 @@ def test3() = {
         }
       }
   }
-}
+} */
 
 
 

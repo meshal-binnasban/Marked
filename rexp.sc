@@ -105,8 +105,6 @@ def mkfin(r: Rexp) : Bits = r match {
   case CHAR(c) => Nil
 }
 
-
-
 // shift function from the paper
 def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = (r: @unchecked) match {
   case ZERO => ZERO

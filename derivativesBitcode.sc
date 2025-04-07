@@ -1,5 +1,6 @@
 import $file.rexp, rexp._
 import rexp.Rexp._
+import scala.collection.immutable.List
 /* 
 enum Rexp {
   case ZERO 
@@ -14,14 +15,14 @@ enum Rexp {
 
 import Rexp._ */
 
-abstract class BRegExp
-case class BZERO() extends BRegExp
-case class BONE(bs: List[Int]) extends BRegExp
-case class BCHAR(bs: List[Int], c: Char) extends BRegExp
-case class BALTs(bs: List[Int], r1: BRegExp, r2: BRegExp) extends BRegExp
-case class BSEQ(bs: List[Int], r1: BRegExp, r2: BRegExp) extends BRegExp
-case class BSTAR(bs: List[Int], r: BRegExp) extends BRegExp
-case class BNTIMES(bs: List[Int], r: BRegExp, n: Int) extends BRegExp
+abstract class ARexp
+case class BZERO() extends ARexp
+case class BONE(bs: List[Int]) extends ARexp
+case class BCHAR(bs: List[Int], c: Char) extends ARexp
+case class BALTs(bs: List[Int], r1: ARexp, r2: ARexp) extends ARexp
+case class BSEQ(bs: List[Int], r1: ARexp, r2: ARexp) extends ARexp
+case class BSTAR(bs: List[Int], r: ARexp) extends ARexp
+case class BNTIMES(bs: List[Int], r: ARexp, n: Int) extends ARexp
 
 
 // some syntax sugar for regexes
@@ -46,7 +47,7 @@ extension (r: Rexp) {
 
 
 // Convert standard regex to bitcoded regex
-def fuse(bs: List[Int], r: BRegExp): BRegExp = r match {
+def fuse(bs: List[Int], r: ARexp): ARexp = r match {
   case BZERO() => BZERO()
   case BONE(bs2) => BONE(bs ++ bs2)
   case BCHAR(bs2, c) => BCHAR(bs ++ bs2, c)
@@ -56,17 +57,8 @@ def fuse(bs: List[Int], r: BRegExp): BRegExp = r match {
   case BNTIMES(bs2, r, n) => BNTIMES(bs ++ bs2, r, n)
 }
 
-/* def internalize(r: Rexp): BRegExp = r match {
-  case ZERO => BZERO()
-  case ONE => BONE(List())
-  case CHAR(c) => BCHAR(List(), c)
-  case ALT(r1, r2) => BALTs(List(), fuse(List(0), internalize(r1)), fuse(List(1), internalize(r2)))
-  case SEQ(r1, r2) => BSEQ(List(), internalize(r1), internalize(r2))
-  case STAR(r) => BSTAR(List(), internalize(r))
-  case NTIMES(r, n) => BNTIMES(List(), internalize(r), n)
-} */
 
-def internalize(r: Rexp): BRegExp = r match {
+def internalize(r: Rexp): ARexp = r match {
   case ZERO => BZERO()
   case ONE => BONE(List())
   case CHAR(c) => BCHAR(List(), c)
@@ -74,11 +66,12 @@ def internalize(r: Rexp): BRegExp = r match {
   case SEQ(r1, r2) => BSEQ(List(), internalize(r1), internalize(r2))
   case STAR(r) => BSTAR(List(), internalize(r))
   case NTIMES(r, n) => BNTIMES(List(), internalize(r), n)
+  case NOT(r) => BZERO()
 }
 
 
 // Nullable function
-def bnullable(r: BRegExp): Boolean = r match {
+def bnullable(r: ARexp): Boolean = r match {
   case BZERO() => false
   case BONE(_) => true
   case BCHAR(_, _) => false
@@ -89,7 +82,7 @@ def bnullable(r: BRegExp): Boolean = r match {
 }
 
 // Compute derivative with bitcodes
-def bder(c: Char, r: BRegExp): BRegExp = r match {
+def bder(c: Char, r: ARexp): ARexp = r match {
   case BZERO() => BZERO()
   case BONE(_) => BZERO()
   case BCHAR(bs, d) => if (c == d) BONE(bs) else BZERO()
@@ -104,13 +97,13 @@ def bder(c: Char, r: BRegExp): BRegExp = r match {
 }
 
 // Compute derivative with respect to a string
-def bders(s: List[Char], r: BRegExp): BRegExp = s match {
+def bders(s: List[Char], r: ARexp): ARexp = s match {
   case Nil => r
   case c :: cs => bders(cs, bder(c, r))
 }
 
 // Extract the bitcode
-def bmkeps(r: BRegExp): List[Int] = r match {
+def bmkeps(r: ARexp): List[Int] = r match {
   case BONE(bs) => bs
   case BALTs(bs, r1, r2) => bs ++ (if (bnullable(r1)) bmkeps(r1) else bmkeps(r2))
   case BSEQ(bs, r1, r2) => bs ++ bmkeps(r1) ++ bmkeps(r2)
@@ -118,26 +111,37 @@ def bmkeps(r: BRegExp): List[Int] = r match {
   case BNTIMES(bs, r, n) => if (n == 0) bs :+ 1 else bs ++ List(0) ++ bmkeps(r) ++ bmkeps(BNTIMES(List(), r, n - 1))
 }
 
+enum VALUE {
+    case EMPTY
+    case CHARV(c: Char)  
+    case SEQV(v1: VALUE, r2: VALUE )
+    case LEFT(v: VALUE)
+    case RIGHT(v: VALUE)
+    case STARV(vs: List[VALUE])
+    case ERRORVALUE
+}
+import VALUE._
+
 // Decode function to reconstruct match structure
-def decode(bs: List[Int], r: Rexp): (String, List[Int]) = r match {
-  case ONE => ("", bs)
-  case CHAR(c) => (c.toString, bs)
+def decode(bs: List[Int], r: Rexp): (VALUE, List[Int]) = r match {
+  case ONE => (EMPTY, bs)
+  case CHAR(c) => (CHARV(c), bs)
   case ALT(r1, r2) => bs match {
-    case 0 :: rest => val (v, rem) = decode(rest, r1); (s"Left($v)", rem)
-    case 1 :: rest => val (v, rem) = decode(rest, r2); (s"Right($v)", rem)
-    case _ => ("", bs)
+    case 0 :: rest => val (v, rem) = decode(rest, r1); (LEFT(v), rem)
+    case 1 :: rest => val (v, rem) = decode(rest, r2); (RIGHT(v), rem)
+    case _ => (ERRORVALUE, bs)
   }
   case SEQ(r1, r2) =>
     val (v1, bs1) = decode(bs, r1)
     val (v2, bs2) = decode(bs1, r2)
-    (s"Seq($v1, $v2)", bs2)
+    (SEQV(v1, v2), bs2)
   case STAR(r) => bs match {
-    case 1 :: rest => ("Stars([])", rest)
+    case 1 :: rest => (STARV(List()), rest)
     case 0 :: rest => 
       val (v, bs1) = decode(rest, r)
-      val (starsRest, bs2) = decode(bs1, STAR(r))
-      (s"Stars($v, $starsRest)", bs2)
-    case _ => ("", bs)
+      val (STARV(vs), bs2) = decode(bs1, STAR(r))
+      (STARV(v :: vs), bs2)
+    case _ => (ERRORVALUE, bs)
   }
 }
 
@@ -153,16 +157,15 @@ def bmatcher(r: Rexp, s: String): Boolean = {
 @main
 def test1() = {
 // Run tests
-val regex1=ALT(ALT(CHAR('b'),CHAR('a')), SEQ(CHAR('a') ,CHAR('b') ))
-
-val regex2=("a" | "ab") ~ ("c" | "bc")
-val regex3=STAR("a")
-val input = "aaaa"
-val br = internalize(regex3)
+//val regex1=ALT(ALT(CHAR('b'),CHAR('a')), SEQ(CHAR('a') ,CHAR('b') ))
+//val regex3=STAR("a")
+val regex=("a" | "ab") ~ ("c" | "bc")
+val input = "abbc"
+val br = internalize(regex)
 
 val finalR = bders(input.toList, br)
 val bitcode = bmkeps(finalR)
-val decoded = decode(bitcode, regex3)
+val decoded = decode(bitcode, regex)
 
 println(s"Matched: ${bnullable(finalR)}")
 println(s"Bitcode: $bitcode")

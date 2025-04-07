@@ -7,7 +7,6 @@ enum Color:
   case WHITE
 
 case class Mark(
-  
   marked: Boolean = false,
   bs: List[Int] = List(),
   color: Color = Color.WHITE
@@ -53,29 +52,27 @@ def shift(m: Boolean, re: Rexp, c: Char, bits:List[Int]) : Rexp = {
   re match {
   case ZERO => ZERO
   case ONE => ONE
-  case CHAR(d,mark) =>
-    val bi=mark.bs
-     if(m && d == c) 
-      CHAR(d, Mark(marked = m && d == c, bs = bits   , color = Color.GREEN))
-      else
-        CHAR(d, Mark())
-
-  case ALT(r1, r2) => 
-    ALT(shift(m, r1, c,bits:+0)
+  case CHAR(d,mark) => 
+    if (m && d == c)
+      CHAR(d, Mark(marked = true, bs = bits , color = Color.GREEN))
+    else 
+      CHAR(d, Mark(marked = false, bs = Nil , color = Color.RED))
+      //CHAR(d, Mark())
+  case ALT(r1, r2) => ALT(shift(m, r1, c,bits:+0)
         , shift(m, r2, c,bits:+1) )
-/*   case SEQ(r1, r2) => 
-    SEQ(shift(m, r1, c, bits)
-        , shift(m && nullable(r1) || fin(r1) ,r2, c,2::bits)) */
 
   case SEQ(r1, r2) if m && nullable(r1) => 
-    SEQ(shift(m, r1, c, bits), shift(true, r2, c ,  ( bits ::: mkeps(r1) )   ) )
+    SEQ(shift(m, r1, c, bits), shift(true, r2, c ,bits ::: mkeps(r1)) )
   case SEQ(r1, r2) if fin(r1) =>
-     SEQ(shift(m, r1, c, bits), shift(true,r2, c, ( mkfin(r1) )  )  ) 
+     SEQ(shift(m, r1, c, bits), shift(true,r2, c,mkfin(r1) )) 
   case SEQ(r1, r2) => 
      SEQ(shift(m, r1, c, bits), shift(false,r2, c, Nil ))
 
-  case STAR(r) => 
-    STAR(shift(m || fin(r), r, c,bits:+7))
+  case STAR(r) if m && fin(r) => STAR(shift(true, r , c , bits ::: (mkfin(r) :+ 0)))
+  case STAR(r) if fin(r) => STAR(shift(true,r,c ,mkfin(r) :+ 0)) 
+  case STAR(r) if m => STAR(shift(m, r, c, bits))
+  case STAR(r) => STAR(shift(false, r, c, Nil))
+
   case NTIMES(r, n,counter) => 
     if (counter == n) re else{
         if (m || fin(r)) NTIMES(shift(m || fin(r), r, c,bits), n, counter+1)
@@ -83,9 +80,9 @@ def shift(m: Boolean, re: Rexp, c: Char, bits:List[Int]) : Rexp = {
         }  
   case INIT(r) => 
     shift(true, r, c,bits)  
+    
     } 
     }
-
 
 def mat(r: Rexp, s: List[Char]) : Rexp = s match {
   case Nil => r
@@ -134,28 +131,8 @@ def mkfin(r: Rexp) : List[Int] = r match {
   case STAR(r) => Nil
 }
 
-def hasMarks(r:Rexp): Boolean = r match {
-    case ONE => false
-  case CHAR(_, mark) =>
-    if (mark.marked || mark.color==Color.GREEN) true else false
-  case ALT(r1, r2) =>
-    hasMarks(r1) ||  hasMarks(r2)
-  case SEQ(r1, r2) =>
-    hasMarks(r1) && hasMarks(r2)
-  case STAR(r) =>
-    hasMarks(r)
-  case NTIMES(r, _, _) =>
-    hasMarks(r) 
-  case INIT(r1) =>
-    hasMarks(r)
-  case _ => false
-}
-
 def decode(r:Rexp , bits:List[Int]): (VALUE,List[Int]) = 
   r match {
-/*     case CHAR(c,mark) => 
-        if(mark.marked) (EMPTY,bits) else (UNMARKED(c),bits) // case of 1 as in matched and case of CHAR combined from original decode
- */
     case CHAR(c, mark) =>(CHARV(c), bits ) // to consume bits?
     case ALT(r1, r2) => bits match {
         case 0::bs => 
@@ -165,24 +142,10 @@ def decode(r:Rexp , bits:List[Int]): (VALUE,List[Int]) =
             val (v,bsp)= decode(r2,bs)
             (RIGHT(v),bsp)
     }
-
     case SEQ(r1, r2) =>
       val (v1, bs1) = decode(r1, bits)
       val (v2, bs2) = decode(r2, bs1)
       (SEQV(v1, v2), bs2) 
-
-    /* case SEQ(r1, r2) =>
-        val (bs, rest) = bits.span(_ != 2)
-        println(s"bs=$bs and rest=$rest")
-        val (v1, bs1) = decode(r1, bs)
-
-        bits match {
-            case 2 :: bs2 =>
-              val (v2, bs2p) = decode(r2, bs2)
-              (SEQV(v1, v2), bs2p)
-            case _ =>
-              (SEQV(v1, EMPTYSTRING), rest)
-        }  */
     case STAR(r) => bits match {
         case 8 :: bs1 => 
             (STARV(List()), bs1) // terminate recursion for STAR
@@ -195,7 +158,6 @@ def decode(r:Rexp , bits:List[Int]): (VALUE,List[Int]) =
         (STARV(List()), bits)
     
     }// end of match r   
-
     case _ => (ERRORVALUE, bits) 
     
 }
@@ -204,7 +166,8 @@ def decode(r:Rexp , bits:List[Int]): (VALUE,List[Int]) =
 def test1() = {
   println("\n===== Testing New BitCodes =====\n")
   val rexp = ("a" | "ab") ~ ("c" | "bc")
-  val s="abc".toList
+  
+  val s="abbc".toList
   val initRexp=intern2(rexp)
 
   println(s"String: $s\n")
@@ -221,7 +184,7 @@ def test1() = {
 
   println("\n ====== Testing Decode  ======\n")
 
-  val bits=mkfin(finReg)
+  val bits=mkeps(finReg)
   println(s"mkeps value= ${mkeps(finReg)}} and mkfin=${mkfin(finReg)}")
 
   val (decodeValue,remainingBits)=decode(rexp,bits)
@@ -232,7 +195,6 @@ def test1() = {
 @main
 def test2() = {
   // test and fix star case and seq
-
   println("\n===== Testing New Bitcodes =====\n")
   //1 + ((1 + 1) + 1)
   //val rexp = SEQ(("a" | ( ("b"|"c")  | "d") ) , "a")
