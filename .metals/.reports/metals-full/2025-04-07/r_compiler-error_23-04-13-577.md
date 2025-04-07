@@ -1,3 +1,16 @@
+file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/play_ComplexMarks.sc
+### java.lang.NullPointerException: Cannot invoke "scala.meta.internal.pc.CompilerWrapper.compiler()" because "access" is null
+
+occurred in the presentation compiler.
+
+presentation compiler configuration:
+
+
+action parameters:
+offset: 3279
+uri: file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/play_ComplexMarks.sc
+text:
+```scala
 import scala.language.implicitConversions
 import os.size
 
@@ -120,7 +133,7 @@ def newMkfin(r: Rexp): List[Int] = r match {
         mkfin(r1) ++ mkeps(r2)
         else mkfin(r1)
       }else 
-        if(nullable(r1)) mkeps(r1) ++ mkfin(r2) else mkfin(r2) // if fin and nullable ?  
+        if(nullable(r1)) mkeps@@mkfin(r2)  
   case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
   case SEQ(r1, r2) => mkfin(r2)
   case STAR(r) => mkfin(r) ++ List(1)
@@ -331,3 +344,16 @@ def pp(e: Rexp) : String = e match {
   case INIT(r) => s"INIT\n" ++ pps(r)   
 }
 def pps(es: Rexp*) = indent(es.map(pp))
+
+```
+
+
+
+#### Error stacktrace:
+
+```
+dotty.tools.pc.ScalaPresentationCompiler.complete$$anonfun$1(ScalaPresentationCompiler.scala:140)
+```
+#### Short summary: 
+
+java.lang.NullPointerException: Cannot invoke "scala.meta.internal.pc.CompilerWrapper.compiler()" because "access" is null

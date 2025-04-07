@@ -186,25 +186,13 @@ def pps(es: Rexp*) = indent(es.map(pp))
 @main
 def test1() = {
   println("=====Test====")
-  val br2 = ("a" | "ab") ~ ("c" | "bc")
-  
-  
-  val s = "abc".toList
+  val rexp=SEQ(ALT(ONE,CHAR('c')) , ALT(SEQ(CHAR('c'),CHAR('c')), CHAR('c')) )
+  val s = "cc".toList
   println("=string=")
   println(s)
-  println(s"=shift ${s(0)}=")
-  println(pp(mat(br2, s.take(1))))
 
-  println(s"=shift ${s(1)}=")
-  println(pp(mat(br2, s.take(2))))
-
-  println(s"=shift ${s(2)}=")
-  println(pp(mat(br2, s.take(3))))
-
-  println(matcher(br2,s))
-
-/*   println(s"=shift ${s(3)}=")
-  println(pp(mat(br2, s.take(4)))) */
+  println(s"mkfin=${mkfin(matcher2(rexp,s))}")
+  println(s"mkeps=${mkeps(matcher2(rexp,s))}")
 }
 
 @main

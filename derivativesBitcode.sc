@@ -157,20 +157,17 @@ def bmatcher(r: Rexp, s: String): Boolean = {
 @main
 def test1() = {
 // Run tests
-//val regex1=ALT(ALT(CHAR('b'),CHAR('a')), SEQ(CHAR('a') ,CHAR('b') ))
-//val regex3=STAR("a")
-val regex=("a" | "ab") ~ ("c" | "bc")
-val input = "abbc"
-val br = internalize(regex)
+
+val rexp=SEQ(ALT(ONE,CHAR('c')) , ALT(SEQ(CHAR('c'),CHAR('c')), CHAR('c')) )
+val input = "cc"
+val br = internalize(rexp)
 
 val finalR = bders(input.toList, br)
 val bitcode = bmkeps(finalR)
-val decoded = decode(bitcode, regex)
+val decoded = decode(bitcode, rexp)
 
 println(s"Matched: ${bnullable(finalR)}")
 println(s"Bitcode: $bitcode")
 println(s"Decoded structure: ${decoded._1}")
-
-
 }
 
