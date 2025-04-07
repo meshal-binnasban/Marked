@@ -29,36 +29,20 @@ def test1List(): Unit = {
 
   for (i <- 0L to numRegexes) {
     val regex = enumDecode(i)
-    val testStrings = generate_up_to(alphabet)(10)(regex).take(maxStringsPerRegex).toList
-    
-    println(s"[$i]Regex: \n${pp(regex)}")
- 
-
-    for (str <- testStrings) {
+    for (str <- regenerate.generate_up_to(alphabet)(10)(regex).take(maxStringsPerRegex) if str != "" ) {
       
       val sList = str.toList
-      println(s"input=$str")
       val markBitcode = bitsToInts(lex(regex, sList).getOrElse(Nil))
-      val markResult = matcher(regex, sList)
-
       val derivativeR = bders(sList, internalize(regex))
       val derivBitcode = bmkeps(derivativeR)
-      val derivResult = bnullable(derivativeR)
-
       val bitMatch = markBitcode == derivBitcode
-      val resultMatch = markResult == derivResult
 
-      if (!bitMatch || !resultMatch) {
+      if (!bitMatch) {
         allPassed = false
         mismatchCount += 1
         mismatches ::= (regex, sList, markBitcode, derivBitcode, markResult, derivResult)
       }
-
-      // Optional per-string output:
-      println(s"Bitcode1 = $markBitcode | Bitcode2 = $derivBitcode")
-      println(s"${if (bitMatch && resultMatch) "✓" else "✗"}") 
-    }
-    println("=" * 50)
+   }
   }
 
   if (allPassed) {

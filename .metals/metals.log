@@ -17199,3 +17199,256 @@ WARNING: empty definition using pc, found symbol in pc: `<none>`. (full report a
 2025.04.07 01:22:31 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc
 2025.04.07 01:22:31 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
 2025.04.07 01:22:32 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:31:56 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:31:56 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:04 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:04 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:06 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:10 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:10 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:10 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:10 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:10 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:13 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:13 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:13 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:13 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:13 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:13 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Apr 07, 2025 1:32:14 AM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5690
+Apr 07, 2025 1:32:14 AM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5691
+Apr 07, 2025 1:32:14 AM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5693
+2025.04.07 01:32:14 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:14 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Apr 07, 2025 1:32:14 AM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5692
+2025.04.07 01:32:14 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:14 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:16 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:17 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:19 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:19 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:23 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:25 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:25 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:25 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:26 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:26 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:27 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:27 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:28 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:29 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:29 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:28 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:29 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:29 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Exception in thread "pool-1645-thread-1" java.lang.InterruptedException
+	at scala.meta.internal.metals.FutureCancelToken.checkCanceled(FutureCancelToken.scala:29)
+	at scala.meta.internal.pc.CompilerAccess.onCompilerJobQueue$$anonfun$1(CompilerAccess.scala:244)
+	at scala.meta.internal.pc.CompilerJobQueue$Job.run(CompilerJobQueue.scala:153)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+Apr 07, 2025 1:32:29 AM scala.meta.internal.metals.StdReporter $anonfun$create$1
+WARNING: empty definition using pc, found symbol in pc: `<none>`. (full report at: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/.metals/.reports/metals-full/2025-03-22/r_empty-definition_(play_point3.sc)_22-18-44-886.md)
+2025.04.07 01:32:29 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:29 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Apr 07, 2025 1:32:31 AM scala.meta.internal.metals.StdReporter $anonfun$create$1
+WARNING: empty definition using pc, found symbol in pc: `<none>`. (full report at: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/.metals/.reports/metals-full/2025-03-22/r_empty-definition_(play_point3.sc)_22-18-44-886.md)
+2025.04.07 01:32:35 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:35 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:35 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:35 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:36 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:38 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:38 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:38 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:40 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:40 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:43 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:43 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:44 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:44 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:44 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:45 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:45 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:49 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:49 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:51 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:51 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:51 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:51 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:53 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:53 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:54 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:53 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:54 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:54 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:54 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:55 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:55 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:56 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:58 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc
+2025.04.07 01:32:58 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:59 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:59 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:59 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:32:59 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:00 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:00 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:00 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:00 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:00 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:00 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc
+2025.04.07 01:33:00 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:00 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:01 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:01 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Apr 07, 2025 1:33:01 AM scala.meta.internal.metals.StdReporter $anonfun$create$1
+WARNING: empty definition using pc, found symbol in pc: `<none>`. (full report at: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/.metals/.reports/metals-full/2025-03-22/r_empty-definition_(play_point3.sc)_22-18-44-886.md)
+2025.04.07 01:33:01 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:01 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:02 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:02 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:04 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:04 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:04 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:04 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:05 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:05 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:05 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:05 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc
+2025.04.07 01:33:05 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:05 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:05 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:05 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Apr 07, 2025 1:33:06 AM scala.meta.internal.metals.StdReporter $anonfun$create$1
+WARNING: empty definition using pc, found symbol in pc: `<none>`. (full report at: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/.metals/.reports/metals-full/2025-03-22/r_empty-definition_(play_point3.sc)_22-18-44-886.md)
+2025.04.07 01:33:07 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:07 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:07 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:08 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:08 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:08 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:08 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:09 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:09 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:09 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:09 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:10 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:10 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:09 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:12 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc
+2025.04.07 01:33:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Apr 07, 2025 1:33:13 AM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 5963
+2025.04.07 01:33:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:13 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:13 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:13 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:13 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:13 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:13 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:14 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:13 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:14 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:15 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc
+2025.04.07 01:33:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:16 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc
+2025.04.07 01:33:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:17 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc
+2025.04.07 01:33:17 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:18 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc
+2025.04.07 01:33:19 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:19 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:21 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:21 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:21 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:21 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:22 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:22 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:24 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:25 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:25 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:24 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:26 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:26 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:26 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:26 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:26 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:26 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:26 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:27 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:28 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:28 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:29 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:29 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:28 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:29 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:28 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:30 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:30 INFO  time: code lens generation in 1.22s
+2025.04.07 01:33:30 INFO  time: code lens generation in 1.02s
+2025.04.07 01:33:30 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc
+2025.04.07 01:33:30 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:30 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:31 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:31 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:31 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:31 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:32 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:33 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:33 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:34 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:33 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc
+2025.04.07 01:33:34 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:35 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:35 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:35 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:35 INFO  time: code lens generation in 1.76s
+2025.04.07 01:33:35 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:35 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:37 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:37 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:37 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:38 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc
+2025.04.07 01:33:38 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:38 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:39 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:41 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:41 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:42 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:43 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc
+2025.04.07 01:33:43 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:44 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:44 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:47 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc
+2025.04.07 01:33:47 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc
+2025.04.07 01:33:47 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:47 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc
+2025.04.07 01:33:47 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc
+2025.04.07 01:33:47 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc
+2025.04.07 01:33:47 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:48 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc
+2025.04.07 01:33:48 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:48 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc
+2025.04.07 01:33:47 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.04.07 01:33:48 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/test.sc. Using presentation compiler with project's scala-library version: 3.6.3
