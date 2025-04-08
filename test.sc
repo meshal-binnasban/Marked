@@ -1,8 +1,8 @@
-import $file.enumerate, enumerate.{decode as enumDecode, CDATA}
-import $file.regenerate, regenerate._
-import $file.rexp, rexp._
-import rexp.Rexp.*
+import $file.enumerate, enumerate.{decode as enumDecode, CDATA} , $file.regenerate, regenerate._
+import $file.rexp, rexp._, rexp.Rexp._, rexp.VALUE._
+import $file.play_explicit_bits, play_explicit_bits._
 import $file.derivativesBitcode, derivativesBitcode._
+
 
 val alphabet: LazyList[Char] = LazyList('a', 'b', 'c')
 
@@ -25,7 +25,7 @@ def test1List(): Unit = {
   println("=" * 50)
   var allPassed = true
   var mismatchCount = 0
-  var mismatches = List.empty[(Rexp, List[Char], List[Int], List[Int], Boolean, Boolean)]
+  var mismatches = List.empty[(Rexp, List[Char], List[Int], List[Int])]
 
   for (i <- 0L to numRegexes) {
     val regex = enumDecode(i)
@@ -40,8 +40,7 @@ def test1List(): Unit = {
       if (!bitMatch) {
         allPassed = false
         mismatchCount += 1
-        mismatches ::= (regex, sList, markBitcode, derivBitcode, markResult, derivResult)
-      }
+        mismatches = (regex, sList, markBitcode, derivBitcode) :: mismatches      }
    }
   }
 
@@ -50,12 +49,11 @@ def test1List(): Unit = {
   } else {
     println(s"\nFound $mismatchCount mismatches: \n")
 
-    for ((regex, input, bc1, bc2, res1, res2) <- mismatches.reverse) {
+    for ((regex, input, bc1, bc2) <- mismatches.reverse) {
       println(s"Regex: $regex")
-      println(s"Input: ${input.mkString}")
+      println(s"Input: ${input}")
       println(s"Marked Bitcode: $bc1")
-      //println(s"Deriv  Bitcode:result $bc2")
-      println(s"Marked Result: $res1, Deriv Result: $res2")
+      println(s"Deriv  Bitcode: $bc2")
       println("-" * 40)
     }
 
@@ -95,11 +93,6 @@ def test2Print(): Unit = {
     println(s"\nFound $mismatchCount mismatches: \n")
 }
 
-def bitsToInts(bits: List[Bit]): List[Int] = bits.map {
-  case Z => 0
-  case S => 1
-}
-
 /* @main
 def test3() = {
   given rexp_cdata : CDATA[Rexp] = List(
@@ -127,3 +120,6 @@ def test3() = {
       }
   }
 } */
+
+
+

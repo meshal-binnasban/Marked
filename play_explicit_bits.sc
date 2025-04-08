@@ -1,60 +1,6 @@
-//
-// Algorithm from "A Play on Regular Expressions"
-//
-// augmented with bitsequences
 
-
-
-import scala.language.implicitConversions
-import $file.enumerate, enumerate._
-import $file.regenerate//, regenerate._
-
-
-
-abstract class Bit
-case object Z extends Bit {
-  override def toString = "0"
-}
-case object S extends Bit {
-  override def toString = "1"
-}
-
-
-type Bits = List[Bit]
-
-
-// standard regexes
-enum Rexp {
-  case ZERO 
-  case ONE 
-  case CHAR(c: Char) 
-  case ALT(r1: Rexp, r2: Rexp) 
-  case SEQ(r1: Rexp, r2: Rexp) 
-  case STAR(r: Rexp) 
-  case POINT(bs: Bits, r: Rexp)
-}
-
-import Rexp._
-
-// some syntax sugar for regexes
-import scala.language.implicitConversions
-
-def charlist2rexp(s : List[Char]): Rexp = s match {
-  case Nil => ONE
-  case c::Nil => CHAR(c)
-  case c::s => SEQ(CHAR(c), charlist2rexp(s))
-}
-
-// strings are coerced into Rexps
-given Conversion[String, Rexp] = s => charlist2rexp(s.toList)
-
-//val ABCD : Rexp = "abcd"
-
-extension (r: Rexp) {
-  def | (s: Rexp) = ALT(r, s)
-  def % = STAR(r)
-  def ~ (s: Rexp) = SEQ(r, s)
-}
+import $file.rexp, rexp._, rexp.Rexp._, rexp.VALUE._
+import $file.derivativesBitcode, derivativesBitcode._
 
 // nullable 
 def nullable(r: Rexp) : Boolean = r match {
@@ -67,7 +13,6 @@ def nullable(r: Rexp) : Boolean = r match {
   case POINT(_, r) => nullable(r)
 }
 
-
 def mkeps(r: Rexp) : Bits = r match {
   case ONE => Nil
   case POINT(bs, CHAR(_)) => bs
@@ -76,7 +21,6 @@ def mkeps(r: Rexp) : Bits = r match {
   case SEQ(r1, r2) => mkeps(r1) ++ mkeps(r2)
   case STAR(r) => mkeps(r) ++ List(S)
 }
-
 // fin function from the paper
 // checks whether a mark is in "final" position
 def fin(r: Rexp) : Boolean = (r: @unchecked) match {
@@ -97,7 +41,6 @@ def mkfin(r: Rexp) : Bits = r match {
   case STAR(r) => mkfin(r) ++ List(S)
 }
 
-
 // shift function from the paper
 def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = (r: @unchecked) match {
   case ZERO => ZERO
@@ -113,8 +56,6 @@ def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = (r: @unchecked) match
   case STAR(r) if m => STAR(shift(m, bs, r, c))
   case STAR(r) => STAR(shift(false, Nil, r, c))
 }
-
-
 // the main matching function (by using BINIT only in 
 // the first step a mark is shifted into the Rexp)
 def mat(r: Rexp, s: List[Char]) : Rexp = s match {
@@ -125,93 +66,49 @@ def mat(r: Rexp, s: List[Char]) : Rexp = s match {
 def matcher(r: Rexp, s: List[Char]) : Boolean =
   if (s == Nil) nullable(r) else fin(mat(r, s))
 
+def matcher2(r: Rexp, s: List[Char]) : Rexp =
+  if (s == Nil) r else mat(r, s)
+
 def lex(r: Rexp, s: List[Char]) : Option[Bits] = {
   if matcher(r, s)
   then Some(if (s == Nil) mkeps(r) else mkfin(mat(r, s)))
   else None
 }
 
-// pretty-printing Rexps
-
-def implode(ss: Seq[String]) = ss.mkString("\n")
-def explode(s: String) = s.split("\n").toList
-
-def lst(s: String) : String = explode(s) match {
-  case hd :: tl => implode(" └" ++ hd :: tl.map("  " ++ _))
-  case Nil => ""
-}
-
-def mid(s: String) : String = explode(s) match {
-  case hd :: tl => implode(" ├" ++ hd :: tl.map(" │" ++ _))
-  case Nil => ""
-}
-
-def indent(ss: Seq[String]) : String = ss match {
-  case init :+ last => implode(init.map(mid) :+ lst(last))
-  case _ => "" 
-}
-
-def pp(e: Rexp) : String = (e: @unchecked) match {
-  case ZERO => "0\n"
-  case ONE => "1\n"
-  case CHAR(c) => s"$c\n"
-  case POINT(bs, CHAR(c)) => s"•$c:${bs.mkString(",")}\n" 
-  case ALT(r1, r2) => "ALT\n" ++ pps(r1, r2)
-  case SEQ(r1, r2) => "SEQ\n" ++ pps(r1, r2)
-  case STAR(r) => "STAR\n" ++ pps(r)
-}
-def pps(es: Rexp*) = indent(es.map(pp))
-
-
-
-
 @main
 def test1() = {
   println("=====Test====")
-  val br2 = ("a" | "ab") ~ ("c" | "bc")
-  val s = "abbc".toList
-  println("=string=")
-  println(s)
-  println(s"=shift ${s(0)}=")
-  println(pp(mat(br2, s.take(1))))
-
-  println(s"=shift ${s(1)}=")
-  println(pp(mat(br2, s.take(2))))
-
-  println(s"=shift ${s(2)}=")
-  println(pp(mat(br2, s.take(3))))
-
-  println(s"=shift ${s(3)}=")
-  println(pp(mat(br2, s.take(4))))
-
-  println(s"=final list=")
-  println(lex(br2, s.take(4)))
-}
-
-@main
-def test2() = {
-  println("=====Test====")
-  //val br2 = SEQ(CHAR('a'),ALT(ONE,ONE))
-  val br2 = SEQ(ALT(ONE,CHAR('c')),ALT(SEQ(CHAR('c'),CHAR('c')),CHAR('c')))
+  val rexp=SEQ(ALT(ONE,CHAR('c')) , ALT(SEQ(CHAR('c'),CHAR('c')), CHAR('c')) )
   val s = "cc".toList
   println("=string=")
   println(s)
   println(s"=shift ${s(0)}=")
-  println(pp(mat(br2, s.take(1))))
+  println(pp(mat(rexp, s.take(1))))
 
   println(s"=shift ${s(1)}=")
-  println(pp(mat(br2, s.take(2))))
+  println(pp(mat(rexp, s.take(2))))
 
-  /*
-  println(s"=shift ${s(2)}=")
-  println(pp(mat(br2, s.take(3))))
-
-  println(s"=shift ${s(3)}=")
-  println(pp(mat(br2, s.take(4))))
-  */
+  val finReg=matcher2(rexp,s)
   println(s"=final list=")
-  println(lex(br2, s.take(3)))
+  println(lex(rexp, s))
+  println(s"\nmkeps: ${mkeps(finReg)}")
+  println(s"mkfin: ${mkfin(finReg)}")
+
+  val derivativeR = bders(s, internalize(rexp))
+  val derivBitcode = bmkeps(derivativeR)
+  println(s"derivatives code: $derivBitcode")
 }
+
+@main
+def test2() = {
+  
+}
+
+
+
+
+
+
 /* 
 @main
 def test3() = {
@@ -244,4 +141,50 @@ def test3() = {
 
 
 
+/* 
+abstract class Bit
+case object Z extends Bit {
+  override def toString = "0"
+}
+case object S extends Bit {
+  override def toString = "1"
+}
 
+
+type Bits = List[Bit]
+
+
+// standard regexes
+enum Rexp {
+  case ZERO 
+  case ONE 
+  case CHAR(c: Char) 
+  case ALT(r1: Rexp, r2: Rexp) 
+  case SEQ(r1: Rexp, r2: Rexp) 
+  case STAR(r: Rexp) 
+  case POINT(bs: Bits, r: Rexp)
+}
+
+import Rexp._
+ */
+
+/* // some syntax sugar for regexes
+import scala.language.implicitConversions
+
+def charlist2rexp(s : List[Char]): Rexp = s match {
+  case Nil => ONE
+  case c::Nil => CHAR(c)
+  case c::s => SEQ(CHAR(c), charlist2rexp(s))
+}
+
+// strings are coerced into Rexps
+given Conversion[String, Rexp] = s => charlist2rexp(s.toList)
+
+//val ABCD : Rexp = "abcd"
+
+extension (r: Rexp) {
+  def | (s: Rexp) = ALT(r, s)
+  def % = STAR(r)
+  def ~ (s: Rexp) = SEQ(r, s)
+}
+ */

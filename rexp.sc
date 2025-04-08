@@ -1,12 +1,13 @@
-//
-// Algorithm from "A Play on Regular Expressions"
-//
-//
-// Call with
-//
-//   amm play.sc test1
-//   amm play.sc test2
-//   ...
+enum VALUE {
+    case EMPTY
+    case CHARV(c: Char)  
+    case SEQV(v1: VALUE, r2: VALUE )
+    case LEFT(v: VALUE)
+    case RIGHT(v: VALUE)
+    case STARV(vs: List[VALUE])
+    case ERRORVALUE
+}
+import VALUE._
 
 abstract class Bit
 case object Z extends Bit {
@@ -19,7 +20,6 @@ case object S extends Bit {
 
 type Bits = List[Bit]
 
-
 // standard regexes
 enum Rexp {
   case ZERO 
@@ -28,12 +28,24 @@ enum Rexp {
   case ALT(r1: Rexp, r2: Rexp) 
   case SEQ(r1: Rexp, r2: Rexp) 
   case STAR(r: Rexp) 
-  case POINT(bs: Bits, r: Rexp)
   case NTIMES(r: Rexp, n: Int)
   case NOT(r: Rexp) 
+  case POINT(bs: Bits, r: Rexp)
+  case INIT(r: Rexp)
 }
 
 import Rexp._
+
+def size(r: Rexp) : Int = r match {
+  case ZERO => 1
+  case ONE => 1
+  case CHAR(_) => 1
+  case ALT(r1, r2) => 1 + size(r1) + size(r2)
+  case SEQ(r1, r2) => 1 + size(r1) + size(r2)
+  case STAR(r) => 1 + size(r)
+  case NTIMES(r,n) => 1 + size(r)
+  case INIT(r) => 1 + size(r)
+}
 
 // some syntax sugar for regexes
 import scala.language.implicitConversions
@@ -54,8 +66,65 @@ extension (r: Rexp) {
   def % = STAR(r)
   def ~ (s: Rexp) = SEQ(r, s)
 }
+// pretty-printing Rexps
 
-// nullable 
+def implode(ss: Seq[String]) = ss.mkString("\n")
+def explode(s: String) = s.split("\n").toList
+
+def lst(s: String) : String = explode(s) match {
+  case hd :: tl => implode(" └" ++ hd :: tl.map("  " ++ _))
+  case Nil => ""
+}
+
+def mid(s: String) : String = explode(s) match {
+  case hd :: tl => implode(" ├" ++ hd :: tl.map(" │" ++ _))
+  case Nil => ""
+}
+
+def indent(ss: Seq[String]) : String = ss match {
+  case init :+ last => implode(init.map(mid) :+ lst(last))
+  case _ => "" 
+}
+
+def pp(e: Rexp) : String = (e: @unchecked) match {
+  case ZERO => "0\n"
+  case ONE => "1\n"
+  case CHAR(c) => s"$c\n"
+  case POINT(bs, CHAR(c)) => s"•$c:${bs.mkString(",")}\n" 
+  case ALT(r1, r2) => "ALT\n" ++ pps(r1, r2)
+  case SEQ(r1, r2) => "SEQ\n" ++ pps(r1, r2)
+  case STAR(r) => "STAR\n" ++ pps(r)
+}
+def pps(es: Rexp*) = indent(es.map(pp))
+
+// Decode function to reconstruct match structure
+def decode(bs: List[Int], r: Rexp): (VALUE, List[Int]) = r match {
+  case ONE => (EMPTY, bs)
+  case CHAR(c) => (CHARV(c), bs)
+  case ALT(r1, r2) => bs match {
+    case 0 :: rest => val (v, rem) = decode(rest, r1); (LEFT(v), rem)
+    case 1 :: rest => val (v, rem) = decode(rest, r2); (RIGHT(v), rem)
+    case _ => (ERRORVALUE, bs)
+  }
+  case SEQ(r1, r2) =>
+    val (v1, bs1) = decode(bs, r1)
+    val (v2, bs2) = decode(bs1, r2)
+    (SEQV(v1, v2), bs2)
+  case STAR(r) => bs match {
+    case 1 :: rest => (STARV(List()), rest)
+    case 0 :: rest => 
+      val (v, bs1) = decode(rest, r)
+      val (STARV(vs), bs2) = decode(bs1, STAR(r))
+      (STARV(v :: vs), bs2)
+    case _ => (ERRORVALUE, bs)
+  }
+}
+
+def bitsToInts(bits: List[Bit]): List[Int] = bits.map {
+  case Z => 0
+  case S => 1
+}
+/* // nullable 
 def nullable(r: Rexp) : Boolean = r match {
   case ZERO => false
   case ONE => true
@@ -220,7 +289,7 @@ def test2() = {
   println(pp(mat(rexp, s.take(4))))  
 }
 
-
+ */
 
 
 

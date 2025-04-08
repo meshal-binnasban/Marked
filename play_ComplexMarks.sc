@@ -1,5 +1,5 @@
-import scala.language.implicitConversions
-import os.size
+import $file.rexp, rexp._, rexp.Rexp._, rexp.VALUE._
+import $file.derivativesBitcode, derivativesBitcode._
 
 enum Color:
   case GREEN
@@ -12,6 +12,216 @@ case class Mark(
   color: Color = Color.WHITE
 )
 
+enum MRexp {
+  case MZERO
+  case MONE
+  case MCHAR(c: Char, mark: Mark)
+  case MALT(r1: MRexp, r2: MRexp)
+  case MSEQ(r1: MRexp, r2: MRexp)
+  case MSTAR(r: MRexp)
+  case MNTIMES(r: MRexp, n: Int, counter: Int = 0)
+  case MINIT(r: MRexp)
+}
+import MRexp._
+
+def nullable (r: MRexp) : Boolean = r match {
+  case MZERO => false
+  case MONE => true
+  case MCHAR(_,_) => false
+  case MALT(r1, r2) => nullable(r1) || nullable(r2)
+  case MSEQ(r1, r2) => nullable(r1) && nullable(r2)
+  case MSTAR(_) => true
+  case MNTIMES(r, n,counter) => if (n == 0) true else nullable(r)
+  case MINIT(r) => nullable(r)
+}
+
+def fin(r: MRexp) : Boolean = r match {
+  case MZERO => false
+  case MONE => false
+  case MCHAR(c,mark) => mark.marked 
+  case MALT(r1, r2) => fin(r1) || fin(r2)
+  case MSEQ(r1, r2) => (fin(r1) && nullable(r2)) || fin(r2)
+  case MSTAR(r) => fin(r)
+  case MNTIMES(r, n,counter) => counter == n && fin(r)
+  case MINIT(r) => fin(r)
+}
+
+//shift char with position
+def shift(m: Boolean, re: MRexp, c: Char, bits:List[Int]) : MRexp = {
+  re match {
+  case MZERO => MZERO
+  case MONE => MONE
+  case MCHAR(d,mark) => 
+    if (m && d == c)
+      MCHAR(d, Mark(marked = true, bs = bits , color = Color.GREEN))
+    else 
+      MCHAR(d, Mark(marked = false, bs = Nil , color = Color.RED))
+      //CHAR(d, Mark())
+  case MALT(r1, r2) => MALT(shift(m, r1, c,bits:+0) , shift(m, r2, c,bits:+1) )
+  case MSEQ(r1, r2) if m && nullable(r1) => 
+    MSEQ(shift(m, r1, c, bits), shift(true, r2, c ,bits ::: mkeps(r1)) )
+  case MSEQ(r1, r2) if fin(r1) =>
+     MSEQ(shift(m, r1, c, bits), shift(true,r2, c,mkfin(r1) )) 
+  case MSEQ(r1, r2) => 
+     MSEQ(shift(m, r1, c, bits), shift(false,r2, c, Nil ))
+
+  case MSTAR(r) if m && fin(r) => MSTAR(shift(true, r , c , bits ::: (mkfin(r) :+ 0)))
+  case MSTAR(r) if fin(r) => MSTAR(shift(true,r,c ,mkfin(r) :+ 0)) 
+  case MSTAR(r) if m => MSTAR(shift(m, r, c, bits))
+  case MSTAR(r) => MSTAR(shift(false, r, c, Nil))
+
+  case MNTIMES(r, n,counter) => 
+    if (counter == n) 
+      re 
+      else{
+        if (m || fin(r)) MNTIMES(shift(m || fin(r), r, c,bits), n, counter+1)
+        else MNTIMES(shift(false, r, c, bits), n, counter)       
+        } 
+
+  case MINIT(r) => shift(true, r, c,bits)  
+    } 
+}
+
+def newMkfin(r: MRexp): List[Int] =(r: @unchecked) match {
+  case MCHAR(_, mark) => if (mark.marked) mark.bs else Nil
+  case MALT(r1, r2) => 
+    if (fin(r1))
+    { if(nullable(r2))
+        mkfin(r1) ++ mkeps(r2)
+        else mkfin(r1)
+      }else 
+        if(nullable(r1)) mkeps(r1) ++ mkfin(r2) else mkfin(r2) // if fin and nullable ?  
+  case MSEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
+  case MSEQ(r1, r2) => mkfin(r2)
+  case MSTAR(r) => mkfin(r) ++ List(1)
+  case MNTIMES(_,_,_) => Nil
+  case MZERO => Nil
+  case MONE => Nil
+}
+
+def mkeps(r: MRexp): List[Int] = (r: @unchecked) match {
+  case MZERO => Nil
+  case MONE => Nil
+  case MCHAR(_, mark) => if (mark.marked) mark.bs else Nil
+  //adding 0 & 1 changes the outcome which used to get the correct values
+  case MALT(r1, r2) => if(nullable(r1)) 0 ::mkeps(r1) else 1 :: mkeps(r2)
+  case MSEQ(r1, r2) => (mkeps(r1)) ::: ((mkeps(r2)))
+  case MSTAR(r) => mkeps(r)++List(1)
+  case MNTIMES(_, _, _) =>Nil
+  case MINIT(r1) =>mkeps(r1)
+}
+
+def mkfin(r: MRexp) : List[Int] = (r: @unchecked) match {
+  case MCHAR(_, mark) => if (mark.marked) mark.bs else Nil
+  case MALT(r1, r2) => if (fin(r1)) mkfin(r1) else mkfin(r2)  
+  case MSEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
+  case MSEQ(r1, r2) => mkfin(r2)
+  case MSTAR(r) => mkfin(r) ++ List(1)
+  case MNTIMES(_,_,_) => Nil
+  case MZERO => Nil
+  case MONE => Nil
+}
+
+def mat(r: MRexp, s: List[Char]) : MRexp = s match {
+  case Nil => r
+  case c::cs => mat(shift(false, r, c,List()), cs)
+}
+
+def matcher(r: Rexp, s: List[Char]) : Boolean =
+  { val reg= intern(r)
+    if (s == Nil) nullable(reg)
+     else fin(mat(reg, s))
+  }
+
+def matcher2(r: Rexp, s: List[Char]) : MRexp = {
+  val reg= intern2(r)
+  if (s == Nil)
+     if(nullable(reg)) reg else MZERO 
+  else mat(reg, s)
+}
+  
+def intern(r: Rexp) : MRexp = (r: @unchecked) match{
+  case ZERO            => MZERO
+  case ONE             => MONE
+  case CHAR(c)         => MCHAR(c, Mark()) 
+  case ALT(r1, r2)     => MALT(intern(r1), intern(r2))
+  case SEQ(r1, r2)     => MSEQ(intern(r1), intern(r2))
+  case STAR(r)         => MSTAR(intern(r))
+  case NTIMES(r, n)    => MNTIMES(intern(r), n, 0)
+  //case INIT(r)         => MINIT(intern(r)) // might remove
+}
+
+def intern2(r: Rexp) : MRexp = MINIT(intern(r))
+
+@main
+def test1() = {
+  println("\n===== Testing New BitCodes =====\n")
+  val rexp=SEQ(ALT(ONE,CHAR('c')) , ALT(SEQ(CHAR('c'),CHAR('c')), CHAR('c')) )
+  val s="cc".toList
+  val mrexp=intern2(rexp)
+
+  println(s"String: $s\n")
+  val finReg=matcher2(rexp, s)
+  println(s"Original size=${size(rexp)} Result= ${fin(finReg)}")
+  
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  val sPart = s.take(i + 1)
+  println(pp(mat(mrexp, sPart)))
+  } 
+
+  println("\n ====== Testing Decode  ======\n")
+
+  val bits=mkfin(finReg)
+  val newMkfinBits=newMkfin(finReg)
+  println(s"mkeps value= {${mkeps(finReg)}}\n mkfin={${mkfin(finReg)}}\n  newMkfin={${newMkfinBits}}\n")
+  
+  val (decodeValue,remainingBits)=decode(bits,rexp)
+  println(s"Dcode: \nvalue=$decodeValue \nremaining bits=$remainingBits")
+  
+  println("=" * 50)
+
+  val derivativeR = bders(s, internalize(rexp))
+  val derivBitcode = bmkeps(derivativeR)
+  println(s"Derivatives Bitcode= ${derivBitcode}")
+}
+
+
+@main
+def test2() = { 
+}
+
+val EVIL2 = SEQ(STAR(STAR(CHAR('a'))), CHAR('b'))
+
+def time_needed[T](i: Int, code: => T) = {
+  val start = System.nanoTime()
+  for (j <- 1 to i) code
+  val end = System.nanoTime()
+  (end - start) / (i * 1.0e9)
+}
+// testing the evil regular expression
+@main
+def test4() = {
+  for (i <- 0 to 7000000 by 500000) {
+  println(f"$i: ${time_needed(2, matcher2(EVIL2, ("a" * i).toList))}%.5f")
+
+  }
+}
+
+def pp(e: MRexp) : String = (e: @unchecked) match {
+  case MZERO => "0\n"
+  case MONE => "1\n"
+  case MCHAR(c,mark) =>  if (mark.marked) s"•$c\n" else s"$c\n"
+  case MALT(r1, r2) => "ALT\n" ++ pps(r1, r2)
+  case MSEQ(r1, r2) => "SEQ\n" ++ pps(r1, r2)
+  case MSTAR(r) => "STAR\n" ++ pps(r)
+}
+def pps(es: MRexp*) = indent(es.map(pp))
+
+
+
+
+/* 
 enum Rexp {
   case ZERO 
   case ONE 
@@ -22,84 +232,9 @@ enum Rexp {
   case NTIMES(r: Rexp, n: Int , counter: Int = 0)
   case INIT(r:Rexp)
 }
-import Rexp._
+import Rexp._ */
 
-
-def nullable (r: Rexp) : Boolean = r match {
-  case ZERO => false
-  case ONE => true
-  case CHAR(_,_) => false
-  case ALT(r1, r2) => nullable(r1) || nullable(r2)
-  case SEQ(r1, r2) => nullable(r1) && nullable(r2)
-  case STAR(_) => true
-  case NTIMES(r, n,counter) => if (n == 0) true else nullable(r)
-  case INIT(r) => nullable(r)
-}
-
-def fin(r: Rexp) : Boolean = r match {
-  case ZERO => false
-  case ONE => false
-  case CHAR(c,marked) => marked.marked 
-  case ALT(r1, r2) => fin(r1) || fin(r2)
-  case SEQ(r1, r2) => (fin(r1) && nullable(r2)) || fin(r2)
-  case STAR(r) => fin(r)
-  case NTIMES(r, n,counter) => counter == n && fin(r)
-  case INIT(r) => fin(r)
-}
-
-//shift char with position
-def shift(m: Boolean, re: Rexp, c: Char, bits:List[Int]) : Rexp = {
-  re match {
-  case ZERO => ZERO
-  case ONE => ONE
-  case CHAR(d,mark) => 
-    if (m && d == c)
-      CHAR(d, Mark(marked = true, bs = bits , color = Color.GREEN))
-    else 
-      CHAR(d, Mark(marked = false, bs = Nil , color = Color.RED))
-      //CHAR(d, Mark())
-  case ALT(r1, r2) => ALT(shift(m, r1, c,bits:+0)
-        , shift(m, r2, c,bits:+1) )
-
-  case SEQ(r1, r2) if m && nullable(r1) => 
-    SEQ(shift(m, r1, c, bits), shift(true, r2, c ,bits ::: mkeps(r1)) )
-  case SEQ(r1, r2) if fin(r1) =>
-     SEQ(shift(m, r1, c, bits), shift(true,r2, c,mkfin(r1) )) 
-  case SEQ(r1, r2) => 
-     SEQ(shift(m, r1, c, bits), shift(false,r2, c, Nil ))
-
-  case STAR(r) if m && fin(r) => STAR(shift(true, r , c , bits ::: (mkfin(r) :+ 0)))
-  case STAR(r) if fin(r) => STAR(shift(true,r,c ,mkfin(r) :+ 0)) 
-  case STAR(r) if m => STAR(shift(m, r, c, bits))
-  case STAR(r) => STAR(shift(false, r, c, Nil))
-
-  case NTIMES(r, n,counter) => 
-    if (counter == n) re else{
-        if (m || fin(r)) NTIMES(shift(m || fin(r), r, c,bits), n, counter+1)
-        else NTIMES(shift(false, r, c, bits), n, counter)       
-        }  
-  case INIT(r) => 
-    shift(true, r, c,bits)  
-    
-    } 
-    }
-
-def mat(r: Rexp, s: List[Char]) : Rexp = s match {
-  case Nil => r
-  case c::cs => mat(shift(false, r, c,List()), cs)
-}
-
-def matcher(r: Rexp, s: List[Char]) : Boolean =
-  if (s == Nil) nullable(r) else fin(mat(r, s))
-
-def matcher2(r: Rexp, s: List[Char]) : Rexp =
-  if (s == Nil)
-     if(nullable(r)) r else ZERO 
-  else mat(r, s)
-
-def intern2(r: Rexp) : Rexp = INIT(r)
-
-enum VALUE {
+/* enum VALUE {
     case EMPTY
     case CHARV(c: Char)  
     case UNMARKED
@@ -110,50 +245,9 @@ enum VALUE {
     case ERRORVALUE
     case EMPTYSTRING
 }
-import VALUE._
+import VALUE._ */
 
-def newMkfin(r: Rexp): List[Int] = r match {
-  case CHAR(_, mark) => if (mark.marked) mark.bs else Nil
-  case ALT(r1, r2) => 
-    if (fin(r1))
-    { if(nullable(r2))
-        mkfin(r1) ++ mkeps(r2)
-        else mkfin(r1)
-      }else 
-        if(nullable(r1)) mkeps(r1) ++ mkfin(r2) else mkfin(r2) // if fin and nullable ?  
-  case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
-  case SEQ(r1, r2) => mkfin(r2)
-  case STAR(r) => mkfin(r) ++ List(1)
-  case NTIMES(_,_,_) => Nil
-  case ZERO => Nil
-  case ONE => Nil
-}
-
-def mkeps(r: Rexp): List[Int] = r match {
-  case ZERO => Nil
-  case ONE => Nil
-  case CHAR(_, mark) => if (mark.marked) mark.bs else Nil
-  //adding 0 & 1 changes the outcome which used to get the correct values
-  case ALT(r1, r2) => if(nullable(r1)) 0 ::mkeps(r1) else 1 :: mkeps(r2)
-  case SEQ(r1, r2) => (mkeps(r1)) ::: ((mkeps(r2)))
-  case STAR(r) => mkeps(r)++List(1)
-  case NTIMES(_, _, _) =>Nil
-  case INIT(r1) =>mkeps(r1)
-  case _ => Nil
-}
-
-def mkfin(r: Rexp) : List[Int] = r match {
-  case CHAR(_, mark) => if (mark.marked) mark.bs else Nil
-  case ALT(r1, r2) => if (fin(r1)) mkfin(r1) else mkfin(r2)  
-  case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
-  case SEQ(r1, r2) => mkfin(r2)
-  case STAR(r) => mkfin(r) ++ List(1)
-  case NTIMES(_,_,_) => Nil
-  case ZERO => Nil
-  case ONE => Nil
-}
-
-def decode(r:Rexp , bits:List[Int]): (VALUE,List[Int]) = 
+/* def decode(r:Rexp , bits:List[Int]): (VALUE,List[Int]) = 
   r match {
     case CHAR(c, mark) =>(CHARV(c), bits ) // to consume bits?
     case ALT(r1, r2) => bits match {
@@ -182,106 +276,9 @@ def decode(r:Rexp , bits:List[Int]): (VALUE,List[Int]) =
     }// end of match r   
     case ONE => (EMPTY, bits) 
     
-}
+} */
 
-@main
-def test1() = {
-  println("\n===== Testing New BitCodes =====\n")
-  //val rexp = ("a" | "ab") ~ ("c" | "bc")
-  //val rexp = ("a" | "ab") ~ (ONE | "bc")
-  val rexp=SEQ(ALT(ONE,CHAR('c')) , ALT(SEQ(CHAR('c'),CHAR('c')), CHAR('c')) )
-  val s="cc".toList
-  val initRexp=intern2(rexp)
-
-  println(s"String: $s\n")
-  val finReg=matcher2(initRexp, s)
-  println(s"Original size=${size(initRexp)} Result= ${fin(finReg)} Final Size=${size(finReg)}")
-  
-  for (i <- s.indices) {
-  println(s"\n ${i + 1}- =shift ${s(i)}=")
-  val sPart = s.take(i + 1)
-  println(pp(mat(initRexp, sPart)))
-  }
-
-  println(s"\nfinReg=${finReg}\n")
-
-  println("\n ====== Testing Decode  ======\n")
-
-  val bits=mkfin(finReg)
-  val newMkfinBits=newMkfin(finReg)
-  println(s"mkeps value= {${mkeps(finReg)}} and mkfin={${mkfin(finReg)}} and endMkfin={${newMkfinBits}}")
-
-  val (decodeValue,remainingBits)=decode(rexp,bits)
-  println(s"Dcode: \nvalue=$decodeValue \nremaining bits=$remainingBits")
-}
-
-
-@main
-def test2() = {
-  // test and fix star case and seq
-  println("\n===== Testing New Bitcodes =====\n")
-  //1 + ((1 + 1) + 1)
-  //val rexp = SEQ(("a" | ( ("b"|"c")  | "d") ) , "a")
-
-  val rexp =  ("b"|"a")| ("a"~"cc")
-  //val rexp = ("a" | "ab")
-  println(s"original rexp=$rexp \n")
-  val initRexp=intern2(rexp)
-
-  val s="acc".toList
-  println(s"String: $s\n")
-
-  val finReg=matcher2(initRexp, s)
-  println(s"Original size=${size(initRexp)} Result= ${fin(finReg)} Final Size=${size(finReg)}")
-  
-   for (i <- s.indices) {
-  println(s"\n ${i + 1}- =shift ${s(i)}=")
-  val sPart = s.take(i + 1)
-  println(pp(mat(initRexp, sPart)))
-  } 
-
-  println(s"\nfinReg=${finReg}\n")
-
-  println("\n ====== Testing Decode  ======\n")
-
-  val bits=mkfin(finReg)
-  println(s"mkeps value= ${mkeps(finReg)}} and mkfin=${mkfin(finReg)}")
-
-  val (decodeValue,remainingBits)=decode(rexp,bits)
-  println(s"Dcode: \nvalue=$decodeValue \nremaining bits=$remainingBits")
-
-}
-
-val EVIL2 = SEQ(STAR(STAR(CHAR('a'))), CHAR('b'))
-
-def time_needed[T](i: Int, code: => T) = {
-  val start = System.nanoTime()
-  for (j <- 1 to i) code
-  val end = System.nanoTime()
-  (end - start) / (i * 1.0e9)
-}
-// testing the evil regular expression
-@main
-def test4() = {
-  for (i <- 0 to 7000000 by 500000) {
-  
-  println(f"$i: ${time_needed(2, matcher2(EVIL2, ("a" * i).toList))}%.5f")
-
-  }
-}
-
-
-def size(r: Rexp) : Int = r match {
-  case ZERO => 1
-  case ONE => 1
-  case CHAR(_,_) => 1
-  case ALT(r1, r2) => 1 + size(r1) + size(r2)
-  case SEQ(r1, r2) => 1 + size(r1) + size(r2)
-  case STAR(r) => 1 + size(r)
-  case NTIMES(r,n,counter) => 1 + size(r)
-  case INIT(r) => 1 + size(r) 
-}
-
+/* 
 // some syntax sugar for regexes
 def charlist2rexp(s : List[Char]): Rexp = s match {
   case Nil => ONE
@@ -331,3 +328,4 @@ def pp(e: Rexp) : String = e match {
   case INIT(r) => s"INIT\n" ++ pps(r)   
 }
 def pps(es: Rexp*) = indent(es.map(pp))
+ */
