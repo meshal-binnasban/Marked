@@ -1,9 +1,9 @@
-
+import scala.language.implicitConversions
 import $file.rexp, rexp._, rexp.Rexp._, rexp.VALUE._
 import $file.derivativesBitcode, derivativesBitcode._
 
 // nullable 
-def nullable(r: Rexp) : Boolean = r match {
+def nullable(r: Rexp) : Boolean = (r: @unchecked) match {
   case ZERO => false
   case ONE => true
   case CHAR(d) =>  false
@@ -13,13 +13,14 @@ def nullable(r: Rexp) : Boolean = r match {
   case POINT(_, r) => nullable(r)
 }
 
-def mkeps(r: Rexp) : Bits = r match {
+def mkeps(r: Rexp) : Bits = (r: @unchecked) match {
   case ONE => Nil
   case POINT(bs, CHAR(_)) => bs
   case ALT(r1, r2) => 
     if (nullable(r1)) Z :: mkeps(r1) else S :: mkeps(r2)  
   case SEQ(r1, r2) => mkeps(r1) ++ mkeps(r2)
   case STAR(r) => mkeps(r) ++ List(S)
+  case CHAR(_) => Nil //for testing mkeps outside lex
 }
 // fin function from the paper
 // checks whether a mark is in "final" position
@@ -33,13 +34,52 @@ def fin(r: Rexp) : Boolean = (r: @unchecked) match {
   case STAR(r) => fin(r)
 }
 
-def mkfin(r: Rexp) : Bits = r match {
+//maybe add count matches?
+def newMkfin(r: Rexp) : Bits = (r: @unchecked) match {
   case POINT(bs, CHAR(_)) => bs
-  case ALT(r1, r2) => if (fin(r1)) mkfin(r1) else mkfin(r2)  
+  case ALT(r1, r2) => 
+    if(fin(r1) && fin(r2)){
+      val mkfin1=mkfin(r1)
+      val mkfin2=mkfin(r1)
+      println(s"mkfin(r1)=${mkfin(r1)}, mkfin(r2)=${mkfin(r2)}")
+      //println(s"comparison > = ${mkfin1 > mkfin2}")
+    }
+
+    if (fin(r1)) mkfin(r1) else mkfin(r2)  
   case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
   case SEQ(r1, r2) => mkfin(r2)
   case STAR(r) => mkfin(r) ++ List(S)
 }
+def isGreater(a: List[Int], b: List[Int]): Boolean = {
+  val len = a.length max b.length
+  val aPad = List.fill(len - a.size)(0) ++ a
+  val bPad = List.fill(len - b.size)(0) ++ b
+
+  (aPad, bPad).zipped.exists(_ > _)
+}
+
+
+def mkfin(r: Rexp) : Bits = (r: @unchecked) match {
+  case POINT(bs, CHAR(_)) => bs
+  case ALT(r1, r2) =>
+    if(fin(r1) && fin(r2)){
+      val mkfin1=bitsToInts(mkfin(r1))
+      val mkfin2=bitsToInts(mkfin(r2))
+      println(s"mkfin(r1)=${mkfin1}, mkfin(r2)=${mkfin2}")
+      println(s"comparison > = ${isGreater(mkfin1,mkfin2)}")
+      if(isGreater(mkfin1,mkfin2)){
+        mkfin(r1)
+      }else{
+        mkfin(r2)
+      }
+    }
+    else
+    if (fin(r1)) mkfin(r1) else mkfin(r2)  
+  case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
+  case SEQ(r1, r2) => mkfin(r2)
+  case STAR(r) => mkfin(r) ++ List(S)
+}
+
 
 // shift function from the paper
 def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = (r: @unchecked) match {
@@ -75,35 +115,99 @@ def lex(r: Rexp, s: List[Char]) : Option[Bits] = {
   else None
 }
 
+
+// testing one/emptystring regex 
 @main
 def test1() = {
-  println("=====Test====")
+  println("=====Test With ONE====")
   val rexp=SEQ(ALT(ONE,CHAR('c')) , ALT(SEQ(CHAR('c'),CHAR('c')), CHAR('c')) )
   val s = "cc".toList
+
   println("=string=")
   println(s)
-  println(s"=shift ${s(0)}=")
-  println(pp(mat(rexp, s.take(1))))
-
-  println(s"=shift ${s(1)}=")
-  println(pp(mat(rexp, s.take(2))))
+  
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  val sPart = s.take(i + 1)
+  println(pp(mat(rexp, sPart)))
+  } 
 
   val finReg=matcher2(rexp,s)
-  println(s"=final list=")
-  println(lex(rexp, s))
+  val bits=bitsToInts(lex(rexp, s).getOrElse(Nil))
+  println(s"=final list=\n ${bits} ")
+
+  println(s"${finReg}")
   println(s"\nmkeps: ${mkeps(finReg)}")
   println(s"mkfin: ${mkfin(finReg)}")
+  println(s"\nDecoded value for Marked=${decode( bits, rexp)._1}")
 
   val derivativeR = bders(s, internalize(rexp))
   val derivBitcode = bmkeps(derivativeR)
-  println(s"derivatives code: $derivBitcode")
-}
-
-@main
-def test2() = {
+  println(s"\nDerivatives bitcode: $derivBitcode")
+  println(s"\nDecoded value for derivatives=${decode( derivBitcode, rexp)._1}")
   
 }
 
+//testing seq,alt,char only regex
+@main
+def test2() = {
+  println("=====Test With SEQ/ALT/CHAR only====")
+  val rexp=SEQ(
+    ALT(ALT(CHAR('a'),CHAR('b')),SEQ(CHAR('a'),CHAR('b'))) , 
+    ALT( SEQ(CHAR('b'),CHAR('c')), ALT(CHAR('c'),CHAR('b'))) )
+  val s = "abc".toList
+  println("=string=")
+  println(s)
+  
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  val sPart = s.take(i + 1)
+  println(pp(mat(rexp, sPart)))
+  } 
+
+  val finReg=matcher2(rexp,s)
+  val bits=bitsToInts(lex(rexp, s).getOrElse(Nil))
+  println(s"=final list=\n ${bits} ")
+
+  println(s"${finReg}")
+  println(s"\nmkeps: ${mkeps(finReg)}")
+  println(s"mkfin: ${mkfin(finReg)}")
+  println(s"\nDecoded value for Marked=${decode( bits, rexp)._1}")
+
+  val derivativeR = bders(s, internalize(rexp))
+  val derivBitcode = bmkeps(derivativeR)
+  println(s"\nDerivatives bitcode: $derivBitcode")
+  println(s"\nDecoded value for derivatives=${decode( derivBitcode, rexp)._1}")
+}
+
+@main
+def test3() = {
+  println("=====Test With SEQ/ALT/CHAR only====")
+  val rexp=("a" | "ab") ~ ("b" | ONE)
+  val s = "ab".toList
+  println("=string=")
+  println(s)
+  
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  val sPart = s.take(i + 1)
+  println(pp(mat(rexp, sPart)))
+  } 
+  val finReg=matcher2(rexp,s)
+  val bits=bitsToInts(lex(rexp, s).getOrElse(Nil))
+  println(s"=final list=\n ${bits} ")
+
+  println(s"${finReg}")
+  println(s"\nmkeps: ${mkeps(finReg)}")
+  println(s"mkfin: ${mkfin(finReg)}")
+  println(s"Decoded value for Marked=${decode( bits, rexp)._1}")
+
+  val derivativeR = bders(s, internalize(rexp))
+  val derivBitcode = bmkeps(derivativeR)
+  println(s"derivatives bitcode: $derivBitcode")
+  println(s"Decoded value for derivatives=${decode( derivBitcode, rexp)._1}")
+  
+}
 
 
 

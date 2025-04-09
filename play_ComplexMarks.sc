@@ -154,7 +154,7 @@ def intern(r: Rexp) : MRexp = (r: @unchecked) match{
 def intern2(r: Rexp) : MRexp = MINIT(intern(r))
 
 @main
-def test1() = {
+def test10() = {
   println("\n===== Testing New BitCodes =====\n")
   val rexp=SEQ(ALT(ONE,CHAR('c')) , ALT(SEQ(CHAR('c'),CHAR('c')), CHAR('c')) )
   val s="cc".toList
@@ -186,10 +186,80 @@ def test1() = {
   println(s"Derivatives Bitcode= ${derivBitcode}")
 }
 
-
+// testing one/emptystring regex 
 @main
-def test2() = { 
+def test1() = {
+  println("=====Test With ONE====")
+  val rexp=SEQ(ALT(ONE,CHAR('c')) , ALT(SEQ(CHAR('c'),CHAR('c')), CHAR('c')) )
+  val mrexp=intern2(rexp)
+  val s = "cc".toList
+
+  println("=string=")
+  println(s)
+  
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  val sPart = s.take(i + 1)
+  println(pp(mat(mrexp, sPart)))
+  } 
+
+  val finReg=matcher2(rexp,s)
+  val bits=mkfin(finReg)
+  println(s"=final list=\n ${bits} ")
+
+  println(s"${finReg}")
+  println(s"\nmkeps: ${mkeps(finReg)}")
+  println(s"mkfin: ${mkfin(finReg)}")
+  println(s"Decoded value for Marked=${decode( bits, rexp)._1}")
+
+  val derivativeR = bders(s, internalize(rexp))
+  val derivBitcode = bmkeps(derivativeR)
+  println(s"Derivatives bitcode: $derivBitcode")
+  println(s"Decoded value for derivatives=${decode( derivBitcode, rexp)._1}")
+  
 }
+
+//testing seq,alt,char only regex
+@main
+def test2() = {
+  println("=====Test With SEQ/ALT/CHAR only====")
+  val rexp=SEQ(
+    ALT(ALT(CHAR('a'),CHAR('b')),SEQ(CHAR('a'),CHAR('b'))) , 
+    ALT( SEQ(CHAR('b'),CHAR('c')), ALT(CHAR('c'),CHAR('b'))) )
+  val mrexp=intern2(rexp)
+  val s = "abc".toList
+  println("=string=")
+  println(s)
+  
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  val sPart = s.take(i + 1)
+  println(pp(mat(mrexp, sPart)))
+  } 
+
+  val finReg=matcher2(rexp,s)
+  val bits=mkfin(finReg)
+  println(s"=final list=\n ${bits} ")
+
+  println(s"${finReg}")
+  println(s"\nmkeps: ${mkeps(finReg)}")
+  println(s"mkfin: ${mkfin(finReg)}")
+  println(s"Decoded value for Marked=${decode( bits, rexp)._1}")
+
+  val derivativeR = bders(s, internalize(rexp))
+  val derivBitcode = bmkeps(derivativeR)
+  println(s"derivatives bitcode: $derivBitcode")
+  println(s"Decoded value for derivatives=${decode( derivBitcode, rexp)._1}")
+}
+
+
+
+
+
+
+
+
+
 
 val EVIL2 = SEQ(STAR(STAR(CHAR('a'))), CHAR('b'))
 
@@ -217,9 +287,6 @@ def pp(e: MRexp) : String = (e: @unchecked) match {
   case MSTAR(r) => "STAR\n" ++ pps(r)
 }
 def pps(es: MRexp*) = indent(es.map(pp))
-
-
-
 
 /* 
 enum Rexp {
