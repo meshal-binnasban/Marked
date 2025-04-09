@@ -35,46 +35,22 @@ def fin(r: Rexp) : Boolean = (r: @unchecked) match {
 }
 
 //maybe add count matches?
-def newMkfin(r: Rexp) : Bits = (r: @unchecked) match {
-  case POINT(bs, CHAR(_)) => bs
-  case ALT(r1, r2) => 
-    if(fin(r1) && fin(r2)){
-      val mkfin1=mkfin(r1)
-      val mkfin2=mkfin(r1)
-      println(s"mkfin(r1)=${mkfin(r1)}, mkfin(r2)=${mkfin(r2)}")
-      //println(s"comparison > = ${mkfin1 > mkfin2}")
-    }
 
-    if (fin(r1)) mkfin(r1) else mkfin(r2)  
-  case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
-  case SEQ(r1, r2) => mkfin(r2)
-  case STAR(r) => mkfin(r) ++ List(S)
-}
-def isGreater(a: List[Int], b: List[Int]): Boolean = {
-  val len = a.length max b.length
-  val aPad = List.fill(len - a.size)(0) ++ a
-  val bPad = List.fill(len - b.size)(0) ++ b
 
-  (aPad, bPad).zipped.exists(_ > _)
+def finSize(r: Rexp, nullable:Boolean) : Int = r match {
+  case ZERO => 0
+  case ONE =>  if(nullable) 1 else 0
+  case CHAR(_) => 0
+  case POINT(bs, r) =>  1 
+  case ALT(r1, r2) => 1 + finSize(r1,nullable) + finSize(r2,nullable)
+  case SEQ(r1, r2) => 1 + finSize(r1,nullable) + finSize(r2,nullable)
+  case STAR(r) => 1 + finSize(r,nullable)
 }
 
 
 def mkfin(r: Rexp) : Bits = (r: @unchecked) match {
   case POINT(bs, CHAR(_)) => bs
-  case ALT(r1, r2) =>
-    if(fin(r1) && fin(r2)){
-      val mkfin1=bitsToInts(mkfin(r1))
-      val mkfin2=bitsToInts(mkfin(r2))
-      println(s"mkfin(r1)=${mkfin1}, mkfin(r2)=${mkfin2}")
-      println(s"comparison > = ${isGreater(mkfin1,mkfin2)}")
-      if(isGreater(mkfin1,mkfin2)){
-        mkfin(r1)
-      }else{
-        mkfin(r2)
-      }
-    }
-    else
-    if (fin(r1)) mkfin(r1) else mkfin(r2)  
+  case ALT(r1, r2) => if (fin(r1)) mkfin(r1) else mkfin(r2)  
   case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
   case SEQ(r1, r2) => mkfin(r2)
   case STAR(r) => mkfin(r) ++ List(S)
@@ -134,10 +110,9 @@ def test1() = {
 
   val finReg=matcher2(rexp,s)
   val bits=bitsToInts(lex(rexp, s).getOrElse(Nil))
-  println(s"=final list=\n ${bits} ")
+  println(s"\n=final list= ${bits}\n")
 
-  println(s"${finReg}")
-  println(s"\nmkeps: ${mkeps(finReg)}")
+  println(s"\nFinal Reg:= ${finReg}\n")
   println(s"mkfin: ${mkfin(finReg)}")
   println(s"\nDecoded value for Marked=${decode( bits, rexp)._1}")
 
@@ -154,8 +129,9 @@ def test2() = {
   println("=====Test With SEQ/ALT/CHAR only====")
   val rexp=SEQ(
     ALT(ALT(CHAR('a'),CHAR('b')),SEQ(CHAR('a'),CHAR('b'))) , 
-    ALT( SEQ(CHAR('b'),CHAR('c')), ALT(CHAR('c'),CHAR('b'))) )
+    ALT( SEQ(CHAR('b'),CHAR('c')), ALT(CHAR('c'),CHAR('b'))) ) 
   val s = "abc".toList
+
   println("=string=")
   println(s)
   
@@ -167,10 +143,9 @@ def test2() = {
 
   val finReg=matcher2(rexp,s)
   val bits=bitsToInts(lex(rexp, s).getOrElse(Nil))
-  println(s"=final list=\n ${bits} ")
+  println(s"\n=final list= ${bits}\n")
 
-  println(s"${finReg}")
-  println(s"\nmkeps: ${mkeps(finReg)}")
+  println(s"\nFinal Reg:= ${finReg}\n")
   println(s"mkfin: ${mkfin(finReg)}")
   println(s"\nDecoded value for Marked=${decode( bits, rexp)._1}")
 
@@ -185,6 +160,7 @@ def test3() = {
   println("=====Test With SEQ/ALT/CHAR only====")
   val rexp=("a" | "ab") ~ ("b" | ONE)
   val s = "ab".toList
+  
   println("=string=")
   println(s)
   
@@ -193,19 +169,19 @@ def test3() = {
   val sPart = s.take(i + 1)
   println(pp(mat(rexp, sPart)))
   } 
+
   val finReg=matcher2(rexp,s)
   val bits=bitsToInts(lex(rexp, s).getOrElse(Nil))
-  println(s"=final list=\n ${bits} ")
+  println(s"\n=final list= ${bits}\n")
 
-  println(s"${finReg}")
-  println(s"\nmkeps: ${mkeps(finReg)}")
+  println(s"\nFinal Reg:= ${finReg}\n")
   println(s"mkfin: ${mkfin(finReg)}")
-  println(s"Decoded value for Marked=${decode( bits, rexp)._1}")
+  println(s"\nDecoded value for Marked=${decode( bits, rexp)._1}")
 
   val derivativeR = bders(s, internalize(rexp))
   val derivBitcode = bmkeps(derivativeR)
-  println(s"derivatives bitcode: $derivBitcode")
-  println(s"Decoded value for derivatives=${decode( derivBitcode, rexp)._1}")
+  println(s"\nDerivatives bitcode: $derivBitcode")
+  println(s"\nDecoded value for derivatives=${decode( derivBitcode, rexp)._1}")
   
 }
 
@@ -292,3 +268,15 @@ extension (r: Rexp) {
   def ~ (s: Rexp) = SEQ(r, s)
 }
  */
+
+ /*  if(fin(r1) && fin(r2)){
+      val r1Size=finSize(r1,nullable(r1))
+      val r2Size=finSize(r2,nullable(r2))
+      println("*" * 20)
+      println(s"size r1=${r1Size} size r2=${r2Size}")
+      println(s"r1=$r1 and r2=$r2")
+      println(s"mkfin(r1)=${mkfin(r1)}, mkfin(r2)=${mkfin(r2)}")
+      println("*" * 20)
+
+      if(r1Size>r2Size) mkfin(r1) else mkfin(r2)
+    }else */

@@ -1,3 +1,15 @@
+file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/play_ComplexMarks.sc
+### java.lang.NullPointerException: Cannot invoke "scala.meta.internal.pc.CompilerWrapper.compiler()" because "access" is null
+
+occurred in the presentation compiler.
+
+presentation compiler configuration:
+
+
+action parameters:
+uri: file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/play_ComplexMarks.sc
+text:
+```scala
 import $file.rexp, rexp._, rexp.Rexp._, rexp.VALUE._
 import $file.derivativesBitcode, derivativesBitcode._
 
@@ -58,16 +70,15 @@ def shift(m: Boolean, re: MRexp, c: Char, bits:List[Int]) : MRexp = {
       MCHAR(d, Mark(marked = false, bs = Nil , color = Color.RED))
       //CHAR(d, Mark())
   case MALT(r1, r2) => MALT(shift(m, r1, c,bits:+0) , shift(m, r2, c,bits:+1) )
-
   case MSEQ(r1, r2) if m && nullable(r1) => 
-    MSEQ(shift(m, r1, c, bits:+2), shift(true, r2, c ,(bits ::: mkeps(r1)):+3) )
+    MSEQ(shift(m, r1, c, bits), shift(true, r2, c ,bits ::: mkeps(r1)) )
   case MSEQ(r1, r2) if fin(r1) =>
-     MSEQ(shift(m, r1, c, bits:+2), shift(true,r2, c,mkfin(r1):+3 )) 
+     MSEQ(shift(m, r1, c, bits), shift(true,r2, c,mkfin(r1) )) 
   case MSEQ(r1, r2) => 
-     MSEQ(shift(m, r1, c, bits:+2), shift(false,r2, c, Nil ))
+     MSEQ(shift(m, r1, c, bits), shift(false,r2, c, Nil ))
 
-  case MSTAR(r) if m && fin(r) => MSTAR(shift(true, r , c , bits ::: (mkfin(r) :+ 4)))
-  case MSTAR(r) if fin(r) => MSTAR(shift(true,r,c ,mkfin(r) :+ 4)) 
+  case MSTAR(r) if m && fin(r) => MSTAR(shift(true, r , c , bits ::: (mkfin(r) :+ 0)))
+  case MSTAR(r) if fin(r) => MSTAR(shift(true,r,c ,mkfin(r) :+ 0)) 
   case MSTAR(r) if m => MSTAR(shift(m, r, c, bits))
   case MSTAR(r) => MSTAR(shift(false, r, c, Nil))
 
@@ -83,12 +94,28 @@ def shift(m: Boolean, re: MRexp, c: Char, bits:List[Int]) : MRexp = {
     } 
 }
 
-
+def newMkfin(r: MRexp): List[Int] =(r: @unchecked) match {
+  case MCHAR(_, mark) => if (mark.marked) mark.bs else Nil
+  case MALT(r1, r2) => 
+    if (fin(r1))
+    { if(nullable(r2))
+        mkfin(r1) ++ mkeps(r2)
+        else mkfin(r1)
+      }else 
+        if(nullable(r1)) mkeps(r1) ++ mkfin(r2) else mkfin(r2) // if fin and nullable ?  
+  case MSEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
+  case MSEQ(r1, r2) => mkfin(r2)
+  case MSTAR(r) => mkfin(r) ++ List(1)
+  case MNTIMES(_,_,_) => Nil
+  case MZERO => Nil
+  case MONE => Nil
+}
 
 def mkeps(r: MRexp): List[Int] = (r: @unchecked) match {
   case MZERO => Nil
   case MONE => Nil
   case MCHAR(_, mark) => if (mark.marked) mark.bs else Nil
+  //adding 0 & 1 changes the outcome which used to get the correct values
   case MALT(r1, r2) => if(nullable(r1)) 0 ::mkeps(r1) else 1 :: mkeps(r2)
   case MSEQ(r1, r2) => (mkeps(r1)) ::: ((mkeps(r2)))
   case MSTAR(r) => mkeps(r)++List(1)
@@ -99,13 +126,7 @@ def mkeps(r: MRexp): List[Int] = (r: @unchecked) match {
 //add boolean argument, if nullable then retrieve from one?
 def mkfin(r: MRexp) : List[Int] = (r: @unchecked) match {
   case MCHAR(_, mark) => if (mark.marked) mark.bs else Nil
-
-  case MALT(r1, r2) => 
-    if(fin(r1) && fin(r2)){
-      println(s"mkfin r1= ${mkfin(r1)} and mkfin r2 =${mkfin(r2)}")
-    }
-    
-    if (fin(r1)) mkfin(r1) else mkfin(r2)  
+  case MALT(r1, r2) => if (fin(r1)) mkfin(r1) else mkfin(r2)  
   case MSEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
   case MSEQ(r1, r2) => mkfin(r2)
   case MSTAR(r) => mkfin(r) ++ List(1)
@@ -233,7 +254,7 @@ def test4() = {
 def pp(e: MRexp) : String = (e: @unchecked) match {
   case MZERO => "0\n"
   case MONE => "1\n"
-  case MCHAR(c,mark) =>  if (mark.marked) s"${"\u001b[32m"} •$c ${mark.bs} ${"\u001b[0m"}\n" else if(mark.color==Color.RED) s"${"\u001b[31m"} $c${"\u001b[0m"}\n" else s"$c\n"
+  case MCHAR(c,mark) =>  if (mark.marked) s"•$c ${mark.bs} ${"\u001b[32m"}\n" else s"$c\n"
   case MALT(r1, r2) => "ALT\n" ++ pps(r1, r2)
   case MSEQ(r1, r2) => "SEQ\n" ++ pps(r1, r2)
   case MSTAR(r) => "STAR\n" ++ pps(r)
@@ -348,3 +369,15 @@ def pp(e: Rexp) : String = e match {
 }
 def pps(es: Rexp*) = indent(es.map(pp))
  */
+```
+
+
+
+#### Error stacktrace:
+
+```
+dotty.tools.pc.ScalaPresentationCompiler.semanticdbTextDocument$$anonfun$1(ScalaPresentationCompiler.scala:240)
+```
+#### Short summary: 
+
+java.lang.NullPointerException: Cannot invoke "scala.meta.internal.pc.CompilerWrapper.compiler()" because "access" is null
