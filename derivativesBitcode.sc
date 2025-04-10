@@ -1,61 +1,62 @@
 import $file.rexp, rexp._, rexp.Rexp._, rexp.VALUE._
 
 abstract class ARexp
-case class BZERO() extends ARexp
-case class BONE(bs: List[Int]) extends ARexp
-case class BCHAR(bs: List[Int], c: Char) extends ARexp
-case class BALTs(bs: List[Int], r1: ARexp, r2: ARexp) extends ARexp
-case class BSEQ(bs: List[Int], r1: ARexp, r2: ARexp) extends ARexp
-case class BSTAR(bs: List[Int], r: ARexp) extends ARexp
-case class BNTIMES(bs: List[Int], r: ARexp, n: Int) extends ARexp
+case class BDZERO() extends ARexp
+case class BDONE(bs: List[Int]) extends ARexp
+case class BDCHAR(bs: List[Int], c: Char) extends ARexp
+case class BDALTs(bs: List[Int], r1: ARexp, r2: ARexp) extends ARexp
+case class BDSEQ(bs: List[Int], r1: ARexp, r2: ARexp) extends ARexp
+case class BDSTAR(bs: List[Int], r: ARexp) extends ARexp
+case class BDNTIMES(bs: List[Int], r: ARexp, n: Int) extends ARexp
 
 // Convert standard regex to bitcoded regex
 def fuse(bs: List[Int], r: ARexp): ARexp = r match {
-  case BZERO() => BZERO()
-  case BONE(bs2) => BONE(bs ++ bs2)
-  case BCHAR(bs2, c) => BCHAR(bs ++ bs2, c)
-  case BALTs(bs2, r1, r2) => BALTs(bs ++ bs2, r1, r2)
-  case BSEQ(bs2, r1, r2) => BSEQ(bs ++ bs2, r1, r2)
-  case BSTAR(bs2, r) => BSTAR(bs ++ bs2, r)
-  case BNTIMES(bs2, r, n) => BNTIMES(bs ++ bs2, r, n)
+  case BDZERO() => BDZERO()
+  case BDONE(bs2) => BDONE(bs ++ bs2)
+  case BDCHAR(bs2, c) => BDCHAR(bs ++ bs2, c)
+  case BDALTs(bs2, r1, r2) => BDALTs(bs ++ bs2, r1, r2)
+  case BDSEQ(bs2, r1, r2) => BDSEQ(bs ++ bs2, r1, r2)
+  case BDSTAR(bs2, r) => BDSTAR(bs ++ bs2, r)
+  case BDNTIMES(bs2, r, n) => BDNTIMES(bs ++ bs2, r, n)
 }
 
-def internalize(r: Rexp): ARexp = r match {
-  case ZERO => BZERO()
-  case ONE => BONE(List())
-  case CHAR(c) => BCHAR(List(), c)
-  case ALT(r1, r2) => BALTs(List(), fuse(List(0), internalize(r1)), fuse(List(1), internalize(r2)))
-  case SEQ(r1, r2) => BSEQ(List(), internalize(r1), internalize(r2))
-  case STAR(r) => BSTAR(List(), internalize(r))
-  case NTIMES(r, n) => BNTIMES(List(), internalize(r), n)
-  case NOT(r) => BZERO()
+def internalize(r: Rexp): ARexp = (r: @unchecked) match {
+  case ZERO => BDZERO()
+  case ONE => BDONE(List())
+  case CHAR(c) => BDCHAR(List(), c)
+  case ALT(r1, r2) => BDALTs(List(), fuse(List(0), internalize(r1)), fuse(List(1), internalize(r2)))
+  case SEQ(r1, r2) => BDSEQ(List(), internalize(r1), internalize(r2))
+  case STAR(r) => BDSTAR(List(), internalize(r))
+  case NTIMES(r, n) => BDNTIMES(List(), internalize(r), n)
+  case NOT(r) => BDZERO()
 }
 
 
 // Nullable function
 def bnullable(r: ARexp): Boolean = r match {
-  case BZERO() => false
-  case BONE(_) => true
-  case BCHAR(_, _) => false
-  case BALTs(_, r1, r2) => bnullable(r1) || bnullable(r2)
-  case BSEQ(_, r1, r2) => bnullable(r1) && bnullable(r2)
-  case BSTAR(_, _) => true
-  case BNTIMES(_, r, n) => if (n == 0) true else bnullable(r)
+  case BDZERO() => false
+  case BDONE(_) => true
+  case BDCHAR(_, _) => false
+  case BDALTs(_, r1, r2) => bnullable(r1) || bnullable(r2)
+  case BDSEQ(_, r1, r2) => bnullable(r1) && bnullable(r2)
+  case BDSTAR(_, _) => true
+  case BDNTIMES(_, r, n) => if (n == 0) true else bnullable(r)
 }
 
 // Compute derivative with bitcodes
 def bder(c: Char, r: ARexp): ARexp = r match {
-  case BZERO() => BZERO()
-  case BONE(_) => BZERO()
-  case BCHAR(bs, d) => if (c == d) BONE(bs) else BZERO()
-  case BALTs(bs, r1, r2) => BALTs(bs, bder(c, r1), bder(c, r2))
-  case BSEQ(bs, r1, r2) => 
-    if (bnullable(r1)) BALTs(bs, BSEQ(List(), bder(c, r1), r2), fuse(bmkeps(r1), bder(c, r2)))
-    else BSEQ(bs, bder(c, r1), r2)
-  case BSTAR(bs, r) => BSEQ(bs :+ 0, bder(c, r), BSTAR(List(), r))
-  case BNTIMES(bs, r, n) => 
-    if (n == 0) BZERO()
-    else BSEQ(bs :+ 0, bder(c, r), BNTIMES(List(), r, n - 1))
+  case BDZERO() => BDZERO()
+  case BDONE(_) => BDZERO()
+  case BDCHAR(bs, d) => if (c == d) BDONE(bs) else BDZERO()
+  case BDALTs(bs, r1, r2) => BDALTs(bs, bder(c, r1), bder(c, r2))
+  case BDSEQ(bs, r1, r2) => 
+    if (bnullable(r1)) BDALTs(bs, BDSEQ(List(), bder(c, r1), r2), fuse(bmkeps(r1), bder(c, r2)))
+    else BDSEQ(bs, bder(c, r1), r2)
+  case BDSTAR(bs, r) => BDSEQ(bs :+ 0, bder(c, r), BDSTAR(List(), r))
+  
+  case BDNTIMES(bs, r, n) => 
+    if (n == 0) BDZERO()
+    else BDSEQ(bs :+ 0, bder(c, r), BDNTIMES(List(), r, n - 1))
 }
 
 // Compute derivative with respect to a string
@@ -66,11 +67,11 @@ def bders(s: List[Char], r: ARexp): ARexp = s match {
 
 // Extract the bitcode
 def bmkeps(r: ARexp): List[Int] = r match {
-  case BONE(bs) => bs
-  case BALTs(bs, r1, r2) => bs ++ (if (bnullable(r1)) bmkeps(r1) else bmkeps(r2))
-  case BSEQ(bs, r1, r2) => bs ++ bmkeps(r1) ++ bmkeps(r2)
-  case BSTAR(bs, _) => bs :+ 1
-  case BNTIMES(bs, r, n) => if (n == 0) bs :+ 1 else bs ++ List(0) ++ bmkeps(r) ++ bmkeps(BNTIMES(List(), r, n - 1))
+  case BDONE(bs) => bs
+  case BDALTs(bs, r1, r2) => bs ++ (if (bnullable(r1)) bmkeps(r1) else bmkeps(r2))
+  case BDSEQ(bs, r1, r2) => bs ++ bmkeps(r1) ++ bmkeps(r2)
+  case BDSTAR(bs, _) => bs :+ 1
+  case BDNTIMES(bs, r, n) => if (n == 0) bs :+ 1 else bs ++ List(0) ++ bmkeps(r) ++ bmkeps(BDNTIMES(List(), r, n - 1))
 }
 
 // Matcher function

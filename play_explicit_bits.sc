@@ -37,7 +37,7 @@ def fin(r: Rexp) : Boolean = (r: @unchecked) match {
 //maybe add count matches?
 
 
-def finSize(r: Rexp, nullable:Boolean) : Int = r match {
+def finSize(r: Rexp, nullable:Boolean) : Int = (r: @unchecked) match {
   case ZERO => 0
   case ONE =>  if(nullable) 1 else 0
   case CHAR(_) => 0
@@ -113,7 +113,7 @@ def test1() = {
   println(s"\n=final list= ${bits}\n")
 
   println(s"\nFinal Reg:= ${finReg}\n")
-  println(s"mkfin: ${mkfin(finReg)}")
+  println(s"mkfin: ${mkfin(finReg)} mkeps=${mkeps(finReg)}")
   println(s"\nDecoded value for Marked=${decode( bits, rexp)._1}")
 
   val derivativeR = bders(s, internalize(rexp))

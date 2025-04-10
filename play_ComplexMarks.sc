@@ -120,7 +120,7 @@ def mat(r: MRexp, s: List[Char]) : MRexp = s match {
 }
 
 def matcher(r: Rexp, s: List[Char]) : Boolean =
-  { val reg= intern(r)
+  { val reg= intern2(r)
     if (s == Nil) nullable(reg)
      else fin(mat(reg, s))
   }
