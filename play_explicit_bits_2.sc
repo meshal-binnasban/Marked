@@ -44,24 +44,14 @@ def fin(r: BRexp) : Boolean = (r: @unchecked) match {
 }
 
 
-def finSize(r: BRexp, nullable:Boolean) : Int = (r: @unchecked) match {
-  case BZERO => 0
-  case BONE(bs) =>  if(nullable) 1 else 0
-  case BCHAR(_,_) => 0
-  case BPOINT(r, bs) =>  1 
-  case BALT(r1, r2, bs) => 1 + finSize(r1,nullable) + finSize(r2,nullable)
-  case BSEQ(r1, r2 , bs) => 1 + finSize(r1,nullable) + finSize(r2,nullable)
-  case BSTAR(r, bs) => 1 + finSize(r,nullable)
-}
-
 def mkeps(r: BRexp) : List[Int] = (r: @unchecked) match {
-  case BONE(bs) => bs:+2 // flag added to indicate a regex used empty string to match
-    //println(s"here, ONE, bs=$bs")
-    //bs
+  case BONE(bs) =>  // flag added to indicate a regex used empty string to match
+    println(s"here, ONE, bs=$bs")
+    8::bs
   case BPOINT(BCHAR(c,bs), pbs) => pbs
   case BALT(r1, r2, bs) => 
     if (nullable(r1)) 0 :: mkeps(r1) else 1 :: mkeps(r2)  
-  case BSEQ(r1, r2, bs) => mkeps(r1) ++ mkeps(r2)
+  case BSEQ(r1, r2, bs) => mkeps(r1) ++ mkeps(r2) // if nullable r1 add 2?
   case BSTAR(r, bs) => mkeps(r) ++ List(1)
   case BCHAR(_,_) => Nil //for testing mkeps outside lex
   case BINIT(r) => mkeps(r) // added to check nullable input
@@ -70,20 +60,9 @@ def mkeps(r: BRexp) : List[Int] = (r: @unchecked) match {
 def mkfin(r: BRexp) : List[Int] = (r: @unchecked) match {
   //case BONE(bs) => if(nullable) bs else Nil, nullable:Boolean
   //if nullable r1 then add mkeps?
-  case BONE(bs) => Nil
+  case BONE(bs) => bs
   case BPOINT(BCHAR(_,bs), pbs) => pbs
-  case BALT(r1, r2, bs) =>
-
-    if(fin(r1) && fin(r2)){
-        val mkfin1=mkfin(r1)
-        val mkfin2=mkfin(r2)
-        if(mkfin2.length < mkfin1.length){
-          mkfin2
-        }else{
-            mkfin1
-        }
-    }else 
-        if (fin(r1)) mkfin(r1) else mkfin(r2)  
+  case BALT(r1, r2, bs) => if (fin(r1)) mkfin(r1) else mkfin(r2)  
   case BSEQ(r1, r2, bs) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
   case BSEQ(r1, r2, bs) => mkfin(r2)
   case BSTAR(r, bs) => mkfin(r) ++ List(1)
@@ -93,9 +72,9 @@ def mkfin(r: BRexp) : List[Int] = (r: @unchecked) match {
 // shift function from the paper
 def shift(m: Boolean, bs: List[Int], r: BRexp, c: Char) : BRexp = (r: @unchecked) match {
   case BZERO => BZERO
-  case BONE(bcs) => BONE(bcs)
-  case BCHAR(d,bcs) => if (m && d == c) BPOINT(BCHAR(d,Nil),bs) else BCHAR(d,Nil)
-  case BPOINT(BCHAR(d,bcs), pbs) => if (m && d == c) BPOINT(BCHAR(d, Nil), bs) else BCHAR(d,Nil)
+  case BONE(bcs) => BONE(bs)
+  case BCHAR(d,bcs) => if (m && d == c) BPOINT(BCHAR(d,Nil),bs:+7) else BCHAR(d,Nil)
+  case BPOINT(BCHAR(d,bcs), pbs) => if (m && d == c) BPOINT(BCHAR(d, Nil), bs:+7) else BCHAR(d,Nil)
   case BALT(r1, r2, bcs) => BALT(shift(m, bs:+0 , r1, c), shift(m, bs:+1, r2, c), Nil)
 
   case BSEQ(r1, r2, bcs) if m && nullable(r1) => BSEQ(shift(m, bs, r1, c), shift(true, (bs ::: mkeps(r1) ), r2, c) , Nil) //:::List(6)
@@ -190,7 +169,7 @@ def test1() = {
   println(s"\n=final list= ${bits}\n")
 
   println(s"\nFinal Reg:= ${finReg}\n\n ${pp(finReg)} nullable=${nullable(finReg)}")
-  println(s"mkfin: ${mkfin(finReg)} , mkeps=${mkeps(finReg)}")
+  println(s"mkfin: ${mkfin(finReg)}")
   println(s"\nDecoded value for Marked=${mDecode( bits, rexp)._1}")
 
   val derivativeR = bders(s, internalize(rexp))
@@ -275,3 +254,42 @@ def pp(e: BRexp) : String = (e: @unchecked) match {
   case BINIT(r) => s"INIT\n" ++ pps(r)
 }
 def pps(es: BRexp*) = indent(es.map(pp))
+
+
+/* 
+def finSize(r: BRexp, nullable:Boolean) : Int = (r: @unchecked) match {
+  case BZERO => 0
+  case BONE(bs) =>  if(nullable) 1 else 0
+  case BCHAR(_,_) => 0
+  case BPOINT(r, bs) =>  1 
+  case BALT(r1, r2, bs) => 1 + finSize(r1,nullable) + finSize(r2,nullable)
+  case BSEQ(r1, r2 , bs) => 1 + finSize(r1,nullable) + finSize(r2,nullable)
+  case BSTAR(r, bs) => 1 + finSize(r,nullable)
+} */
+
+/*     if(fin(r1) && fin(r2)){
+      var mkfinr1=mkfin(r1)
+      var mkfinr2=mkfin(r2)
+
+      if(nullable(r1))
+      mkfinr1++mkeps(r1)
+
+      if(nullable(r2))
+      mkfinr2++mkeps(r2)
+
+        println(s"mkfin r1= ${mkfinr1} and mkfin r2 =${mkfinr2}")
+        println(s"nullable r1= ${nullable(r1)} and nullable r2 =${nullable(r2)}")
+        if(mkfinr1.length < mkfinr2.length){
+          mkfinr1
+        }else
+          mkfinr2
+      }    
+    else 
+        if (fin(r1)){
+        println(s"mkfin fin1 final & nullable=${nullable(r1)}")
+        if(nullable(r1)) mkfin(r1)++mkeps(r1) else mkfin(r1) 
+        }
+        else{
+        println(s"mkfin fin2 final & nullable=${nullable(r2)}")
+        if(nullable(r2)) mkfin(r2)++mkeps(r2) else mkfin(r2) 
+        }  */
