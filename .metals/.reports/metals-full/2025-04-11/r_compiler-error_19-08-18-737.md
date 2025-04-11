@@ -1,3 +1,16 @@
+file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/play_explicit_bits_2.sc
+### java.lang.IndexOutOfBoundsException: -1
+
+occurred in the presentation compiler.
+
+presentation compiler configuration:
+
+
+action parameters:
+offset: 1771
+uri: file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/play_explicit_bits_2.sc
+text:
+```scala
 import scala.language.implicitConversions
 import $file.rexp, rexp._, rexp.Rexp._, rexp.VALUE._
 import $file.derivativesBitcode, derivativesBitcode._
@@ -43,22 +56,28 @@ def fin(r: BRexp) : Boolean = (r: @unchecked) match {
   case BINIT(r) => fin(r) // added to check nullable input
 }
 
+
 def mkeps(r: BRexp) : List[Int] = (r: @unchecked) match {
-  case BONE(bs) => List(8) //8::bs // flag added to indicate a regex used empty string to match 
+  case BONE(bs) => 8::bs // flag added to indicate a regex used empty string to match 
   case BPOINT(BCHAR(c,bs), pbs) => pbs
   case BALT(r1, r2, bs) => 
     if (nullable(r1)) 0 :: mkeps(r1) else 1 :: mkeps(r2)  
-  case BSEQ(r1, r2, bs) => (2::mkeps(r1)) ::: (3 :: mkeps(r2) ) // if nullable r1 add 2?
+  case BSEQ(r1, r2, bs) => ((2::mkeps(r1)))(@@) mkeps(r2) ) :+3 // if nullable r1 add 2?
   case BSTAR(r, bs) => mkeps(r) ++ List(1)
   case BCHAR(_,_) => Nil //for testing mkeps outside lex
   case BINIT(r) => mkeps(r) // added to check nullable input
 }
 
 def mkfin(r: BRexp) : List[Int] = (r: @unchecked) match {
+  //case BONE(bs) => if(nullable) bs else Nil, nullable:Boolean
+  //if nullable r1 then add mkeps?
+ // case BONE(bs) => bs
   case BPOINT(BCHAR(_,bs), pbs) => pbs
   case BALT(r1, r2, bs) => if (fin(r1)) mkfin(r1) else mkfin(r2)  
+
   case BSEQ(r1, r2, bs) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
   case BSEQ(r1, r2, bs) => mkfin(r2) 
+
   case BSTAR(r, bs) => mkfin(r) ++ List(1)
   case BINIT(r) => mkfin(r)
 }
@@ -145,7 +164,7 @@ def mDecode(bs: List[Int], r: Rexp): (VALUE, List[Int]) =
 @main
 def test1() = {
   println("=====Test With ONE====")
-  val rexp=SEQ( ALT(ONE, CHAR('c')) ,ALT(SEQ(CHAR('c'),CHAR('c')), CHAR('c')) )
+  val rexp=SEQ( ALT(ONE, CHAR('c')) ,ALT(SEQ(CHAR('c'),CHAR('c')), ONE) )
   val brexp=intern2(rexp)
   val s = "cc".toList
 
@@ -286,3 +305,22 @@ def finSize(r: BRexp, nullable:Boolean) : Int = (r: @unchecked) match {
         println(s"mkfin fin2 final & nullable=${nullable(r2)}")
         if(nullable(r2)) mkfin(r2)++mkeps(r2) else mkfin(r2) 
         }  */
+```
+
+
+
+#### Error stacktrace:
+
+```
+scala.collection.LinearSeqOps.apply(LinearSeq.scala:129)
+	scala.collection.LinearSeqOps.apply$(LinearSeq.scala:128)
+	scala.collection.immutable.List.apply(List.scala:79)
+	dotty.tools.dotc.util.Signatures$.applyCallInfo(Signatures.scala:244)
+	dotty.tools.dotc.util.Signatures$.computeSignatureHelp(Signatures.scala:101)
+	dotty.tools.dotc.util.Signatures$.signatureHelp(Signatures.scala:88)
+	dotty.tools.pc.SignatureHelpProvider$.signatureHelp(SignatureHelpProvider.scala:46)
+	dotty.tools.pc.ScalaPresentationCompiler.signatureHelp$$anonfun$1(ScalaPresentationCompiler.scala:435)
+```
+#### Short summary: 
+
+java.lang.IndexOutOfBoundsException: -1
