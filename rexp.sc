@@ -5,7 +5,7 @@ enum VALUE {
     case LEFT(v: VALUE)
     case RIGHT(v: VALUE)
     case STARV(vs: List[VALUE])
-    case ERRORVALUE
+    case ERRORVALUE(msg:String)
 }
 import VALUE._
 
@@ -104,7 +104,7 @@ def decode(bs: List[Int], r: Rexp): (VALUE, List[Int]) = r match {
   case ALT(r1, r2) => bs match {
     case 0 :: rest => val (v, rem) = decode(rest, r1); (LEFT(v), rem)
     case 1 :: rest => val (v, rem) = decode(rest, r2); (RIGHT(v), rem)
-    case _ => (ERRORVALUE, bs)
+    case _ => (ERRORVALUE("ALT ERROR"), bs)
   }
   case SEQ(r1, r2) =>
     val (v1, bs1) = decode(bs, r1)
@@ -116,7 +116,7 @@ def decode(bs: List[Int], r: Rexp): (VALUE, List[Int]) = r match {
       val (v, bs1) = decode(rest, r)
       val (STARV(vs), bs2) = decode(bs1, STAR(r))
       (STARV(v :: vs), bs2)
-    case _ => (ERRORVALUE, bs)
+    case _ => (ERRORVALUE("ALT ERROR"), bs)
   }
 }
 

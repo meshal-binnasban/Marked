@@ -56,7 +56,13 @@ def mkeps(r: BRexp) : List[Int] = (r: @unchecked) match {
 
 def mkfin(r: BRexp) : List[Int] = (r: @unchecked) match {
   case BPOINT(BCHAR(_,bs), pbs) => pbs
-  case BALT(r1, r2, bs) => if (fin(r1)) mkfin(r1) else mkfin(r2)  
+  case BALT(r1, r2, bs) => 
+    if(fin(r1) && fin(r2)) {
+    if(mkfin(r1).length < mkfin(r2).length)
+    mkfin(r1)
+    else mkfin(r2)
+  }
+    else if (fin(r1)) mkfin(r1) else mkfin(r2)  
   case BSEQ(r1, r2, bs) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
   case BSEQ(r1, r2, bs) => mkfin(r2) 
   case BSTAR(r, bs) => mkfin(r) ++ List(1)
@@ -118,29 +124,117 @@ def intern(r: Rexp) : BRexp = (r: @unchecked) match{
 
 def intern2(r: Rexp) : BRexp = BINIT(intern(r))
 
-def mDecode(bs: List[Int], r: Rexp): (VALUE, List[Int]) = 
-    val cleanedBs = bs.filterNot(_ == 2)
+def mDecode(bs: List[Int], r: Rexp): (VALUE, List[Int]) =  
     (r: @unchecked) match {
-    case ONE => (EMPTY, bs)
-    case CHAR(c) => (CHARV(c), bs)
-    case ALT(r1, r2) => bs match {
-        case 0 :: rest => val (v, rem) = decode(rest, r1); (LEFT(v), rem)
-        case 1 :: rest => val (v, rem) = decode(rest, r2); (RIGHT(v), rem)
-        case _ => (ERRORVALUE, bs)
+    case ONE => (bs: @unchecked) match {
+        case 8 :: rest => 
+          (EMPTY, rest)
+        case _ => (ERRORVALUE(s"ONE ERROR, bs=$bs"), bs)
+    } 
+    case CHAR(c) =>
+      (bs: @unchecked) match {
+        case 7 :: rest => (CHARV(c), rest)
+    } 
+     
+    case ALT(r1, r2) => (bs: @unchecked) match {
+        case 0 :: rest => 
+          val (v, rem) = mDecode(rest, r1)
+          (LEFT(v), rem)
+        case 1 :: rest => 
+          val (v, rem) = mDecode(rest, r2)
+          (RIGHT(v), rem)
+        case _ => (ERRORVALUE(s"ALT ERROR, bs=$bs"), bs)
     }
-    case SEQ(r1, r2) =>
-        val (v1, bs1) = decode(bs, r1)
-        val (v2, bs2) = decode(bs1, r2)
-        (SEQV(v1, v2), bs2)
-    case STAR(r) => bs match {
+    case SEQ(r1, r2) => (bs: @unchecked) match {
+      case 2 :: rest =>
+      val (v1, bs1) = mDecode(rest,r1)
+      (bs1: @unchecked) match {
+        case 3 :: rest2 =>
+          val (v2, bs2) = mDecode(rest2,r2)
+          (SEQV(v1, v2), bs2)
+        case _ => (ERRORVALUE(s"SEQ ERROR, bs=$bs"), Nil)
+      } 
+    }
+    case STAR(r) => (bs: @unchecked) match {
         case 1 :: rest => (STARV(List()), rest)
         case 0 :: rest => 
-        val (v, bs1) = decode(rest, r)
-        val (STARV(vs), bs2) = decode(bs1, STAR(r))
+        val (v, bs1) = mDecode(rest, r) 
+       // val (STARV(vs), bs2) = mDecode(bs1, STAR(r)) 
+        val (STARV(vs), bs2) = mDecode(bs1, STAR(r)): @unchecked
         (STARV(v :: vs), bs2)
-        case _ => (ERRORVALUE, bs)
+        case _ => (ERRORVALUE(s"STAR ERROR, bs=$bs"), bs)
     }
 }
+
+def compareResults(v1:VALUE, v2:VALUE): Boolean = (v1, v2) match {
+  case (EMPTY, EMPTY) => true
+  case (CHARV(c1), CHARV(c2)) => c1 == c2 //true if using bdecode
+  case (SEQV(a1, b1), SEQV(a2, b2)) =>
+    compareResults(a1, a2) && compareResults(b1, b2)
+  case (LEFT(vl1), LEFT(vl2)) =>
+    compareResults(vl1, vl2)
+  case (RIGHT(vr1), RIGHT(vr2)) =>
+    compareResults(vr1, vr2)
+  case (STARV(vs1), STARV(vs2)) => vs1 == vs2
+    /* vs1.length == vs2.length &&
+      vs1.zip(vs2).forall { case (x, y) => compareResults(x, y) } */
+  case (ERRORVALUE(_), ERRORVALUE(_)) => true 
+  case _ => false 
+}
+
+def bdecode(bs: List[Int]): (VALUE, List[Int]) = bs match {
+  case 7 :: rest =>
+    (CHARV('x'), rest) // placeholder value, maybe include empty to simulate the derivatives approach?
+
+  case 8 :: rest =>
+    (EMPTY, rest)
+
+  case 0 :: rest => // ALT left
+    val (v1, bs1) = bdecode(rest)
+    (LEFT(v1), bs1)
+
+  case 1 :: rest => // ALT right
+    val (v2, bs2) = bdecode(rest)
+    (RIGHT(v2), bs2)
+
+  case 2 :: rest => // SEQ start of r1
+    val (v1, bs1) = bdecode(rest)
+    bs1 match {
+      case 3 :: bs2 => // SEQ start of r2
+        val (v2, bs3) = bdecode(bs2)
+        (SEQV(v1, v2), bs3)
+      case _ => (ERRORVALUE(s"SEQ ERROR, bs=$bs"), bs)
+    }
+
+    //needs tesitng
+    /* case 4 :: rest => // STAR
+    def loop(acc: List[VALUE], bits: List[Int]): (VALUE, List[Int]) = bits match {
+      case 6 :: tail => (STARV(acc.reverse), tail)
+      case _ =>
+        val (v, bs1) = bdecode(bits)
+        loop(v :: acc, bs1)
+    }
+    loop(Nil, rest)
+
+  case 5 :: n :: rest => // NTIMES with count `n`
+    def loop(n: Int, acc: List[VALUE], bits: List[Int]): (VALUE, List[Int]) = {
+      if (n <= 0) acc match {
+        case Nil       => (EMPTY, bits)
+        case x :: Nil  => (x, bits)
+        case x :: xs   => (xs.foldLeft(x)(SEQV(_, _)), bits)
+      }
+      else {
+        val (v, bs1) = bdecode(bits)
+        loop(n - 1, acc :+ v, bs1)
+      }
+    }
+    loop(n, Nil, rest)
+ */
+
+  case _ =>
+    (ERRORVALUE(s"unmatched bitcode: ${bs}"), bs)
+}
+
 // testing one/emptystring regex 
 @main
 def test1() = {
@@ -160,16 +254,25 @@ def test1() = {
 
   val finReg=matcher2(rexp,s)
   val bits=lex(rexp, s).getOrElse(Nil)
-  println(s"\n=final list= ${bits}\n")
+  val markedValue=mDecode(bits, rexp)._1
 
-  println(s"\nFinal Reg:\n ${pp(finReg)} \nnullable=${nullable(finReg)}")
-  println(s"\nDecoded value for Marked=${mDecode( bits, rexp)._1}")
+  println(s"===============\nFinal Reg:\n ${pp(finReg)} \nnullable=${nullable(finReg)}")
+  println(s"===============\nMarked bitcode: ${bits}")
+  println(s"Decoded value for Marked=${markedValue}")
 
   val derivativeR = bders(s, internalize(rexp))
   val derivBitcode = bmkeps(derivativeR)
-  println(s"\nDerivatives bitcode: $derivBitcode")
-  println(s"\nDecoded value for derivatives=${decode( derivBitcode, rexp)._1}")
-  
+  val derivValue=decode( derivBitcode, rexp)._1
+  println(s"===============\nDerivatives bitcode: $derivBitcode")
+  println(s"Decoded value for derivatives=${derivValue}")
+
+  println(s"===============\ncompareResults = ${compareResults(markedValue, derivValue)}")
+  println(s"derivative bitcode == marked bitcode :  ${(markedValue == derivValue)}")
+
+
+  val onlyBitsValue=bdecode(bits)._1
+  println(s"===============\nDecoded value without regex, bdecode=${onlyBitsValue}")
+  println(s"bdecode compareResults mdecode : ${compareResults(markedValue,onlyBitsValue)}")
 }
 
 //testing seq,alt,char only regex
@@ -181,7 +284,7 @@ def test2() = {
     ALT( SEQ(CHAR('b'),CHAR('c')), ALT(CHAR('c'),CHAR('b'))) ) 
   val brexp=intern2(rexp)
   val s = "abc".toList
-
+  
   println("=string=")
   println(s)
   
@@ -193,16 +296,25 @@ def test2() = {
 
   val finReg=matcher2(rexp,s)
   val bits=lex(rexp, s).getOrElse(Nil)
-  println(s"\n=final list= ${bits}\n")
+  val markedValue=mDecode(bits, rexp)._1
 
-  println(s"\nFinal Reg:= ${finReg}\n")
-  println(s"mkfin: ${mkfin(finReg)}")
-  println(s"\nDecoded value for Marked=${decode( bits, rexp)._1}")
+  println(s"===============\nFinal Reg:\n ${pp(finReg)} \nnullable=${nullable(finReg)}")
+  println(s"===============\nMarked bitcode: ${bits}")
+  println(s"Decoded value for Marked=${markedValue}")
 
   val derivativeR = bders(s, internalize(rexp))
   val derivBitcode = bmkeps(derivativeR)
-  println(s"\nDerivatives bitcode: $derivBitcode")
-  println(s"\nDecoded value for derivatives=${decode( derivBitcode, rexp)._1}")
+  val derivValue=decode( derivBitcode, rexp)._1
+  println(s"===============\nDerivatives bitcode: $derivBitcode")
+  println(s"Decoded value for derivatives=${derivValue}")
+
+  println(s"===============\ncompareResults = ${compareResults(markedValue, derivValue)}")
+  println(s"derivative bitcode == marked bitcode :  ${(markedValue == derivValue)}")
+
+
+  val onlyBitsValue=bdecode(bits)._1
+  println(s"===============\nDecoded value without regex, bdecode=${onlyBitsValue}")
+  println(s"bdecode compareResults mdecode : ${compareResults(markedValue,onlyBitsValue)}")
 }
 
 @main
