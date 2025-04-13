@@ -16,7 +16,18 @@ case object Z extends Bit {
 case object S extends Bit {
   override def toString = "1"
 }
-
+case object C extends Bit {
+  override def toString = "7"
+}
+case object E extends Bit {
+  override def toString = "8"
+}
+case object SE1 extends Bit {
+  override def toString = "2"
+}
+case object SE2 extends Bit {
+  override def toString = "3"
+}
 
 type Bits = List[Bit]
 
@@ -36,7 +47,7 @@ enum Rexp {
 
 import Rexp._
 
-def size(r: Rexp) : Int = r match {
+def size(r: Rexp) : Int = (r: @unchecked) match {
   case ZERO => 1
   case ONE => 1
   case CHAR(_) => 1
@@ -98,7 +109,7 @@ def pp(e: Rexp) : String = (e: @unchecked) match {
 def pps(es: Rexp*) = indent(es.map(pp))
 
 // Decode function to reconstruct match structure
-def decode(bs: List[Int], r: Rexp): (VALUE, List[Int]) = r match {
+def decode(bs: List[Int], r: Rexp): (VALUE, List[Int]) = (r: @unchecked) match {
   case ONE => (EMPTY, bs)
   case CHAR(c) => (CHARV(c), bs)
   case ALT(r1, r2) => bs match {
@@ -114,16 +125,22 @@ def decode(bs: List[Int], r: Rexp): (VALUE, List[Int]) = r match {
     case 1 :: rest => (STARV(List()), rest)
     case 0 :: rest => 
       val (v, bs1) = decode(rest, r)
-      val (STARV(vs), bs2) = decode(bs1, STAR(r))
+      val (STARV(vs), bs2) = decode(bs1, STAR(r)): @unchecked
       (STARV(v :: vs), bs2)
     case _ => (ERRORVALUE("ALT ERROR"), bs)
   }
 }
 
-def bitsToInts(bits: List[Bit]): List[Int] = bits.map {
-  case Z => 0
-  case S => 1
+def bitsToInts(bs: Bits): List[Int] = bs.map {
+  case Z    => 0
+  case S    => 1
+  case SE1  => 2
+  case SE2  => 3
+  case C    => 7
+  case E    => 8
+  // Add more if you have them
 }
+
 /* // nullable 
 def nullable(r: Rexp) : Boolean = r match {
   case ZERO => false

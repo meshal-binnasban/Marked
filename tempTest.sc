@@ -2,79 +2,94 @@ import scala.language.implicitConversions
 import $file.rexp, rexp._, rexp.Rexp._, rexp.VALUE._
 import $file.derivativesBitcode, derivativesBitcode._
 
-// nullable 
-def nullable(r: Rexp) : Boolean = (r: @unchecked) match {
-  case ZERO => false
-  case ONE => true
-  case CHAR(d) =>  false
-  case ALT(r1, r2) => nullable(r1) || nullable(r2)
-  case SEQ(r1, r2) => nullable(r1) && nullable(r2)
-  case STAR(r) => true
-  case POINT(bs,r) => nullable(r)
-  case INIT(r) => nullable(r) // added to check nullable input
+enum BRexp {
+  case BZERO 
+  case BONE(bs: List[Int]=List()) 
+  case BCHAR(c: Char, bs: List[Int]=List()) 
+  case BALT(r1: BRexp, r2: BRexp, bs: List[Int]=List()) 
+  case BSEQ(r1: BRexp, r2: BRexp, bs: List[Int]=List()) 
+  case BSTAR(r: BRexp, bs: List[Int]=List()) 
+  case BNTIMES(r: BRexp, n: Int , counter: Int=0 , bs: List[Int]=List())
+  case NOT(r: BRexp) 
+  case BPOINT(r: BRexp, bs: List[Int]) // might not need the bs here
+  case BINIT(r: BRexp)
 }
+
+import BRexp._
+// nullable 
+def nullable(r: BRexp) : Boolean = (r: @unchecked) match {
+  case BZERO => false
+  case BONE(bs) => true
+  case BCHAR(d,bs) =>  false
+  case BALT(r1, r2,bs) => nullable(r1) || nullable(r2)
+  case BSEQ(r1, r2,bs) => nullable(r1) && nullable(r2)
+  case BSTAR(r,bs) => true
+  case BPOINT(r,bs) => nullable(r)
+  case BINIT(r) => nullable(r) // added to check nullable input
+}
+
+
+
 // fin function from the paper
 // checks whether a mark is in "final" position
-def fin(r: Rexp) : Boolean = (r: @unchecked) match {
-  case ZERO => false
-  case ONE => false
-  case CHAR(_) => false
-  case POINT(bs,CHAR(_)) => true
-  case ALT(r1, r2) => fin(r1) || fin(r2)
-  case SEQ(r1, r2) => (fin(r1) && nullable(r2)) || fin(r2)
-  case STAR(r) => fin(r)
-  case INIT(r) => fin(r) // added to check nullable input
+def fin(r: BRexp) : Boolean = (r: @unchecked) match {
+  case BZERO => false
+  case BONE(_) => false
+  case BCHAR(_,_) => false
+  case BPOINT(BCHAR(_,_),bs) => true
+  case BALT(r1, r2, bs) => fin(r1) || fin(r2)
+  case BSEQ(r1, r2, bs) => (fin(r1) && nullable(r2)) || fin(r2)
+  case BSTAR(r, bs) => fin(r)
+  case BINIT(r) => fin(r) // added to check nullable input
 }
 
-def mkeps(r: Rexp) : Bits = (r: @unchecked) match {
-  case ONE => List(E) //8::bs // flag added to indicate a regex used empty string to match 
-  case POINT(bs,CHAR(c)) => bs
-  case ALT(r1, r2) => 
-    if (nullable(r1)) Z :: mkeps(r1) else S :: mkeps(r2)  
-  case SEQ(r1, r2) => (SE1::mkeps(r1)) ::: (SE2 :: mkeps(r2) ) // if nullable r1 add 2?
-  case STAR(r) => mkeps(r) ++ List(S)
-  case CHAR(_) => Nil //for testing mkeps outside lex
-  case INIT(r) => mkeps(r) // added to check nullable input
+def mkeps(r: BRexp) : List[Int] = (r: @unchecked) match {
+  case BONE(bs) => List(8) //8::bs // flag added to indicate a regex used empty string to match 
+  case BPOINT(BCHAR(c,bs), pbs) => pbs
+  case BALT(r1, r2, bs) => 
+    if (nullable(r1)) 0 :: mkeps(r1) else 1 :: mkeps(r2)  
+  case BSEQ(r1, r2, bs) => (2::mkeps(r1)) ::: (3 :: mkeps(r2) ) // if nullable r1 add 2?
+  case BSTAR(r, bs) => mkeps(r) ++ List(1)
+  case BCHAR(_,_) => Nil //for testing mkeps outside lex
+  case BINIT(r) => mkeps(r) // added to check nullable input
 }
 
-def mkfin(r: Rexp) : Bits = (r: @unchecked) match {
-  case POINT(bs,CHAR(_)) => bs
-  case ALT(r1, r2) => 
+def mkfin(r: BRexp) : List[Int] = (r: @unchecked) match {
+  case BPOINT(BCHAR(_,bs), pbs) => pbs
+  case BALT(r1, r2, bs) => 
     if(fin(r1) && fin(r2)) {
     if(mkfin(r1).length < mkfin(r2).length)
     mkfin(r1)
     else mkfin(r2)
   }
     else if (fin(r1)) mkfin(r1) else mkfin(r2)  
-  case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
-  case SEQ(r1, r2) => mkfin(r2) 
-  case STAR(r) => mkfin(r) ++ List(S)
-  case INIT(r) => mkfin(r)
+  case BSEQ(r1, r2, bs) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
+  case BSEQ(r1, r2, bs) => mkfin(r2) 
+  case BSTAR(r, bs) => mkfin(r) ++ List(1)
+  case BINIT(r) => mkfin(r)
 }
 
 // shift function from the paper
-def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = (r: @unchecked) match {
-  case ZERO => ZERO
-  case ONE => ONE
-  case CHAR(d) => if (m && d == c) POINT(bs:+C,CHAR(d)) else CHAR(d)
-  
-  case POINT(bits,CHAR(d)) => if (m && d == c) POINT(bs:+C,CHAR(d)) else CHAR(d)
-  case ALT(r1, r2) => ALT(shift(m, bs:+Z , r1, c), shift(m, bs:+S, r2, c))
+def shift(m: Boolean, bs: List[Int], r: BRexp, c: Char) : BRexp = (r: @unchecked) match {
+  case BZERO => BZERO
+  case BONE(bcs) => BONE(Nil)
+  case BCHAR(d,bcs) => if (m && d == c) BPOINT(BCHAR(d,Nil),bs:+7) else BCHAR(d,Nil)
+  case BPOINT(BCHAR(d,bcs), pbs) => if (m && d == c) BPOINT(BCHAR(d, Nil), bs:+7) else BCHAR(d,Nil)
+  case BALT(r1, r2, bcs) => BALT(shift(m, bs:+0 , r1, c), shift(m, bs:+1, r2, c), Nil)
 
-  case SEQ(r1, r2) if m && nullable(r1) => 
-    SEQ(shift(m, SE1::bs, r1, c), shift(true, SE1:: ((bs ::: mkeps(r1)):+SE2), r2, c)) 
-  case SEQ(r1, r2) if fin(r1) => SEQ(shift(m, bs, r1, c), shift(true, ((mkfin(r1)):+SE2), r2, c))
-  case SEQ(r1, r2) => SEQ(shift(m, bs:+SE1, r1, c), shift(false, Nil, r2, c)) //Nil
+  case BSEQ(r1, r2, bcs) if m && nullable(r1) => BSEQ(shift(m, 2::bs, r1, c), shift(true, 2:: ((bs ::: mkeps(r1)):+3), r2, c) , Nil) //(bs ::: mkeps(r1) 
+  case BSEQ(r1, r2, bcs) if fin(r1) => BSEQ(shift(m, bs, r1, c), shift(true, ((mkfin(r1)):+3), r2, c) , Nil)
+  case BSEQ(r1, r2, bcs) => BSEQ(shift(m, bs:+2, r1, c), shift(false, Nil, r2, c) , Nil) //Nil
 
-  case STAR(r) if m && fin(r) => STAR(shift(true, bs ::: (mkfin(r):+ Z), r, c))
-  case STAR(r) if fin(r) => STAR(shift(true, mkfin(r):+ Z, r, c)) 
-  case STAR(r) if m => STAR(shift(m, bs, r, c))
-  case STAR(r) => STAR(shift(false, Nil, r, c))
-  case INIT(r) => shift(true, bs, r, c)
+  case BSTAR(r, bcs) if m && fin(r) => BSTAR(shift(true, bs ::: (mkfin(r)), r, c), Nil)
+  case BSTAR(r, bcs) if fin(r) => BSTAR(shift(true, mkfin(r), r, c),  Nil) 
+  case BSTAR(r, bcs) if m => BSTAR(shift(m, bs, r, c) , Nil)
+  case BSTAR(r, bcs) => BSTAR(shift(false, Nil, r, c),Nil)
+  case BINIT(r) => shift(true, bs, r, c)
 }
 // the main matching function (by using BINIT only in 
 // the first step a mark is shifted into the Rexp)
-def mat(r: Rexp, s: List[Char]) : Rexp = s match {
+def mat(r: BRexp, s: List[Char]) : BRexp = s match {
   case Nil => r
   case c::cs => mat(shift(false,List(), r, c), cs)
 }
@@ -84,54 +99,65 @@ def matcher(r: Rexp, s: List[Char]) : Boolean =
     if (s == Nil) nullable(reg)
      else fin(mat(reg, s))
 
-def matcher2(r: Rexp, s: List[Char]) : Rexp =
+def matcher2(r: Rexp, s: List[Char]) : BRexp =
     val reg= intern2(r)
-    if (s == Nil) if(nullable(reg)) reg else ZERO 
+    if (s == Nil) if(nullable(reg)) reg else BZERO 
     else mat(reg, s)
 
-def lex(r: Rexp, s: List[Char]) : Option[Bits] = {
+def lex(r: Rexp, s: List[Char]) : Option[List[Int]] = {
   val reg=intern2(r)
   if matcher(r, s)
   then Some(if (s == Nil) mkeps(reg) else mkfin(mat(reg, s)))
   else None
 }
 
-def intern2(r: Rexp) : Rexp = INIT(r)
+def intern(r: Rexp) : BRexp = (r: @unchecked) match{
+  case ZERO            => BZERO
+  case ONE             => BONE(List())
+  case CHAR(c)         => BCHAR(c, List()) 
+  case ALT(r1, r2)     => BALT(intern(r1), intern(r2), List())
+  case SEQ(r1, r2)     => BSEQ(intern(r1), intern(r2), List())
+  case STAR(r)         => BSTAR(intern(r), List())
+  case NTIMES(r, n)    => BNTIMES(intern(r), n, 0 , List())
+  //case INIT(r)         => BINIT(intern(r)) // might remove
+}
 
-def mDecode(bs: Bits, r: Rexp): (VALUE, Bits) =  
+def intern2(r: Rexp) : BRexp = BINIT(intern(r))
+
+def mDecode(bs: List[Int], r: Rexp): (VALUE, List[Int]) =  
     (r: @unchecked) match {
     case ONE => (bs: @unchecked) match {
-        case E :: rest => 
+        case 8 :: rest => 
           (EMPTY, rest)
         case _ => (ERRORVALUE(s"ONE ERROR, bs=$bs"), bs)
     } 
     case CHAR(c) =>
       (bs: @unchecked) match {
-        case C :: rest => (CHARV(c), rest)
+        case 7 :: rest => (CHARV(c), rest)
     } 
      
     case ALT(r1, r2) => (bs: @unchecked) match {
-        case Z :: rest => 
+        case 0 :: rest => 
           val (v, rem) = mDecode(rest, r1)
           (LEFT(v), rem)
-        case S :: rest => 
+        case 1 :: rest => 
           val (v, rem) = mDecode(rest, r2)
           (RIGHT(v), rem)
         case _ => (ERRORVALUE(s"ALT ERROR, bs=$bs"), bs)
     }
     case SEQ(r1, r2) => (bs: @unchecked) match {
-      case SE1 :: rest =>
+      case 2 :: rest =>
       val (v1, bs1) = mDecode(rest,r1)
       (bs1: @unchecked) match {
-        case SE2 :: rest2 =>
+        case 3 :: rest2 =>
           val (v2, bs2) = mDecode(rest2,r2)
           (SEQV(v1, v2), bs2)
         case _ => (ERRORVALUE(s"SEQ ERROR, bs=$bs"), Nil)
       } 
     }
     case STAR(r) => (bs: @unchecked) match {
-        case S :: rest => (STARV(List()), rest)
-        case Z :: rest => 
+        case 1 :: rest => (STARV(List()), rest)
+        case 0 :: rest => 
         val (v, bs1) = mDecode(rest, r) 
        // val (STARV(vs), bs2) = mDecode(bs1, STAR(r)) 
         val (STARV(vs), bs2) = mDecode(bs1, STAR(r)): @unchecked
@@ -156,25 +182,25 @@ def compareResults(v1:VALUE, v2:VALUE): Boolean = (v1, v2) match {
   case _ => false 
 }
 
-def bdecode(bs: Bits): (VALUE, Bits) = bs match {
-  case C :: rest =>
+def bdecode(bs: List[Int]): (VALUE, List[Int]) = bs match {
+  case 7 :: rest =>
     (CHARV('x'), rest) // placeholder value, maybe include empty to simulate the derivatives approach?
 
-  case E :: rest =>
+  case 8 :: rest =>
     (EMPTY, rest)
 
-  case Z :: rest => // ALT left
+  case 0 :: rest => // ALT left
     val (v1, bs1) = bdecode(rest)
     (LEFT(v1), bs1)
 
-  case S :: rest => // ALT right
+  case 1 :: rest => // ALT right
     val (v2, bs2) = bdecode(rest)
     (RIGHT(v2), bs2)
 
-  case SE1 :: rest => // SEQ start of r1
+  case 2 :: rest => // SEQ start of r1
     val (v1, bs1) = bdecode(rest)
     bs1 match {
-      case SE2 :: bs2 => // SEQ start of r2
+      case 3 :: bs2 => // SEQ start of r2
         val (v2, bs3) = bdecode(bs2)
         (SEQV(v1, v2), bs3)
       case _ => (ERRORVALUE(s"SEQ ERROR, bs=$bs"), bs)
@@ -298,19 +324,41 @@ def test3() = {
   val brexp=intern2(rexp)
   val s = "ab".toList
   
+  println("=string=")
+  println(s)
+  
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  val sPart = s.take(i + 1)
+  println(pp(mat(brexp, sPart)))
+  } 
+
+  val finReg=matcher2(rexp,s)
+  val bits=lex(rexp, s).getOrElse(Nil)
+  println(s"\n=final list= ${bits}\n")
+
+  println(s"\nFinal Reg:= ${finReg}\n")
+  println(s"mkfin: ${mkfin(finReg)}")
+  println(s"\nDecoded value for Marked=${decode( bits, rexp)._1}")
+
+  val derivativeR = bders(s, internalize(rexp))
+  val derivBitcode = bmkeps(derivativeR)
+  println(s"\nDerivatives bitcode: $derivBitcode")
+  println(s"\nDecoded value for derivatives=${decode( derivBitcode, rexp)._1}")
+  
 }
 
-def pp(e: Rexp) : String = (e: @unchecked) match {
-  case ZERO => "0\n"
-  case ONE => s"1\n"
-  case CHAR(d) => s"$d \n"
-  case POINT(bs,CHAR(c)) => s"${"\u001b[32m"} •$c :${bs.mkString(",")} ${"\u001b[0m"}\n" 
-  case ALT(r1, r2) => s"ALT \n" ++ pps(r1, r2)
-  case SEQ(r1, r2) => s"SEQ \n" ++ pps(r1, r2)
-  case STAR(r) => s"STAR \n" ++ pps(r)
-  case INIT(r) => s"INIT\n" ++ pps(r)
+def pp(e: BRexp) : String = (e: @unchecked) match {
+  case BZERO => "0\n"
+  case BONE(bs) => s"1 ${if(bs.length>0) s":${bs.mkString(",")}" else ""}\n"
+  case BCHAR(d,bs) => s"$d ${if(bs.length>0) s":${bs.mkString(",")}" else ""}\n"
+  case BPOINT(BCHAR(c,bs), pbs) => s"${"\u001b[32m"} •$c :${pbs.mkString(",")} ${"\u001b[0m"}\n" 
+  case BALT(r1, r2, bs) => s"ALT ${if(bs.length>0) s":${bs.mkString(",")}" else ""}\n" ++ pps(r1, r2)
+  case BSEQ(r1, r2, bs) => s"SEQ ${if(bs.length>0) s":${bs.mkString(",")}" else ""}\n" ++ pps(r1, r2)
+  case BSTAR(r, bs) => s"STAR ${if(bs.length>0) s":${bs.mkString(",")}" else ""}\n" ++ pps(r)
+  case BINIT(r) => s"INIT\n" ++ pps(r)
 }
-def pps(es: Rexp*) = indent(es.map(pp))
+def pps(es: BRexp*) = indent(es.map(pp))
 
 
 /* 
