@@ -42,7 +42,7 @@ def mkfin(r: Rexp) : Bits = (r: @unchecked) match {
   case POINT(bs,CHAR(_)) => bs
   case ALT(r1, r2) => 
     if (fin(r1) && fin(r2)) {
-      if (mkfin(r1)<mkfin(r2))
+      if (mkfin(r1)<=mkfin(r2))
       mkfin(r1) else mkfin(r2)
     } else if (fin(r1)) mkfin(r1) else mkfin(r2)
   case SEQ(r1, r2) if fin(r1) && nullable(r2) => (mkfin(r1)) ::: (SE2 :: mkeps(r2) ) // added SE2 for cases of null r2 not having 3/SE2 flag
