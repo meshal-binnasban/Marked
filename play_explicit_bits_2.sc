@@ -45,8 +45,9 @@ def mkfin(r: Rexp) : Bits = (r: @unchecked) match {
     mkfin(r1)
     else mkfin(r2)
   }
-    else if (fin(r1)) mkfin(r1) else mkfin(r2)  
-  case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
+    else if (fin(r1)) mkfin(r1) else mkfin(r2) 
+
+  case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin(r1) ::: (SE2 :: mkeps(r2) ) // added SE2 for cases of null r2 not having 3/SE2 flag
   case SEQ(r1, r2) => mkfin(r2) 
   case STAR(r) => mkfin(r) ++ List(S)
   case INIT(r) => mkfin(r)
@@ -293,11 +294,41 @@ def test2() = {
 
 @main
 def test3() = {
-  println("=====Test With SEQ/ALT/CHAR only====")
+  println("=====Test====")
   val rexp=("a" | "ab") ~ ("b" | ONE)
   val brexp=intern2(rexp)
   val s = "ab".toList
   
+  println("=string=")
+  println(s)
+  
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  val sPart = s.take(i + 1)
+  println(pp(mat(brexp, sPart)))
+  } 
+
+  val finReg=matcher2(rexp,s)
+  val bits=lex(rexp, s).getOrElse(Nil)
+  val markedValue=mDecode(bits, rexp)._1
+
+  println(s"===============\nFinal Reg:\n ${pp(finReg)} \nnullable=${nullable(finReg)}")
+  println(s"===============\nMarked bitcode: ${bits}")
+  println(s"Decoded value for Marked=${markedValue}")
+
+  val derivativeR = bders(s, internalize(rexp))
+  val derivBitcode = bmkeps(derivativeR)
+  val derivValue=decode( derivBitcode, rexp)._1
+  println(s"===============\nDerivatives bitcode: $derivBitcode")
+  println(s"Decoded value for derivatives=${derivValue}")
+
+  println(s"===============\ncompareResults = ${compareResults(markedValue, derivValue)}")
+  println(s"derivative bitcode == marked bitcode :  ${(markedValue == derivValue)}")
+
+
+  val onlyBitsValue=bdecode(bits)._1
+  println(s"===============\nDecoded value without regex, bdecode=${onlyBitsValue}")
+  println(s"bdecode compareResults mdecode : ${compareResults(markedValue,onlyBitsValue)}")
 }
 
 def pp(e: Rexp) : String = (e: @unchecked) match {
