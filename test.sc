@@ -16,11 +16,11 @@ given rexp_cdata: CDATA[Rexp] = List(
   (2, cs => SEQ(cs(0), cs(1)))
 )
 
-val numRegexes = 100L//100_000_000L
+val numRegexes = 1000L//100_000_000L
 val maxStringsPerRegex = 5
 
 @main
-def test1List(): Unit = {
+def test1(): Unit = {
   /* println(s"🔍 Testing first $numRegexes regexes with up to $maxStringsPerRegex matching strings each\n")
   println("=" * 50)
   var allPassed = true
@@ -63,7 +63,7 @@ def test1List(): Unit = {
 }
 
 @main
-def test2Print(): Unit = {
+def test2(): Unit = {
   println(s"🔍 Testing first $numRegexes regexes with up to $maxStringsPerRegex matching strings each\n")
   println("=" * 50)
   var allPassed = true
@@ -73,18 +73,29 @@ def test2Print(): Unit = {
     val regex = enumDecode(i)
     for (str <- regenerate.generate_up_to(alphabet)(10)(regex).take(maxStringsPerRegex) if str != "" ) {
       val sList = str.toList
-      val markBitcode1 = lex(regex, sList).getOrElse(Nil)
-      val markBitcode = markBitcode1.filterNot(_ == 2)
+      val markBitcode = lex(regex, sList).getOrElse(Nil)
+      val markValue=mDecode(markBitcode, regex)._1
+
       val derivativeR = bders(sList, internalize(regex))
       val derivBitcode = bmkeps(derivativeR)
+      val derivValue=decode(derivBitcode, regex)._1
 
-      val bitMatch = markBitcode == derivBitcode
-      if (!bitMatch) {
+      val valueMatch = markValue == derivValue
+
+      if (!valueMatch) {
         allPassed = false
         mismatchCount += 1
-        println(s"Mark Bitcode = $markBitcode\nDerivBitcode = $derivBitcode\n ${rexp.pp(regex)}")
+
+        if(mismatchCount > 2){
+        println(s"Mark Value = $markValue\nDerivBitcode = $derivValue\n ${rexp.pp(regex)}")
         println(s"Input: ${sList}")
         println("=" * 50)
+        }
+
+        if(mismatchCount > 2000){
+          return
+        }
+
       }
     }
     

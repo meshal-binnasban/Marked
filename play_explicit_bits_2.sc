@@ -40,12 +40,11 @@ def mkeps(r: Rexp) : Bits = (r: @unchecked) match {
 def mkfin(r: Rexp) : Bits = (r: @unchecked) match {
   case POINT(bs,CHAR(_)) => bs
   case ALT(r1, r2) => 
-    if(fin(r1) && fin(r2)) {
-    if(mkfin(r1).length < mkfin(r2).length)
+     if(fin(r1) && fin(r2)) {
+    if(mkfin(r1).length <= mkfin(r2).length)
     mkfin(r1)
     else mkfin(r2)
-  }
-    else if (fin(r1)) mkfin(r1) else mkfin(r2) 
+  }else  if (fin(r1)) mkfin(r1) else mkfin(r2) 
 
   case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin(r1) ::: (SE2 :: mkeps(r2) ) // added SE2 for cases of null r2 not having 3/SE2 flag
   case SEQ(r1, r2) => mkfin(r2) 
@@ -63,7 +62,7 @@ def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = (r: @unchecked) match
   case ALT(r1, r2) => ALT(shift(m, bs:+Z , r1, c), shift(m, bs:+S, r2, c))
 
   case SEQ(r1, r2) if m && nullable(r1) => 
-    SEQ(shift(m, SE1::bs, r1, c), shift(true, SE1:: ((bs ::: mkeps(r1)):+SE2), r2, c)) 
+    SEQ(shift(m, bs:+SE1, r1, c), shift(true, bs::: ((SE1 :: mkeps(r1)):+SE2), r2, c)) 
   case SEQ(r1, r2) if fin(r1) => SEQ(shift(m, bs, r1, c), shift(true, ((mkfin(r1)):+SE2), r2, c))
   case SEQ(r1, r2) => SEQ(shift(m, bs:+SE1, r1, c), shift(false, Nil, r2, c)) //Nil
 
@@ -295,9 +294,11 @@ def test2() = {
 @main
 def test3() = {
   println("=====Test====")
-  val rexp=("a" | "ab") ~ ("b" | ONE)
+  //val rexp=("a" | "ab") ~ ("b" | ONE)
+  //val rexp= ONE | ONE~"c"
+  val rexp= ONE | ("a"|ONE)~"c"
   val brexp=intern2(rexp)
-  val s = "ab".toList
+  val s = "ac".toList
   
   println("=string=")
   println(s)
