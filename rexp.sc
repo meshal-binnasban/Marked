@@ -31,12 +31,21 @@ case object SE2 extends Bit {
 
 implicit val bitOrdering: Ordering[Bit] = Ordering.by {
   case C   => 0  // high priority for matching char?
+  case E   => 2
+  case Z   => 2
+  case S   => 2
+  case SE1 => 2
+  case SE2 => 2
+}
+
+/* implicit val bitOrdering: Ordering[Bit] = Ordering.by {
+  case C   => 0  // high priority for matching char?
   case Z   => 1
   case S   => 2
   case SE1 => 3
   case SE2 => 4
   case E   => 5  // low priority for empty string?
-}
+} */
 
 type Bits = List[Bit]
 

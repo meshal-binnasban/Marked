@@ -16,7 +16,7 @@ given rexp_cdata: CDATA[Rexp] = List(
   (2, cs => SEQ(cs(0), cs(1)))
 )
 
-val numRegexes = 1000L//100_000_000L
+val numRegexes = 100_000_000L
 val maxStringsPerRegex = 5
 
 @main
@@ -74,6 +74,7 @@ def test2(): Unit = {
     for (str <- regenerate.generate_up_to(alphabet)(10)(regex).take(maxStringsPerRegex) if str != "" ) {
       val sList = str.toList
       val markBitcode = lex(regex, sList).getOrElse(Nil)
+      println(s"regex:$regex , input:$sList, markBitcode:$markBitcode")
       val markValue=mDecode(markBitcode, regex)._1
 
       val derivativeR = bders(sList, internalize(regex))

@@ -42,9 +42,10 @@ def mkfin(r: Rexp) : Bits = (r: @unchecked) match {
   case POINT(bs,CHAR(_)) => bs
   case ALT(r1, r2) => 
     if (fin(r1) && fin(r2)) {
-      if (mkfin(r1)<mkfin(r2)) mkfin(r1) else mkfin(r2)
+      if (mkfin(r1)<mkfin(r2))
+      mkfin(r1) else mkfin(r2)
     } else if (fin(r1)) mkfin(r1) else mkfin(r2)
-  case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin(r1) ::: (SE2 :: mkeps(r2) ) // added SE2 for cases of null r2 not having 3/SE2 flag
+  case SEQ(r1, r2) if fin(r1) && nullable(r2) => (mkfin(r1)) ::: (SE2 :: mkeps(r2) ) // added SE2 for cases of null r2 not having 3/SE2 flag
   case SEQ(r1, r2) => mkfin(r2) 
   case STAR(r) => mkfin(r) ++ List(S)
   case INIT(r) => mkfin(r)
@@ -57,12 +58,15 @@ def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = (r: @unchecked) match
   case ONE => ONE
   case CHAR(d) => if (m && d == c) POINT(bs:+C,CHAR(d)) else CHAR(d)
   
-  case POINT(bits,CHAR(d)) => if (m && d == c) POINT(bs:+C,CHAR(d)) else CHAR(d)
+  case POINT(bits,CHAR(d)) => if (m && d == c) POINT(bs:+C,CHAR(d)) else {
+    println(s"inside previously marked point char, bits$bits")
+    CHAR(d)}
+
   case ALT(r1, r2) => ALT(shift(m, bs:+Z , r1, c), shift(m, bs:+S, r2, c))
 
   case SEQ(r1, r2) if m && nullable(r1) => 
-    SEQ(shift(m, bs:+SE1, r1, c), shift(true, bs::: ((SE1 :: mkeps(r1)):+SE2), r2, c)) 
-  case SEQ(r1, r2) if fin(r1) => SEQ(shift(m, bs, r1, c), shift(true, ((mkfin(r1)):+SE2), r2, c))
+    SEQ(shift(m, bs:+SE1, r1, c), shift(true, bs::: SE1::((mkeps(r1)):+SE2), r2, c)) 
+  case SEQ(r1, r2) if fin(r1) => SEQ(shift(m, bs:+SE1, r1, c), shift(true, ((mkfin(r1))):+SE2, r2, c))
   case SEQ(r1, r2) => SEQ(shift(m, bs:+SE1, r1, c), shift(false, Nil, r2, c)) //Nil
 
   case STAR(r) if m && fin(r) => STAR(shift(true, bs ::: (mkfin(r):+ Z), r, c))
@@ -337,10 +341,10 @@ def test3() = {
 @main
 def test4() = {
   println("=====Test====")
-  val rexp="ac" | ("a"|"a")
-
+  val rexp= (ONE | "a") ~ ("a" ~ ONE)
+//SEQ(ALT(ONE,CHAR(a)),SEQ(CHAR(a),ONE))
   val brexp=intern2(rexp)
-  val s = "a".toList
+  val s = "aa".toList
   
   println("=string=")
   println(s)
@@ -356,7 +360,7 @@ def test4() = {
   val markedValue=mDecode(bits, rexp)._1
 
   println(s"===============\nFinal Reg:\n ${pp(finReg)} \nnullable=${nullable(finReg)}")
-  println(s"===============\nMarked bitcode: ${bits} and mkfin=${mkfin(finReg)}")
+  println(s"===============\nMarked bitcode: ${bits}")
   println(s"Decoded value for Marked=${markedValue}")
 
   val derivativeR = bders(s, internalize(rexp))
