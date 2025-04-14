@@ -1,7 +1,22 @@
+error id: zipWithIndex.
+file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/play_explicit_bits_2.sc
+empty definition using pc, found symbol in pc: zipWithIndex.
+empty definition using semanticdb
+empty definition using fallback
+non-local guesses:
+	 -rexp/bits/zipWithIndex.
+	 -rexp/Rexp.bits.zipWithIndex.
+	 -rexp/VALUE.bits.zipWithIndex.
+	 -derivativesBitcode/bits/zipWithIndex.
+	 -bits/zipWithIndex.
+	 -scala/Predef.bits.zipWithIndex.
+offset: 2741
+uri: file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/play_explicit_bits_2.sc
+text:
+```scala
 import scala.language.implicitConversions
 import $file.rexp, rexp._, rexp.Rexp._, rexp.VALUE._
 import $file.derivativesBitcode, derivativesBitcode._
-import scala.math.Ordering.Implicits._
 
 // nullable 
 def nullable(r: Rexp) : Boolean = (r: @unchecked) match {
@@ -37,13 +52,51 @@ def mkeps(r: Rexp) : Bits = (r: @unchecked) match {
   case CHAR(_) => Nil //for testing mkeps outside lex
   case INIT(r) => mkeps(r) // added to check nullable input
 }
- 
+
 def mkfin(r: Rexp) : Bits = (r: @unchecked) match {
   case POINT(bs,CHAR(_)) => bs
   case ALT(r1, r2) => 
-    if (fin(r1) && fin(r2)) {
-      if (mkfin(r1)<mkfin(r2)) mkfin(r1) else mkfin(r2)
-    } else if (fin(r1)) mkfin(r1) else mkfin(r2)
+    if(fin(r1) && fin(r2)) {
+    //add code to determine match left most match length 
+    /* 
+Leftmost Preference: If two matches start at the same position, 
+    the one that appears earlier in the ALT should be preferred (leftmost).
+Longest Match: If two matches start at the same position, 
+    the longer match should be preferred.
+ **The Longest Match Rule (or “Maximal Munch Rule”): The longest initial
+substring matched by any regular expression is taken as next token.
+ **Priority Rule: For a particular longest initial substring, the first (leftmost)
+regular expression that can match determines the token.
+**Star Rule: A subexpression repeated by∗ shall not match an empty string
+unless this is the only match for the repetition.
+**Empty String Rule: An empty string shall be considered to be longer than
+no match at all.
+
+  val bits1 = mkfin(r1)
+  val bits2 = mkfin(r2)
+  val (v1, _) = mDecode(bits1, r1)
+  val (v2, _) = mDecode(bits2, r2)
+  val len1 = matchLength(v1)
+  val len2 = matchLength(v2)
+  println(s"\nr1 Value: $v1, Length: $len1")
+  println(s"\nr2 Value: $v2, Length: $len2")
+  if (len1 > len2) mkfin(r1) else mkfin(r2)
+
+
+*/
+    def charIndices(bits: Bits): List[Int] =
+    bits.zipWit@@hIndex.collect { case (C, idx) => idx }
+
+
+    val indices1 = charMatchIndices(mkfin(r1))
+    val indices2 = charMatchIndices(mkfin(r2))
+    println(s"\n\nr1 indicies $indices1")
+    println(s"r2 indicies $indices2\n\n")
+    if(mkfin(r1).length <= mkfin(r2).length)
+    mkfin(r1)
+    else mkfin(r2)
+  }else  if (fin(r1)) mkfin(r1) else mkfin(r2) 
+
   case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin(r1) ::: (SE2 :: mkeps(r2) ) // added SE2 for cases of null r2 not having 3/SE2 flag
   case SEQ(r1, r2) => mkfin(r2) 
   case STAR(r) => mkfin(r) ++ List(S)
@@ -296,11 +349,9 @@ def test3() = {
   println("=====Test====")
   //val rexp=("a" | "ab") ~ ("b" | ONE)
   //val rexp= ONE | ONE~"c"
-  //val rexp= ONE | ("a"|ONE)~"c"
-  val rexp="ac" | ("c"|"c")
-
+  val rexp= ONE | ("a"|ONE)~"c"
   val brexp=intern2(rexp)
-  val s = "c".toList
+  val s = "ac".toList
   
   println("=string=")
   println(s)
@@ -316,47 +367,7 @@ def test3() = {
   val markedValue=mDecode(bits, rexp)._1
 
   println(s"===============\nFinal Reg:\n ${pp(finReg)} \nnullable=${nullable(finReg)}")
-  println(s"===============\nMarked bitcode: ${bits} and mkfin=${mkfin(finReg)}")
-  println(s"Decoded value for Marked=${markedValue}")
-
-  val derivativeR = bders(s, internalize(rexp))
-  val derivBitcode = bmkeps(derivativeR)
-  val derivValue=decode( derivBitcode, rexp)._1
-  println(s"===============\nDerivatives bitcode: $derivBitcode")
-  println(s"Decoded value for derivatives=${derivValue}")
-
-  println(s"===============\ncompareResults = ${compareResults(markedValue, derivValue)}")
-  println(s"derivative bitcode == marked bitcode :  ${(markedValue == derivValue)}")
-
-
-  val onlyBitsValue=bdecode(bits)._1
-  println(s"===============\nDecoded value without regex, bdecode=${onlyBitsValue}")
-  println(s"bdecode compareResults mdecode : ${compareResults(markedValue,onlyBitsValue)}")
-}
-
-@main
-def test4() = {
-  println("=====Test====")
-  val rexp="ac" | ("a"|"a")
-
-  val brexp=intern2(rexp)
-  val s = "a".toList
-  
-  println("=string=")
-  println(s)
-  
-  for (i <- s.indices) {
-  println(s"\n ${i + 1}- =shift ${s(i)}=")
-  val sPart = s.take(i + 1)
-  println(pp(mat(brexp, sPart)))
-  } 
-
-  val finReg=matcher2(rexp,s)
-  val bits=lex(rexp, s).getOrElse(Nil)
-  val markedValue=mDecode(bits, rexp)._1
-
-  println(s"===============\nFinal Reg:\n ${pp(finReg)} \nnullable=${nullable(finReg)}")
-  println(s"===============\nMarked bitcode: ${bits} and mkfin=${mkfin(finReg)}")
+  println(s"===============\nMarked bitcode: ${bits}")
   println(s"Decoded value for Marked=${markedValue}")
 
   val derivativeR = bders(s, internalize(rexp))
@@ -424,32 +435,9 @@ def finSize(r: BRexp, nullable:Boolean) : Int = (r: @unchecked) match {
         println(s"mkfin fin2 final & nullable=${nullable(r2)}")
         if(nullable(r2)) mkfin(r2)++mkeps(r2) else mkfin(r2) 
         }  */
+```
 
 
-         //add code to determine match left most match length 
-    /* 
-Leftmost Preference: If two matches start at the same position, 
-    the one that appears earlier in the ALT should be preferred (leftmost).
-Longest Match: If two matches start at the same position, 
-    the longer match should be preferred.
- **The Longest Match Rule (or “Maximal Munch Rule”): The longest initial
-substring matched by any regular expression is taken as next token.
- **Priority Rule: For a particular longest initial substring, the first (leftmost)
-regular expression that can match determines the token.
-**Star Rule: A subexpression repeated by∗ shall not match an empty string
-unless this is the only match for the repetition.
-**Empty String Rule: An empty string shall be considered to be longer than
-no match at all.
+#### Short summary: 
 
-  val bits1 = mkfin(r1)
-  val bits2 = mkfin(r2)
-  val (v1, _) = mDecode(bits1, r1)
-  val (v2, _) = mDecode(bits2, r2)
-  val len1 = matchLength(v1)
-  val len2 = matchLength(v2)
-  println(s"\nr1 Value: $v1, Length: $len1")
-  println(s"\nr2 Value: $v2, Length: $len2")
-  if (len1 > len2) mkfin(r1) else mkfin(r2)
-
-
-*/
+empty definition using pc, found symbol in pc: zipWithIndex.

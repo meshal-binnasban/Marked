@@ -29,6 +29,15 @@ case object SE2 extends Bit {
   override def toString = "3"
 }
 
+implicit val bitOrdering: Ordering[Bit] = Ordering.by {
+  case C   => 0  // high priority for matching char?
+  case Z   => 1
+  case S   => 2
+  case SE1 => 3
+  case SE2 => 4
+  case E   => 5  // low priority for empty string?
+}
+
 type Bits = List[Bit]
 
 // standard regexes

@@ -86,14 +86,18 @@ def test2(): Unit = {
         allPassed = false
         mismatchCount += 1
 
-        if(mismatchCount > 2){
-        println(s"Mark Value = $markValue\nDerivBitcode = $derivValue\n ${rexp.pp(regex)}")
+        if(mismatchCount > 10){
+        println(s"Mark Value = $markValue\nDeriv Value = $derivValue\n ${rexp.pp(regex)}")
+        println(s"Mark Bits = $markBitcode\nDeriv Bits = $derivBitcode\n")
         println(s"Input: ${sList}")
         println("=" * 50)
         }
 
         if(mismatchCount > 2000){
-          return
+        println(s"Mark Value = $markValue\nDerivBitcode = $derivValue\n ${rexp.pp(regex)}")
+        println(s"Input: ${sList}")
+        println("=" * 50)
+          //return
         }
 
       }
