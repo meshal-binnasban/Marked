@@ -42,7 +42,10 @@ def mkfin(r: Rexp) : Bits = (r: @unchecked) match {
   case POINT(bs,CHAR(_)) => bs
   case ALT(r1, r2) => 
     if (fin(r1) && fin(r2)) {
-      if (mkfin(r1)<=mkfin(r2))
+      val fin1Weight=totalBitsWeight(mkfin(r1))
+      val fin2Weight=totalBitsWeight(mkfin(r2))
+      println(s"fin r1,r2. mkfin1=${mkfin(r1)}, weight= ${fin1Weight}\nmkfin2=${mkfin(r2)} , weight= ${fin2Weight}\n, ${fin1Weight <= fin2Weight}")
+      if (totalBitsWeight(mkfin(r1))>=totalBitsWeight(mkfin(r2)))
       mkfin(r1) else mkfin(r2)
     } else if (fin(r1)) mkfin(r1) else mkfin(r2)
   case SEQ(r1, r2) if fin(r1) && nullable(r2) => (mkfin(r1)) ::: (SE2 :: mkeps(r2) ) // added SE2 for cases of null r2 not having 3/SE2 flag
@@ -212,7 +215,7 @@ def bdecode(bs: Bits): (VALUE, Bits) = bs match {
     (ERRORVALUE(s"unmatched bitcode: ${bs}"), bs)
 }
 
-// testing one/emptystring regex 
+// testing (1 | "c") ~ ("cc" | "c") regex 
 @main
 def test1() = {
   println("=====Test With ONE====")
@@ -252,7 +255,7 @@ def test1() = {
   println(s"bdecode compareResults mdecode : ${compareResults(markedValue,onlyBitsValue)}")
 }
 
-//testing seq,alt,char only regex
+// testing (("a" | "b") | ("ab") ) | ("bc" | ("c"| "b"))  regex @main
 @main
 def test2() = {
   println("=====Test With SEQ/ALT/CHAR only====")
@@ -295,6 +298,8 @@ def test2() = {
 
 
 }
+
+// testing "ac" | ("c"|"c") regex
 @main
 def test3() = {
   println("=====Test====")
@@ -338,13 +343,13 @@ def test3() = {
   println(s"bdecode compareResults mdecode : ${compareResults(markedValue,onlyBitsValue)}")
 }
 
+// testing ("a"| ONE | ONE) | (("b" | "c") | "c") regex
 @main
 def test4() = {
   println("=====Test====")
-  val rexp= (ONE | "a") ~ ("a" ~ ONE)
-//SEQ(ALT(ONE,CHAR(a)),SEQ(CHAR(a),ONE))
+  val rexp= ("a"| ONE | ONE) | (("b" | "c") | "c")
   val brexp=intern2(rexp)
-  val s = "aa".toList
+  val s = "c".toList
   
   println("=string=")
   println(s)

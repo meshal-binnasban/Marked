@@ -28,16 +28,35 @@ case object SE1 extends Bit {
 case object SE2 extends Bit {
   override def toString = "3"
 }
+type Bits = List[Bit]
 
 implicit val bitOrdering: Ordering[Bit] = Ordering.by {
   case C   => 0  // high priority for matching char?
-  case E   => 2
+  case E   => 1
   case Z   => 2
-  case S   => 2
-  case SE1 => 2
-  case SE2 => 2
+  case S   => 3
+  case SE1 => 3
+  case SE2 => 3
 }
 
+val bitWeight: Bit => Double = {
+  case C   => 10.0  // highest weight
+  case E   => 0.0
+  case Z   => 0.0
+  case S   => 0.0
+  case SE1 => 0.0
+  case SE2 => 0.0
+}
+
+def totalBitsWeight(bs: Bits): Double = {
+  val n = bs.length
+  bs.zipWithIndex.map { case (bit, idx) =>
+    val positionWeight =
+      if (n == 1) 1.0  // For Single C List
+      else 1.0 - (idx.toDouble / (n - 1))
+    bitWeight(bit) * positionWeight
+  }.sum
+}
 /* implicit val bitOrdering: Ordering[Bit] = Ordering.by {
   case C   => 0  // high priority for matching char?
   case Z   => 1
@@ -47,7 +66,7 @@ implicit val bitOrdering: Ordering[Bit] = Ordering.by {
   case E   => 5  // low priority for empty string?
 } */
 
-type Bits = List[Bit]
+
 
 // standard regexes
 enum Rexp {
