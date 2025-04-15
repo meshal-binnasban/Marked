@@ -41,11 +41,11 @@ implicit val bitOrdering: Ordering[Bit] = Ordering.by {
 
 val bitWeight: Bit => Double = {
   case C   => 10.0  // highest weight
-  case E   => 0.0
-  case Z   => 0.0
-  case S   => 0.0
-  case SE1 => 0.0
-  case SE2 => 0.0
+  case E   => 2.0
+  case Z   => -1.0
+  case S   => -1.0
+  case SE1 => -1.0
+  case SE2 => -1.0
 }
 
 def totalBitsWeight(bs: Bits): Double = {
