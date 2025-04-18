@@ -28,6 +28,14 @@ case object SE1 extends Bit {
 case object SE2 extends Bit {
   override def toString = "3"
 }
+case object ST1 extends Bit {
+  override def toString = "4"
+}
+case object ST2 extends Bit {
+  override def toString = "5"
+}
+
+
 type Bits = List[Bit]
 
 implicit val bitOrdering: Ordering[Bit] = Ordering.by {
@@ -40,32 +48,82 @@ implicit val bitOrdering: Ordering[Bit] = Ordering.by {
 }
 
 val bitWeight: Bit => Double = {
-  case C   => 10.0  // highest weight
-  case E   => 2.0
-  case Z   => -1.0
-  case S   => -1.0
-  case SE1 => -1.0
-  case SE2 => -1.0
+  case C   => 100.0
+  case Z   => 0.5
+  case S   => 0
+  case SE1 => 0
+  case SE2 => 0
+  case E   => 0
 }
 
 def totalBitsWeight(bs: Bits): Double = {
   val n = bs.length
-  bs.zipWithIndex.map { case (bit, idx) =>
-    val positionWeight =
-      if (n == 1) 1.0  // For Single C List
-      else 1.0 - (idx.toDouble / (n - 1))
-    bitWeight(bit) * positionWeight
+  if (n == 0) return 0.0
+  val weightedSum = bs.zipWithIndex.map {
+    case (bit, idx) => bitWeight(bit) / (idx + 1) // use bitWeight directly
   }.sum
-}
-/* implicit val bitOrdering: Ordering[Bit] = Ordering.by {
-  case C   => 0  // high priority for matching char?
-  case Z   => 1
-  case S   => 2
-  case SE1 => 3
-  case SE2 => 4
-  case E   => 5  // low priority for empty string?
-} */
 
+  (weightedSum) * 100.0 // average reward per C, scaled to percentage
+}
+
+def progressiveBitScore(bs: Bits): Double = {
+  val totalLen = bs.length.toDouble
+  if (totalLen == 0.0) return 0.0
+
+  var score = 0.0
+  var currentWeight = totalLen
+
+  bs.foreach {
+    case C =>
+      score += currentWeight
+      currentWeight -= 1
+
+    case Z =>
+      score += 1
+      currentWeight -= 1
+
+    case S =>
+      score += 0
+      currentWeight -= 1
+
+    case SE1 | SE2 | E =>
+      currentWeight -= 1
+
+    case _ =>
+      currentWeight -= 1
+  }
+
+  // Maximum possible score is if *all* bits were C at best positions
+  val maxPossible = (1 to bs.length).reverse.map(_.toDouble).sum
+  (score / maxPossible) * 100.0
+}
+
+def convertMtoDBit(bs: Bits): Bits =
+  bs.collect {
+    case Z   => Z
+    case S   => S
+    case ST1 => Z  
+    case ST2 => S  
+  }
+
+def bitsToInts(bs: Bits): List[Int] = bs.map {
+  case Z    => 0
+  case S    => 1
+  case SE1  => 2
+  case SE2  => 3
+  case C    => 7
+  case E    => 8
+  case ST1  => 4
+  case ST2  => 5
+}
+
+def convertMtoDBit2(bs: Bits): Bits = bs.flatMap {
+    case ST1 => Some(Z)  // ST1 (4) → 0
+    case ST2 => Some(S)  // ST2 (5) → 1
+    case Z   => Some(Z)  // already 0
+    case S   => Some(S)  // already 1
+    case _   => None     // discard everything else
+  }
 
 
 // standard regexes
@@ -158,6 +216,7 @@ def decode(bs: List[Int], r: Rexp): (VALUE, List[Int]) = (r: @unchecked) match {
     val (v1, bs1) = decode(bs, r1)
     val (v2, bs2) = decode(bs1, r2)
     (SEQV(v1, v2), bs2)
+
   case STAR(r) => bs match {
     case 1 :: rest => (STARV(List()), rest)
     case 0 :: rest => 
@@ -168,15 +227,7 @@ def decode(bs: List[Int], r: Rexp): (VALUE, List[Int]) = (r: @unchecked) match {
   }
 }
 
-def bitsToInts(bs: Bits): List[Int] = bs.map {
-  case Z    => 0
-  case S    => 1
-  case SE1  => 2
-  case SE2  => 3
-  case C    => 7
-  case E    => 8
-  // Add more if you have them
-}
+
 
 /* // nullable 
 def nullable(r: Rexp) : Boolean = r match {

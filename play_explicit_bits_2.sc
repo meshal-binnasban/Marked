@@ -33,7 +33,8 @@ def mkeps(r: Rexp) : Bits = (r: @unchecked) match {
   case ALT(r1, r2) => 
     if (nullable(r1)) Z :: mkeps(r1) else S :: mkeps(r2)  
   case SEQ(r1, r2) => (SE1::mkeps(r1)) ::: (SE2 :: mkeps(r2) ) // if nullable r1 add 2?
-  case STAR(r) => mkeps(r) ++ List(S)
+  
+  case STAR(r) => if(nullable(r))(ST1::mkeps(r)):+ST2 else List(ST2) // if nullable then st1 List(E) st2?
   case CHAR(_) => Nil //for testing mkeps outside lex
   case INIT(r) => mkeps(r) // added to check nullable input
 }
@@ -42,15 +43,17 @@ def mkfin(r: Rexp) : Bits = (r: @unchecked) match {
   case POINT(bs,CHAR(_)) => bs
   case ALT(r1, r2) => 
     if (fin(r1) && fin(r2)) {
-      println(s"mkfin1=${mkfin(r1)}, mkfin2=${mkfin(r2)}\ntotalWeight r1 ${totalBitsWeight(mkfin(r1))} and r2 ${totalBitsWeight(mkfin(r2))}")
-      if (totalBitsWeight(mkfin(r1))>=totalBitsWeight(mkfin(r2)))
-      mkfin(r1) else mkfin(r2)
+    //println(s"mkfin1=${mkfin(r1)}, mkfin2=${mkfin(r2)}\ntotalBitsWeight r1 ${progressiveBitScore(mkfin(r1))} and r2 ${progressiveBitScore(mkfin(r2))}")
+     if (progressiveBitScore(mkfin(r1))>=progressiveBitScore(mkfin(r2)))
+      mkfin(r1) else mkfin(r2) 
     } else if (fin(r1)) mkfin(r1) else mkfin(r2)
   case SEQ(r1, r2) if fin(r1) && nullable(r2) => (mkfin(r1)) ::: (SE2 :: mkeps(r2) ) // added SE2 for cases of null r2 not having 3/SE2 flag
   case SEQ(r1, r2) => mkfin(r2) 
-  case STAR(r) => mkfin(r) ++ List(S)
+  case STAR(r) =>  (mkfin(r)) ++ List(ST2)  //ST1:: 
   case INIT(r) => mkfin(r)
 }
+
+
 
 
 // shift function from the paper
@@ -68,10 +71,12 @@ def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = (r: @unchecked) match
   case SEQ(r1, r2) if fin(r1) => SEQ(shift(m, bs:+SE1, r1, c), shift(true, ((mkfin(r1))):+SE2, r2, c))
   case SEQ(r1, r2) => SEQ(shift(m, bs:+SE1, r1, c), shift(false, Nil, r2, c)) //Nil
 
-  case STAR(r) if m && fin(r) => STAR(shift(true, bs ::: (mkfin(r):+ Z), r, c))
-  case STAR(r) if fin(r) => STAR(shift(true, mkfin(r):+ Z, r, c)) 
-  case STAR(r) if m => STAR(shift(m, bs, r, c))
+  case STAR(r) if m && fin(r) =>{println(s"r=$r , bs=${ bs ::: ((mkfin(r) :+ST1))} ,mkfin r=${mkfin(r)}")
+     STAR(shift(true, bs :::((mkfin(r) :+ST1)), r, c))}
+  case STAR(r) if fin(r) => STAR(shift(true, mkfin(r):+ ST1, r, c)) 
+  case STAR(r) if m => STAR(shift(m, bs:+ST1, r, c))
   case STAR(r) => STAR(shift(false, Nil, r, c))
+
   case INIT(r) => shift(true, bs, r, c)
 }
 // the main matching function (by using BINIT only in 
@@ -83,63 +88,65 @@ def mat(r: Rexp, s: List[Char]) : Rexp = s match {
 
 def matcher(r: Rexp, s: List[Char]) : Boolean =
     val reg= intern2(r)
-    if (s == Nil) nullable(reg)
+    if (s == Nil) nullable(r)
      else fin(mat(reg, s))
 
 def matcher2(r: Rexp, s: List[Char]) : Rexp =
     val reg= intern2(r)
-    if (s == Nil) if(nullable(reg)) reg else ZERO 
+    if (s == Nil) if(nullable(r)) r else ZERO 
     else mat(reg, s)
 
 def lex(r: Rexp, s: List[Char]) : Option[Bits] = {
   val reg=intern2(r)
   if matcher(r, s)
-  then Some(if (s == Nil) mkeps(reg) else mkfin(mat(reg, s)))
+  then Some(if (s == Nil) mkeps(r) else mkfin(mat(reg, s)))
   else None
 }
 
 def intern2(r: Rexp) : Rexp = INIT(r)
 
-def mDecode(bs: Bits, r: Rexp): (VALUE, Bits) =  
-    (r: @unchecked) match {
-    case ONE => (bs: @unchecked) match {
-        case E :: rest => 
-          (EMPTY, rest)
-        case _ => (ERRORVALUE(s"ONE ERROR, bs=$bs"), bs)
-    } 
-    case CHAR(c) =>
-      (bs: @unchecked) match {
-        case C :: rest => (CHARV(c), rest)
-    } 
-     
-    case ALT(r1, r2) => (bs: @unchecked) match {
-        case Z :: rest => 
-          val (v, rem) = mDecode(rest, r1)
-          (LEFT(v), rem)
-        case S :: rest => 
-          val (v, rem) = mDecode(rest, r2)
-          (RIGHT(v), rem)
-        case _ => (ERRORVALUE(s"ALT ERROR, bs=$bs"), bs)
+def mDecode(bs: Bits, r: Rexp): (VALUE, Bits) =  (r: @unchecked) match {
+  case ONE => (bs: @unchecked) match {
+    case E :: rest => (EMPTY, rest)
+    case _ => (ERRORVALUE(s"ONE ERROR, bs=$bs"), bs)
+  } 
+  case CHAR(c) => (bs: @unchecked) match {
+    case C :: rest => (CHARV(c), rest)
+  } 
+  case ALT(r1, r2) => (bs: @unchecked) match {
+    case Z :: rest => 
+      val (v, rem) = mDecode(rest, r1)
+      (LEFT(v), rem)
+    case S :: rest => 
+      val (v, rem) = mDecode(rest, r2)
+      (RIGHT(v), rem)
+    case _ => (ERRORVALUE(s"ALT ERROR, bs=$bs"), bs)
     }
-    case SEQ(r1, r2) => (bs: @unchecked) match {
-      case SE1 :: rest =>
+  case SEQ(r1, r2) => (bs: @unchecked) match {
+    case SE1 :: rest =>
       val (v1, bs1) = mDecode(rest,r1)
       (bs1: @unchecked) match {
         case SE2 :: rest2 =>
           val (v2, bs2) = mDecode(rest2,r2)
           (SEQV(v1, v2), bs2)
         case _ => (ERRORVALUE(s"SEQ ERROR, bs=$bs"), Nil)
-      } 
+      }
     }
-    case STAR(r) => (bs: @unchecked) match {
-        case S :: rest => (STARV(List()), rest)
-        case Z :: rest => 
-        val (v, bs1) = mDecode(rest, r) 
-       // val (STARV(vs), bs2) = mDecode(bs1, STAR(r)) 
-        val (STARV(vs), bs2) = mDecode(bs1, STAR(r)): @unchecked
-        (STARV(v :: vs), bs2)
-        case _ => (ERRORVALUE(s"STAR ERROR, bs=$bs"), bs)
+  
+  case STAR(r) => bs match {
+    case ST1 :: ST2 :: rest => (STARV(Nil), rest) // Empty STAR
+    case ST2 :: rest => (STARV(Nil), rest) // STAR end
+    
+    case ST1 :: rest =>
+      val (v, bs1) = mDecode(rest, r)                    
+      val (vs, bs2) = mDecode(bs1, STAR(r))              
+      vs match {
+        case STARV(vs) => (STARV(v :: vs), bs2)
+        case _ => (ERRORVALUE(s"STAR ERROR inside, bs=$bs1"), bs1)
     }
+  case _ =>
+    (ERRORVALUE(s"STAR ERROR, bs=$bs"), bs)
+  }
 }
 
 def compareResults(v1:VALUE, v2:VALUE): Boolean = (v1, v2) match {
@@ -182,34 +189,18 @@ def bdecode(bs: Bits): (VALUE, Bits) = bs match {
       case _ => (ERRORVALUE(s"SEQ ERROR, bs=$bs"), bs)
     }
 
-    //needs tesitng
-    /* case 4 :: rest => // STAR
-    def loop(acc: List[VALUE], bits: List[Int]): (VALUE, List[Int]) = bits match {
-      case 6 :: tail => (STARV(acc.reverse), tail)
-      case _ =>
-        val (v, bs1) = bdecode(bits)
-        loop(v :: acc, bs1)
+  case ST1 :: rest => 
+    val (v, bs1) = bdecode(rest)
+    val (svs, bs2) = bdecode(bs1)
+    svs match {
+      case STARV(vs) => (STARV(v :: vs), bs2)
+      case _         => (ERRORVALUE(s"STAR ERROR bs=$bs2"), bs2)
     }
-    loop(Nil, rest)
-
-  case 5 :: n :: rest => // NTIMES with count `n`
-    def loop(n: Int, acc: List[VALUE], bits: List[Int]): (VALUE, List[Int]) = {
-      if (n <= 0) acc match {
-        case Nil       => (EMPTY, bits)
-        case x :: Nil  => (x, bits)
-        case x :: xs   => (xs.foldLeft(x)(SEQV(_, _)), bits)
-      }
-      else {
-        val (v, bs1) = bdecode(bits)
-        loop(n - 1, acc :+ v, bs1)
-      }
-    }
-    loop(n, Nil, rest)
- */
-
+  case ST2 :: rest => (STARV(Nil), rest)
   case _ =>
     (ERRORVALUE(s"unmatched bitcode: ${bs}"), bs)
 }
+
 
 // testing (1 | "c") ~ ("cc" | "c") regex 
 @main
@@ -418,6 +409,89 @@ def test5() = {
   println(s"===============\nDecoded value without regex, bdecode=${onlyBitsValue}")
   println(s"bdecode compareResults mdecode : ${compareResults(markedValue,onlyBitsValue)}")
 }
+
+// testing (ONE | "a")  | ((ONE ~ ONE) ~ "a") regex
+@main
+def test6() = {
+  println("=====Test====")
+  val rexp= (ONE | "a")  | ((ONE ~ ONE) ~ "a")
+  val brexp=intern2(rexp)
+  val s = "a".toList
+  
+  println("=string=")
+  println(s)
+  
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  val sPart = s.take(i + 1)
+  println(pp(mat(brexp, sPart)))
+  } 
+
+  val finReg=matcher2(rexp,s)
+  val bits=lex(rexp, s).getOrElse(Nil)
+  val markedValue=mDecode(bits, rexp)._1
+
+  println(s"===============\nFinal Reg:\n ${pp(finReg)} \nnullable=${nullable(finReg)}")
+  println(s"===============\nMarked bitcode: ${bits}")
+  println(s"Decoded value for Marked=${markedValue}")
+
+  val derivativeR = bders(s, internalize(rexp))
+  val derivBitcode = bmkeps(derivativeR)
+  val derivValue=decode( derivBitcode, rexp)._1
+  println(s"===============\nDerivatives bitcode: $derivBitcode")
+  println(s"Decoded value for derivatives=${derivValue}")
+
+  println(s"===============\ncompareResults = ${compareResults(markedValue, derivValue)}")
+  println(s"derivative bitcode == marked bitcode :  ${(markedValue == derivValue)}")
+
+
+  val onlyBitsValue=bdecode(bits)._1
+  println(s"===============\nDecoded value without regex, bdecode=${onlyBitsValue}")
+  println(s"bdecode compareResults mdecode : ${compareResults(markedValue,onlyBitsValue)}")
+}
+
+// testing STAR("a"|"c") regex
+
+@main
+def test7() = {
+  println("=====Test====")
+  //val rexp= STAR("c"~"a" | "c"~"b")
+  val rexp=SEQ(STAR("ONE"|"a"),"b")
+  val brexp=intern2(rexp)
+  val s = "b".toList
+  
+  println("=string=")
+  println(s)
+  
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  val sPart = s.take(i + 1)
+  println(pp(mat(brexp, sPart)))
+  } 
+
+  val finReg=matcher2(rexp,s)
+  val bits=lex(rexp, s).getOrElse(Nil)
+  val markedValue=mDecode(bits, rexp)._1
+
+  println(s"===============\nFinal Reg:\n ${pp(finReg)} \nnullable=${nullable(finReg)}")
+  println(s"===============\nMarked bitcode: ${bits} \nMarked bitcode converted: ${convertMtoDBit(bits)}")
+  println(s"Decoded value for Marked=${markedValue}")
+
+  val derivativeR = bders(s, internalize(rexp))
+  val derivBitcode = bmkeps(derivativeR)
+  val derivValue=decode( derivBitcode, rexp)._1
+  println(s"===============\nDerivatives bitcode: $derivBitcode")
+  println(s"Decoded value for derivatives=${derivValue}")
+
+  println(s"===============\ncompareResults = ${compareResults(markedValue, derivValue)}")
+  println(s"===============\nmarked bitcode == derivatives bitcode :  ${(bitsToInts(convertMtoDBit2(bits)) == derivBitcode)}")
+
+
+  val onlyBitsValue=bdecode(bits)._1
+  println(s"===============\nDecoded value without regex, bdecode=${onlyBitsValue}")
+  //println(s"bdecode compareResults mdecode : ${compareResults(markedValue,onlyBitsValue)}")
+}
+
 
 def pp(e: Rexp) : String = (e: @unchecked) match {
   case ZERO => "0\n"
