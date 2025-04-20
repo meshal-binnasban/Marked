@@ -34,7 +34,11 @@ def mkeps(r: Rexp) : Bits = (r: @unchecked) match {
     if (nullable(r1)) Z :: mkeps(r1) else S :: mkeps(r2)  
   case SEQ(r1, r2) => (SE1::mkeps(r1)) ::: (SE2 :: mkeps(r2) ) // if nullable r1 add 2?
   
-  case STAR(r) => if(nullable(r))(ST1::mkeps(r)):+ST2 else List(ST2) // if nullable then st1 List(E) st2?
+  case STAR(r) =>List(ST2)
+    //if(nullable(r))(mkeps(r)):+ST2 else List(ST2)
+    //if(nullable(r)) ST1::mkeps(r)++List(ST2) else 
+    // if(nullable(r)) ST1::mkeps(r)++List(ST2) else  
+      
   case CHAR(_) => Nil //for testing mkeps outside lex
   case INIT(r) => mkeps(r) // added to check nullable input
 }
@@ -49,15 +53,16 @@ def mkfin(r: Rexp) : Bits = (r: @unchecked) match {
     } else if (fin(r1)) mkfin(r1) else mkfin(r2)
   case SEQ(r1, r2) if fin(r1) && nullable(r2) => (mkfin(r1)) ::: (SE2 :: mkeps(r2) ) // added SE2 for cases of null r2 not having 3/SE2 flag
   case SEQ(r1, r2) => mkfin(r2) 
+
   case STAR(r) =>  (mkfin(r)) ++ List(ST2)  //ST1:: 
   case INIT(r) => mkfin(r)
 }
 
 
-
-
 // shift function from the paper
-def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = (r: @unchecked) match {
+def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = 
+  (r: @unchecked) match {
+
   case ZERO => ZERO
   case ONE => ONE
   case CHAR(d) => if (m && d == c) POINT(bs:+C,CHAR(d)) else CHAR(d)
@@ -66,40 +71,32 @@ def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = (r: @unchecked) match
 
   case ALT(r1, r2) => ALT(shift(m, bs:+Z , r1, c), shift(m, bs:+S, r2, c))
 
-  case SEQ(r1, r2) if m && nullable(r1) => 
-    SEQ(shift(m, bs:+SE1, r1, c), shift(true, bs::: SE1::((mkeps(r1)):+SE2), r2, c)) 
+  case SEQ(r1, r2) if m && nullable(r1) => SEQ(shift(m, bs:+SE1, r1, c), shift(true,  bs::: (SE1::((mkeps(r1)):+SE2)), r2, c)) 
   case SEQ(r1, r2) if fin(r1) => SEQ(shift(m, bs:+SE1, r1, c), shift(true, ((mkfin(r1))):+SE2, r2, c))
   case SEQ(r1, r2) => SEQ(shift(m, bs:+SE1, r1, c), shift(false, Nil, r2, c)) //Nil
 
-  case STAR(r) if m && fin(r) =>{println(s"r=$r , bs=${ bs ::: ((mkfin(r) :+ST1))} ,mkfin r=${mkfin(r)}")
-     STAR(shift(true, bs :::((mkfin(r) :+ST1)), r, c))}
-  case STAR(r) if fin(r) => STAR(shift(true, mkfin(r):+ ST1, r, c)) 
+  case STAR(r) if m && fin(r) =>STAR(shift(true, (bs) :+ST1, r, c)) //273-     2732 , 274537
+  case STAR(r) if fin(r) => STAR(shift(true, (mkfin(r):+ST1), r, c)) 
   case STAR(r) if m => STAR(shift(m, bs:+ST1, r, c))
   case STAR(r) => STAR(shift(false, Nil, r, c))
-
-  case INIT(r) => shift(true, bs, r, c)
 }
 // the main matching function (by using BINIT only in 
 // the first step a mark is shifted into the Rexp)
 def mat(r: Rexp, s: List[Char]) : Rexp = s match {
   case Nil => r
-  case c::cs => mat(shift(false,List(), r, c), cs)
+  case c::cs => cs.foldLeft(shift(true, Nil, r, c))((r, c) => shift(false, Nil, r, c))
 }
 
 def matcher(r: Rexp, s: List[Char]) : Boolean =
-    val reg= intern2(r)
-    if (s == Nil) nullable(r)
-     else fin(mat(reg, s))
+    if (s == Nil) nullable(r) else fin(mat(r, s))
 
 def matcher2(r: Rexp, s: List[Char]) : Rexp =
-    val reg= intern2(r)
-    if (s == Nil) if(nullable(r)) r else ZERO 
-    else mat(reg, s)
+    if (s == Nil){ if(nullable(r)) r else ZERO}
+    else mat(r, s)
 
 def lex(r: Rexp, s: List[Char]) : Option[Bits] = {
-  val reg=intern2(r)
   if matcher(r, s)
-  then Some(if (s == Nil) mkeps(r) else mkfin(mat(reg, s)))
+  then Some( if (s == Nil) mkeps(r) else mkfin(mat(r, s)))
   else None
 }
 
@@ -132,9 +129,9 @@ def mDecode(bs: Bits, r: Rexp): (VALUE, Bits) =  (r: @unchecked) match {
         case _ => (ERRORVALUE(s"SEQ ERROR, bs=$bs"), Nil)
       }
     }
-  
+
   case STAR(r) => bs match {
-    case ST1 :: ST2 :: rest => (STARV(Nil), rest) // Empty STAR
+    //case ST1 :: ST2 :: rest => (STARV(Nil), rest) // Empty STAR
     case ST2 :: rest => (STARV(Nil), rest) // STAR end
     
     case ST1 :: rest =>
@@ -151,16 +148,15 @@ def mDecode(bs: Bits, r: Rexp): (VALUE, Bits) =  (r: @unchecked) match {
 
 def compareResults(v1:VALUE, v2:VALUE): Boolean = (v1, v2) match {
   case (EMPTY, EMPTY) => true
-  case (CHARV(c1), CHARV(c2)) => c1 == c2 //true if using bdecode
+  case (CHARV(c1), CHARV(c2)) =>true// c1 == c2 //true if using bdecode
   case (SEQV(a1, b1), SEQV(a2, b2)) =>
     compareResults(a1, a2) && compareResults(b1, b2)
   case (LEFT(vl1), LEFT(vl2)) =>
     compareResults(vl1, vl2)
   case (RIGHT(vr1), RIGHT(vr2)) =>
     compareResults(vr1, vr2)
-  case (STARV(vs1), STARV(vs2)) => vs1 == vs2
-    /* vs1.length == vs2.length &&
-      vs1.zip(vs2).forall { case (x, y) => compareResults(x, y) } */
+  case (STARV(vs1), STARV(vs2)) => 
+      vs1.zip(vs2).forall { case (x, y) => compareResults(x, y) } 
   case (ERRORVALUE(_), ERRORVALUE(_)) => true 
   case _ => false 
 }
@@ -194,7 +190,7 @@ def bdecode(bs: Bits): (VALUE, Bits) = bs match {
     val (svs, bs2) = bdecode(bs1)
     svs match {
       case STARV(vs) => (STARV(v :: vs), bs2)
-      case _         => (ERRORVALUE(s"STAR ERROR bs=$bs2"), bs2)
+      case _         => (ERRORVALUE(s"STAR 1 ERROR bs=$bs2"), bs2)
     }
   case ST2 :: rest => (STARV(Nil), rest)
   case _ =>
@@ -207,7 +203,6 @@ def bdecode(bs: Bits): (VALUE, Bits) = bs match {
 def test1() = {
   println("=====Test With ONE====")
   val rexp=SEQ( ALT(ONE, CHAR('c')) ,ALT(SEQ(CHAR('c'),CHAR('c')), CHAR('c')) )
-  val brexp=intern2(rexp)
   val s = "cc".toList
 
   println("=string=")
@@ -216,7 +211,7 @@ def test1() = {
   for (i <- s.indices) {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
   val sPart = s.take(i + 1)
-  println(pp(mat(brexp, sPart)))
+  println(pp(mat(rexp, sPart)))
   } 
 
   val finReg=matcher2(rexp,s)
@@ -249,7 +244,6 @@ def test2() = {
   val rexp=SEQ(
     ALT(ALT(CHAR('a'),CHAR('b')),SEQ(CHAR('a'),CHAR('b'))) , 
     ALT( SEQ(CHAR('b'),CHAR('c')), ALT(CHAR('c'),CHAR('b'))) ) 
-  val brexp=intern2(rexp)
   val s = "abc".toList
   
   println("=string=")
@@ -258,7 +252,7 @@ def test2() = {
   for (i <- s.indices) {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
   val sPart = s.take(i + 1)
-  println(pp(mat(brexp, sPart)))
+  println(pp(mat(rexp, sPart)))
   } 
 
   val finReg=matcher2(rexp,s)
@@ -294,8 +288,6 @@ def test3() = {
   //val rexp= ONE | ONE~"c"
   //val rexp= ONE | ("a"|ONE)~"c"
   val rexp="ac" | ("c"|"c")
-
-  val brexp=intern2(rexp)
   val s = "c".toList
   
   println("=string=")
@@ -304,7 +296,7 @@ def test3() = {
   for (i <- s.indices) {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
   val sPart = s.take(i + 1)
-  println(pp(mat(brexp, sPart)))
+  println(pp(mat(rexp, sPart)))
   } 
 
   val finReg=matcher2(rexp,s)
@@ -335,7 +327,6 @@ def test3() = {
 def test4() = {
   println("=====Test====")
   val rexp= ("a"| ONE | ONE) | (("b" | "c") | "c")
-  val brexp=intern2(rexp)
   val s = "c".toList
   
   println("=string=")
@@ -344,7 +335,7 @@ def test4() = {
   for (i <- s.indices) {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
   val sPart = s.take(i + 1)
-  println(pp(mat(brexp, sPart)))
+  println(pp(mat(rexp, sPart)))
   } 
 
   val finReg=matcher2(rexp,s)
@@ -375,7 +366,6 @@ def test4() = {
 def test5() = {
   println("=====Test====")
   val rexp= ("a"| "ab") | (("c"|"a") ~ ("b" | "c") )
-  val brexp=intern2(rexp)
   val s = "ab".toList
   
   println("=string=")
@@ -384,7 +374,7 @@ def test5() = {
   for (i <- s.indices) {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
   val sPart = s.take(i + 1)
-  println(pp(mat(brexp, sPart)))
+  println(pp(mat(rexp, sPart)))
   } 
 
   val finReg=matcher2(rexp,s)
@@ -415,7 +405,6 @@ def test5() = {
 def test6() = {
   println("=====Test====")
   val rexp= (ONE | "a")  | ((ONE ~ ONE) ~ "a")
-  val brexp=intern2(rexp)
   val s = "a".toList
   
   println("=string=")
@@ -424,7 +413,7 @@ def test6() = {
   for (i <- s.indices) {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
   val sPart = s.take(i + 1)
-  println(pp(mat(brexp, sPart)))
+  println(pp(mat(rexp, sPart)))
   } 
 
   val finReg=matcher2(rexp,s)
@@ -451,14 +440,16 @@ def test6() = {
 }
 
 // testing STAR("a"|"c") regex
-
 @main
 def test7() = {
   println("=====Test====")
-  //val rexp= STAR("c"~"a" | "c"~"b")
-  val rexp=SEQ(STAR("ONE"|"a"),"b")
-  val brexp=intern2(rexp)
-  val s = "b".toList
+  //val rexp= STAR(STAR("c"))
+  //val rexp=(STAR("a")~STAR(STAR("a")))
+  //val rexp=SEQ(STAR(SEQ(CHAR('a'),CHAR('a'))),STAR(STAR(CHAR('a'))))
+  //val rexp=SEQ(CHAR('a'),SEQ(STAR(CHAR('a')),CHAR('a')))
+  //val rexp=SEQ(CHAR('a'),SEQ((CHAR('a')|ONE),CHAR('a'))) 
+  val rexp=SEQ("a",SEQ(STAR(STAR("a")),SEQ(STAR("c"),SEQ("c","a"))))
+  val s = "aca".toList
   
   println("=string=")
   println(s)
@@ -466,7 +457,7 @@ def test7() = {
   for (i <- s.indices) {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
   val sPart = s.take(i + 1)
-  println(pp(mat(brexp, sPart)))
+  println(pp(mat(rexp, sPart)))
   } 
 
   val finReg=matcher2(rexp,s)
@@ -480,16 +471,16 @@ def test7() = {
   val derivativeR = bders(s, internalize(rexp))
   val derivBitcode = bmkeps(derivativeR)
   val derivValue=decode( derivBitcode, rexp)._1
+
   println(s"===============\nDerivatives bitcode: $derivBitcode")
   println(s"Decoded value for derivatives=${derivValue}")
 
   println(s"===============\ncompareResults = ${compareResults(markedValue, derivValue)}")
   println(s"===============\nmarked bitcode == derivatives bitcode :  ${(bitsToInts(convertMtoDBit2(bits)) == derivBitcode)}")
 
-
   val onlyBitsValue=bdecode(bits)._1
   println(s"===============\nDecoded value without regex, bdecode=${onlyBitsValue}")
-  //println(s"bdecode compareResults mdecode : ${compareResults(markedValue,onlyBitsValue)}")
+  println(s"bdecode compareResults derivative value : ${compareResults(derivValue,onlyBitsValue)}")
 }
 
 

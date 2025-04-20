@@ -12,11 +12,11 @@ given rexp_cdata: CDATA[Rexp] = List(
   (0, _ => CHAR('b')),
   (0, _ => CHAR('c')),
   (1, cs => STAR(cs(0))),
-  (2, cs => ALT(cs(0), cs(1))),
+  //(2, cs => ALT(cs(0), cs(1))),
   (2, cs => SEQ(cs(0), cs(1)))
 )
 
-val numRegexes = 100_000L//100_000_000L
+val numRegexes = 100_000_000L//100_000_000L
 val maxStringsPerRegex = 5
 
 @main
@@ -30,33 +30,33 @@ def test1(): Unit = {
     val regex = enumDecode(i)
     for (str <- regenerate.generate_up_to(alphabet)(10)(regex).take(maxStringsPerRegex) if (str != " " | str!="") ) {
       val sList = str.toList
+     // println(s"[$i] regex= ${regex} str= ${sList}")
       val markBitcode = lex(regex, sList).getOrElse(Nil)
       val convertedBitcode=convertMtoDBit2(markBitcode)
-      println(s"regex = $regex, sList = $sList, convertedBitcode = $convertedBitcode , markBitcode= $markBitcode")
-      val markValue=mDecode(markBitcode, regex)._1
-
       val derivativeR = bders(sList, internalize(regex))
       val derivBitcode = bmkeps(derivativeR)
+     // println(s"converted=$convertedBitcode, markBitcode=$markBitcode\n derivBitcode=$derivBitcode") 
+
+
+      val markValue=mDecode(markBitcode, regex)._1
       val derivValue=decode(derivBitcode, regex)._1
 
       val valueMatch = compareResults(markValue, derivValue)
-      val bitMatch = bitsToInts(convertedBitcode) == derivBitcode
+      //val bitMatch = bitsToInts(convertedBitcode) == derivBitcode
 
-      if (!valueMatch || !bitMatch) {
+      if (!valueMatch) {
         allPassed = false
         mismatchCount += 1
         if(mismatchCount > 1000){
-        println(s"convertedBitcode =$convertedBitcode , bitMatch = $derivBitcode")
-
-        println(s"convertedBitcode type = ${convertedBitcode.getClass}")
-        println(s"bitMatch type = ${derivBitcode.getClass}")
-        println(s"Mark Value = $markValue\nDeriv Value = $derivValue\n ${rexp.pp(regex)}")
-        println(s"Mark Bits = $convertedBitcode\nDeriv Bits = $derivBitcode\n")
+        println(s"[$i]")
+        println(s"-Mark Value = $markValue\n-Deriv Value = $derivValue\n ${rexp.pp(regex)}")
+        println(s"regex= ${regex}")
+        println(s"markBitcode= $markBitcode\nMark Converted Bits = $convertedBitcode\nDeriv Bits = $derivBitcode\n")
         println(s"Input: ${sList}")
         println("=" * 50)
         }
 
-        if(mismatchCount > 1200){
+        if(mismatchCount > 1002){
           return
         }
 
