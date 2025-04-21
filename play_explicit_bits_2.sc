@@ -46,12 +46,12 @@ def mkeps(r: Rexp) : Bits = (r: @unchecked) match {
 def mkfin(r: Rexp) : Bits = (r: @unchecked) match {
   case POINT(bs,CHAR(_)) => bs
   case ALT(r1, r2) => 
-    if (fin(r1) && fin(r2)) {
+/*     if (fin(r1) && fin(r2)) {
       println(s"mkfin1=${mkfin(r1)}, mkfin2=${mkfin(r2)}\ntotalBitsWeight r1 ${totalBitsWeight(mkfin(r1))} and r2 ${totalBitsWeight(mkfin(r2))}")
       if (totalBitsWeight(mkfin(r1))>=totalBitsWeight(mkfin(r2)))
       mkfin(r1) else mkfin(r2)
       
-    } else if (fin(r1)) mkfin(r1) else mkfin(r2)
+    } else  */if (fin(r1)) mkfin(r1) else mkfin(r2)
   case SEQ(r1, r2) if fin(r1) && nullable(r2) => (mkfin(r1)) ::: (SE2 :: mkeps(r2) ) // added SE2 for cases of null r2 not having 3/SE2 flag
   case SEQ(r1, r2) => mkfin(r2) 
 
@@ -60,21 +60,15 @@ def mkfin(r: Rexp) : Bits = (r: @unchecked) match {
 }
 
 // shift function from the paper
-def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = 
-  (r: @unchecked) match {
-
+def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = (r: @unchecked) match {
   case ZERO => ZERO
   case ONE => ONE
   case CHAR(d) => if (m && d == c) POINT(bs:+C,CHAR(d)) else CHAR(d)
-  
   case POINT(bits,CHAR(d)) => if (m && d == c) POINT(bs:+C,CHAR(d)) else CHAR(d)
-
   case ALT(r1, r2) => ALT(shift(m, bs:+Z , r1, c), shift(m, bs:+S, r2, c))
-
   case SEQ(r1, r2) if m && nullable(r1) => SEQ(shift(m, bs:+SE1, r1, c), shift(true,  bs::: (SE1::((mkeps(r1)):+SE2)), r2, c)) 
   case SEQ(r1, r2) if fin(r1) => SEQ(shift(m, bs:+SE1, r1, c), shift(true, ((mkfin(r1))):+SE2, r2, c))
   case SEQ(r1, r2) => SEQ(shift(m, bs:+SE1, r1, c), shift(false, Nil, r2, c)) //Nil
-
   case STAR(r) if m && fin(r) =>STAR(shift(true, (bs) :+ST1, r, c)) //273-     2732 , 274537
   case STAR(r) if fin(r) => STAR(shift(true, (mkfin(r):+ST1), r, c)) 
   case STAR(r) if m => STAR(shift(m, bs:+ST1, r, c))
@@ -245,6 +239,7 @@ def test2() = {
   val rexp=SEQ(
     ALT(ALT(CHAR('a'),CHAR('b')),SEQ(CHAR('a'),CHAR('b'))) , 
     ALT( SEQ(CHAR('b'),CHAR('c')), ALT(CHAR('c'),CHAR('b'))) ) 
+  println(s"regex= $rexp")
   val s = "abc".toList
   
   println("=string=")
@@ -271,7 +266,7 @@ def test2() = {
   println(s"Decoded value for derivatives=${derivValue}")
 
   println(s"===============\ncompareResults = ${compareResults(markedValue, derivValue)}")
-  println(s"derivative bitcode == marked bitcode :  ${(markedValue == derivValue)}")
+  println(s"Marked Value  == Derivative Value :  ${(markedValue == derivValue)}")
 
 
   val onlyBitsValue=bdecode(bits)._1
@@ -289,6 +284,7 @@ def test3() = {
   //val rexp= ONE | ONE~"c"
   //val rexp= ONE | ("a"|ONE)~"c"
   val rexp="ac" | ("c"|"c")
+  println(s"regex= $rexp")
   val s = "c".toList
   
   println("=string=")
@@ -315,7 +311,7 @@ def test3() = {
   println(s"Decoded value for derivatives=${derivValue}")
 
   println(s"===============\ncompareResults = ${compareResults(markedValue, derivValue)}")
-  println(s"derivative bitcode == marked bitcode :  ${(markedValue == derivValue)}")
+  println(s"Marked Value  == Derivative Value :  ${(markedValue == derivValue)}")
 
 
   val onlyBitsValue=bdecode(bits)._1
@@ -328,6 +324,7 @@ def test3() = {
 def test4() = {
   println("=====Test====")
   val rexp= ("a"| ONE | ONE) | (("b" | "c") | "c")
+  println(s"regex= $rexp")
   val s = "c".toList
   
   println("=string=")
@@ -354,7 +351,7 @@ def test4() = {
   println(s"Decoded value for derivatives=${derivValue}")
 
   println(s"===============\ncompareResults = ${compareResults(markedValue, derivValue)}")
-  println(s"derivative bitcode == marked bitcode :  ${(markedValue == derivValue)}")
+  println(s"Marked Value  == Derivative Value :  ${(markedValue == derivValue)}")
 
 
   val onlyBitsValue=bdecode(bits)._1
@@ -367,6 +364,7 @@ def test4() = {
 def test5() = {
   println("=====Test====")
   val rexp= ("a"| "ab") | (("c"|"a") ~ ("b" | "c") )
+  println(s"regex= $rexp")
   val s = "ab".toList
   
   println("=string=")
@@ -393,7 +391,7 @@ def test5() = {
   println(s"Decoded value for derivatives=${derivValue}")
 
   println(s"===============\ncompareResults = ${compareResults(markedValue, derivValue)}")
-  println(s"derivative bitcode == marked bitcode :  ${(markedValue == derivValue)}")
+  println(s"Marked Value  == Derivative Value :  ${(markedValue == derivValue)}")
 
 
   val onlyBitsValue=bdecode(bits)._1
@@ -406,6 +404,7 @@ def test5() = {
 def test6() = {
   println("=====Test====")
   val rexp= (ONE | "a")  | ((ONE ~ ONE) ~ "a")
+  println(s"regex= $rexp")
   val s = "a".toList
   
   println("=string=")
@@ -432,7 +431,7 @@ def test6() = {
   println(s"Decoded value for derivatives=${derivValue}")
 
   println(s"===============\ncompareResults = ${compareResults(markedValue, derivValue)}")
-  println(s"derivative bitcode == marked bitcode :  ${(markedValue == derivValue)}")
+  println(s"Marked Value  == Derivative Value :  ${(markedValue == derivValue)}")
 
 
   val onlyBitsValue=bdecode(bits)._1
@@ -447,6 +446,7 @@ def test7() = {
   //val rexp= STAR(STAR("c"))
   //ALT(STAR(STAR(CHAR(a))),ALT(ALT(CHAR(c),ONE),ALT(CHAR(a),CHAR(b))))
   val rexp=ALT(ALT(ONE,ALT(CHAR('a'),CHAR('a'))),ALT(SEQ(ONE,CHAR('b')),ALT(CHAR('b'),CHAR('a'))))
+  println(s"regex= $rexp")
   val s = "b".toList
   
   println("=string=")
