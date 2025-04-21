@@ -70,8 +70,6 @@ def totalBitsWeight(bs: Bits): Double = {
 
 
 
-
-
 def bitsToInts(bs: Bits): List[Int] = bs.map {
   case Z    => 0
   case S    => 1
