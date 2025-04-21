@@ -35,76 +35,42 @@ case object ST2 extends Bit {
   override def toString = "5"
 }
 
-
 type Bits = List[Bit]
 
-implicit val bitOrdering: Ordering[Bit] = Ordering.by {
+/* implicit val bitOrdering: Ordering[Bit] = Ordering.by {
   case C   => 0  // high priority for matching char?
   case E   => 1
   case Z   => 2
   case S   => 3
   case SE1 => 3
   case SE2 => 3
-}
+} */
 
 val bitWeight: Bit => Double = {
   case C   => 100.0
-  case Z   => 0.5
-  case S   => 0
-  case SE1 => 0
-  case SE2 => 0
-  case E   => 0
+  case Z   => 0
+  case S   => -0.25
+  case SE1 => -0.25
+  case SE2 => -0.25
+  case ST1 => -0.25
+  case ST2 => -0.25
+  case E   => -2.0
+
 }
 
 def totalBitsWeight(bs: Bits): Double = {
   val n = bs.length
   if (n == 0) return 0.0
   val weightedSum = bs.zipWithIndex.map {
-    case (bit, idx) => bitWeight(bit) / (idx + 1) // use bitWeight directly
+    case (bit, idx) => bitWeight(bit) / (idx + 1) 
   }.sum
 
   (weightedSum) * 100.0 // average reward per C, scaled to percentage
 }
 
-def progressiveBitScore(bs: Bits): Double = {
-  val totalLen = bs.length.toDouble
-  if (totalLen == 0.0) return 0.0
 
-  var score = 0.0
-  var currentWeight = totalLen
 
-  bs.foreach {
-    case C =>
-      score += currentWeight
-      currentWeight -= 1
 
-    case Z =>
-      score += 1
-      currentWeight -= 1
-
-    case S =>
-      score += 0
-      currentWeight -= 1
-
-    case SE1 | SE2 | E =>
-      currentWeight -= 1
-
-    case _ =>
-      currentWeight -= 1
-  }
-
-  // Maximum possible score is if *all* bits were C at best positions
-  val maxPossible = (1 to bs.length).reverse.map(_.toDouble).sum
-  (score / maxPossible) * 100.0
-}
-
-def convertMtoDBit(bs: Bits): Bits =
-  bs.collect {
-    case Z   => Z
-    case S   => S
-    case ST1 => Z  
-    case ST2 => S  
-  }
 
 def bitsToInts(bs: Bits): List[Int] = bs.map {
   case Z    => 0
@@ -118,11 +84,11 @@ def bitsToInts(bs: Bits): List[Int] = bs.map {
 }
 
 def convertMtoDBit2(bs: Bits): Bits = bs.flatMap {
-    case ST1 => Some(Z)  // ST1 (4) → 0
-    case ST2 => Some(S)  // ST2 (5) → 1
-    case Z   => Some(Z)  // already 0
-    case S   => Some(S)  // already 1
-    case _   => None     // discard everything else
+    case ST1 => Some(Z)  // ST1 (4) => 0
+    case ST2 => Some(S)  // ST2 (5) => 1
+    case Z   => Some(Z)  //  0 => 0
+    case S   => Some(S)  //  1 => 1
+    case _   => None     // discard 
   }
 
 

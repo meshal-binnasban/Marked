@@ -47,9 +47,10 @@ def mkfin(r: Rexp) : Bits = (r: @unchecked) match {
   case POINT(bs,CHAR(_)) => bs
   case ALT(r1, r2) => 
     if (fin(r1) && fin(r2)) {
-    //println(s"mkfin1=${mkfin(r1)}, mkfin2=${mkfin(r2)}\ntotalBitsWeight r1 ${progressiveBitScore(mkfin(r1))} and r2 ${progressiveBitScore(mkfin(r2))}")
-     if (progressiveBitScore(mkfin(r1))>=progressiveBitScore(mkfin(r2)))
-      mkfin(r1) else mkfin(r2) 
+      println(s"mkfin1=${mkfin(r1)}, mkfin2=${mkfin(r2)}\ntotalBitsWeight r1 ${totalBitsWeight(mkfin(r1))} and r2 ${totalBitsWeight(mkfin(r2))}")
+      if (totalBitsWeight(mkfin(r1))>=totalBitsWeight(mkfin(r2)))
+      mkfin(r1) else mkfin(r2)
+      
     } else if (fin(r1)) mkfin(r1) else mkfin(r2)
   case SEQ(r1, r2) if fin(r1) && nullable(r2) => (mkfin(r1)) ::: (SE2 :: mkeps(r2) ) // added SE2 for cases of null r2 not having 3/SE2 flag
   case SEQ(r1, r2) => mkfin(r2) 
@@ -57,7 +58,6 @@ def mkfin(r: Rexp) : Bits = (r: @unchecked) match {
   case STAR(r) =>  (mkfin(r)) ++ List(ST2)  //ST1:: 
   case INIT(r) => mkfin(r)
 }
-
 
 // shift function from the paper
 def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = 
@@ -148,7 +148,7 @@ def mDecode(bs: Bits, r: Rexp): (VALUE, Bits) =  (r: @unchecked) match {
 
 def compareResults(v1:VALUE, v2:VALUE): Boolean = (v1, v2) match {
   case (EMPTY, EMPTY) => true
-  case (CHARV(c1), CHARV(c2)) =>true// c1 == c2 //true if using bdecode
+  case (CHARV(c1), CHARV(c2)) => c1 == c2 //true if using bdecode
   case (SEQV(a1, b1), SEQV(a2, b2)) =>
     compareResults(a1, a2) && compareResults(b1, b2)
   case (LEFT(vl1), LEFT(vl2)) =>
@@ -203,6 +203,7 @@ def bdecode(bs: Bits): (VALUE, Bits) = bs match {
 def test1() = {
   println("=====Test With ONE====")
   val rexp=SEQ( ALT(ONE, CHAR('c')) ,ALT(SEQ(CHAR('c'),CHAR('c')), CHAR('c')) )
+  println(s"regex= $rexp")
   val s = "cc".toList
 
   println("=string=")
@@ -229,7 +230,7 @@ def test1() = {
   println(s"Decoded value for derivatives=${derivValue}")
 
   println(s"===============\ncompareResults = ${compareResults(markedValue, derivValue)}")
-  println(s"derivative bitcode == marked bitcode :  ${(markedValue == derivValue)}")
+  println(s"Marked mdecode value == Derivative value :  ${(markedValue == derivValue)}")
 
 
   val onlyBitsValue=bdecode(bits)._1
@@ -237,7 +238,7 @@ def test1() = {
   println(s"bdecode compareResults mdecode : ${compareResults(markedValue,onlyBitsValue)}")
 }
 
-// testing (("a" | "b") | ("ab") ) | ("bc" | ("c"| "b"))  regex @main
+// testing (("a" | "b") | ("ab") ) | ("bc" | ("c"| "b"))  regex 
 @main
 def test2() = {
   println("=====Test With SEQ/ALT/CHAR only====")
@@ -444,12 +445,9 @@ def test6() = {
 def test7() = {
   println("=====Test====")
   //val rexp= STAR(STAR("c"))
-  //val rexp=(STAR("a")~STAR(STAR("a")))
-  //val rexp=SEQ(STAR(SEQ(CHAR('a'),CHAR('a'))),STAR(STAR(CHAR('a'))))
-  //val rexp=SEQ(CHAR('a'),SEQ(STAR(CHAR('a')),CHAR('a')))
-  //val rexp=SEQ(CHAR('a'),SEQ((CHAR('a')|ONE),CHAR('a'))) 
-  val rexp=SEQ("a",SEQ(STAR(STAR("a")),SEQ(STAR("c"),SEQ("c","a"))))
-  val s = "aca".toList
+  //ALT(STAR(STAR(CHAR(a))),ALT(ALT(CHAR(c),ONE),ALT(CHAR(a),CHAR(b))))
+  val rexp=ALT(ALT(ONE,ALT(CHAR('a'),CHAR('a'))),ALT(SEQ(ONE,CHAR('b')),ALT(CHAR('b'),CHAR('a'))))
+  val s = "b".toList
   
   println("=string=")
   println(s)
@@ -465,7 +463,7 @@ def test7() = {
   val markedValue=mDecode(bits, rexp)._1
 
   println(s"===============\nFinal Reg:\n ${pp(finReg)} \nnullable=${nullable(finReg)}")
-  println(s"===============\nMarked bitcode: ${bits} \nMarked bitcode converted: ${convertMtoDBit(bits)}")
+  println(s"===============\nMarked bitcode: ${bits} \nMarked bitcode converted: ${convertMtoDBit2(bits)}")
   println(s"Decoded value for Marked=${markedValue}")
 
   val derivativeR = bders(s, internalize(rexp))
