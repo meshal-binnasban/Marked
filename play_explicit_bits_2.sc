@@ -48,16 +48,39 @@ def mkfin(r: Rexp) : Bits = (r: @unchecked) match {
   case NTIMES(r: Rexp, n: Int) => mkfin(r) 
 }
 
+def mkfin2(r: Rexp) : Set[Bits] = r match {
+  case POINT(bs, CHAR(_)) => Set(bs)
+  case ALT(r1, r2) if fin(r1) && fin(r2) => mkfin2(r1) | mkfin2(r2)
+  case ALT(r1, r2) if fin(r1) => mkfin2(r1)
+  case ALT(r1, r2) if fin(r2) => mkfin2(r2)                     
+  case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin2(r1).map(_ ++ mkeps(r2))
+  case SEQ(r1, r2) => mkfin2(r2)
+  case STAR(r) => mkfin2(r).map(_ ++ List(S))
+}
+
+def lex2(r: Rexp, s: List[Char]) : Option[Set[Bits]] = {
+  if matcher(r, s)
+  then Some(if (s == Nil) Set(mkeps(r)) else mkfin2(mat(r, s)))
+  else None
+}
+
 // shift function from the paper
 def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = (r: @unchecked) match {
   case ZERO => ZERO
   case ONE => ONE
   case CHAR(d) => if (m && d == c) POINT(bs:+C,CHAR(d)) else CHAR(d)
   case POINT(bits,CHAR(d)) => if (m && d == c) POINT(bs:+C,CHAR(d)) else CHAR(d)
+
   case ALT(r1, r2) => ALT(shift(m, bs:+Z , r1, c), shift(m, bs:+S, r2, c))
-  case SEQ(r1, r2) if m && nullable(r1) => SEQ(shift(m, bs:+SE1, r1, c), shift(true,  bs::: (SE1::((mkeps(r1)):+SE2)), r2, c)) 
-  case SEQ(r1, r2) if fin(r1) => SEQ(shift(m, bs:+SE1, r1, c), shift(true, ((mkfin(r1))):+SE2, r2, c))
+
+  case SEQ(r1, r2) if m && nullable(r1) =>
+     SEQ(shift(m, bs:+SE1, r1, c), shift(true,  bs::: (SE1::((mkeps(r1)):+SE2)), r2, c)) 
+  
+  case SEQ(r1, r2) if fin(r1) =>
+     SEQ(shift(m, bs:+SE1, r1, c), shift(true, ((mkfin(r1))):+SE2, r2, c))
+  
   case SEQ(r1, r2) => SEQ(shift(m, bs:+SE1, r1, c), shift(false, Nil, r2, c)) //Nil
+  
   case STAR(r) if m && fin(r) =>STAR(shift(true, (bs) :+ST1, r, c)) //273-     2732 , 274537
   case STAR(r) if fin(r) => STAR(shift(true, (mkfin(r):+ST1), r, c)) 
   case STAR(r) if m => STAR(shift(m, bs:+ST1, r, c))
@@ -137,7 +160,8 @@ def compareResults(v1:VALUE, v2:VALUE): Boolean = (v1, v2) match {
     compareResults(vl1, vl2)
   case (RIGHT(vr1), RIGHT(vr2)) =>
     compareResults(vr1, vr2)
-  case (STARV(vs1), STARV(vs2)) => 
+  case (STARV(vs1), STARV(vs2))           =>
+    vs1.length == vs2.length &&
       vs1.zip(vs2).forall { case (x, y) => compareResults(x, y) } 
   case (ERRORVALUE(_), ERRORVALUE(_)) => true 
   case _ => false 
@@ -215,6 +239,11 @@ def test1() = {
   val onlyBitsValue=bdecode(bits)._1
   println(s"===============\nDecoded value without regex, bdecode=${onlyBitsValue}")
   println(s"bdecode compareResults mdecode : ${compareResults(markedValue,onlyBitsValue)}")
+
+  val bitsSet=lex2(rexp,s).getOrElse(Set())
+  for( b <- bitsSet) {
+    println(s"bitsSet=${b}")
+  }
 }
 
 // testing (("a" | "b") | ("ab") ) | ("bc" | ("c"| "b"))  regex 
@@ -417,13 +446,11 @@ def test6() = {
 @main
 def test7() = {
   println("=====Test====")
-  //val rexp= STAR(STAR("c"))
-  //ALT(STAR(STAR(CHAR(a))),ALT(ALT(CHAR(c),ONE),ALT(CHAR(a),CHAR(b))))
-  val rexp=ALT(ALT(ONE,ALT(CHAR('a'),CHAR('a'))),ALT(SEQ(ONE,CHAR('b')),ALT(CHAR('b'),CHAR('a'))))
-  //val rexp=(ONE | ("a" | "a")) | (ONE ~ "b" | ("b"|"a"))
+  //val rexp=ALT(ALT(ONE,ALT(CHAR('a'),CHAR('a'))),ALT(SEQ(ONE,CHAR('b')),ALT(CHAR('b'),CHAR('a'))))
+  val rexp=SEQ(CHAR('a'),STAR(STAR(CHAR('a'))))
   println(s"regex= $rexp")
-  val s = "b".toList
-  
+ // val s = "b".toList
+  val s = "aaaa".toList
   println("=string=")
   println(s)
   
@@ -464,6 +491,6 @@ def pp(e: Rexp) : String = (e: @unchecked) match {
   case ALT(r1, r2) => s"ALT \n" ++ pps(r1, r2)
   case SEQ(r1, r2) => s"SEQ \n" ++ pps(r1, r2)
   case STAR(r) => s"STAR \n" ++ pps(r)
-  case INIT(r) => s"INIT\n" ++ pps(r)
+  //case INIT(r) => s"INIT\n" ++ pps(r)
 }
 def pps(es: Rexp*) = indent(es.map(pp))
