@@ -171,6 +171,18 @@ def bitsToInts(bs: Bits): List[Int] = bs.map {
   case ST2  => 5
 }
 
+def intsToBits(bs: List[Int]): Bits = bs.map {
+  case 0 => Z
+  case 1 => S
+  case 2 => SE1
+  case 3 => SE2
+  case 4 => ST1
+  case 5 => ST2
+  case 7 => C
+  case 8 => E
+}
+
+
 def convertMtoDBit2(bs: Bits): Bits = bs.flatMap {
     case ST1 => Some(Z)  // ST1 (4) => 0
     case ST2 => Some(S)  // ST2 (5) => 1
@@ -178,6 +190,7 @@ def convertMtoDBit2(bs: Bits): Bits = bs.flatMap {
     case S   => Some(S)  //  1 => 1
     case _   => None     // discard 
   }
+
 
 
 

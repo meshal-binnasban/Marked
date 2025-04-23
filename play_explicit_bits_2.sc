@@ -48,7 +48,7 @@ def mkfin(r: Rexp) : Bits = (r: @unchecked) match {
   case NTIMES(r: Rexp, n: Int) => mkfin(r) 
 }
 
-def mkfin2(r: Rexp) : Set[Bits] = r match {
+def mkfin2(r: Rexp) : Set[Bits] = (r: @unchecked) match {
   case POINT(bs, CHAR(_)) => Set(bs)
   case ALT(r1, r2) if fin(r1) && fin(r2) => mkfin2(r1) | mkfin2(r2)
   case ALT(r1, r2) if fin(r1) => mkfin2(r1)
