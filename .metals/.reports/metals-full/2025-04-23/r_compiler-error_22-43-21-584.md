@@ -1,3 +1,16 @@
+file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/play_explicit_bits_2.sc
+### java.lang.NullPointerException: Cannot invoke "scala.meta.internal.pc.CompilerWrapper.compiler()" because "access" is null
+
+occurred in the presentation compiler.
+
+presentation compiler configuration:
+
+
+action parameters:
+offset: 3506
+uri: file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/play_explicit_bits_2.sc
+text:
+```scala
 import scala.language.implicitConversions
 import $file.rexp, rexp._, rexp.Rexp._, rexp.VALUE._
 import $file.derivativesBitcode, derivativesBitcode._
@@ -19,8 +32,7 @@ def fin(r: Rexp) : Boolean = (r: @unchecked) match {
   case POINT(bs,CHAR(_)) => true
   case ALT(r1, r2) => fin(r1) || fin(r2)
   case SEQ(r1, r2) => (fin(r1) && nullable(r2)) || fin(r2)
-  case STAR(r) => {
-    fin(r)}
+  case STAR(r) => fin(r)
   case NTIMES(r,n) => fin(r) // count occurences vs n?
 }
 
@@ -29,7 +41,7 @@ def mkeps(r: Rexp) : Bits = (r: @unchecked) match {
   case POINT(bs,CHAR(c)) => bs
   case ALT(r1, r2) => if (nullable(r1)) Z :: mkeps(r1) else S :: mkeps(r2)  
   case SEQ(r1, r2) => (SE1::mkeps(r1)) ::: (SE2 :: mkeps(r2) ) // if nullable r1 add 2?
-  case STAR(r) =>  List(ST2) 
+  case STAR(r) =>List(ST2)
   //case CHAR(_) => Nil //for testing mkeps outside lex
 }
 
@@ -47,15 +59,6 @@ def mkfin(r: Rexp) : Bits = (r: @unchecked) match {
 
   case STAR(r) =>  (mkfin(r)) ++ List(ST2)  //ST1:: 
   case NTIMES(r: Rexp, n: Int) => mkfin(r) 
-}
-
-def mkfinStar(r: Rexp) : Bits = (r: @unchecked) match {
-  case POINT(bs,CHAR(_)) => bs
-  case ALT(r1, r2) => if (fin(r1)) mkfinStar(r1) else mkfinStar(r2)
-  case SEQ(r1, r2) if fin(r1) && nullable(r2) => (mkfinStar(r1)) ::: (SE2 :: mkeps(r2) ) // added SE2 for cases of null r2 not having 3/SE2 flag
-  case SEQ(r1, r2) => mkfinStar(r2) 
-  case STAR(r) =>  (mkfinStar(r))   //ST1:: 
-  case NTIMES(r: Rexp, n: Int) => mkfinStar(r) 
 }
 
 def mkfin2(r: Rexp) : Set[Bits] = (r: @unchecked) match {
@@ -84,27 +87,17 @@ def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = (r: @unchecked) match
   case ALT(r1, r2) => ALT(shift(m, bs:+Z , r1, c), shift(m, bs:+S, r2, c))
 
   case SEQ(r1, r2) if m && nullable(r1) =>
-    SEQ(shift(m, bs:+SE1, r1, c), shift(true,  bs::: (SE1::((mkeps(r1)):+SE2)), r2, c)) 
+     SEQ(shift(m, bs:+SE1, r1, c), shift(true,  bs::: (SE1::((mkeps(r1)):+SE2)), r2, c)) 
+  
   case SEQ(r1, r2) if fin(r1) =>
      SEQ(shift(m, bs:+SE1, r1, c), shift(true, ((mkfin(r1))):+SE2, r2, c))
-  case SEQ(r1, r2) => 
-    SEQ(shift(m, bs:+SE1, r1, c), shift(false, Nil, r2, c)) //Nil
   
-
- // case STAR(r) if m && nullable(r) && fin(r) =>STAR(shift(true,(bs), r, c))   
-  //case STAR(r) if m && nullable(r) =>STAR(shift(true,(bs):+ST1, r, c)) 
-
-  // need extra case check for test9, maybe nullable again or?
-  case STAR(r) if m && fin(r)=>
-    STAR(shift(true,(bs):+ST1, r, c)) 
-
-  case STAR(r) if fin(r) => 
-    STAR(shift(true, mkfinStar(r):+ST1 , r, c)) 
-
-  case STAR(r) if m =>
-    STAR(shift(m, bs:+ST1, r, c))
-  case STAR(r) => 
-    STAR(shift(false, Nil, r, c))
+  case SEQ(r1, r2) => SEQ(shift(m, bs:+SE1, r1, c), shift(false, Nil, r2, c)) //Nil
+  
+  case STAR(r) if m && nullable(r1)  => if(fin(r)) STAR(shift(true,mkfin(r), r, c))  else  STAR(shift(true, (bs) :+ST1, r, c))
+  case STAR(r) if fin(r) => STAR(shift(true, (mkfin(r):+ST1), r, c)) 
+  case STAR(r) if m => STAR(shift(m, bs:+ST1, r, c))
+  case STAR(r) => STAR(shift(false, Nil, r,@@ c))
 
   
 }
@@ -503,7 +496,7 @@ def test7() = {
 @main
 def test8() = {
   println("=====Test====")
-  val rexp=SEQ(STAR(SEQ(CHAR('a'),CHAR('a'))),(STAR(CHAR('a'))))
+  val rexp=SEQ(STAR(SEQ(CHAR('a'),CHAR('a'))),STAR(STAR(CHAR('a'))))
   println(s"regex= $rexp")
   val s = "aaa".toList
   println("=string=")
@@ -516,10 +509,10 @@ def test8() = {
   } 
 
   val bits=lex(rexp, s).getOrElse(Nil)
-  //val markedValue=mDecode(bits, rexp)._1
+  val markedValue=mDecode(bits, rexp)._1
 
   println(s"===============\nMarked bitcode: ${bits} \nMarked bitcode converted: ${convertMtoDBit2(bits)}")
-  //println(s"Decoded value for Marked=${markedValue}")
+  println(s"Decoded value for Marked=${markedValue}")
 
   val derivativeR = bders(s, internalize(rexp))
   val derivBitcode = bmkeps(derivativeR)
@@ -528,7 +521,7 @@ def test8() = {
   println(s"===============\nDerivatives bitcode: $derivBitcode")
   println(s"Decoded value for derivatives=${derivValue}")
 
-  //println(s"===============\ncompareResults = ${compareResults(markedValue, derivValue)}")
+  println(s"===============\ncompareResults = ${compareResults(markedValue, derivValue)}")
   println(s"===============\nmarked bitcode == derivatives bitcode :  ${(bitsToInts(convertMtoDBit2(bits)) == derivBitcode)}")
 
   val onlyBitsValue=bdecode(bits)._1
@@ -551,42 +544,7 @@ def test9() = {
   } 
 
   val bits=lex(rexp, s).getOrElse(Nil)
- // val markedValue=mDecode(bits, rexp)._1
-
-  println(s"===============\nMarked bitcode: ${bits} \nMarked bitcode converted: ${convertMtoDBit2(bits)}")
-  //println(s"Decoded value for Marked=${markedValue}")
-
-  val derivativeR = bders(s, internalize(rexp))
-  val derivBitcode = bmkeps(derivativeR)
-  val derivValue=decode( derivBitcode, rexp)._1
-
-  println(s"===============\nDerivatives bitcode: $derivBitcode")
-  println(s"Decoded value for derivatives=${derivValue}")
-
-  //println(s"===============\ncompareResults = ${compareResults(markedValue, derivValue)}")
-  println(s"===============\nmarked bitcode == derivatives bitcode :  ${(bitsToInts(convertMtoDBit2(bits)) == derivBitcode)}")
-
-  val onlyBitsValue=bdecode(bits)._1
-  println(s"===============\nDecoded value without regex, bdecode=${onlyBitsValue}")
-  println(s"bdecode compareResults derivative value : ${compareResults(derivValue,onlyBitsValue)}")
-}
-
-@main
-def test10() = {
-  println("=====Test====")
-  val rexp=STAR(("a"~ONE))
-  println(s"regex= $rexp")
-  val s = "aaa".toList
-  println("=string=")
-
-  for (i <- s.indices) {
-  println(s"\n ${i + 1}- =shift ${s(i)}=")
-  val sPart = s.take(i + 1)
-  println(pp(mat(rexp, sPart)))
-  } 
-
-  val bits=lex(rexp, s).getOrElse(Nil)
- // val markedValue=mDecode(bits, rexp)._1
+  val markedValue=mDecode(bits, rexp)._1
 
   println(s"===============\nMarked bitcode: ${bits} \nMarked bitcode converted: ${convertMtoDBit2(bits)}")
   //println(s"Decoded value for Marked=${markedValue}")
@@ -617,3 +575,15 @@ def pp(e: Rexp) : String = (e: @unchecked) match {
   //case INIT(r) => s"INIT\n" ++ pps(r)
 }
 def pps(es: Rexp*) = indent(es.map(pp))
+```
+
+
+
+#### Error stacktrace:
+
+```
+dotty.tools.pc.ScalaPresentationCompiler.hover$$anonfun$1(ScalaPresentationCompiler.scala:388)
+```
+#### Short summary: 
+
+java.lang.NullPointerException: Cannot invoke "scala.meta.internal.pc.CompilerWrapper.compiler()" because "access" is null

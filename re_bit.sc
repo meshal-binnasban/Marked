@@ -1,15 +1,4 @@
-
-
-
-
-abstract class Rexp
-case object ZERO extends Rexp
-case object ONE extends Rexp
-case class CHAR(c: Char) extends Rexp
-case class ALT(r1: Rexp, r2: Rexp) extends Rexp 
-case class SEQ(r1: Rexp, r2: Rexp) extends Rexp 
-case class STAR(r: Rexp) extends Rexp 
-case class NTIMES(r: Rexp, n: Int) extends Rexp 
+import $file.rexp, rexp._, rexp.Rexp._, rexp.VALUE._
 
 abstract class ARexp
 case class AZERO() extends ARexp
@@ -20,15 +9,6 @@ case class ASEQ(bs: Bits, r1: ARexp, r2: ARexp) extends ARexp
 case class ASTAR(bs: Bits, r: ARexp) extends ARexp
 //case class ANTIMES(bs: Bits, r: ARexp, n: Int) extends ARexp
 
-abstract class Bit
-case object Z extends Bit {
-  override def toString = "0"
-}
-case object S extends Bit {
-  override def toString = "1"
-}
-
-type Bits = List[Bit]
 
 def fuse(bs: Bits, r: ARexp): ARexp = r match {
   case AZERO() => AZERO()

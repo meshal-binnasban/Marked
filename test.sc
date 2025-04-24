@@ -1,26 +1,25 @@
 import $file.enumerate, enumerate.{decode as enumDecode, CDATA} , $file.regenerate, regenerate._
 import $file.rexp, rexp._, rexp.Rexp._, rexp.VALUE._
-//import $file.play_explicit_bits_2, play_explicit_bits_2._
 import $file.play_explicit_bits_2, play_explicit_bits_2._
+//import $file.play_explicit_bits_2, play_explicit_bits_2._
 import $file.derivativesBitcode, derivativesBitcode._
-
 
 val alphabet: LazyList[Char] = LazyList('a', 'b', 'c')
 
 given rexp_cdata: CDATA[Rexp] = List(
-  (0, _ => ONE),
+  //(0, _ => ONE),
   (0, _ => CHAR('a')),
   (0, _ => CHAR('b')),
   (0, _ => CHAR('c')),
-  //(1, cs => STAR(cs(0))),
-  (2, cs => ALT(cs(0), cs(1))),
+  (1, cs => STAR(cs(0))),
+  //(2, cs => ALT(cs(0), cs(1))),
   (2, cs => SEQ(cs(0), cs(1)))
 )
 
-val numRegexes = 100_000L//100_000_000L
+val numRegexes = 100L//100_000_000L
 val maxStringsPerRegex = 5
 
-@main
+/* @main
 def test1(): Unit = {
   println(s"🔍 Testing first $numRegexes regexes with up to $maxStringsPerRegex matching strings each\n")
   println("=" * 50)
@@ -71,6 +70,7 @@ def test1(): Unit = {
    else 
     println(s"\nFound $mismatchCount mismatches: \n")
 }
+ */
 
 @main
 def test2(): Unit = {
@@ -89,9 +89,9 @@ def test2(): Unit = {
 
       val derivativeR = bders(sList, internalize(regex))
       val derivBitcode = bmkeps(derivativeR)
-      val derivBitcodeBits=intsToBits(derivBitcode)
+      val derivBitcodeBits=intsToBits(derivBitcode) 
 
-    
+
       val derivInMarkSet: Boolean = convertedMarkBitcode.contains(derivBitcodeBits)
 
       //val markValue=mDecode(markBitcode, regex)._1
@@ -105,7 +105,7 @@ def test2(): Unit = {
         if(mismatchCount > 1){
         println(s"[$i]\nRegex= ${regex}\n${rexp.pp(regex)}")
        // println(s"-Mark Value = $markValue\n\n-Deriv Value = $derivValue\n")
-        println(s"markBitcode= $markBitcode\nDeriv Bits = $derivBitcode\n")
+        println(s"convertedMarkBitcode= $convertedMarkBitcode\nDeriv Bits = $derivBitcode\n")
         println(s"Input: ${sList}")
         //println(s"Value Match = $valueMatch\nBit match = $bitMatch")
        // println(s"medecode.2 ${mDecode(markBitcode, regex)._2}")
