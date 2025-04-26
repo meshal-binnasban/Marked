@@ -135,6 +135,13 @@ case object ST1 extends Bit {
 case object ST2 extends Bit {
   override def toString = "5"
 }
+case object A1 extends Bit {
+  override def toString = "10"
+}
+case object B1 extends Bit {
+  override def toString = "11"
+}
+
 
 type Bits = List[Bit]
 
@@ -201,4 +208,35 @@ def convertMtoDBit2(bs: Bits): Bits = bs.flatMap {
   case S   => 3
   case SE1 => 3
   case SE2 => 3
+} */
+/* enum PriorityType:
+  case A
+  case B
+  case N
+
+import PriorityType._
+
+case class Priority(
+  p: PriorityType = N,
+  pOrder: Int = 0,
+)
+
+def maxPriority(p1: Priority, p2: Priority): Priority = {
+  def typeWeight(pt: PriorityType): Int = pt match {
+    case A => 3
+    case B => 2
+    case N => 1
+  }
+  val w1 = typeWeight(p1.p)
+  val w2 = typeWeight(p2.p)
+  (w1 compare w2) match {
+    case 1  => p1   // w1 > w2
+    case -1 => p2   // w1 < w2
+    case 0  =>       // tie on type ⇒ compare pOrder
+      (p1.pOrder compare p2.pOrder) match {
+        case 1  => p1 // p1.pOrder > p2.pOrder
+        case -1 => p2 // p1.pOrder < p2.pOrder
+        case 0  => p1 // perfect tie ⇒ first argument wins
+      }
+  }
 } */

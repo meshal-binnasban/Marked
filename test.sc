@@ -7,16 +7,16 @@ import $file.derivativesBitcode, derivativesBitcode._
 val alphabet: LazyList[Char] = LazyList('a', 'b', 'c')
 
 given rexp_cdata: CDATA[Rexp] = List(
-  //(0, _ => ONE),
+  (0, _ => ONE),
   (0, _ => CHAR('a')),
   (0, _ => CHAR('b')),
   (0, _ => CHAR('c')),
-  (1, cs => STAR(cs(0))),
-  //(2, cs => ALT(cs(0), cs(1))),
+ // (1, cs => STAR(cs(0))),
+  (2, cs => ALT(cs(0), cs(1))),
   (2, cs => SEQ(cs(0), cs(1)))
 )
 
-val numRegexes = 100L//100_000_000L
+val numRegexes = 100_000L//100_000_000L
 val maxStringsPerRegex = 5
 
 /* @main
@@ -84,28 +84,30 @@ def test2(): Unit = {
     for (str <- regenerate.generate_up_to(alphabet)(10)(regex).take(maxStringsPerRegex) if (str!="") ) {
       val sList = str.toList
 
-      val markBitcode: Set[Bits] =lex2(regex, sList).getOrElse(Set.empty[Bits])
-      val convertedMarkBitcode: Set[Bits] =markBitcode.map(convertMtoDBit2)
+      //val markBitcode: Set[Bits] =lex2(regex, sList).getOrElse(Set.empty[Bits])
+      //val convertedMarkBitcode: Set[Bits] =markBitcode.map(convertMtoDBit2)
+      //val derivInMarkSet: Boolean = convertedMarkBitcode.contains(derivBitcodeBits)
+
+      val markBitcode = lex(regex, sList).getOrElse(Nil)
+      val markedBitsConverted=convertMtoDBit2(markBitcode)
+
 
       val derivativeR = bders(sList, internalize(regex))
       val derivBitcode = bmkeps(derivativeR)
       val derivBitcodeBits=intsToBits(derivBitcode) 
 
-
-      val derivInMarkSet: Boolean = convertedMarkBitcode.contains(derivBitcodeBits)
-
       //val markValue=mDecode(markBitcode, regex)._1
       //val derivValue=decode(derivBitcode, regex)._1
       //val valueMatch = compareResults(markValue, derivValue)
-      //val bitMatch = bitsToInts(markBitcode) == derivBitcode
+      val bitMatch = bitsToInts(markedBitsConverted) == derivBitcode
 
-      if (!derivInMarkSet) {
+      if (!bitMatch) {
         allPassed = false
         mismatchCount += 1
         if(mismatchCount > 1){
         println(s"[$i]\nRegex= ${regex}\n${rexp.pp(regex)}")
        // println(s"-Mark Value = $markValue\n\n-Deriv Value = $derivValue\n")
-        println(s"convertedMarkBitcode= $convertedMarkBitcode\nDeriv Bits = $derivBitcode\n")
+        println(s"convertedMarkBitcode= $markedBitsConverted\nDeriv Bits = $derivBitcode\n")
         println(s"Input: ${sList}")
         //println(s"Value Match = $valueMatch\nBit match = $bitMatch")
        // println(s"medecode.2 ${mDecode(markBitcode, regex)._2}")
