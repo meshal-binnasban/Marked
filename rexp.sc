@@ -141,6 +141,9 @@ case object A1 extends Bit {
 case object B1 extends Bit {
   override def toString = "11"
 }
+case object C1 extends Bit {
+  override def toString = "12"
+}
 
 
 type Bits = List[Bit]

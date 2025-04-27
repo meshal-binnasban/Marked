@@ -44,7 +44,7 @@ def splitPriorityPrefix(bits: Bits): (Bits, Bit, Int) = {
     (suffix, winner, winnerCount)
   }
   else {
-    (bits, A1, 1)
+    (bits, C1, 1)
   }
 }
 
@@ -56,18 +56,30 @@ def mkfin(r: Rexp) : Bits = (r: @unchecked) match {
         val (rest2, winner2, count2) = splitPriorityPrefix(mkfin(r2))
         println(s"rest1=$rest1,winner1=$winner1,count1=$count1")
         println(s"rest2=$rest2,winner2=$winner2,count1=$count2")
+        winner1 match{
+            case A1 =>
+                winner2 match{
+                    case A1 => if(count1>=count2) mkfin(r1) else mkfin(r2) 
+                    case B1 => mkfin(r1)
+                    case C1 => mkfin(r1)  
+                }
+            case B1 =>
+                winner2 match{
+                    case A1 => mkfin(r2) 
+                    case B1 => if(count1>=count2) mkfin(r1) else mkfin(r2)
+                    case C1 => mkfin(r1)  
+                }
+            case C1 =>
+                winner2 match{
+                    case A1 => mkfin(r2) 
+                    case B1 => mkfin(r1)
+                    case C1 => mkfin(r1)  
+                }
 
-        if(winner1==winner2){
-            if(count1>=count2)
-            mkfin(r1)
-            else
-                mkfin(r2)
-        }else{
-            if(winner1==A1)
-            mkfin(r1)
-            else
-                mkfin(r2)
-            }
+        }
+        
+
+
     } else  if (fin(r1)) mkfin(r1) else mkfin(r2)
   case SEQ(r1, r2) if fin(r1) && nullable(r2) => (mkfin(r1)) ::: (SE2 :: mkeps(r2) ) // added SE2 for cases of null r2 not having 3/SE2 flag
   case SEQ(r1, r2) => mkfin(r2) 
@@ -599,6 +611,49 @@ def test8() = {
   println(s"===============\nDecoded value without regex, bdecode=${onlyBitsValue}")
 
 }
+
+// testing ALT(SEQ(ONE,CHAR('a')) , ALT(ONE, CHAR('a'))) regex
+@main
+def test9() = {
+  println("=====Test====")
+  val rexp=ALT(SEQ(ONE,CHAR('a')) , ALT(ONE, CHAR('a'))) 
+  println(s"regex= $rexp")
+ // val s = "b".toList
+  val s = "a".toList
+  
+  println("=string=")
+  println(s)
+  
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  val sPart = s.take(i + 1)
+  println(pp(mat(rexp, sPart)))
+  } 
+
+  val bits=lex(rexp, s).getOrElse(Nil)
+  val markedBitsConverted=convertMtoDBit2(bits)
+
+  val markedValue=mDecode(bits, rexp)._1
+
+  println(s"===============\nMarked bitcode: ${bits}")
+  println(s"Decoded value for Marked=${markedValue}")
+
+  val derivativeR = bders(s, internalize(rexp))
+  val derivBitcode = bmkeps(derivativeR)
+  val derivValue=decode( derivBitcode, rexp)._1
+
+  println(s"===============\nDerivatives bitcode: $derivBitcode")
+  println(s"Decoded value for derivatives=${derivValue}")
+
+  println(s"===============\nComparing Values using compareResults = ${compareResults(markedValue, derivValue)}")
+  println(s"Marked mdecode value == Derivative value :  ${(markedValue == derivValue)}")
+  println(s"===============\nmarked bitcode == derivatives bitcode :  ${(bitsToInts(convertMtoDBit2(bits)) == derivBitcode)}")
+
+  val onlyBitsValue=bdecode(bits)._1
+  println(s"===============\nDecoded value without regex, bdecode=${onlyBitsValue}")
+
+}
+
 
 def pp(e: Rexp) : String = (e: @unchecked) match {
   case ZERO => "0\n"
