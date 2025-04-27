@@ -71,15 +71,11 @@ def mkfin(r: Rexp) : Bits = (r: @unchecked) match {
                 }
             case C1 =>
                 winner2 match{
-                    case A1 => mkfin(r2) 
+                    case A1 => mkfin(r1) 
                     case B1 => mkfin(r1)
                     case C1 => mkfin(r1)  
                 }
-
         }
-        
-
-
     } else  if (fin(r1)) mkfin(r1) else mkfin(r2)
   case SEQ(r1, r2) if fin(r1) && nullable(r2) => (mkfin(r1)) ::: (SE2 :: mkeps(r2) ) // added SE2 for cases of null r2 not having 3/SE2 flag
   case SEQ(r1, r2) => mkfin(r2) 
@@ -118,8 +114,8 @@ def shift(m: Boolean, bs: Bits, r: Rexp, c: Char,p:Boolean) : Rexp = (r: @unchec
         val rs2=shift(true,  (B1::bs)::: (SE1::((mkeps(r1)):+SE2)), r2, c,false)
         SEQ( rs1, rs2)
     }else {
-        val rs1=shift(m, (B1::bs):+SE1, r1, c,false)
-        val rs2=shift(true,  (B1::bs)::: (SE1::((mkeps(r1)):+SE2)), r2, c,false)
+        val rs1=shift(m, ((bs)):+SE1, r1, c,false)
+        val rs2=shift(true,  ((bs))::: (SE1::((mkeps(r1)):+SE2)), r2, c,false)
         SEQ( rs1, rs2)
     }
   case SEQ(r1, r2) if fin(r1) =>
@@ -128,17 +124,17 @@ def shift(m: Boolean, bs: Bits, r: Rexp, c: Char,p:Boolean) : Rexp = (r: @unchec
     val rs2=shift(true, (B1::((mkfin(r1)))):+SE2, r2, c,false)
     SEQ(rs1, rs2) 
     }else {
-        val rs1=shift(m, (B1::bs):+SE1, r1, c ,false)
-        val rs2=shift(true, (B1::((mkfin(r1)))):+SE2, r2, c,false)
+        val rs1=shift(m, (bs):+SE1, r1, c ,false)
+        val rs2=shift(true, (((mkfin(r1)))):+SE2, r2, c,false)
         SEQ(rs1, rs2)
     }
   case SEQ(r1, r2) => 
     if(p){
-    val rs1=shift(m, (A1::bs):+SE1, r1, c,true)
-    val rs2=shift(false, List(B1), r2, c,true)
+    val rs1=shift(m, (A1::(bs)):+SE1, r1, c,true)
+    val rs2=shift(false, Nil, r2, c,true)
     SEQ(rs1,rs2)
     }else{
-    val rs1=shift(m, (bs):+SE1, r1, c,false)
+    val rs1=shift(m, (B1::(bs)):+SE1, r1, c,false)
     val rs2=shift(false, Nil, r2, c,false)
     SEQ(rs1,rs2 )
     } //Nil
@@ -654,6 +650,48 @@ def test9() = {
 
 }
 
+// testing ALT(ALT(ONE,CHAR(a)),SEQ(CHAR(a),ONE)) regex
+@main
+def test10() = {
+  println("=====Test====")
+  //val rexp=ALT(ALT(ONE,CHAR('a')),SEQ(CHAR('a'),ONE))
+  val rexp=ALT(CHAR('a'),ALT(SEQ(ONE,CHAR('b')),SEQ(CHAR('b'),ONE)))
+  println(s"regex= $rexp")
+
+  val s = "b".toList
+  
+  println("=string=")
+  println(s)
+  
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  val sPart = s.take(i + 1)
+  println(pp(mat(rexp, sPart)))
+  } 
+
+  val bits=lex(rexp, s).getOrElse(Nil)
+  val markedBitsConverted=convertMtoDBit2(bits)
+
+  val markedValue=mDecode(bits, rexp)._1
+
+  println(s"===============\nMarked bitcode: ${bits}")
+  println(s"Decoded value for Marked=${markedValue}")
+
+  val derivativeR = bders(s, internalize(rexp))
+  val derivBitcode = bmkeps(derivativeR)
+  val derivValue=decode( derivBitcode, rexp)._1
+
+  println(s"===============\nDerivatives bitcode: $derivBitcode")
+  println(s"Decoded value for derivatives=${derivValue}")
+
+  println(s"===============\nComparing Values using compareResults = ${compareResults(markedValue, derivValue)}")
+  println(s"Marked mdecode value == Derivative value :  ${(markedValue == derivValue)}")
+  println(s"===============\nmarked bitcode == derivatives bitcode :  ${(bitsToInts(convertMtoDBit2(bits)) == derivBitcode)}")
+
+  val onlyBitsValue=bdecode(bits)._1
+  println(s"===============\nDecoded value without regex, bdecode=${onlyBitsValue}")
+
+}
 
 def pp(e: Rexp) : String = (e: @unchecked) match {
   case ZERO => "0\n"

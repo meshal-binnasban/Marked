@@ -1,13 +1,13 @@
 import $file.enumerate, enumerate.{decode as enumDecode, CDATA} , $file.regenerate, regenerate._
 import $file.rexp, rexp._, rexp.Rexp._, rexp.VALUE._
-import $file.play_explicit_bits_2, play_explicit_bits_2._
+//import $file.play_explicit_bits_3, play_explicit_bits_3._
 //import $file.play_explicit_bits_2, play_explicit_bits_2._
 import $file.derivativesBitcode, derivativesBitcode._
-
+import $file.play_ComplexMarks, play_ComplexMarks._
 val alphabet: LazyList[Char] = LazyList('a', 'b', 'c')
 
 given rexp_cdata: CDATA[Rexp] = List(
-  (0, _ => ONE),
+  //(0, _ => ONE),
   (0, _ => CHAR('a')),
   (0, _ => CHAR('b')),
   (0, _ => CHAR('c')),
@@ -16,7 +16,7 @@ given rexp_cdata: CDATA[Rexp] = List(
   (2, cs => SEQ(cs(0), cs(1)))
 )
 
-val numRegexes = 100_000L//100_000_000L
+val numRegexes = 100_000_00L//100_000_000L
 val maxStringsPerRegex = 5
 
 /* @main
@@ -72,7 +72,7 @@ def test1(): Unit = {
 }
  */
 
-@main
+/* @main
 def test2(): Unit = {
   println(s"🔍 Testing first $numRegexes regexes with up to $maxStringsPerRegex matching strings each\n")
   println("=" * 50)
@@ -108,6 +108,58 @@ def test2(): Unit = {
         println(s"[$i]\nRegex= ${regex}\n${rexp.pp(regex)}")
        // println(s"-Mark Value = $markValue\n\n-Deriv Value = $derivValue\n")
         println(s"convertedMarkBitcode= $markedBitsConverted\nDeriv Bits = $derivBitcode\n")
+        println(s"Input: ${sList}")
+        //println(s"Value Match = $valueMatch\nBit match = $bitMatch")
+       // println(s"medecode.2 ${mDecode(markBitcode, regex)._2}")
+
+        println("=" * 50)
+        }
+
+        if(mismatchCount > 3){
+          return
+        }
+
+      }
+    }
+    
+  }// end of for
+
+  if (allPassed) 
+    println("\nAll strings and bitcodes matched")
+   else 
+    println(s"\nFound $mismatchCount mismatches: \n")
+} */
+
+@main
+def test3(): Unit = {
+  println(s"🔍 Testing first $numRegexes regexes with up to $maxStringsPerRegex matching strings each\n")
+  println("=" * 50)
+  var allPassed = true
+  var mismatchCount = 0
+
+  for (i <- 0L to numRegexes) {
+    val regex = enumDecode(i)
+    for (str <- regenerate.generate_up_to(alphabet)(10)(regex).take(maxStringsPerRegex) if (str!="") ) {
+      val sList = str.toList
+
+      val markBitcode = lexComplex(regex,sList).getOrElse(Nil).filter(Set(0, 1))
+
+      val derivativeR = bders(sList, internalize(regex))
+      val derivBitcode = bmkeps(derivativeR)
+      val derivBitcodeBits=intsToBits(derivBitcode) 
+
+      //val markValue=mDecode(markBitcode, regex)._1
+      //val derivValue=decode(derivBitcode, regex)._1
+      //val valueMatch = compareResults(markValue, derivValue)
+      val bitMatch = markBitcode == derivBitcode
+
+      if (!bitMatch) {
+        allPassed = false
+        mismatchCount += 1
+        if(mismatchCount > 1){
+        println(s"[$i]\nRegex= ${regex}\n${rexp.pp(regex)}")
+       // println(s"-Mark Value = $markValue\n\n-Deriv Value = $derivValue\n")
+        println(s"markBitcode= $markBitcode\nDeriv Bits = $derivBitcode\n")
         println(s"Input: ${sList}")
         //println(s"Value Match = $valueMatch\nBit match = $bitMatch")
        // println(s"medecode.2 ${mDecode(markBitcode, regex)._2}")

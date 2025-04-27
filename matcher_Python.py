@@ -99,6 +99,6 @@ def match(re, s):
     return result
 
 
-reg= Alternative(Alternative(Char('c'), Char('a'))  , Char('d'))
+reg= Alternative(Alternative( Char('c'), Char('a') )  ,  Char('d'))
 print(match(reg,"dd"))
 
