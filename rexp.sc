@@ -201,7 +201,23 @@ def convertMtoDBit2(bs: Bits): Bits = bs.flatMap {
     case _   => None     // discard 
   }
 
+def hasNestedStar(r: Rexp): Boolean = {
+  def containsStar(r: Rexp): Boolean = r match {
+    case STAR(_) => true
+    case ALT(r1, r2) => containsStar(r1) || containsStar(r2)
+    case SEQ(r1, r2) => containsStar(r1) || containsStar(r2)
+    case _ => false
+  }
 
+  r match {
+    case STAR(inner) => 
+      if (containsStar(inner)) true
+      else hasNestedStar(inner)
+    case ALT(r1, r2) => hasNestedStar(r1) || hasNestedStar(r2)
+    case SEQ(r1, r2) => hasNestedStar(r1) || hasNestedStar(r2)
+    case _ => false
+  }
+}
 
 
 /* implicit val bitOrdering: Ordering[Bit] = Ordering.by {
