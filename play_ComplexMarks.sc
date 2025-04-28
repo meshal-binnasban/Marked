@@ -72,12 +72,14 @@ def shift(m: Boolean, re: MRexp, c: Char, bits:List[Int], pList:List[Color]) : M
     else 
       MCHAR(d, Mark(marked = false, bs = Nil , color = List()))
       //CHAR(d, Mark())
-  case MALT(r1, r2) => MALT(shift(m, r1, c,bits:+0,pList) , shift(m, r2, c,bits:+1,pList) )
+  case MALT(r1, r2) => MALT(shift(m, r1, c,bits:+0,pList:+Color.RED) , shift(m, r2, c,bits:+1,pList:+Color.RED) )
 
   case MSEQ(r1, r2,p1,p2) if m && nullable(r1) =>
-    val p1b=pList:+ Color.RED
-    val p2b=pList:+ Color.GREEN
-    MSEQ(shift(m, r1, c, bits:+2,p1b), shift(true, r2, c ,(bits ::: (2:: mkeps(r1))):+3,p2b) ,p1b,p2b)//(B1::bs)::: (SE1::((mkeps(r1)):+SE2))
+    val p1b=p1:::pList
+    val p1bs=pList:+Color.RED
+    val p2b=p2:::pList
+    val p2bs=pList:+Color.GREEN
+    MSEQ(shift(m, r1, c, bits:+2,p1bs), shift(true, r2, c ,(bits ::: (2:: mkeps(r1))):+3,p2bs) ,p1b,p2b)//(B1::bs)::: (SE1::((mkeps(r1)):+SE2))
   case MSEQ(r1, r2,p1,p2) if fin(r1) =>
     val p1b=List(Color.RED)
     val p1bs=(p1:::p2):::pList
@@ -126,7 +128,7 @@ def mkColor(r: MRexp): Option[Color] = r match {
     mark.color.headOption
   case MALT(r1, r2) =>
     if (fin(r1)) mkColor(r1) else mkColor(r2)
-  case MSEQ(r1, r2, _, _) if fin(r1) && nullable(r) => mkColor(r1)
+  case MSEQ(r1, r2, _, _) if fin(r1) && !fin(r2) => mkColor(r1)
   case MSEQ(_, r2, _, _) => mkColor(r2)
   case MSTAR(inner)          => mkColor(inner)
   case MNTIMES(inner, _, _)  => mkColor(inner)
@@ -142,6 +144,7 @@ def mkfin(r: MRexp) : List[Int] = (r: @unchecked) match {
     if(fin(r1) && fin(r2)){
       val c1=mkColor(r1)
       val c2=mkColor(r2)
+     
      // println(s"mkfin r1= ${mkfin(r1)} and mkfin r2 =${mkfin(r2)}")
      // println(s"mkColor r1= ${mkColor(r1)} and mkColor r2 =${mkColor(r2)}")
       (c1, c2) match {
@@ -253,6 +256,60 @@ def test3() = {
   val rexp=ALT(ALT(ONE,SEQ(ONE,CHAR('a'))),SEQ(ALT(ONE,CHAR('a')),ALT(ONE,ONE)))
   println(s"regex= $rexp")
   val s = "a".toList
+  val mrexp=intern2(rexp)
+
+  println("=string=")
+  println(s)
+  
+  var pList=List()
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  val sPart = s.take(i + 1)
+  println(pp(mat(mrexp, sPart,pList)))
+  } 
+
+  val bits=lexComplex(rexp,s).getOrElse(Nil)
+  println(s"\n=final list= ${bits}\n")
+  //println(s"Decoded value for Marked=${decode( bits, rexp)._1}\n")
+
+  val derivativeR = bders(s, internalize(rexp))
+  val derivBitcode = bmkeps(derivativeR)
+  println(s"Derivatives bitcode: $derivBitcode\n")
+  //println(s"Decoded value for derivatives=${decode( derivBitcode, rexp)._1}\n")
+}
+
+@main
+def test4() = {
+  val rexp=ALT(SEQ(CHAR('a'),SEQ(CHAR('a'),CHAR('a'))),SEQ(SEQ(CHAR('a'),CHAR('a')),SEQ(ONE,CHAR('a'))))
+  println(s"regex= $rexp")
+  val s = "aaa".toList
+  val mrexp=intern2(rexp)
+
+  println("=string=")
+  println(s)
+  
+  var pList=List()
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  val sPart = s.take(i + 1)
+  println(pp(mat(mrexp, sPart,pList)))
+  } 
+
+  val bits=lexComplex(rexp,s).getOrElse(Nil)
+  println(s"\n=final list= ${bits}\n")
+  //println(s"Decoded value for Marked=${decode( bits, rexp)._1}\n")
+
+  val derivativeR = bders(s, internalize(rexp))
+  val derivBitcode = bmkeps(derivativeR)
+  println(s"Derivatives bitcode: $derivBitcode\n")
+  //println(s"Decoded value for derivatives=${decode( derivBitcode, rexp)._1}\n")
+}
+
+@main
+def test5() = {
+  val rexp=SEQ(ALT(ONE,CHAR('a')),ALT(SEQ(CHAR('a'),CHAR('b')),SEQ(CHAR('b'),ONE)))
+  println(s"regex= $rexp")
+  val s = "ab".toList
   val mrexp=intern2(rexp)
 
   println("=string=")

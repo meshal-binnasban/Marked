@@ -7,7 +7,7 @@ import $file.play_ComplexMarks, play_ComplexMarks._
 val alphabet: LazyList[Char] = LazyList('a', 'b', 'c')
 
 given rexp_cdata: CDATA[Rexp] = List(
-  //(0, _ => ONE),
+  (0, _ => ONE),
   (0, _ => CHAR('a')),
   (0, _ => CHAR('b')),
   (0, _ => CHAR('c')),
@@ -16,7 +16,7 @@ given rexp_cdata: CDATA[Rexp] = List(
   (2, cs => SEQ(cs(0), cs(1)))
 )
 
-val numRegexes = 100_000_00L//100_000_000L
+val numRegexes = 100_000_000L//100_000_000L
 val maxStringsPerRegex = 5
 
 /* @main
