@@ -95,7 +95,7 @@ def shift(m: Boolean, re: MRexp, c: Char, bits:List[Int], pList:List[Color]) : M
 
   case MSTAR(r) if m && fin(r) => MSTAR(shift(true, r , c , bits ::: (mkfin(r) :+ 4),pList))
   case MSTAR(r) if fin(r) => MSTAR(shift(true,r,c ,mkfin(r) :+ 4,pList)) 
-  case MSTAR(r) if m => MSTAR(shift(m, r, c, bits,pList))
+  case MSTAR(r) if m => MSTAR(shift(m, r, c, bits:+4,pList))
   case MSTAR(r) => MSTAR(shift(false, r, c, Nil,pList))
 
   case MNTIMES(r, n,counter) => 
@@ -109,8 +109,6 @@ def shift(m: Boolean, re: MRexp, c: Char, bits:List[Int], pList:List[Color]) : M
   case MINIT(r) => shift(true, r, c,bits,pList)  
     } 
 }
-
-
 
 def mkeps(r: MRexp): List[Int] = (r: @unchecked) match {
   case MZERO => Nil
