@@ -16,7 +16,7 @@ given rexp_cdata: CDATA[Rexp] = List(
   (2, cs => SEQ(cs(0), cs(1)))
 )
 
-val numRegexes = 100_000_000_000L//100_000_000L
+val numRegexes = BigInt(100_000_000_000L)//100_000_000L
 val maxStringsPerRegex = 5
 
 /* @main
@@ -138,7 +138,9 @@ def test3(): Unit = {
   var mismatchCount = 0
   var nestedStarMismatchCount = 0
 
-  for (i <- 0L to numRegexes) {
+  var i=BigInt(0)
+  while(i<= numRegexes){
+
     val regex = enumDecode(i)
     for (str <- regenerate.generate_up_to(alphabet)(10)(regex).take(maxStringsPerRegex) if (str!="") ) {
       val sList = str.toList
@@ -180,8 +182,8 @@ def test3(): Unit = {
       }
         
     }
-    
-  }// end of for
+    i+=1
+  }// end of while
 
   if (allPassed) 
     println("\nAll strings and bitcodes matched")
