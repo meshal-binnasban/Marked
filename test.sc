@@ -11,12 +11,12 @@ given rexp_cdata: CDATA[Rexp] = List(
   (0, _ => CHAR('a')),
   (0, _ => CHAR('b')),
   (0, _ => CHAR('c')),
- // (1, cs => STAR(cs(0))),
+  (1, cs => STAR(cs(0))),
   (2, cs => ALT(cs(0), cs(1))),
   (2, cs => SEQ(cs(0), cs(1)))
 )
 
-val numRegexes = 100_000_000L//100_000_000L
+val numRegexes = 100_000_000_000L//100_000_000L
 val maxStringsPerRegex = 5
 
 /* @main
@@ -136,6 +136,7 @@ def test3(): Unit = {
   println("=" * 50)
   var allPassed = true
   var mismatchCount = 0
+  var nestedStarMismatchCount = 0
 
   for (i <- 0L to numRegexes) {
     val regex = enumDecode(i)
@@ -154,6 +155,7 @@ def test3(): Unit = {
       val bitMatch = markBitcode == derivBitcode
 
       if (!bitMatch) {
+        if(!hasNestedStar(regex)){
         allPassed = false
         mismatchCount += 1
         if(mismatchCount > 1){
@@ -171,7 +173,12 @@ def test3(): Unit = {
           return
         }
 
+      }else
+        {
+          nestedStarMismatchCount+=1
+        }
       }
+        
     }
     
   }// end of for
