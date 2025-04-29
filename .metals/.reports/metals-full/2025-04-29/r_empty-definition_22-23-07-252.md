@@ -1,3 +1,20 @@
+error id: _empty_/Color.
+file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/play_ComplexMarks.sc
+empty definition using pc, found symbol in pc: 
+empty definition using semanticdb
+empty definition using fallback
+non-local guesses:
+	 -rexp/Color.
+	 -rexp/Rexp.Color.
+	 -rexp/VALUE.Color.
+	 -derivativesBitcode/Color.
+	 -MRexp.Color.
+	 -Color.
+	 -scala/Predef.Color.
+offset: 4864
+uri: file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/play_ComplexMarks.sc
+text:
+```scala
 import $file.rexp, rexp._, rexp.Rexp._, rexp.VALUE._
 import $file.derivativesBitcode, derivativesBitcode._
 
@@ -116,7 +133,7 @@ def mkeps(r: MRexp): List[Int] = (r: @unchecked) match {
   case MCHAR(_, mark) => if (mark.marked) mark.bs else Nil
   case MALT(r1, r2) => if(nullable(r1)) 0 ::mkeps(r1) else 1 :: mkeps(r2)
   case MSEQ(r1, r2,p1,p2) => (mkeps(r1)) ::: ((mkeps(r2)))
-  case MSTAR(r) => List(1)
+  case MSTAR(r) => mkeps(r)++List(1)
   case MNTIMES(_, _, _) =>Nil
   case MINIT(r1) =>mkeps(r1)
 }
@@ -146,7 +163,7 @@ def mkfin(r: MRexp) : List[Int] = (r: @unchecked) match {
      // println(s"mkColor r1= ${mkColor(r1)} and mkColor r2 =${mkColor(r2)}")
       (c1, c2) match {
         case (Some(Color.RED), _) => mkfin(r1)
-        case (Some(Color.GREEN), Some(Color.RED)) => mkfin(r2)
+        case (Some(@@Color.GREEN), Some(Color.RED)) => mkfin(r2)
         case (Some(Color.GREEN), _) => mkfin(r1)
         case _ => mkfin(r1)
         }
@@ -154,6 +171,9 @@ def mkfin(r: MRexp) : List[Int] = (r: @unchecked) match {
   case MSEQ(r1, r2,p1,p2) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
   case MSEQ(r1, r2,p1,p2) => mkfin(r2)
   case MSTAR(r) => mkfin(r) ++ List(1)
+  case MNTIMES(_,_,_) => Nil
+  case MZERO => Nil
+  case MONE => Nil
 }
 
 def mat(r: MRexp, s: List[Char],pList:List[Color]) : MRexp = s match {
@@ -444,3 +464,9 @@ def pp(e: Rexp) : String = e match {
 }
 def pps(es: Rexp*) = indent(es.map(pp))
  */
+```
+
+
+#### Short summary: 
+
+empty definition using pc, found symbol in pc: 

@@ -192,7 +192,6 @@ def intsToBits(bs: List[Int]): Bits = bs.map {
   case 8 => E
 }
 
-
 def convertMtoDBit2(bs: Bits): Bits = bs.flatMap {
     case ST1 => Some(Z)  // ST1 (4) => 0
     case ST2 => Some(S)  // ST2 (5) => 1
@@ -200,6 +199,13 @@ def convertMtoDBit2(bs: Bits): Bits = bs.flatMap {
     case S   => Some(S)  //  1 => 1
     case _   => None     // discard 
   }
+
+def convertMtoDInt(bs: List[Int]): List[Int] = bs.collect {
+  case 0 => 0
+  case 1 => 1
+  case 4 => 0
+  case 5 => 1
+}
 
 def hasNestedStar(r: Rexp): Boolean = {
   def containsStar(r: Rexp): Boolean = r match {

@@ -290,17 +290,25 @@ def test3() = {
 @main
 def test4() = {
   println("=====Test====")
-  val br2 = STAR("c")
-  val s = "c".toList
+ // val br2 = STAR("c")
+  val br2=SEQ(STAR(CHAR('a')),STAR(CHAR('a')))
+  val s = "aaa".toList
   println("=string=")
   println(s)
   println(s"=shift ${s(0)}=")
   println(pp(mat(br2, s.take(1))))
 
+  println(s"=shift ${s(1)}=")
+  println(pp(mat(br2, s.take(2))))
+
+    println(s"=shift ${s(2)}=")
+  println(pp(mat(br2, s.take(3))))
+
+
   println(s"=final list=")
-  println(lex(br2, s.take(1)))
+  println(lex(br2, s.take(3)))
   println(s"=reference list=") 
-  println(rebit.lex(br2, s.take(1)))
+  println(rebit.lex(br2, s.take(3)))
 }
 
 import scala.util._

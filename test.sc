@@ -145,7 +145,7 @@ def test3(): Unit = {
     for (str <- regenerate.generate_up_to(alphabet)(10)(regex).take(maxStringsPerRegex) if (str!="") ) {
       val sList = str.toList
 
-      val markBitcode = lexComplex(regex,sList).getOrElse(Nil).filter(Set(0, 1))
+      val markBitcode = convertMtoDInt(lexComplex(regex,sList).getOrElse(Nil))
 
       val derivativeR = bders(sList, internalize(regex))
       val derivBitcode = bmkeps(derivativeR)
