@@ -1,3 +1,15 @@
+file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/play_explicit_bits_3.sc
+### java.lang.NullPointerException: Cannot invoke "scala.meta.internal.pc.CompilerWrapper.compiler()" because "access" is null
+
+occurred in the presentation compiler.
+
+presentation compiler configuration:
+
+
+action parameters:
+uri: file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/play_explicit_bits_3.sc
+text:
+```scala
 import scala.language.implicitConversions
 import $file.rexp, rexp._, rexp.Rexp._, rexp.VALUE._
 import $file.derivativesBitcode, derivativesBitcode._
@@ -656,10 +668,10 @@ def test10() = {
   println("=====Test====")
   //val rexp=ALT(ALT(ONE,CHAR('a')),SEQ(CHAR('a'),ONE))
   //val rexp=ALT(CHAR('a'),ALT(SEQ(ONE,CHAR('b')),SEQ(CHAR('b'),ONE)))
-  val rexp=(ONE|"a") ~ %("a")
+  val rexp
   println(s"regex= $rexp")
 
-  val s = "aaa".toList
+  val s = "b".toList
   
   println("=string=")
   println(s)
@@ -712,3 +724,15 @@ def pps(es: Rexp*) = indent(es.map(pp))
 // if(p.p == N) Priority(A,1) else p.copy(pOrder = p.pOrder + 1) ,  if(p.p == N) Priority(B,1) else p.copy(pOrder = p.pOrder + 1)
 //if(p.p == N) Priority(A,1) else p.copy(pOrder = p.pOrder + 1) , if(p.p == N | mkprio(r1).p != N) mkprio(r1) else p.copy(pOrder = p.pOrder + 1)
 //if(p.p == N) if(mkprio(r1).p != N) mkprio(r1) else Priority(A,1) else p.copy(pOrder = 7) , ,if(p.p == N) mkprio(r2) else p.copy(pOrder = p.pOrder + 1)
+```
+
+
+
+#### Error stacktrace:
+
+```
+dotty.tools.pc.ScalaPresentationCompiler.semanticTokens$$anonfun$1(ScalaPresentationCompiler.scala:110)
+```
+#### Short summary: 
+
+java.lang.NullPointerException: Cannot invoke "scala.meta.internal.pc.CompilerWrapper.compiler()" because "access" is null

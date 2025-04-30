@@ -291,8 +291,11 @@ def test3() = {
 def test4() = {
   println("=====Test====")
  // val br2 = STAR("c")
-  val br2=SEQ(STAR(CHAR('a')),STAR(CHAR('a')))
+ // val br2=SEQ(STAR(CHAR('a')),STAR(CHAR('a')))
+  //val br2=SEQ(ALT(ONE,CHAR('a')),STAR(CHAR('a')))
+  val br2= (ONE|"a") ~ %("a")
   val s = "aaa".toList
+  println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
   println(s)
   println(s"=shift ${s(0)}=")

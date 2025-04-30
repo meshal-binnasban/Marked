@@ -79,7 +79,8 @@ def shift(m: Boolean, re: MRexp, c: Char, bits:List[Int], pList:List[Color]) : M
     val p1bs=pList:+Color.RED
     val p2b=p2:::pList
     val p2bs=pList:+Color.GREEN
-    MSEQ(shift(m, r1, c, bits:+2,p1bs), shift(true, r2, c ,(bits ::: (2:: mkeps(r1))):+3,p2bs) ,p1b,p2b)//(B1::bs)::: (SE1::((mkeps(r1)):+SE2))
+    MSEQ(shift(m, r1, c, bits:+2,p1bs)
+    , shift(true, r2, c ,(bits ::: (2:: mkeps(r1))):+3,p2bs) ,p1b,p2b)          //(B1::bs)::: (SE1::((mkeps(r1)):+SE2))
   case MSEQ(r1, r2,p1,p2) if fin(r1) =>
     val p1b=List(Color.RED)
     val p1bs=(p1:::p2):::pList
@@ -93,7 +94,7 @@ def shift(m: Boolean, re: MRexp, c: Char, bits:List[Int], pList:List[Color]) : M
     val p2bs=pList:+Color.GREEN
     MSEQ(shift(m, r1, c, bits:+2,p1bs), shift(false,r2, c, Nil ,p2bs),p1b,p2b)
 
-  case MSTAR(r) if m && fin(r) => MSTAR(shift(true, r , c , bits ::: (mkfin(r) :+ 4),pList))
+  case MSTAR(r) if m && fin(r) => MSTAR(shift(true, r , c , (bits  :+ 4),pList))//bits ::: (mkfin(r) :+ 4)
   case MSTAR(r) if fin(r) => MSTAR(shift(true,r,c ,mkfin(r) :+ 4,pList)) 
   case MSTAR(r) if m => MSTAR(shift(m, r, c, bits:+4,pList))
   case MSTAR(r) => MSTAR(shift(false, r, c, Nil,pList))
@@ -116,9 +117,8 @@ def mkeps(r: MRexp): List[Int] = (r: @unchecked) match {
   case MCHAR(_, mark) => if (mark.marked) mark.bs else Nil
   case MALT(r1, r2) => if(nullable(r1)) 0 ::mkeps(r1) else 1 :: mkeps(r2)
   case MSEQ(r1, r2,p1,p2) => (mkeps(r1)) ::: ((mkeps(r2)))
-  case MSTAR(r) => List(1)
+  case MSTAR(r) => List(5)
   case MNTIMES(_, _, _) =>Nil
-  case MINIT(r1) =>mkeps(r1)
 }
 
 def mkColor(r: MRexp): Option[Color] = r match {
@@ -153,7 +153,7 @@ def mkfin(r: MRexp) : List[Int] = (r: @unchecked) match {
      }else if (fin(r1)) mkfin(r1) else mkfin(r2)  
   case MSEQ(r1, r2,p1,p2) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
   case MSEQ(r1, r2,p1,p2) => mkfin(r2)
-  case MSTAR(r) => mkfin(r) ++ List(1)
+  case MSTAR(r) => mkfin(r) ++ List(5)
 }
 
 def mat(r: MRexp, s: List[Char],pList:List[Color]) : MRexp = s match {
@@ -301,7 +301,8 @@ def test4() = {
 
 @main
 def test5() = {
-  val rexp=SEQ(STAR(CHAR('a')),STAR(CHAR('a')))
+  //val rexp=SEQ(ALT(ONE,CHAR('a')) , STAR(CHAR('a')))
+  val rexp=(ONE|"a") ~ %("a")
   println(s"regex= $rexp")
   val s = "aaa".toList
   val mrexp=intern2(rexp)
