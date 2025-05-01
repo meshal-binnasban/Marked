@@ -131,7 +131,8 @@ def mkfin(r: Rexp) : Bits = r match {
   case ALT(r1, r2) => if (fin(r1)) mkfin(r1) else mkfin(r2)  
   case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
   case SEQ(r1, r2) => mkfin(r2)
-  case STAR(r) => mkfin(r) ++ List(En)
+  case STAR(STAR(r)) => mkfin(r)++ List(En)
+  case STAR(r) => mkfin(r)++ List(En)
 }
 
 def mkfin2(r: Rexp) : Set[Bits] = r match {
@@ -143,7 +144,6 @@ def mkfin2(r: Rexp) : Set[Bits] = r match {
   case SEQ(r1, r2) => mkfin2(r2)
   case STAR(r) => mkfin2(r).map(_ ++ List(En))
 }
-
 
 // shift function from the paper
 def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = (r: @unchecked) match {
@@ -159,12 +159,32 @@ def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = (r: @unchecked) match
   case SEQ(r1, r2) if fin(r1) => SEQ(shift(m, bs, r1, c), shift(true, mkfin(r1), r2, c))
   case SEQ(r1, r2) => SEQ(shift(m, bs, r1, c), shift(false, Nil, r2, c))
   
-  case STAR(r) if m && fin(r) => STAR(shift(true, bs ::: (mkfin(r) :+ Nx), r, c))
-  case STAR(r) if fin(r) => STAR(shift(true, mkfin(r) :+ Nx, r, c)) 
-  case STAR(r) if m => STAR(shift(m, bs :+ Nx, r, c))
+  /* case STAR(r) if m && fin(r) && hasNestedMStar(r) =>
+    STAR(shift(true, bs:+Nx   , r, c)) */
+
+  case STAR(r) if m && fin(r) => STAR(shift(true, bs:+Nx , r, c))
+  case STAR(r) if fin(r) => STAR(shift(true, (mkfin(r)):+Nx, r, c)) 
+  case STAR(r) if m =>STAR(shift(m, bs:+Nx, r, c))
   case STAR(r) => STAR(shift(false, Nil, r, c))
 }
 
+def hasNestedMStar(r: Rexp): Boolean = {
+  def containsMStar(r: Rexp): Boolean = r match {
+    case STAR(_) => true
+    case ALT(r1, r2) => containsMStar(r1) || containsMStar(r2)
+    case SEQ(r1, r2) => containsMStar(r1) || containsMStar(r2)
+    case _ => false
+  }
+
+  r match {
+    case STAR(inner) => 
+      if (containsMStar(inner)) true
+      else hasNestedMStar(inner)
+    case ALT(r1, r2) => hasNestedMStar(r1) || hasNestedMStar(r2)
+    case SEQ(r1, r2) => hasNestedMStar(r1) || hasNestedMStar(r2)
+    case _ => false
+  }
+}
 
 // the main matching function (by using BINIT only in 
 // the first step a mark is shifted into the Rexp)
@@ -182,11 +202,9 @@ def lex(r: Rexp, s: List[Char]) : Option[Set[Bits]] = {
   else None
 }
 
-
 def lexer(r: Rexp, s: List[Char]) : Option[Set[Val]] = {
   lex(r, s).map(_.map(dec2(r, _)))
 }
-
 
 // pretty-printing Rexps
 
@@ -220,8 +238,6 @@ def pp(e: Rexp) : String = (e: @unchecked) match {
 def pps(es: Rexp*) = indent(es.map(pp))
 
 
-
-
 @main
 def test1() = {
   println("=====Test====")
@@ -237,15 +253,16 @@ def test1() = {
 
   println(s"=final list=")
   println(lex(br2, s.take(2)))
+  println(s"=reference list=") 
+  println(rebit.lex(br2, s.take(2)))
 }
 
 @main
 def test2() = {
   println("=====Test====")
-  //val br2 = SEQ(CHAR('a'),ALT(ONE,ONE))
-  //val br2 = SEQ(ALT(ONE,CHAR('c')),ALT(SEQ(CHAR('c'),CHAR('c')),CHAR('c')))
-  val br2 = ALT(ONE, STAR("c" | "d"))
-  val s = "ccc".toList
+  //val br2 = ALT(ONE, STAR("c" | "d"))
+  val br2= STAR( STAR("a") )
+  val s = "aaa".toList
   println("=string=")
   println(s)
   println(s"=shift ${s(0)}=")
@@ -263,13 +280,16 @@ def test2() = {
   
   println(s"=final list=")
   println(lex(br2, s.take(3)))
+  println(s"=reference list=") 
+  println(rebit.lex(br2, s.take(3)))
 }
 
 @main
 def test3() = {
   println("=====Test====")
-  val br2 = STAR("e" | ("d" | "c"))
-  val s = "ccc".toList
+  //val br2 = STAR("e" | ("d" | "c"))
+  val br2=SEQ(STAR("a") , ALT(SEQ("a","a") , "a"))
+  val s = "aaaaa".toList
   println("=string=")
   println(s)
   println(s"=shift ${s(0)}=")
@@ -281,16 +301,22 @@ def test3() = {
   println(s"=shift ${s(2)}=")
   println(pp(mat(br2, s.take(3))))
 
+  println(s"=shift ${s(3)}=")
+  println(pp(mat(br2, s.take(4))))
+
+  println(s"=shift ${s(4)}=")
+  println(pp(mat(br2, s.take(5))))
+
   println(s"=final list=")
-  println(lex(br2, s.take(3)))
+  println(lex(br2, s.take(5)))
   println(s"=reference list=") 
-  println(rebit.lex(br2, s.take(3)))
+  println(rebit.lex(br2, s.take(5)))
 }
 
 @main
 def test4() = {
   println("=====Test====")
- // val br2 = STAR("c")
+  //val br2 =STAR( STAR("a") )
  // val br2=SEQ(STAR(CHAR('a')),STAR(CHAR('a')))
   //val br2=SEQ(ALT(ONE,CHAR('a')),STAR(CHAR('a')))
   val br2= (ONE|"a") ~ %("a")
@@ -317,7 +343,7 @@ def test4() = {
 import scala.util._
 
 @main
-def test5() = {
+def longTest1() = {
   given rexp_cdata : CDATA[Rexp] = List(
         (0, _ => ONE),
         (0, _ => ZERO),
@@ -341,6 +367,40 @@ def test5() = {
           println(s"mark: ${v1s.get} bder: $v2")
           println(s"mark: ${lex(r, s.toList).get} bder: ${rebit.lex(r, s.toList)}")
           System.exit(1)
+        }
+      }
+  }
+}
+
+@main
+def longTest2() = {
+  given rexp_cdata : CDATA[Rexp] = List(
+        (0, _ => ONE),
+        (0, _ => ZERO),
+        (0, _ => CHAR('a')),
+        (0, _ => CHAR('b')),
+        (0, _ => CHAR('c')),
+        (1, cs => STAR(cs(0))),
+        (2, cs => ALT(cs(0), cs(1))),
+        (2, cs => SEQ(cs(0), cs(1)))
+      )
+
+  val alphabet = LazyList('a', 'b')
+  for (i <- (0L to 10_000_000L)) {
+    val r = enumerate.decode(i)
+    if (i % 100_000 == 0) { print("*") }
+    for (s <- (regenerate.generate_up_to(alphabet)(10)(r).take(9)) if s != "")
+      { val v1s = Try(lexer(r, s.toList)).getOrElse(None)
+        val v2 = rebit.blexer(r, s)
+        if (v1s.isDefined && !v1s.get.contains(v2)) {
+          
+          if(!hasNestedMStar(r)){
+          println(s"reg: $r str: $s")
+          println(s"mark: ${v1s.get} bder: $v2")
+          println(s"mark: ${lex(r, s.toList).get} bder: ${rebit.lex(r, s.toList)}")
+          
+          System.exit(1)
+          }
         }
       }
   }
