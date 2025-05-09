@@ -469,6 +469,26 @@ def test9() = {
   println(rebit.lex(br2, s))
 }
 
+@main
+def test10() = {
+  println("=====Test====")
+  val br2= ONE | %( "a" | "aa")
+  val s = "aaa".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+
+  println(s"=final list=")
+  println(lex(br2, s))
+  println(s"=reference list=") 
+  println(rebit.lex(br2, s))
+}
+
 
 import scala.util._
 

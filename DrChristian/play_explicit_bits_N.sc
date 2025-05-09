@@ -125,7 +125,7 @@ def fin(r: Rexp) : Boolean = (r: @unchecked) match {
 
 def mkfin(r: Rexp) : Bits = r match {
   case POINT(bs, CHAR(_)) => bs
-  case ALT(r1, r2) => if (fin(r2)) mkfin(r2) else mkfin(r1) 
+  case ALT(r1, r2) => if (fin(r1)) mkfin(r1) else mkfin(r2) 
 
   case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
   case SEQ(r1, r2) if fin(r2) =>  mkfin(r2)
