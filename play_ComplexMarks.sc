@@ -302,7 +302,9 @@ def test4() = {
 @main
 def test5() = {
   //val rexp=SEQ(ALT(ONE,CHAR('a')) , STAR(CHAR('a')))
-  val rexp=(ONE|"a") ~ %("a")
+  //ALT(ONE,STAR(ALT(CHAR(a),SEQ(CHAR(a),CHAR(a)))))
+  //val rexp=(ONE|"a") ~ %("a")
+  val rexp=ALT(ONE,STAR(ALT(CHAR('a'),SEQ(CHAR('a'),CHAR('a')))))
   println(s"regex= $rexp")
   val s = "aaa".toList
   val mrexp=intern2(rexp)

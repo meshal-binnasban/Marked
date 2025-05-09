@@ -104,13 +104,13 @@ def dec2(r: Rexp, bs: Bits) = decode_aux(r, bs) match {
   case _ => throw new Exception("Not decodable")
 }
 
-def mkeps(r: Rexp) : Set[Bits] = r match {
-  case ONE => Set(Nil)
+def mkeps(r: Rexp) : Bits = r match {
+  case ONE => Nil
   case POINT(bs, CHAR(_)) => bs
   case ALT(r1, r2) => 
-    if (nullable(r1)) mkeps(r1).map(Lf :: _) else mkeps(r2).map(Ri :: _)  
+    if (nullable(r1)) Lf:: mkeps(r1) else Ri:: mkeps(r2) 
   case SEQ(r1, r2) => mkeps(r1) ++ mkeps(r2)
-  case STAR(r) => Set(List(En))
+  case STAR(r) => List(En)
 }
 
 def fin(r: Rexp) : Boolean = (r: @unchecked) match {
@@ -123,7 +123,7 @@ def fin(r: Rexp) : Boolean = (r: @unchecked) match {
   case STAR(r) => fin(r)
 }
 
-/* def mkfin(r: Rexp) : Bits = r match {
+def mkfin(r: Rexp) : Bits = r match {
   case POINT(bs, CHAR(_)) => bs
   case ALT(r1, r2) => if (fin(r1)) mkfin(r1) else mkfin(r2) 
 
@@ -133,43 +133,54 @@ def fin(r: Rexp) : Boolean = (r: @unchecked) match {
   case STAR(r) => mkfin(r) ++ List(En)
   //case POINT(bs, STAR(r)) => bs++mkfin(r)++ List(En)
   //case POINT(bs,STAR(r)) => bs
-} */
+} 
+
+def mkfinStar(r: Rexp) : Bits = r match {
+  case STAR(r) => mkfin(r) 
+  case _ => mkfin(r)
+} 
 
 def mkfin2(r: Rexp) : Set[Bits] = r match {
-  case POINT(bs, CHAR(_)) => bs
+  case POINT(bs, CHAR(_)) => Set(bs)
   case ALT(r1, r2) if fin(r1) && fin(r2) => mkfin2(r1) | mkfin2(r2)
   case ALT(r1, r2) if fin(r1) => mkfin2(r1)
   case ALT(r1, r2) if fin(r2) => mkfin2(r2) 
 
-  case SEQ(r1, r2) if fin(r1) && nullable(r2) =>mkfin2(r1).flatMap(x => mkeps(r2).map(y => x ++ y)) // mkfin2(r1).map(_ ++ mkeps(r2)) 
+  case SEQ(r1, r2) if ((fin(r1) && nullable(r2)) && fin(r2))=>mkfin2(r1).map(_ ++ mkeps(r2)) | mkfin2(r2) // mkfin2(r1).map(_ ++ mkeps(r2)) 
+  case SEQ(r1, r2) if ((fin(r1) && nullable(r2))) => mkfin2(r1).map(_ ++ mkeps(r2))
   case SEQ(r1, r2) => mkfin2(r2)
   case STAR(r) => mkfin2(r).map(_ ++ List(En))
  // case POINT(bs, STAR(r)) => mkfin2(r).map(_ ++ List(En))
 }
 
 // shift function from the paper
-def shift(m: Boolean, bs: Set[Bits], r: Rexp, c: Char) : Rexp = (r: @unchecked) match {
+def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = (r: @unchecked) match {
   case ZERO => ZERO
   case ONE => ONE
   case CHAR(d) => if (m && d == c) POINT(bs, CHAR(d)) else CHAR(d)
   case POINT(_, CHAR(d)) => if (m && d == c) POINT(bs, CHAR(d)) else CHAR(d)
-  case ALT(r1, r2) => ALT(shift(m, (bs).map(_ ++ List(Lf)), r1, c), shift(m, (bs).map(_ ++ List(Ri)), r2, c))
+  case ALT(r1, r2) => ALT(shift(m, bs:+Lf, r1, c), shift(m, bs:+Ri, r2, c))
 
-  case SEQ(r1, r2) if m && nullable(r1) => 
-    SEQ(shift(m, bs, r1, c), shift(true, (bs+Nil).flatMap(b => (mkeps(r1)+Nil).map(f => b ++ f)) , r2, c))
-  case SEQ(r1, r2) if fin(r1) => SEQ(shift(m, bs, r1, c), shift(true, mkfin2(r1), r2, c))
-  case SEQ(r1, r2) => SEQ(shift(m, bs, r1, c), shift(false, Set(Nil), r2, c))
-    
-  // save old bits and shift empty list
-  // if again, then add mkfin to old and shift empty again?
-  case STAR(r) if m && fin(r) => STAR(shift(true, (bs).map(_ ++ List(Nx)) , r, c)) // bs:+Nx
-  //case POINT(sbs, STAR(r)) if fin(r) => POINT(sbs,STAR(shift(true, (bs):+Nx, r, c)))
+  case SEQ(r1, r2) if m && nullable(r1) => SEQ(shift(m, bs, r1, c), shift(true, bs:::mkeps(r1) , r2, c))
+  case SEQ(r1, r2) if fin(r1) => SEQ(shift(m, bs, r1, c), shift(true, mkfin(r1), r2, c))
+  case SEQ(r1, r2) => SEQ(shift(m, bs, r1, c), shift(false, Nil, r2, c))
 
+  
+ 
+  case STAR(r) if m && fin(r) =>
+    r match {
+      case STAR(rs) => STAR(shift(true, (mkfinStar(rs)) , r, c))
+      case _        => STAR(shift(true, (bs):+Nx , r, c))
+    }
   case STAR(r) if fin(r) =>
-    //STAR(shift(true, (for {b <- bs; f <- mkfin2(r)+Nil} yield b ++ f ++ List(Nx)), r, c))
-    STAR(shift(true, (mkfin2(r)).map(_ ++ List(Nx)) , r, c)) //(mkfin(r)):+Nx (bs).flatMap(b => (mkfin2(r)+Nil).map(f => b ++ f ++ List(Nx)))
-  case STAR(r) if m =>STAR(shift(m, (bs).map(_ ++ List(Nx)), r, c))
-  case STAR(r) => STAR(shift(false, Set(Nil), r, c)) 
+    r match {
+      case STAR(rs) => STAR(shift(true, (mkfin(rs)) , r, c))
+      case _        => STAR(shift(true, (mkfin(r)):+Nx , r, c))
+    }
+ //STAR(shift(true, (for {b <- bs; f <- mkfin2(r)+Nil} yield b ++ f ++ List(Nx)), r, c))  or (mkfin(r)):+Nx (bs).flatMap(b => (mkfin2(r)+Nil).map(f => b ++ f ++ List(Nx)))
+//STAR(shift(true, (for {b <- bs; f <- mkfin2(r)+Nil} yield b ++ f ++ List(Nx)), r, c))  or (mkfin(r)):+Nx (bs).flatMap(b => (mkfin2(r)+Nil).map(f => b ++ f ++ List(Nx)))
+  case STAR(r) if m =>STAR(shift(m, bs:+Nx, r, c))
+  case STAR(r) => STAR(shift(false, Nil, r, c)) 
   
 }
 
@@ -195,7 +206,7 @@ def hasNestedMStar(r: Rexp): Boolean = {
 // the first step a mark is shifted into the Rexp)
 def mat(r: Rexp, s: List[Char]) : Rexp = s match {
   case Nil => r
-  case c::cs => cs.foldLeft(shift(true, Set(Nil), r, c))((r, c) => shift(false, Set(Nil), r, c))
+  case c::cs => cs.foldLeft(shift(true, Nil, r, c))((r, c) => shift(false, Nil, r, c))
 }
 
 def matcher(r: Rexp, s: List[Char]) : Boolean =
@@ -203,7 +214,7 @@ def matcher(r: Rexp, s: List[Char]) : Boolean =
 
 def lex(r: Rexp, s: List[Char]) : Option[Set[Bits]] = {
   if matcher(r, s)
-  then Some(if (s == Nil) mkeps(r) else mkfin2(mat(r, s)))
+  then Some(if (s == Nil) Set(mkeps(r)) else mkfin2(mat(r, s)))
   else None
 }
 
@@ -375,6 +386,89 @@ def test5() = {
   println(rebit.lex(br2, s))
 }
 
+//Nested STAR
+//ONE|%(%("a"))
+@main
+def test6() = {
+  println("=====Test====")
+  val br2= %(%("a"))
+  val s = "aa".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+
+  println(s"=final list=")
+  println(lex(br2, s))
+  println(s"=reference list=") 
+  println(rebit.lex(br2, s))
+}
+
+@main
+def test7() = {
+  println("=====Test====")
+  val br2= ONE | %(%("a"))
+  val s = "aa".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+
+  println(s"=final list=")
+  println(lex(br2, s))
+  println(s"=reference list=") 
+  println(rebit.lex(br2, s))
+}
+
+@main
+def test8() = {
+  println("=====Test====")
+  val br2= %("aa") ~ %(%("a"))
+  val s = "aaa".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+
+  println(s"=final list=")
+  println(lex(br2, s))
+  println(s"=reference list=") 
+  println(rebit.lex(br2, s))
+}
+
+@main
+def test9() = {
+  println("=====Test====")
+  val br2= ( %("a") ~ %("a") ) ~ "a"
+  //val br2=ALT(ONE,STAR(ALT(CHAR('a'),SEQ(CHAR('a'),CHAR('a')))))
+  val s = "aaa".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+
+  println(s"=final list=")
+  println(lex(br2, s))
+  println(s"=reference list=") 
+  println(rebit.lex(br2, s))
+}
+
 
 import scala.util._
 
@@ -422,7 +516,7 @@ def longTest2() = {
       )
   val alphabet = LazyList('a', 'b')
   var i=BigInt(0)
-  val numRegexes=BigInt(10_000_000L)
+  val numRegexes=BigInt(10_000_000_000L)
   while(i<= numRegexes){
     val r = enumerate.decode(i)
     if (i % 100_000 == 0) { print("*") }
@@ -430,20 +524,28 @@ def longTest2() = {
       { val v1s = Try(lexer(r, s.toList)).getOrElse(None)
         val v2 = rebit.blexer(r, s)
         if (v1s.isDefined && !v1s.get.contains(v2)) {
+        
+          println(s"[${i}]- reg: $r str: $s")
+          println(s"mark: ${v1s.get} bder: $v2")
+          println(s"mark: ${lex(r, s.toList).get} bder: ${rebit.lex(r, s.toList)}")
+          System.exit(1)
           
-          if(!hasNestedMStar(r)){
+        }
+      }
+      i+=1
+  }//end whild
+  println("\nAll tests passed!")
+}
+
+/* 
+ if(!hasNestedMStar(r)){
           println(s"reg: $r str: $s")
           println(s"mark: ${v1s.get} bder: $v2")
           println(s"mark: ${lex(r, s.toList).get} bder: ${rebit.lex(r, s.toList)}")
           
           System.exit(1)
           }
-        }
-      }
-      i+=1
-  }//end whild
-}
-
+           */
 
 
 

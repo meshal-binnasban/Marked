@@ -1,9 +1,18 @@
-import scala.language.implicitConversions
-import $file.rexp, rexp._
-import $file.enumerate, enumerate._
-import $file.regenerate//, regenerate._
-import $file.rebit
+file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/play_ComplexMarks.sc
+### dotty.tools.dotc.ast.Trees$UnAssignedTypeException: type of Ident(p1m) is not assigned
 
+occurred in the presentation compiler.
+
+presentation compiler configuration:
+
+
+action parameters:
+offset: 5470
+uri: file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/play_ComplexMarks.sc
+text:
+```scala
+import $file.rexp, rexp._, rexp.Rexp._, rexp.VALUE._
+import $file.derivativesBitcode, derivativesBitcode._
 
 enum Color:
   case GREEN
@@ -13,7 +22,7 @@ enum Color:
 
 case class Mark(
   marked: Boolean = false,
-  bs: Bits = List(),
+  bs: List[Int] = List(),
   color: List[Color] = List()
 )
 
@@ -39,15 +48,6 @@ def nullable (r: MRexp) : Boolean = r match {
   case MNTIMES(r, n,counter) => if (n == 0) true else nullable(r)
   case MINIT(r) => nullable(r)
 }
-def mkeps(r: MRexp): Bits = (r: @unchecked) match {
-  case MZERO => Nil
-  case MONE => Nil
-  case MCHAR(_, mark) => if (mark.marked) mark.bs else Nil
-  case MALT(r1, r2) => if(nullable(r1)) Lf ::mkeps(r1) else Ri :: mkeps(r2)
-  case MSEQ(r1, r2,p1,p2) => (mkeps(r1)) ::: ((mkeps(r2)))
-  case MSTAR(r) => List(En)
-  case MNTIMES(_, _, _) =>Nil
-}
 
 def fin(r: MRexp) : Boolean = r match {
   case MZERO => false
@@ -58,6 +58,80 @@ def fin(r: MRexp) : Boolean = r match {
   case MSTAR(r) => fin(r)
   case MNTIMES(r, n,counter) => counter == n && fin(r)
   case MINIT(r) => fin(r)
+}
+
+def collectPLists(r: MRexp): List[(List[Color], List[Color])] = r match {
+  case MSEQ(r1, r2, p1, p2) =>
+    (p1, p2) :: (collectPLists(r1) ++ collectPLists(r2))
+  case MALT(r1, r2) =>
+    collectPLists(r1) ++ collectPLists(r2)
+  case MSTAR(r1) =>
+    collectPLists(r1)
+  case MNTIMES(r1, _, _) =>
+    collectPLists(r1)
+  case MINIT(r1) =>
+    collectPLists(r1)
+  case _ => Nil
+}
+
+//shift char with position
+def shift(m: Boolean, re: MRexp, c: Char, bits:List[Int], pList:List[Color]) : MRexp = {
+  re match {
+  case MZERO => MZERO
+  case MONE => MONE
+  case MCHAR(d,mark) => 
+    if (m && d == c)
+      MCHAR(d, Mark(marked = true, bs = bits , color = pList:::mark.color))
+    else 
+      MCHAR(d, Mark(marked = false, bs = Nil , color = List()))
+      //CHAR(d, Mark())
+  case MALT(r1, r2) => MALT(shift(m, r1, c,bits:+0,pList:+Color.RED) , shift(m, r2, c,bits:+1,pList:+Color.RED) )
+
+  case MSEQ(r1, r2,p1,p2) if m && nullable(r1) =>
+    val p1b=p1:::pList
+    val p1bs=pList:+Color.RED
+    val p2b=p2:::pList
+    val p2bs=pList:+Color.GREEN
+    MSEQ(shift(m, r1, c, bits:+2,p1bs)
+    , shift(true, r2, c ,(bits ::: (2:: mkeps(r1))):+3,p2bs) ,p1b,p2b)          //(B1::bs)::: (SE1::((mkeps(r1)):+SE2))
+  case MSEQ(r1, r2,p1,p2) if fin(r1) =>
+    val p1b=List(Color.RED)
+    val p1bs=(p1:::p2):::pList
+    val p2b=List(Color.GREEN)
+    val p2bs=(p1:::p2):::pList
+    MSEQ(shift(m, r1, c, bits:+2,p1b), shift(true,r2, c,mkfin(r1):+3 ,p2bs),p1b,p2b) 
+  case MSEQ(r1, r2,p1,p2) =>
+    val p1b=p1:::pList
+    val p1bs=pList:+Color.RED
+    val p2b=p2:::pList
+    val p2bs=pList:+Color.GREEN
+    MSEQ(shift(m, r1, c, bits:+2,p1bs), shift(false,r2, c, Nil ,p2bs),p1b,p2b)
+
+  case MSTAR(r) if m && fin(r) => MSTAR(shift(true, r , c , (bits  :+ 4),pList))//bits ::: (mkfin(r) :+ 4)
+  case MSTAR(r) if fin(r) => MSTAR(shift(true,r,c ,mkfin(r) :+ 4,pList)) 
+  case MSTAR(r) if m => MSTAR(shift(m, r, c, bits:+4,pList))
+  case MSTAR(r) => MSTAR(shift(false, r, c, Nil,pList))
+
+  case MNTIMES(r, n,counter) => 
+    if (counter == n) 
+      re 
+      else{
+        if (m || fin(r)) MNTIMES(shift(m || fin(r), r, c,bits,pList), n, counter+1)
+        else MNTIMES(shift(false, r, c, bits,pList), n, counter)       
+        } 
+
+  case MINIT(r) => shift(true, r, c,bits,pList)  
+    } 
+}
+
+def mkeps(r: MRexp): List[Int] = (r: @unchecked) match {
+  case MZERO => Nil
+  case MONE => Nil
+  case MCHAR(_, mark) => if (mark.marked) mark.bs else Nil
+  case MALT(r1, r2) => if(nullable(r1)) 0 ::mkeps(r1) else 1 :: mkeps(r2)
+  case MSEQ(r1, r2,p1,p2) => (mkeps(r1)) ::: ((mkeps(r2)))
+  case MSTAR(r) => List(5)
+  case MNTIMES(_, _, _) =>Nil
 }
 
 def mkColor(r: MRexp): Option[Color] = r match {
@@ -74,7 +148,7 @@ def mkColor(r: MRexp): Option[Color] = r match {
 }
 
 //add boolean argument, if nullable then retrieve from one?
-def mkfin(r: MRexp) : Bits = (r: @unchecked) match {
+def mkfin(r: MRexp) : List[Int] = (r: @unchecked) match {
   case MCHAR(_, mark) => if (mark.marked) mark.bs else Nil
   case MALT(r1, r2) => 
     if(fin(r1) && fin(r2)){
@@ -89,82 +163,28 @@ def mkfin(r: MRexp) : Bits = (r: @unchecked) match {
         case (Some(Color.GREEN), _) => mkfin(r1)
         case _ => mkfin(r1)
         }
-     }else if (fin(r1)) mkfin(r1) else mkfin(r2) 
-     
+     }else if (fin(r1)) mkfin(r1) else mkfin(r2)  
   case MSEQ(r1, r2,p1,p2) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
-  case MSEQ(r1, r2,p1,p2) if fin(r2)=> mkfin(r2) 
-  //case MSTAR(r) if (hasNestedMStar(MSTAR(r))) => List(En) // if nested get
-  case MSTAR(r) => mkfin(r) ++ List(En)
+  case MSEQ(r1, r2,p1,p2) => mkfin(r2)
+  case MSTAR(r) if (hasNestedMStar(r)) => List(5) // if nested get
+  case MSTAR(r) => mkfin(r) ++ List(5)
 }
 def hasNestedMStar(r: MRexp): Boolean = {
   def containsMStar(r: MRexp): Boolean = r match {
     case MSTAR(_) => true
     case MALT(r1, r2) => containsMStar(r1) || containsMStar(r2)
-    case MSEQ(r1, r2,p1,p2) => containsMStar(r1) || containsMStar(r2)
+    case MSEQ(r1, r2,p1m[@@]) => containsMStar(r1) || containsMStar(r2)
     case _ => false
   }
 
   r match {
     case MSTAR(inner) => 
-      if (containsMStar(inner)) true
+      if (containsStar(inner)) true
       else hasNestedMStar(inner)
     case MALT(r1, r2) => hasNestedMStar(r1) || hasNestedMStar(r2)
-    case MSEQ(r1, r2,p1,p2) => hasNestedMStar(r1) || hasNestedMStar(r2)
+    case MSEQ(r1, r2) => hasNestedMStar(r1) || hasNestedMStar(r2)
     case _ => false
   }
-}
-
-
-//shift char with position
-def shift(m: Boolean, re: MRexp, c: Char, bits:Bits, pList:List[Color]) : MRexp = {
-  re match {
-  case MZERO => MZERO
-  case MONE => MONE
-  case MCHAR(d,mark) => 
-    if (m && d == c)
-      MCHAR(d, Mark(marked = true, bs = bits , color = pList:::mark.color))
-    else 
-      MCHAR(d, Mark(marked = false, bs = Nil , color = List()))
-      //CHAR(d, Mark())
-  case MALT(r1, r2) => MALT(shift(m, r1, c,bits:+Lf,pList:+Color.RED) , shift(m, r2, c,bits:+Ri,pList:+Color.RED) )
-
-  case MSEQ(r1, r2,p1,p2) if m && nullable(r1) =>
-    val p1b=p1:::pList
-    val p1bs=pList:+Color.RED
-    val p2b=p2:::pList
-    val p2bs=pList:+Color.GREEN
-    MSEQ(shift(m, r1, c, bits,p1b) //bits:+2
-    , shift(true, r2, c ,(bits ::: mkeps(r1)),p1b) ,p1bs,p2bs)  //(bits ::: (2:: mkeps(r1))):+3
-  case MSEQ(r1, r2,p1,p2) if fin(r1) =>
-    val p1b=List(Color.RED)
-    val p1bs=(p1:::p2):::pList
-    val p2b=List(Color.GREEN)
-    val p2bs=(p1:::p2):::pList
-    MSEQ(shift(m, r1, c, bits,p1b), shift(true,r2, c,mkfin(r1) ,p2bs),p1b,p2b)  //bits:+2 , mkfin(r1):+3
-  case MSEQ(r1, r2,p1,p2) =>
-    val p1b=p1:::pList
-    val p1bs=pList:+Color.RED
-    val p2b=p2:::pList
-    val p2bs=pList:+Color.GREEN
-    MSEQ(shift(m, r1, c, bits,p1bs), shift(false,r2, c, Nil ,p2bs),p1b,p2b) //bits:+2 , 
-
-  case MSTAR(r) if m && fin(r) => 
-    println(s"in m & fin r, bs=$bits")
-    MSTAR(shift(true, r , c ,List(Nx),pList))//bits ::: (mkfin(r) :+ 4)
-  case MSTAR(r) if fin(r) => MSTAR(shift(true,r,c ,mkfin(r) :+ Nx,pList)) 
-  case MSTAR(r) if m => MSTAR(shift(m, r, c, bits:+Nx,pList))
-  case MSTAR(r) => MSTAR(shift(false, r, c, Nil,pList))
-
-  case MNTIMES(r, n,counter) => 
-    if (counter == n) 
-      re 
-      else{
-        if (m || fin(r)) MNTIMES(shift(m || fin(r), r, c,bits,pList), n, counter+1)
-        else MNTIMES(shift(false, r, c, bits,pList), n, counter)       
-        } 
-
-  case MINIT(r) => shift(true, r, c,bits,pList)  
-    } 
 }
 
 def mat(r: MRexp, s: List[Char],pList:List[Color]) : MRexp = s match {
@@ -178,7 +198,7 @@ def matcher(r: Rexp, s: List[Char],pList:List[Color]) : Boolean =
      else fin(mat(reg, s,pList))
   }
 
-def lexComplex(r: Rexp, s: List[Char]) : Option[Bits] = {
+def lexComplex(r: Rexp, s: List[Char]) : Option[List[Int]] = {
   val reg= intern2(r)
   if matcher(r, s,List())
   then Some( if (s == Nil) mkeps(reg) else mkfin(mat(reg, s,List())))
@@ -192,7 +212,7 @@ def intern(r: Rexp) : MRexp = (r: @unchecked) match{
   case ALT(r1, r2)     => MALT(intern(r1), intern(r2))
   case SEQ(r1, r2)     => MSEQ(intern(r1), intern(r2),List(),List())
   case STAR(r)         => MSTAR(intern(r))
-  //case NTIMES(r, n)    => MNTIMES(intern(r), n, 0)
+  case NTIMES(r, n)    => MNTIMES(intern(r), n, 0)
   //case INIT(r)         => MINIT(intern(r)) // might remove
 }
 
@@ -221,8 +241,8 @@ def test1() = {
   println(s"\n=final list= ${bits}\n")
   //println(s"Decoded value for Marked=${decode( bits, rexp)._1}\n")
 
-  
-  val derivBitcode = rebit.lex(rexp, s)
+  val derivativeR = bders(s, internalize(rexp))
+  val derivBitcode = bmkeps(derivativeR)
   println(s"Derivatives bitcode: $derivBitcode\n")
   //println(s"Decoded value for derivatives=${decode( derivBitcode, rexp)._1}\n")
 }
@@ -250,7 +270,8 @@ def test2() = {
   println(s"\n=final list= ${bits}\n")
   //println(s"Decoded value for Marked=${decode( bits, rexp)._1}\n")
 
-  val derivBitcode = rebit.lex(rexp, s)
+  val derivativeR = bders(s, internalize(rexp))
+  val derivBitcode = bmkeps(derivativeR)
   println(s"Derivatives bitcode: $derivBitcode\n")
   //println(s"Decoded value for derivatives=${decode( derivBitcode, rexp)._1}\n")
 }
@@ -276,7 +297,8 @@ def test3() = {
   println(s"\n=final list= ${bits}\n")
   //println(s"Decoded value for Marked=${decode( bits, rexp)._1}\n")
 
-  val derivBitcode = rebit.lex(rexp, s)
+  val derivativeR = bders(s, internalize(rexp))
+  val derivBitcode = bmkeps(derivativeR)
   println(s"Derivatives bitcode: $derivBitcode\n")
   //println(s"Decoded value for derivatives=${decode( derivBitcode, rexp)._1}\n")
 }
@@ -302,17 +324,16 @@ def test4() = {
   println(s"\n=final list= ${bits}\n")
   //println(s"Decoded value for Marked=${decode( bits, rexp)._1}\n")
 
-  val derivBitcode = rebit.lex(rexp, s)
+  val derivativeR = bders(s, internalize(rexp))
+  val derivBitcode = bmkeps(derivativeR)
   println(s"Derivatives bitcode: $derivBitcode\n")
   //println(s"Decoded value for derivatives=${decode( derivBitcode, rexp)._1}\n")
 }
 
-//  val br2= ONE |  %( "a" | "aa" )
 @main
 def test5() = {
-  //val rexp=ONE |  %( "a" | "aa" )
+  val rexp=STAR(STAR("a"))
   //val rexp=(ONE|"a") ~ %("a")
-  val rexp= ONE |  %( "a" | "aa" )
   println(s"regex= $rexp")
   val s = "aaa".toList
   val mrexp=intern2(rexp)
@@ -328,10 +349,11 @@ def test5() = {
   } 
 
   val bits=lexComplex(rexp,s).getOrElse(Nil)
-  println(s"\n=final list= ${bits}\n")
+  println(s"\n=final list= ${bits}\n bits after convertMtoDInt=${convertMtoDInt(bits)}")
   //println(s"Decoded value for Marked=${decode( bits, rexp)._1}\n")
 
-  val derivBitcode = rebit.lex(rexp, s)
+  val derivativeR = bders(s, internalize(rexp))
+  val derivBitcode = bmkeps(derivativeR)
   println(s"Derivatives bitcode: $derivBitcode\n")
   //println(s"Decoded value for derivatives=${decode( derivBitcode, rexp)._1}\n")
 }
@@ -344,24 +366,7 @@ def pp(e: MRexp) : String = (e: @unchecked) match {
   case MSEQ(r1, r2,p1,p2) => s"SEQ {p1=$p1} {p2=$p2}\n" ++ pps(r1, r2)
   case MSTAR(r) => "STAR\n" ++ pps(r)
 }
-
-def implode(ss: Seq[String]) = ss.mkString("\n")
-def explode(s: String) = s.split("\n").toList
-def lst(s: String) : String = explode(s) match {
-  case hd :: tl => implode(" └" ++ hd :: tl.map("  " ++ _))
-  case Nil => ""
-}
-def mid(s: String) : String = explode(s) match {
-  case hd :: tl => implode(" ├" ++ hd :: tl.map(" │" ++ _))
-  case Nil => ""
-}
-def indent(ss: Seq[String]) : String = ss match {
-  case init :+ last => implode(init.map(mid) :+ lst(last))
-  case _ => "" 
-}
 def pps(es: MRexp*) = indent(es.map(pp))
-
-
 
 /* 
 enum Rexp {
@@ -471,3 +476,20 @@ def pp(e: Rexp) : String = e match {
 }
 def pps(es: Rexp*) = indent(es.map(pp))
  */
+```
+
+
+
+#### Error stacktrace:
+
+```
+dotty.tools.dotc.ast.Trees$Tree.tpe(Trees.scala:74)
+	dotty.tools.dotc.util.Signatures$.applyCallInfo(Signatures.scala:208)
+	dotty.tools.dotc.util.Signatures$.computeSignatureHelp(Signatures.scala:104)
+	dotty.tools.dotc.util.Signatures$.signatureHelp(Signatures.scala:88)
+	dotty.tools.pc.SignatureHelpProvider$.signatureHelp(SignatureHelpProvider.scala:46)
+	dotty.tools.pc.ScalaPresentationCompiler.signatureHelp$$anonfun$1(ScalaPresentationCompiler.scala:435)
+```
+#### Short summary: 
+
+dotty.tools.dotc.ast.Trees$UnAssignedTypeException: type of Ident(p1m) is not assigned
