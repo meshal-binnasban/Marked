@@ -127,11 +127,22 @@ def mkfin(r: Rexp) : Bits = r match {
   case POINT(bs, CHAR(_)) => bs
   case ALT(r1, r2) => if (fin(r1)) mkfin(r1) else mkfin(r2) 
 
-  case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
+  case SEQ(r1, r2) if fin(r1) && nullable(r2) =>
+    if(isStar(r2) && fin(r2))
+    {println("here")
+    mkfin(r1)++ mkeps(r2)
+    } else
+    mkfin(r1) ++ mkeps(r2)
   case SEQ(r1, r2) if fin(r2) =>  mkfin(r2)
   case STAR(r) => mkfin(r) ++ List(En)
 
 } 
+
+def isStar(r: Rexp) : Boolean = r match {
+  case STAR(_) => true
+  case _ => false
+} 
+
 
 def mkfinStar(r: Rexp) : Bits = r match {
   case STAR(r) => mkfin(r) 
@@ -144,8 +155,8 @@ def mkfin2(r: Rexp) : Set[Bits] = r match {
   case ALT(r1, r2) if fin(r1) => mkfin2(r1)
   case ALT(r1, r2) if fin(r2) => mkfin2(r2) 
 
-  //case SEQ(r1, r2) if ((fin(r1) && nullable(r2)) && fin(r2))=>mkfin2(r1).map(_ ++ mkeps(r2)) | mkfin2(r2) // mkfin2(r1).map(_ ++ mkeps(r2)) 
-  case SEQ(r1, r2) if ((fin(r1) && nullable(r2))) => mkfin2(r1).map(_ ++ mkeps(r2))
+  case SEQ(r1, r2) if ((fin(r1) && nullable(r2)) && fin(r2))=>mkfin2(r1).map(_ ++ mkeps(r2)) | mkfin2(r2) // mkfin2(r1).map(_ ++ mkeps(r2)) 
+  case SEQ(r1, r2) if ((fin(r1) && nullable(r2))) =>mkfin2(r1).map(_ ++ mkeps(r2))
   case SEQ(r1, r2) => mkfin2(r2)
   case STAR(r) => mkfin2(r).map(_ ++ List(En))
 }
@@ -164,7 +175,7 @@ def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = (r: @unchecked) match
 
   case STAR(r) if m && fin(r) =>
     r match {
-      case STAR(rs) => STAR(shift(true, (mkfinStar(rs)) , r, c))
+      case STAR(rs) => STAR(shift(true, (bs):+Nx , r, c))
       case _        => STAR(shift(true, (bs):+Nx , r, c))
     }
   case STAR(r) if fin(r) =>
@@ -255,6 +266,7 @@ def pp(e: Rexp) : String = (e: @unchecked) match {
 def pps(es: Rexp*) = indent(es.map(pp))
 
 
+//%("a")~(%("ab") ~ %("b")) - doesn't work in this version
 @main
 def test1() = {
   println("=====Test====")
@@ -274,7 +286,7 @@ def test1() = {
   println(rebit.lex(br2, s.take(2)))
 }
 
-//%("a") ~ ("aa"|"a"), works if bs:+Nx only.
+//%("a") ~ ("aa"|"a") -  works now - check more input chars
 @main
 def test2() = {
   println("=====Test====")
@@ -303,7 +315,8 @@ def test2() = {
   println(s"=reference list=") 
   println(rebit.lex(br2, s.take(5)))
 }
-//(ONE  |  %("c"|"d"))
+
+//(ONE  |  %("c"|"d")) - works now - check more input chars
 @main
 def test3() = {
   println("=====Test====")
@@ -330,7 +343,9 @@ def test3() = {
   println(s"=reference list=") 
   println(rebit.lex(br2, s.take(3)))
 }
-// (ONE|"a") ~ %("a")
+
+
+// (ONE|"a") ~ %("a") - works now - check more input chars
 @main
 def test4() = {
   println("=====Test====")
@@ -358,7 +373,7 @@ def test4() = {
   println(rebit.lex(br2, s.take(3)))
 }
 
-// ONE |  %( "a" | "aa" )
+// ONE |  %( "a" | "aa" ) - works now - check more input chars
 @main
 def test5() = {
   println("=====Test====")
@@ -380,7 +395,7 @@ def test5() = {
 }
 
 //Nested STAR
-//ONE|%(%("a"))
+//ONE|%(%("a")) - works now - check more input chars
 @main
 def test6() = {
   println("=====Test====")
@@ -401,6 +416,7 @@ def test6() = {
   println(rebit.lex(br2, s))
 }
 
+//ONE | %(%("a")) - works now - check more input chars
 @main
 def test7() = {
   println("=====Test====")
@@ -421,6 +437,8 @@ def test7() = {
   println(rebit.lex(br2, s))
 }
 
+
+//%("aa") ~ %(%("a")) - doesn't work in this version
 @main
 def test8() = {
   println("=====Test====")
@@ -441,6 +459,7 @@ def test8() = {
   println(rebit.lex(br2, s))
 }
 
+//( %("a") ~ %("a") ) ~ "a" - works now - check more input chars
 @main
 def test9() = {
   println("=====Test====")
@@ -462,11 +481,12 @@ def test9() = {
   println(rebit.lex(br2, s))
 }
 
+// empty
 @main
 def test10() = {
   println("=====Test====")
-  val br2= ONE | %( "a" | "aa")
-  val s = "aaa".toList
+  val br2= ONE 
+  val s = "".toList
   println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
   println(s)
@@ -509,7 +529,16 @@ def weakTest() = {
           println(s"[$i]reg: $r str: $s")
           println(s"mark: ${v1s.get} bder: $v2")
           println(s"mark: ${lex(r, s.toList).get} bder: ${rebit.lex(r, s.toList)}")
-          System.exit(1)
+
+          //get input to continue or stop
+          print("Continue testing? (y/n): ")
+          val input = scala.io.StdIn.readLine().trim.toLowerCase
+          if (input != "y") {
+            println("Testing stopped by user.")
+            System.exit(0) 
+          }
+
+
         }
       }
   }
