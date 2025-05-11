@@ -42,6 +42,7 @@ case class CHAR(c: Char) extends Rexp
 case class ALT(r1: Rexp, r2: Rexp) extends Rexp
 case class SEQ(r1: Rexp, r2: Rexp) extends Rexp 
 case class STAR(r: Rexp) extends Rexp 
+case class NTIMES(r: Rexp,n:Int) extends Rexp // new to testX1.
 // only used by re-generate to generate non-matching strings
 case class NOT(r: Rexp) extends Rexp 
 case class POINT(bs: Bits, r: Rexp) extends Rexp
@@ -71,6 +72,7 @@ def nullable(r: Rexp) : Boolean = r match {
   case ALT(r1, r2) => nullable(r1) || nullable(r2)
   case SEQ(r1, r2) => nullable(r1) && nullable(r2)
   case STAR(_) => true
+  case NTIMES(r, n) => n == 0 || nullable(r) // new to testX1.
   case POINT(_, r) => nullable(r)
 }
 
@@ -83,6 +85,7 @@ def der(c: Char, r: Rexp) : Rexp = r match {
     if (nullable(r1)) ALT(SEQ(der(c, r1), r2), der(c, r2))
     else SEQ(der(c, r1), r2)
   case STAR(r) => SEQ(der(c, r), STAR(r))
+  case NTIMES(r, n) => if (n == 0) ZERO else SEQ(der(c, r), NTIMES(r, n-1)) // new to testX1.
 }
 
 // the derivative w.r.t. a string (iterates der and simp)
@@ -102,6 +105,7 @@ case class Sequ(v1: Val, v2: Val) extends Val
 case class Left(v: Val) extends Val
 case class Right(v: Val) extends Val
 case class Stars(vs: List[Val]) extends Val
+case class Nt(vs: List[Val], n: Int) extends Val // new to testX1.
 //case object XXX extends Val
 
 
@@ -112,6 +116,7 @@ def mkeps(r: Rexp) : Val = r match {
     if (nullable(r1)) Left(mkeps(r1)) else Right(mkeps(r2))
   case SEQ(r1, r2) => Sequ(mkeps(r1), mkeps(r2))
   case STAR(r) => Stars(Nil)
+  case NTIMES(r, n) => Nt(Nil, 0) // new to testX1.
 }
 
 def inj(r: Rexp, c: Char, v: Val) : Val = (r, v) match {
@@ -167,6 +172,7 @@ def draw_r(e: Rexp, prefix: String, more: Boolean) : String = {
     case ALT(r1, r2) => s"ALT" ++ draw_rs(List(r1, r2), childPrefix)
     case SEQ(r1, r2) => s"SEQ" ++ draw_rs(List(r1, r2), childPrefix)
     case STAR(r) => s"STAR" ++ draw_r(r, childPrefix, false)
+    case NTIMES(r, n) => s"NTIMES($n)" ++ draw_r(r, childPrefix, false) // new to testX1.
   })
 }
 

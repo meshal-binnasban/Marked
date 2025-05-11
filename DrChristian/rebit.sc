@@ -45,7 +45,7 @@ case class ACHAR(bs: Bits, c: Char) extends ARexp
 case class AALT(bs: Bits, r1: ARexp, r2: ARexp) extends ARexp 
 case class ASEQ(bs: Bits, r1: ARexp, r2: ARexp) extends ARexp 
 case class ASTAR(bs: Bits, r: ARexp) extends ARexp 
-
+case class ANTIMES(bs: Bits, r: ARexp , n:Int) extends ARexp // new to testX1.
 
 // values
 /*
@@ -85,6 +85,7 @@ def fuse(bs: Bits, r: ARexp) : ARexp = r match {
   case AALT(cs, r1, r2) => AALT(bs ++ cs, r1, r2)
   case ASEQ(cs, r1, r2) => ASEQ(bs ++ cs, r1, r2)
   case ASTAR(cs, r) => ASTAR(bs ++ cs, r)
+  case ANTIMES(cs, r,n) => ANTIMES(bs ++ cs, r,n)
 }
 
 def intern(r: Rexp) : ARexp = r match {
@@ -95,6 +96,7 @@ def intern(r: Rexp) : ARexp = r match {
     AALT(Nil, fuse(List(Lf), intern(r1)), fuse(List(Ri), intern(r2)))
   case SEQ(r1, r2) => ASEQ(Nil, intern(r1), intern(r2))
   case STAR(r) => ASTAR(Nil, intern(r))
+  case NTIMES(r, n) => ANTIMES(Nil, intern(r),n) // new to testX1.
 }
 
 
@@ -123,6 +125,13 @@ def decode_aux(r: Rexp, bs: Bits) : (Val, Bits) = (r, bs) match {
     (Stars(v::vs), bs2)
   }
   case (STAR(_), En::bs) => (Stars(Nil), bs)
+
+  case (NTIMES(r1,n), Nx::bs) => {
+    val (v, bs1) = decode_aux(r1, bs)
+    val (Nt(vs,ns), bs2) = (decode_aux(NTIMES(r1,n-1), bs1)  : @unchecked)
+    (Nt(v::vs,n), bs2)
+  }
+  case (NTIMES(_,_), En::bs) => (Nt(Nil,0), bs)
 }
 
 def decode(r: Rexp, bs: Bits) = decode_aux(r, bs) match {
@@ -140,6 +149,7 @@ def bnullable (r: ARexp) : Boolean = r match {
   case AALT(_, r1, r2) => bnullable(r1) || bnullable(r2)
   case ASEQ(_, r1, r2) => bnullable(r1) && bnullable(r2)
   case ASTAR(_, _) => true
+  case ANTIMES(_, _, n) => n == 0 || bnullable(r) // new to testX1.
 }
 
 def bmkeps(r: ARexp) : Bits = r match {
@@ -148,6 +158,7 @@ def bmkeps(r: ARexp) : Bits = r match {
     if (bnullable(r1)) bs ++ bmkeps(r1) else bs ++ bmkeps(r2)  
   case ASEQ(bs, r1, r2) => bs ++ bmkeps(r1) ++ bmkeps(r2)
   case ASTAR(bs, r) => bs ++ List(En)
+  case ANTIMES(bs, r, n) => bs ++ List(En) // new to testX1.
 }
 
 // derivative of a regular expression w.r.t. a character
@@ -160,6 +171,8 @@ def bder(c: Char, r: ARexp) : ARexp = r match {
     if (bnullable(r1)) AALT(bs, ASEQ(Nil, bder(c, r1), r2), fuse(bmkeps(r1), bder(c, r2)))
     else ASEQ(bs, bder(c, r1), r2)
   case ASTAR(bs, r) => ASEQ(bs, fuse(List(Nx), bder(c, r)), ASTAR(Nil, r))
+  case ANTIMES(bs, r, n) => 
+    if (n == 0) AZERO else ASEQ(bs, fuse(List(Nx), bder(c, r)), ANTIMES(Nil, r, n-1)) // new to testX1.
 }
 
 // derivative w.r.t. a string (iterates bder)
@@ -215,6 +228,7 @@ def pp(e: ARexp) : String = (e: @unchecked) match {
   case AALT(bs, r1, r2) => s"AALT:${bs.mkString(",")}\n" ++ pps(r1, r2)
   case ASEQ(bs, r1, r2) => s"ASEQ:${bs.mkString(",")}\n" ++ pps(r1, r2)
   case ASTAR(bs, r) => s"ASTAR:${bs.mkString(",")}\n" ++ pps(r)
+  case ANTIMES(bs, r, n) => s"ANTIMES:${bs.mkString(",")}:$n\n" ++ pps(r) // new to testX1.
 }
 def pps(es: ARexp*) = indent(es.map(pp))
 
@@ -225,6 +239,7 @@ def ppr(e: Rexp) : String = (e: @unchecked) match {
   case ALT(r1, r2) => "ALT\n" ++ pprs(r1, r2)
   case SEQ(r1, r2) => "SEQ\n" ++ pprs(r1, r2)
   case STAR(r) => "STAR\n" ++ pprs(r)
+  case NTIMES(r, n) => s"NTIMES:$n\n" ++ pprs(r) // new to testX1.
 }
 def pprs(es: Rexp*) = indent(es.map(ppr))
 

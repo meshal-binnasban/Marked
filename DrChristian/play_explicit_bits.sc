@@ -127,12 +127,10 @@ def mkfin(r: Rexp) : Bits = r match {
   case POINT(bs, CHAR(_)) => bs
   case ALT(r1, r2) => if (fin(r1)) mkfin(r1) else mkfin(r2) 
 
-  case SEQ(r1, r2) if fin(r2) =>  mkfin(r2)
   case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
-
+  case SEQ(r1, r2) if fin(r2) =>  mkfin(r2)
   case STAR(r) => mkfin(r) ++ List(En)
-  //case POINT(bs, STAR(r)) => bs++mkfin(r)++ List(En)
-  //case POINT(bs,STAR(r)) => bs
+
 } 
 
 def mkfinStar(r: Rexp) : Bits = r match {
@@ -146,11 +144,10 @@ def mkfin2(r: Rexp) : Set[Bits] = r match {
   case ALT(r1, r2) if fin(r1) => mkfin2(r1)
   case ALT(r1, r2) if fin(r2) => mkfin2(r2) 
 
-  case SEQ(r1, r2) if ((fin(r1) && nullable(r2)) && fin(r2))=>mkfin2(r1).map(_ ++ mkeps(r2)) | mkfin2(r2) // mkfin2(r1).map(_ ++ mkeps(r2)) 
+  //case SEQ(r1, r2) if ((fin(r1) && nullable(r2)) && fin(r2))=>mkfin2(r1).map(_ ++ mkeps(r2)) | mkfin2(r2) // mkfin2(r1).map(_ ++ mkeps(r2)) 
   case SEQ(r1, r2) if ((fin(r1) && nullable(r2))) => mkfin2(r1).map(_ ++ mkeps(r2))
   case SEQ(r1, r2) => mkfin2(r2)
   case STAR(r) => mkfin2(r).map(_ ++ List(En))
- // case POINT(bs, STAR(r)) => mkfin2(r).map(_ ++ List(En))
 }
 
 // shift function from the paper
@@ -165,8 +162,6 @@ def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = (r: @unchecked) match
   case SEQ(r1, r2) if fin(r1) => SEQ(shift(m, bs, r1, c), shift(true, mkfin(r1), r2, c))
   case SEQ(r1, r2) => SEQ(shift(m, bs, r1, c), shift(false, Nil, r2, c))
 
-  
- 
   case STAR(r) if m && fin(r) =>
     r match {
       case STAR(rs) => STAR(shift(true, (mkfinStar(rs)) , r, c))
@@ -177,8 +172,6 @@ def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = (r: @unchecked) match
       case STAR(rs) => STAR(shift(true, (mkfin(rs)) , r, c))
       case _        => STAR(shift(true, (mkfin(r)):+Nx , r, c))
     }
- //STAR(shift(true, (for {b <- bs; f <- mkfin2(r)+Nil} yield b ++ f ++ List(Nx)), r, c))  or (mkfin(r)):+Nx (bs).flatMap(b => (mkfin2(r)+Nil).map(f => b ++ f ++ List(Nx)))
-//STAR(shift(true, (for {b <- bs; f <- mkfin2(r)+Nil} yield b ++ f ++ List(Nx)), r, c))  or (mkfin(r)):+Nx (bs).flatMap(b => (mkfin2(r)+Nil).map(f => b ++ f ++ List(Nx)))
   case STAR(r) if m =>STAR(shift(m, bs:+Nx, r, c))
   case STAR(r) => STAR(shift(false, Nil, r, c)) 
   
@@ -493,7 +486,7 @@ def test10() = {
 import scala.util._
 
 @main
-def longTest1() = {
+def weakTest() = {
   given rexp_cdata : CDATA[Rexp] = List(
         (0, _ => ONE),
         (0, _ => ZERO),
@@ -513,7 +506,7 @@ def longTest1() = {
       { val v1s = Try(lexer(r, s.toList)).getOrElse(None)
         val v2 = rebit.blexer(r, s)
         if (v1s.isDefined && !v1s.get.contains(v2)) {
-          println(s"reg: $r str: $s")
+          println(s"[$i]reg: $r str: $s")
           println(s"mark: ${v1s.get} bder: $v2")
           println(s"mark: ${lex(r, s.toList).get} bder: ${rebit.lex(r, s.toList)}")
           System.exit(1)
@@ -523,7 +516,7 @@ def longTest1() = {
 }
 
 @main
-def longTest2() = {
+def weakTestLong() = {
   given rexp_cdata : CDATA[Rexp] = List(
         (0, _ => ONE),
         (0, _ => ZERO),

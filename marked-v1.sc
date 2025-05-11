@@ -60,7 +60,7 @@ def test1() = {
 
 val r1=SEQ(NTIMES(OPT(CHAR('a')), 10), NTIMES(CHAR('a'), 10))
 println("testing new ntimes")
-matcher(r1, "aaaaaaaaaaaaaab")
+matcher(r1, "aaaaaaaaaa")
 
 //val r= NTIMES(CHAR('b'),2)
 //matcher(r, "bbc".toList)
