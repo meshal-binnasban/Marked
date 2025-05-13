@@ -149,7 +149,7 @@ def bnullable (r: ARexp) : Boolean = r match {
   case AALT(_, r1, r2) => bnullable(r1) || bnullable(r2)
   case ASEQ(_, r1, r2) => bnullable(r1) && bnullable(r2)
   case ASTAR(_, _) => true
-  case ANTIMES(_, _, n) => n == 0 || bnullable(r) // new to testX1.
+  case ANTIMES(cs, r, n) => n == 0 || bnullable(r) // new to testX1.
 }
 
 def bmkeps(r: ARexp) : Bits = r match {

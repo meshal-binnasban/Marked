@@ -1,5 +1,5 @@
 
-
+// not working 
 import scala.language.implicitConversions
 import $file.rexp, rexp._
 import $file.enumerate, enumerate._
@@ -40,6 +40,48 @@ def dec2(r: Rexp, bs: Bits) = decode_aux(r, bs) match {
   case _ => throw new Exception("Not decodable")
 }
 
+
+def hasNestedMStar(r: Rexp): Boolean = {
+    def containsMStar(r: Rexp): Boolean = r match {
+      case STAR(_) => true
+      case ALT(r1, r2) => containsMStar(r1) || containsMStar(r2)
+      case SEQ(r1, r2) => containsMStar(r1) || containsMStar(r2)
+      case _ => false
+    }
+    r match {
+      case STAR(inner) => 
+        if (containsMStar(inner)) true
+        else hasNestedMStar(inner)
+      case ALT(r1, r2) => hasNestedMStar(r1) || hasNestedMStar(r2)
+      case SEQ(r1, r2) => hasNestedMStar(r1) || hasNestedMStar(r2)
+      case _ => false
+    }
+}
+
+def isStar(r: Rexp) : Boolean = r match {
+    case STAR(_) => true
+    case _ => false
+} 
+
+  
+def mat(r: Rexp, s: List[Char]) : Rexp = s match {
+    case Nil => r
+    case c::cs => cs.foldLeft(shift(true, Nil, r, c))((r, c) => shift(false, Nil, r, c))
+}
+  
+def matcher(r: Rexp, s: List[Char]) : Boolean =
+    if (s == Nil) nullable(r) else fin(mat(r, s))
+  
+def lex(r: Rexp, s: List[Char]) : Option[Set[Bits]] = {
+    if matcher(r, s)
+    then Some(if (s == Nil) Set(mkeps(r)) else mkfin2(mat(r, s)))
+    else None
+}
+  
+def lexer(r: Rexp, s: List[Char]) : Option[Set[Val]] = {
+    lex(r, s).map(_.map(dec2(r, _)))
+}
+
 def mkeps(r: Rexp) : Bits = r match {
   case ONE => Nil
   case POINT(bs, CHAR(_)) => bs
@@ -47,6 +89,7 @@ def mkeps(r: Rexp) : Bits = r match {
     if (nullable(r1)) Lf:: mkeps(r1) else Ri:: mkeps(r2) 
   case SEQ(r1, r2) => mkeps(r1) ++ mkeps(r2)
   case STAR(r) => List(En)
+  case NTIMES(r,n) => List(En)
 }
 
 def fin(r: Rexp) : Boolean = (r: @unchecked) match {
@@ -57,22 +100,18 @@ def fin(r: Rexp) : Boolean = (r: @unchecked) match {
   case ALT(r1, r2) => fin(r1) || fin(r2)
   case SEQ(r1, r2) => (fin(r1) && nullable(r2)) || fin(r2)
   case STAR(r) => fin(r)
+  case NTIMES(r,n) => if(n==0) fin(r) else false
 }
 
 def mkfin(r: Rexp) : Bits = r match {
   case POINT(bs, CHAR(_)) => bs
   case ALT(r1, r2) => if (fin(r1)) mkfin(r1) else mkfin(r2) 
 
-  //case SEQ(r1, r2) if fin(r1) && isStar(r2) => mkfin(r1) ++ mkfin(r2)
+  //case SEQ(r1, r2) if ((fin(r1) && isStar(r2)))=>mkfin(r1) ++ List(En)
   case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
   case SEQ(r1, r2) if fin(r2) =>  mkfin(r2)
   case STAR(r) => mkfin(r) ++ List(En)
-
-} 
-
-def mkfinStar(r: Rexp) : Bits = r match {
-  case STAR(r) => mkfin(r) 
-  case _ => mkfin(r)
+  case NTIMES(r,n) => mkfin(r) ++ List(En)
 } 
 
 def mkfin2(r: Rexp) : Set[Bits] = r match {
@@ -81,10 +120,13 @@ def mkfin2(r: Rexp) : Set[Bits] = r match {
   case ALT(r1, r2) if fin(r1) => mkfin2(r1)
   case ALT(r1, r2) if fin(r2) => mkfin2(r2) 
 
-  //case SEQ(r1, r2) if ((fin(r1) && nullable(r2)) && fin(r2))=>mkfin2(r1).map(_ ++ mkeps(r2)) | mkfin2(r2) // mkfin2(r1).map(_ ++ mkeps(r2)) 
-  case SEQ(r1, r2) if ((fin(r1) && nullable(r2))) => mkfin2(r1).map(_ ++ mkeps(r2))
+  //case SEQ(r1, r2) if ((fin(r1) && isStar(r2)))=>mkfin2(r1).map(_ ++ List(En))
+  //case SEQ(r1, r2) if ((fin(r1) && nullable(r2)) && fin(r2)) => mkfin2(r1).map(_ ++ mkeps(r2))  | mkfin2(r2)
+  case SEQ(r1, r2) if ((fin(r1) && nullable(r2))) => mkfin2(r1).map(_ ++ mkeps(r2)) 
   case SEQ(r1, r2) => mkfin2(r2)
+
   case STAR(r) => mkfin2(r).map(_ ++ List(En))
+  case NTIMES(r,n) =>mkfin2(r).map(_ ++ List(En))
 }
 
 def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = (r: @unchecked) match {
@@ -94,171 +136,111 @@ def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = (r: @unchecked) match
   case POINT(_, CHAR(d)) => if (m && d == c) POINT(bs, CHAR(d)) else CHAR(d)
   case ALT(r1, r2) => ALT(shift(m, bs:+Lf, r1, c), shift(m, bs:+Ri, r2, c))
 
-  case SEQ(r1, r2) if m && nullable(r1) => SEQ(shift(m, bs, r1, c), shift(true, bs:::mkeps(r1) , r2, c))
+   case SEQ(r1, r2) if m && isStar(r2) => 
+    if(fin(r1))
+    SEQ(shift(m, bs, r1, c), shift(true,mkfin(r1),r2,c))
+    else
+    SEQ(shift(m, bs, r1, c), shift(true,bs:+Nx,r2,c)) 
+    
+  //case SEQ(r1, r2) if m && nullable(r1) => SEQ(shift(m, bs, r1, c), shift(true, bs:::mkeps(r1) , r2, c))
+  case SEQ(r1, r2) if m && nullable(r1) => 
+    //val r2s= if fin(r1) then shift(true,mkfin(r1), r2, c) else shift(true,bs:::mkeps(r1), r2, c)
+    ALT( SEQ(shift(true, bs, r1, c), shift(fin(r), bs:::mkeps(r1) , r2, c)) 
+         , shift(true,bs:::mkeps(r1), r2, c) )
+
   case SEQ(r1, r2) if fin(r1) => SEQ(shift(m, bs, r1, c), shift(true, mkfin(r1), r2, c))
   case SEQ(r1, r2) => SEQ(shift(m, bs, r1, c), shift(false, Nil, r2, c))
 
-  case STAR(r) if m && fin(r) =>
-    r match {
-      case STAR(rs) => STAR(shift(true, (mkfinStar(rs)) , r, c))
-      case _        => STAR(shift(true, (bs):+Nx , r, c))
-    }
-  case STAR(r) if fin(r) =>
-    r match {
-      case STAR(rs) => STAR(shift(true, (mkfin(rs)) , r, c))
-      case _        => STAR(shift(true, (mkfin(r)):+Nx , r, c))
-    }
-  case STAR(r) if m =>STAR(shift(m, bs:+Nx, r, c))
-  case STAR(r) => STAR(shift(false, Nil, r, c)) 
+  //case STAR(r) if m && fin(r)=> STAR(SEQ(shift(true, (bs:::mkfin(r)):+Nx, r, c),STAR(r)) )
+  //case STAR(r) if fin(r)=> STAR(SEQ(shift(true, (mkfin(r)):+Nx, r, c), STAR(r)))
+  case STAR(r) if m => SEQ(shift(true, bs:+Nx, r, c),STAR(r))
+  case STAR(r) => STAR(shift(false, Nil, r, c))
   
+  case NTIMES(r,n) if n<=0 =>ONE
+  case NTIMES(r,n) if fin(r) =>
+// check when ntimes ends then add E ???
+    SEQ(shift(true, (mkfin(r):+En),r, c) , NTIMES(r,n-1)) 
+  case NTIMES(r,n) if m =>SEQ(shift(true, bs:+Nx, r, c) , NTIMES(r,n-1)) 
+  case NTIMES(r,n) =>NTIMES(shift(false, Nil, r, c),n)
 }
 
-def hasNestedMStar(r: Rexp): Boolean = {
-  def containsMStar(r: Rexp): Boolean = r match {
-    case STAR(_) => true
-    case ALT(r1, r2) => containsMStar(r1) || containsMStar(r2)
-    case SEQ(r1, r2) => containsMStar(r1) || containsMStar(r2)
-    case _ => false
-  }
-  r match {
-    case STAR(inner) => 
-      if (containsMStar(inner)) true
-      else hasNestedMStar(inner)
-    case ALT(r1, r2) => hasNestedMStar(r1) || hasNestedMStar(r2)
-    case SEQ(r1, r2) => hasNestedMStar(r1) || hasNestedMStar(r2)
-    case _ => false
-  }
-}
+def OPT(r: Rexp) = ALT(ONE, r)
+// testing new implementation
 
-def mat(r: Rexp, s: List[Char]) : Rexp = s match {
-  case Nil => r
-  case c::cs => cs.foldLeft(shift(true, Nil, r, c))((r, c) => shift(false, Nil, r, c))
-}
+@main
+def basic1() = {
+  println("=====Test====")
+  //val br2 = %("a") ~ %("a")
+  //val br2=NTIMES(("a"|"b") , 2)
+  val br2=OPT(NTIMES("a",2)) ~ ( OPT(NTIMES("ab",2)) ~ OPT(NTIMES("b",2)) )
+  //val br2= NTIMES("a",2) ~ (NTIMES("b",2) ~ ONE)
+  val s = "abab".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
 
-def matcher(r: Rexp, s: List[Char]) : Boolean =
-  if (s == Nil) nullable(r) else fin(mat(r, s))
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
 
-def lex(r: Rexp, s: List[Char]) : Option[Set[Bits]] = {
-  if matcher(r, s)
-  then Some(if (s == Nil) Set(mkeps(r)) else mkfin2(mat(r, s)))
-  else None
-}
-
-def lexer(r: Rexp, s: List[Char]) : Option[Set[Val]] = {
-  lex(r, s).map(_.map(dec2(r, _)))
+  println(s"=final list=")
+  println(lex(br2, s))
+  println(s"=reference list=") 
+  println(rebit.lex(br2, s))
 }
 
 
-//%("a")~(%("ab") ~ %("b"))
+//%("a")~(%("ab") ~ %("b")) - doesn't work in this version
 @main
 def test1() = {
   println("=====Test====")
   val br2 = %("a")~(%("ab") ~ %("b"))
   val s = "ab".toList
+  println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
   println(s)
-  println(s"=shift ${s(0)}=")
-  println(pp(mat(br2, s.take(1))))
 
-  println(s"=shift ${s(1)}=")
-  println(pp(mat(br2, s.take(2))))
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
 
   println(s"=final list=")
-  println(lex(br2, s.take(2)))
+  println(lex(br2, s))
   println(s"=reference list=") 
-  println(rebit.lex(br2, s.take(2)))
+  println(rebit.lex(br2, s))
 }
 
-//%("a") ~ ("aa"|"a"), works if bs:+Nx only.
+//%("a") ~ ("aa"|"a") -  works now - check more input chars
 @main
 def test2() = {
   println("=====Test====")
 
   val br2= %("a") ~ ("aa"|"a")
   val s = "aaaaa".toList
+  println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
   println(s)
-  println(s"=shift ${s(0)}=")
-  println(pp(mat(br2, s.take(1))))
 
-  println(s"=shift ${s(1)}=")
-  println(pp(mat(br2, s.take(2))))
-
-  println(s"=shift ${s(2)}=")
-  println(pp(mat(br2, s.take(3))))
-
-  println(s"=shift ${s(3)}=")
-  println(pp(mat(br2, s.take(4))))
-
-  println(s"=shift ${s(4)}=")
-  println(pp(mat(br2, s.take(5))))
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
 
   println(s"=final list=")
-  println(lex(br2, s.take(5)))
+  println(lex(br2, s))
   println(s"=reference list=") 
-  println(rebit.lex(br2, s.take(5)))
+  println(rebit.lex(br2, s))
 }
-//(ONE  |  %("c"|"d"))
+
+//(ONE  |  %("c"|"d")) - works now - check more input chars
 @main
-def test3() = {
+def test3() =  {
   println("=====Test====")
   val br2 = (ONE  |  %("c"|"d"))
   //val br2= STAR( STAR("a") )
   val s = "ccc".toList
-  println("=string=")
-  println(s)
-  println(s"=shift ${s(0)}=")
-  println(pp(mat(br2, s.take(1))))
-
-  println(s"=shift ${s(1)}=")
-  println(pp(mat(br2, s.take(2))))
-
-  
-  println(s"=shift ${s(2)}=")
-  println(pp(mat(br2, s.take(3))))
-
-  //println(s"=shift ${s(3)}=")
-  //println(pp(mat(br2, s.take(4))))
-  
-  println(s"=final list=")
-  println(lex(br2, s.take(3)))
-  println(s"=reference list=") 
-  println(rebit.lex(br2, s.take(3)))
-}
-// (ONE|"a") ~ %("a")
-@main
-def test4() = {
-  println("=====Test====")
-  //val br2 =STAR( STAR("a") )
- // val br2=SEQ(STAR(CHAR('a')),STAR(CHAR('a')))
-  //val br2=SEQ(ALT(ONE,CHAR('a')),STAR(CHAR('a')))
-  val br2= (ONE|"a") ~ %("a")
-  val s = "aaa".toList
-  println(s"Regex:\n${pp(br2)}\n")
-  println("=string=")
-  println(s)
-  println(s"=shift ${s(0)}=")
-  println(pp(mat(br2, s.take(1))))
-
-  println(s"=shift ${s(1)}=")
-  println(pp(mat(br2, s.take(2))))
-
-  println(s"=shift ${s(2)}=")
-  println(pp(mat(br2, s.take(3))))
-
-
-  println(s"=final list=")
-  println(lex(br2, s.take(3)))
-  println(s"=reference list=") 
-  println(rebit.lex(br2, s.take(3)))
-}
-
-// ONE |  %( "a" | "aa" )
-@main
-def test5() = {
-  println("=====Test====")
-  val br2= ONE |  %( "a" | "aa" )
-  val s = "aa".toList
   println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
   println(s)
@@ -275,7 +257,7 @@ def test5() = {
 }
 
 //Nested STAR
-//ONE|%(%("a"))
+//ONE|%(%("a")) - works now - check more input chars
 @main
 def test6() = {
   println("=====Test====")
@@ -296,7 +278,7 @@ def test6() = {
   println(rebit.lex(br2, s))
 }
 
-//ONE | %(%("a"))
+//ONE | %(%("a")) - works now - check more input chars
 @main
 def test7() = {
   println("=====Test====")
@@ -317,7 +299,8 @@ def test7() = {
   println(rebit.lex(br2, s))
 }
 
-//%("aa") ~ %(%("a"))
+
+//%("aa") ~ %(%("a")) - doesn't work in this version
 @main
 def test8() = {
   println("=====Test====")
@@ -338,13 +321,13 @@ def test8() = {
   println(rebit.lex(br2, s))
 }
 
-//( %("a") ~ %("a") ) ~ "a"
+//( %("a") ~ %("a") ) ~ "a" - works now - check more input chars
 @main
 def test9() = {
   println("=====Test====")
   val br2= ( %("a") ~ %("a") ) ~ "a"
   //val br2=ALT(ONE,STAR(ALT(CHAR('a'),SEQ(CHAR('a'),CHAR('a')))))
-  val s = "aa".toList
+  val s = "aaa".toList
   println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
   println(s)
@@ -352,6 +335,7 @@ def test9() = {
   for (i <- s.indices) {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
   println(pp(mat(br2, s.take(i + 1))))
+  
   } 
 
   println(s"=final list=")
@@ -360,12 +344,12 @@ def test9() = {
   println(rebit.lex(br2, s))
 }
 
-//
+// empty
 @main
 def test10() = {
   println("=====Test====")
-  val br2= ONE | %( "a" | "aa")
-  val s = "aaa".toList
+  val br2= ONE 
+  val s = "".toList
   println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
   println(s)
@@ -416,7 +400,7 @@ def weakTest() = {
           val input = scala.io.StdIn.readLine().trim.toLowerCase
           
           if (input != "y") {
-            println("Testing stopped by user.")
+            println("End test.")
             System.exit(0)
           }
           
@@ -458,6 +442,7 @@ def pp(e: Rexp) : String = (e: @unchecked) match {
   case ALT(r1, r2) => "ALT\n" ++ pps(r1, r2)
   case SEQ(r1, r2) => "SEQ\n" ++ pps(r1, r2)
   case STAR(r) => "STAR\n" ++ pps(r)
+  case NTIMES(r, n) => s"NTIMES:$n\n" ++ pps(r) // new to testX1.
 }
 def pps(es: Rexp*) = indent(es.map(pp))
 

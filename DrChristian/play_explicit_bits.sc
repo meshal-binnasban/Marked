@@ -129,8 +129,8 @@ def mkfin(r: Rexp) : Bits = r match {
 
   case SEQ(r1, r2) if fin(r1) && nullable(r2) =>
     if(isStar(r2) && fin(r2))
-    {println("here")
-    mkfin(r1)++ mkeps(r2)
+    {
+    mkfin(r1)++ mkeps(r2) //
     } else
     mkfin(r1) ++ mkeps(r2)
   case SEQ(r1, r2) if fin(r2) =>  mkfin(r2)
@@ -206,8 +206,7 @@ def hasNestedMStar(r: Rexp): Boolean = {
   }
 }
 
-// the main matching function (by using BINIT only in 
-// the first step a mark is shifted into the Rexp)
+
 def mat(r: Rexp, s: List[Char]) : Rexp = s match {
   case Nil => r
   case c::cs => cs.foldLeft(shift(true, Nil, r, c))((r, c) => shift(false, Nil, r, c))
@@ -226,11 +225,6 @@ def lexer(r: Rexp, s: List[Char]) : Option[Set[Val]] = {
   lex(r, s).map(_.map(dec2(r, _)))
 }
   
-/* def lex1(r: Rexp, s: List[Char]) : Option[Bits] = {
-  if matcher(r, s)
-  then Some(if (s == Nil) mkeps(r) else mkfin(mat(r, s)))
-  else None
-} */
 
 // pretty-printing Rexps
 
@@ -272,18 +266,19 @@ def test1() = {
   println("=====Test====")
   val br2 = %("a")~(%("ab") ~ %("b"))
   val s = "ab".toList
+  println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
   println(s)
-  println(s"=shift ${s(0)}=")
-  println(pp(mat(br2, s.take(1))))
 
-  println(s"=shift ${s(1)}=")
-  println(pp(mat(br2, s.take(2))))
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
 
   println(s"=final list=")
-  println(lex(br2, s.take(2)))
+  println(lex(br2, s))
   println(s"=reference list=") 
-  println(rebit.lex(br2, s.take(2)))
+  println(rebit.lex(br2, s))
 }
 
 //%("a") ~ ("aa"|"a") -  works now - check more input chars
@@ -293,27 +288,19 @@ def test2() = {
 
   val br2= %("a") ~ ("aa"|"a")
   val s = "aaaaa".toList
+  println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
   println(s)
-  println(s"=shift ${s(0)}=")
-  println(pp(mat(br2, s.take(1))))
 
-  println(s"=shift ${s(1)}=")
-  println(pp(mat(br2, s.take(2))))
-
-  println(s"=shift ${s(2)}=")
-  println(pp(mat(br2, s.take(3))))
-
-  println(s"=shift ${s(3)}=")
-  println(pp(mat(br2, s.take(4))))
-
-  println(s"=shift ${s(4)}=")
-  println(pp(mat(br2, s.take(5))))
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
 
   println(s"=final list=")
-  println(lex(br2, s.take(5)))
+  println(lex(br2, s))
   println(s"=reference list=") 
-  println(rebit.lex(br2, s.take(5)))
+  println(rebit.lex(br2, s))
 }
 
 //(ONE  |  %("c"|"d")) - works now - check more input chars
@@ -323,25 +310,19 @@ def test3() = {
   val br2 = (ONE  |  %("c"|"d"))
   //val br2= STAR( STAR("a") )
   val s = "ccc".toList
+  println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
   println(s)
-  println(s"=shift ${s(0)}=")
-  println(pp(mat(br2, s.take(1))))
 
-  println(s"=shift ${s(1)}=")
-  println(pp(mat(br2, s.take(2))))
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
 
-  
-  println(s"=shift ${s(2)}=")
-  println(pp(mat(br2, s.take(3))))
-
-  //println(s"=shift ${s(3)}=")
-  //println(pp(mat(br2, s.take(4))))
-  
   println(s"=final list=")
-  println(lex(br2, s.take(3)))
+  println(lex(br2, s))
   println(s"=reference list=") 
-  println(rebit.lex(br2, s.take(3)))
+  println(rebit.lex(br2, s))
 }
 
 
@@ -357,23 +338,19 @@ def test4() = {
   println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
   println(s)
-  println(s"=shift ${s(0)}=")
-  println(pp(mat(br2, s.take(1))))
 
-  println(s"=shift ${s(1)}=")
-  println(pp(mat(br2, s.take(2))))
-
-    println(s"=shift ${s(2)}=")
-  println(pp(mat(br2, s.take(3))))
-
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
 
   println(s"=final list=")
-  println(lex(br2, s.take(3)))
+  println(lex(br2, s))
   println(s"=reference list=") 
-  println(rebit.lex(br2, s.take(3)))
+  println(rebit.lex(br2, s))
 }
 
-// ONE |  %( "a" | "aa" ) - works now - check more input chars
+// ONE |  %( "a" | "aa" ) - works now input aa - check more input chars
 @main
 def test5() = {
   println("=====Test====")
@@ -395,30 +372,9 @@ def test5() = {
 }
 
 //Nested STAR
-//ONE|%(%("a")) - works now - check more input chars
-@main
-def test6() = {
-  println("=====Test====")
-  val br2= %(%("a"))
-  val s = "aa".toList
-  println(s"Regex:\n${pp(br2)}\n")
-  println("=string=")
-  println(s)
-
-  for (i <- s.indices) {
-  println(s"\n ${i + 1}- =shift ${s(i)}=")
-  println(pp(mat(br2, s.take(i + 1))))
-  } 
-
-  println(s"=final list=")
-  println(lex(br2, s))
-  println(s"=reference list=") 
-  println(rebit.lex(br2, s))
-}
-
 //ONE | %(%("a")) - works now - check more input chars
 @main
-def test7() = {
+def test6() = {
   println("=====Test====")
   val br2= ONE | %(%("a"))
   val s = "aa".toList
@@ -437,10 +393,9 @@ def test7() = {
   println(rebit.lex(br2, s))
 }
 
-
 //%("aa") ~ %(%("a")) - doesn't work in this version
 @main
-def test8() = {
+def test7() = {
   println("=====Test====")
   val br2= %("aa") ~ %(%("a"))
   val s = "aaa".toList
@@ -461,7 +416,7 @@ def test8() = {
 
 //( %("a") ~ %("a") ) ~ "a" - works now - check more input chars
 @main
-def test9() = {
+def test8() = {
   println("=====Test====")
   val br2= ( %("a") ~ %("a") ) ~ "a"
   //val br2=ALT(ONE,STAR(ALT(CHAR('a'),SEQ(CHAR('a'),CHAR('a')))))
@@ -481,12 +436,12 @@ def test9() = {
   println(rebit.lex(br2, s))
 }
 
-// empty
+// ONE | %( %( %("a") ) ) , input aa - doesn't work in this version
 @main
-def test10() = {
+def test9() = {
   println("=====Test====")
-  val br2= ONE 
-  val s = "".toList
+  val br2= ONE | %( %( %("a") ) )  
+  val s = "aa".toList
   println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
   println(s)
@@ -502,6 +457,27 @@ def test10() = {
   println(rebit.lex(br2, s))
 }
 
+
+// ONE | %( "a" | "aa" ) , input aaa - doesn't work in this version
+@main
+def test10() = {
+  println("=====Test====")
+  val br2= ONE | %( "a" | "aa" )
+  val s = "aaa".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+
+  println(s"=final list=")
+  println(lex(br2, s))
+  println(s"=reference list=") 
+  println(rebit.lex(br2, s))
+}
 
 import scala.util._
 
@@ -534,7 +510,7 @@ def weakTest() = {
           print("Continue testing? (y/n): ")
           val input = scala.io.StdIn.readLine().trim.toLowerCase
           if (input != "y") {
-            println("Testing stopped by user.")
+            println("End test.")
             System.exit(0) 
           }
 

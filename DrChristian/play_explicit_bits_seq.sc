@@ -17,7 +17,7 @@ case class MSTAR(bs: Bits, r: MRexp) extends MRexp
 case class MNTIMES(bs: Bits, r: MRexp , n:Int) extends MRexp // new to testX1.
 
 
-def decode_aux(r: MRexp, bs: Bits) : (Val, Bits) = (r, bs) match {
+/* def decode_aux(r: MRexp, bs: Bits) : (Val, Bits) = (r, bs) match {
   case (MONE(_), bs) => (Empty, bs)
   case (MCHAR(_,c), bs) => (Chr(c), bs)
   case (MALT(cs,r1, r2), Lf::bs) => {
@@ -44,7 +44,7 @@ def decode_aux(r: MRexp, bs: Bits) : (Val, Bits) = (r, bs) match {
 def dec2(r: MRexp, bs: Bits) = decode_aux(r, bs) match {
   case (v, Nil) => v
   case _ => throw new Exception("Not decodable")
-}
+} */
 
 def mnullable (r: MRexp) : Boolean = r match {
   case MZERO => false
@@ -53,12 +53,12 @@ def mnullable (r: MRexp) : Boolean = r match {
   case MALT(_, r1, r2) => mnullable(r1) || mnullable(r2)
   case MSEQ(_, r1, r2) => mnullable(r1) && mnullable(r2)
   case MSTAR(_, _) => true
-  case MNTIMES(_, _, n) => n == 0 || mnullable(r) // new to testX1.
+  case MNTIMES(cs, r, n) => n == 0 || mnullable(r) // new to testX1.
   case MPOINT(_, r) => mnullable(r)
 }
 
 def mkeps(r: MRexp) : Bits = r match {
-  case MONE(_) => Nil
+  case MONE(cs) => cs
   case MPOINT(bs, MCHAR(_,_)) => bs
   case MALT(bs,r1, r2) => 
     if (mnullable(r1)) Lf :: mkeps(r1) else Ri :: mkeps(r2) //??? 
@@ -99,12 +99,14 @@ def fin(r: MRexp) : Boolean = (r: @unchecked) match {
   case MALT(bs,r1, r2) => fin(r1) || fin(r2)
   case MSEQ(bs,r1, r2) => (fin(r1) && mnullable(r2)) || fin(r2)
   case MSTAR(bs, r) => fin(r)
-  case MNTIMES(bs, r, n) => fin(r) 
+  case MNTIMES(bs, r, n) => if(n==0) fin(r) else false // new to testX1.
 }
 
 def mkfin(r: MRexp) : Bits = r match {
   case MPOINT(bs, MCHAR(_,_)) => bs
   case MALT(bs ,r1, r2) => if (fin(r1)) mkfin(r1) else mkfin(r2)  
+
+  //case MSEQ(bs ,r1, r2) if fin(r1) && fin(r2) => mkfin(r2)
   case MSEQ(bs ,r1, r2) if fin(r1) && mnullable(r2) => mkfin(r1) ++ mkeps(r2)
   case MSEQ(bs ,r1, r2) => mkfin(r2)
   case MSTAR(bs ,r) => mkfin(r) ++ List(En)
@@ -115,41 +117,49 @@ def mkfin2(r: MRexp) : Set[Bits] = r match {
   case MPOINT(bs, MCHAR(_,_)) => Set(bs)
   case MALT(bs, r1, r2) if fin(r1) && fin(r2) => mkfin2(r1) | mkfin2(r2)
   case MALT(bs ,r1, r2) if fin(r1) => mkfin2(r1)
-  case MALT(bs, r1, r2) if fin(r2) => mkfin2(r2)   
+  case MALT(bs, r1, r2) if fin(r2) => mkfin2(r2) 
+
+  //case MSEQ(bs, r1, r2) if fin(r1) && mnullable(r2) && fin(r2)=>mkfin2(r1).map(_ ++ mkeps(r2))  | mkfin2(r2)
   case MSEQ(bs, r1, r2) if fin(r1) && mnullable(r2) =>mkfin2(r1).map(_ ++ mkeps(r2))
   case MSEQ(bs, r1, r2) => mkfin2(r2)
   case MSTAR(bs, r) => mkfin2(r).map(_ ++ List(En))
-  case MNTIMES(bs, r, n) => mkfin2(r).map(_ ++ List(En)) // new to testX1.
+  case MNTIMES(bs, r, n) => mkfin2(r).map(_ ++ List(En)) 
 }
 
 // shift function from the paper
 def shift(m: Boolean, bs: Bits, r: MRexp, c: Char) : MRexp = (r: @unchecked) match {
   case MZERO => MZERO
-  case MONE(cs) => MONE(cs)
+  case MONE(cs) => MONE(Nil)
   case MCHAR(cs ,d) => if (m && d == c) MPOINT(cs, MCHAR(Nil,d)) else MCHAR(Nil,d)
   case MPOINT(_, MCHAR(cs,d)) => if (m && d == c) MPOINT(cs, MCHAR(Nil,d)) else MCHAR(Nil,d)
 
-  case MALT(cs ,r1, r2) => MALT(cs,shift(m, Nil, fuse(cs:+Lf, r1), c), shift(m, Nil, fuse(cs:+Ri, r2), c))
+  case MALT(cs ,r1, r2) => MALT(Nil,shift(m, Nil, fuse(cs:+Lf, r1), c), shift(m, Nil, fuse(cs:+Ri, r2), c))
   
   case MSEQ(cs,r1, r2) if m && mnullable(r1) => 
-    MSEQ(cs,shift(m, Nil, fuse(cs,r1), c), shift(true, Nil , fuse(cs ::: mkeps(r1),r2), c))
+    //MSEQ(cs,shift(m, Nil, fuse(cs,r1), c), shift(true, Nil , fuse(cs ::: mkeps(r1),r2), c))
+    MALT(Nil,MSEQ(Nil,shift(true, Nil, fuse(cs,r1), c), shift(fin(r), Nil , fuse(cs:::mkeps(r1),r2), c)) 
+    , shift(true,Nil, fuse(cs:::mkeps(r1),r2), c) )
+
   case MSEQ(cs,r1, r2) if fin(r1) => 
-    MSEQ(cs,shift(m, Nil, fuse(cs,r1), c), shift(true, Nil, fuse(mkfin(r1),r2), c))
+    MSEQ(Nil,shift(m, Nil, fuse(cs,r1), c), shift(true, Nil, fuse(mkfin(r1),r2), c))
   case MSEQ(cs,r1, r2) => 
-    MSEQ(cs,shift(m, Nil, fuse(cs,r1), c), shift(false, Nil, r2, c))
+    MSEQ(Nil,shift(m, Nil, fuse(cs,r1), c), shift(false, Nil, r2, c))
 
-  case MSTAR(cs,r) if m && fin(r)=> MSEQ(cs,shift(true, Nil , fuse(cs:::(mkfin(r) :+ Nx),r), c), MSTAR(cs,r))
-  case MSTAR(cs,r) if fin(r)=> MSEQ(cs ,shift(true, Nil , fuse((mkfin(r) :+ Nx),r), c), MSTAR(cs,r))
-  case MSTAR(cs,r) if m => MSEQ(cs ,shift(true, Nil, fuse(cs :+ Nx,r), c), MSTAR(cs,r))
-  case MSTAR(cs,r)=> MSTAR(cs,shift(false, Nil, r, c))
+ // case MSTAR(cs,r) if m && fin(r)=> MSEQ(cs,shift(true, Nil , fuse(cs:::(mkfin(r) :+ Nx),r), c), MSTAR(cs,r))
+ // case MSTAR(cs,r) if fin(r)=> MSEQ(cs ,shift(true, Nil , fuse((mkfin(r) :+ Nx),r), c), MSTAR(cs,r))
+  case MSTAR(cs,r) if m => MSEQ(Nil ,shift(true, Nil, fuse(cs :+ Nx,r), c), MSTAR(Nil,r))
+  case MSTAR(cs,r)=> MSTAR(Nil,shift(false, Nil, r, c))
 
-  case MNTIMES(cs ,r,n) if n==0 => MONE(cs)
-  case MNTIMES(cs ,r,n) if m && fin(r) =>MSEQ(cs, shift(true, Nil, fuse(cs:::(mkfin(r) :+ Nx),r), c) , MNTIMES(cs,r,n-1)) // new to testX1.
-  case MNTIMES(cs ,r,n) if fin(r) => MSEQ(cs ,shift(true, Nil, fuse(mkfin(r):+Nx,r), c) , MNTIMES(cs,r,n-1)) // new to testX1.
-  case MNTIMES(cs ,r,n) if m => MSEQ(cs,shift(true , Nil, fuse(cs:+Nx,r), c) , MNTIMES(cs,r,n-1)) // new to testX1.
-  case MNTIMES(cs ,r,n) =>MNTIMES(cs,shift(false, Nil, r, c),n)
+
+  case MNTIMES(cs ,r,n) if n<=0 =>MONE(cs)
+  //case MNTIMES(cs ,r,n) if fin(r) =>MSEQ(Nil ,shift(true, Nil, fuse(mkfin(r),r), c) , MNTIMES(mkfin(r),r,n-1)) 
+  case MNTIMES(cs ,r,n) if m => 
+
+    MSEQ(Nil ,shift(true, Nil, fuse(cs:+Nx,r), c) , MNTIMES(List(En) ,r,n-1))
+    
+
+  case MNTIMES(cs ,r,n) =>MNTIMES(Nil,shift(false, Nil, r, c),n)
 }
-
 
 // the main matching function (by using BINIT only in 
 // the first step a mark is shifted into the Rexp)
@@ -168,31 +178,55 @@ def lex(r: MRexp, s: List[Char]) : Option[Set[Bits]] = {
 }
 
 
-def lexer(r: MRexp, s: List[Char]) : Option[Set[Val]] = {
+/* def lexer(r: MRexp, s: List[Char]) : Option[Set[Val]] = {
   lex(r, s).map(_.map(dec2(r, _)))
-}
+} */
 
-def OPT(r: MRexp) = MALT(Nil,r, MONE(Nil))
+def OPT(r: Rexp) = ALT(ONE, r)
 
+//
 @main
-def test1() = {
+def basic1() = {
   println("=====Test====")
-  //val br2 = OPT(NTIMES("a",1)) ~ ( OPT(NTIMES("ab",1)) ~ OPT(NTIMES("b",1)) )// this one is not even matching; input ab
-  val rexp=SEQ(STAR("a"),STAR("a"))
-  //val br2=SEQ(STAR("a"),STAR("b"))
-  //val rexp=NTIMES("a",2)
-  
+  //val rexp = "a" ~ "b" | "c"
+  val rexp=OPT(NTIMES("a",1)) ~ ( OPT(NTIMES("ab",1)) ~ OPT(NTIMES("b",1)) )
   val mrexp=intern(rexp)
-  val s = "aa".toList
+  val s = "ab".toList
+
   println(s"Regex:\n${pp(mrexp)}\n")
   println("=string=")
   println(s)
 
-  for (i <- s.indices) {
+   for (i <- s.indices) {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
   println(pp(mat(mrexp, s.take(i + 1))))
   } 
+ 
+  println(s"=final list=")
+  println(lex(mrexp, s))
+  println(s"=reference list=") 
+  println(rebit.lex(rexp, s))
+}
 
+@main
+def test1() = {
+  println("=====Test====")
+  val rexp = OPT(NTIMES("a",1)) ~ ( OPT(NTIMES("ab",1)) ~ OPT(NTIMES("b",1)) )
+  //val rexp=SEQ(STAR("a"),STAR("a"))
+  //val br2=SEQ(STAR("a"),STAR("b"))
+  //val rexp=SEQ(NTIMES("a",2),NTIMES("a",2))
+  //val rexp=NTIMES(("a"|"b"),2)
+  val mrexp=intern(rexp)
+  val s = "ab".toList
+  println(s"Regex:\n${pp(mrexp)}\n")
+  println("=string=")
+  println(s)
+
+   for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(mrexp, s.take(i + 1))))
+  } 
+ 
   println(s"=final list=")
   println(lex(mrexp, s))
   println(s"=reference list=") 
@@ -225,7 +259,12 @@ def weakTest() = {
           println(s"[$i] reg: $r str: $s")
           println(s"mark: ${v1s.get} bder: $v2")
           println(s"mark: ${lex(intern(r), s.toList).get} bder: ${rebit.lex(r, s.toList)}")
-          System.exit(1)
+          print("Continue testing? (y/n): ")
+          val input = scala.io.StdIn.readLine().trim.toLowerCase
+          if (input != "y") {
+            println("End test.")
+            System.exit(0) 
+          }
         }
       }
   }
@@ -255,7 +294,7 @@ def indent(ss: Seq[String]) : String = ss match {
 
 def pp(e: MRexp) : String = (e: @unchecked) match {
   case MZERO => "0\n"
-  case MONE(_) => "1\n"
+  case MONE(cs) => s"1:${cs.mkString(",")}\n"
   case MCHAR(cs,c) => s"$c\n"
   case MPOINT(cs, MCHAR(css,c)) => s"•$c:${cs.mkString(",")}\n" 
   case MALT(cs ,r1, r2) => s"ALT :${cs.mkString(",")}\n" ++ pps(r1, r2)
