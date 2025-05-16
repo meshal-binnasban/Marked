@@ -148,7 +148,7 @@ def flattenSegs1(xs: Segments): LazyList[LazyList[String]] = xs match {
 }
 
 def updateMax(a: Int, segs: Segments, b: Option[Int], c: Option[Int])
-: (Lang, Segments, Option[Int], Option[Int]) = (a, segs, b, c) match {
+: (Lang, Segments, Option[Int], Option[Int]) = ((a, segs, b, c): @unchecked) match {
     case (_, _, Some(_), _)                         => (Null, LazyList(), b, c)
     case (_, LazyList(), None, _)                   => (Null, LazyList(), Some(a), c)
     case (_, Cons(xs)#::xss, None, None)            => (xs, xss, None, None)

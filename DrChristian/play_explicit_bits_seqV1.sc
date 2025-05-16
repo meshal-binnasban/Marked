@@ -85,8 +85,8 @@ def lexer(r: Rexp, s: List[Char]) : Option[Set[Val]] = {
 def mkeps(r: Rexp) : Bits = r match {
   case ONE => Nil
   case POINT(bs, CHAR(_)) => bs
-  case ALT(r1, r2) => 
-    if (nullable(r1)) Lf:: mkeps(r1) else Ri:: mkeps(r2) 
+  case POINT(bs, ONE) => List(En)
+  case ALT(r1, r2) => if (nullable(r1)) Lf:: mkeps(r1) else Ri:: mkeps(r2) 
   case SEQ(r1, r2) => mkeps(r1) ++ mkeps(r2)
   case STAR(r) => List(En)
   case NTIMES(r,n) => List(En)
@@ -95,6 +95,7 @@ def mkeps(r: Rexp) : Bits = r match {
 def fin(r: Rexp) : Boolean = (r: @unchecked) match {
   case ZERO => false
   case ONE => false
+  case POINT(_, ONE) => false
   case CHAR(_) => false
   case POINT(_, CHAR(_)) => true
   case ALT(r1, r2) => fin(r1) || fin(r2)
@@ -106,8 +107,6 @@ def fin(r: Rexp) : Boolean = (r: @unchecked) match {
 def mkfin(r: Rexp) : Bits = r match {
   case POINT(bs, CHAR(_)) => bs
   case ALT(r1, r2) => if (fin(r1)) mkfin(r1) else mkfin(r2) 
-
-  //case SEQ(r1, r2) if ((fin(r1) && isStar(r2)))=>mkfin(r1) ++ List(En)
   case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
   case SEQ(r1, r2) if fin(r2) =>  mkfin(r2)
   case STAR(r) => mkfin(r) ++ List(En)
@@ -120,11 +119,9 @@ def mkfin2(r: Rexp) : Set[Bits] = r match {
   case ALT(r1, r2) if fin(r1) => mkfin2(r1)
   case ALT(r1, r2) if fin(r2) => mkfin2(r2) 
 
-  //case SEQ(r1, r2) if ((fin(r1) && isStar(r2)))=>mkfin2(r1).map(_ ++ List(En))
   //case SEQ(r1, r2) if ((fin(r1) && nullable(r2)) && fin(r2)) => mkfin2(r1).map(_ ++ mkeps(r2))  | mkfin2(r2)
   case SEQ(r1, r2) if ((fin(r1) && nullable(r2))) => mkfin2(r1).map(_ ++ mkeps(r2)) 
   case SEQ(r1, r2) => mkfin2(r2)
-
   case STAR(r) => mkfin2(r).map(_ ++ List(En))
   case NTIMES(r,n) =>mkfin2(r).map(_ ++ List(En))
 }
@@ -134,47 +131,38 @@ def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = (r: @unchecked) match
   case ONE => ONE
   case CHAR(d) => if (m && d == c) POINT(bs, CHAR(d)) else CHAR(d)
   case POINT(_, CHAR(d)) => if (m && d == c) POINT(bs, CHAR(d)) else CHAR(d)
+  case POINT(bs, ONE) => ONE
+
   case ALT(r1, r2) => ALT(shift(m, bs:+Lf, r1, c), shift(m, bs:+Ri, r2, c))
 
-   case SEQ(r1, r2) if m && isStar(r2) => 
-    if(fin(r1))
-    SEQ(shift(m, bs, r1, c), shift(true,mkfin(r1),r2,c))
-    else
-    SEQ(shift(m, bs, r1, c), shift(true,bs:+Nx,r2,c)) 
-    
-  //case SEQ(r1, r2) if m && nullable(r1) => SEQ(shift(m, bs, r1, c), shift(true, bs:::mkeps(r1) , r2, c))
   case SEQ(r1, r2) if m && nullable(r1) => 
-    //val r2s= if fin(r1) then shift(true,mkfin(r1), r2, c) else shift(true,bs:::mkeps(r1), r2, c)
-    ALT( SEQ(shift(true, bs, r1, c), shift(fin(r), bs:::mkeps(r1) , r2, c)) 
-         , shift(true,bs:::mkeps(r1), r2, c) )
+    ALT( SEQ(shift(true, bs, r1, c), shift(fin(r), bs++mkeps(r1) , r2, c) ), shift(true,bs++mkeps(r1), r2, c) )
+
+    //SEQ(shift(m, bs, r1, c), shift(true, bs ::: mkeps(r1), r2, c))
+
+    
 
   case SEQ(r1, r2) if fin(r1) => SEQ(shift(m, bs, r1, c), shift(true, mkfin(r1), r2, c))
   case SEQ(r1, r2) => SEQ(shift(m, bs, r1, c), shift(false, Nil, r2, c))
 
-  //case STAR(r) if m && fin(r)=> STAR(SEQ(shift(true, (bs:::mkfin(r)):+Nx, r, c),STAR(r)) )
-  //case STAR(r) if fin(r)=> STAR(SEQ(shift(true, (mkfin(r)):+Nx, r, c), STAR(r)))
-  case STAR(r) if m => SEQ(shift(true, bs:+Nx, r, c),STAR(r))
-  case STAR(r) => STAR(shift(false, Nil, r, c))
+  //case STAR(r) if fin(r) => SEQ(shift(true, mkfin(r):+Nx, r, c),STAR(r))
+  case STAR(r) if m => shift(true, bs:+Nx ,SEQ(r,STAR(r) ),c)
+  case STAR(r) => STAR(r)  // STAR(shift(false, Nil, r, c))
   
-  case NTIMES(r,n) if n<=0 =>ONE
-  case NTIMES(r,n) if fin(r) =>
-// check when ntimes ends then add E ???
-    SEQ(shift(true, (mkfin(r):+En),r, c) , NTIMES(r,n-1)) 
+  case NTIMES(r,n) if n<=0 => POINT(List(En),ONE)
   case NTIMES(r,n) if m =>SEQ(shift(true, bs:+Nx, r, c) , NTIMES(r,n-1)) 
-  case NTIMES(r,n) =>NTIMES(shift(false, Nil, r, c),n)
+  case NTIMES(r,n) => NTIMES(shift(false, Nil, r, c),n)
 }
 
-def OPT(r: Rexp) = ALT(ONE, r)
-// testing new implementation
+def OPT(r: Rexp) = ALT(r,ONE)
 
+// testing new implementation
 @main
-def basic1() = {
+def basic() = {
   println("=====Test====")
-  //val br2 = %("a") ~ %("a")
-  //val br2=NTIMES(("a"|"b") , 2)
-  val br2=OPT(NTIMES("a",2)) ~ ( OPT(NTIMES("ab",2)) ~ OPT(NTIMES("b",2)) )
-  //val br2= NTIMES("a",2) ~ (NTIMES("b",2) ~ ONE)
-  val s = "abab".toList
+  //val br2=NTIMES("a",5) ~ ("aa"|"a") 
+  val br2= %( "a" | "aa" )
+  val s = "aa".toList
   println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
   println(s)
@@ -190,8 +178,7 @@ def basic1() = {
   println(rebit.lex(br2, s))
 }
 
-
-//%("a")~(%("ab") ~ %("b")) - doesn't work in this version
+//%("a")~(%("ab") ~ %("b")) - Works now - after r.r* and SEQ nullable = ALT
 @main
 def test1() = {
   println("=====Test====")
@@ -241,6 +228,49 @@ def test3() =  {
   val br2 = (ONE  |  %("c"|"d"))
   //val br2= STAR( STAR("a") )
   val s = "ccc".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+
+  println(s"=final list=")
+  println(lex(br2, s))
+  println(s"=reference list=") 
+  println(rebit.lex(br2, s))
+}
+
+// ONE  |  "a" ~ %("a") - Works now - after r.r* and SEQ nullable = ALT
+@main
+def test4() =  {
+  println("=====Test====")
+  val br2 = ONE  |  "a" ~ %("a")
+  val s = "aaa".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+
+  println(s"=final list=")
+  println(lex(br2, s))
+  println(s"=reference list=") 
+  println(rebit.lex(br2, s))
+}
+
+// ONE | %("a" | "aa") - fails on aaa - after r.r* and SEQ nullable = ALT
+@main
+def test5() =  {
+  println("=====Test====")
+  val br2 = ONE |  %("a" | "aa") 
+  
+  val s = "aa".toList
   println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
   println(s)
@@ -438,6 +468,7 @@ def pp(e: Rexp) : String = (e: @unchecked) match {
   case ONE => "1\n"
   case CHAR(c) => s"$c\n"
   case POINT(bs, CHAR(c)) => s"•$c:${bs.mkString(",")}\n" 
+  case POINT(bs, ONE) => s"1:${bs.mkString(",")}\n"
   //case POINT(bs, STAR(r))=> s"•STAR bs=${bs.mkString(",")}\n" ++ pps(r)
   case ALT(r1, r2) => "ALT\n" ++ pps(r1, r2)
   case SEQ(r1, r2) => "SEQ\n" ++ pps(r1, r2)
@@ -478,3 +509,22 @@ def weakTest() = {
   }
 }
 */
+
+//shift
+/*    case SEQ(r1, r2) if m && isStar(r2) => 
+    if(fin(r1))
+    SEQ(shift(m, bs, r1, c), shift(true,mkfin(r1),r2,c))
+    else
+    SEQ(shift(m, bs, r1, c), shift(true,bs:+Nx,r2,c)) 
+*/
+//case STAR(r) if m && fin(r)=> STAR(SEQ(shift(true, (bs:::mkfin(r)):+Nx, r, c),STAR(r)) )
+//case STAR(r) if fin(r)=> STAR(SEQ(shift(true, (mkfin(r)):+Nx, r, c), STAR(r)))
+//case SEQ(r1, r2) if m && nullable(r1) => SEQ(shift(m, bs, r1, c), shift(true, bs:::mkeps(r1) , r2, c))
+//val r2s= if fin(r1) then shift(true,mkfin(r1), r2, c) else shift(true,bs:::mkeps(r1), r2, c)
+//case NTIMES(r,n) if fin(r) =>SEQ(shift(true, (mkfin(r):+En),r, c) , NTIMES(r,n-1)) 
+
+//mkfin2
+//case SEQ(r1, r2) if ((fin(r1) && isStar(r2)))=>mkfin2(r1).map(_ ++ List(En))
+//case SEQ(r1, r2) if ((fin(r1) && nullable(r2)) && fin(r2)) => mkfin2(r1).map(_ ++ mkeps(r2))  | mkfin2(r2)
+//mkfin
+//case SEQ(r1, r2) if ((fin(r1) && isStar(r2)))=>mkfin(r1) ++ List(En)

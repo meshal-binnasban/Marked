@@ -101,7 +101,7 @@ def intern(r: Rexp) : ARexp = r match {
 
 
 // decoding of a value from a bitsequence
-def decode_aux(r: Rexp, bs: Bits) : (Val, Bits) = (r, bs) match {
+def decode_aux(r: Rexp, bs: Bits) : (Val, Bits) = ((r, bs): @unchecked) match {
   //case (_, I::bs) => decode_aux(r, bs)
   //case (_, I::b1::b2::bs) => decode_aux(r, b2::b1::bs)
   case (ONE, bs) => (Empty, bs)
@@ -124,7 +124,7 @@ def decode_aux(r: Rexp, bs: Bits) : (Val, Bits) = (r, bs) match {
     val (Stars(vs), bs2) = (decode_aux(STAR(r1), bs1)  : @unchecked)
     (Stars(v::vs), bs2)
   }
-  case (STAR(_), En::bs) => (Stars(Nil), bs)
+  case (STAR(r), En::bs) => (Stars(Nil), bs)
 
   case (NTIMES(r1,n), Nx::bs) => {
     val (v, bs1) = decode_aux(r1, bs)

@@ -45,7 +45,7 @@ case class STAR(r: Rexp) extends Rexp
 case class NTIMES(r: Rexp,n:Int) extends Rexp // new to testX1.
 // only used by re-generate to generate non-matching strings
 case class NOT(r: Rexp) extends Rexp 
-case class POINT(bs: Bits, r: Rexp) extends Rexp
+case class POINT(bs: List[Bits], r: Rexp) extends Rexp
 
 
 def charlist2rexp(s : List[Char]): Rexp = s match {
@@ -184,5 +184,5 @@ def draw(e: Rexp) =
 def test() = {
       val r = STAR("ab" | "cd")
       println(s"reg: $r")
-      println(draw(r))
+      println(draw(r)) 
 }

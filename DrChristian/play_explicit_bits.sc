@@ -69,8 +69,9 @@ def nullable(r: Rexp) : Boolean = r match {
 }
 */ 
 
+
 // decoding of a value from a bitsequence
-def decode_aux(r: Rexp, bs: Bits) : (Val, Bits) = (r, bs) match {
+def decode_aux(r: Rexp, bs: Bits) : (Val, Bits) = ((r, bs): @unchecked) match {
   case (ONE, bs) => (Empty, bs)
   case (CHAR(c), bs) => (Chr(c), bs)
   case (ALT(r1, r2), Lf::bs) => {
@@ -106,13 +107,28 @@ def dec2(r: Rexp, bs: Bits) = decode_aux(r, bs) match {
 
 def mkeps(r: Rexp) : Bits = r match {
   case ONE => Nil
-  case POINT(bs, CHAR(_)) => bs
+  case POINT(bss, CHAR(_)) => bss.head
   case ALT(r1, r2) => 
-    if (nullable(r1)) Lf:: mkeps(r1) else Ri:: mkeps(r2) 
+    if (nullable(r1)) Lf :: mkeps(r1) else Ri :: mkeps(r2)  
   case SEQ(r1, r2) => mkeps(r1) ++ mkeps(r2)
   case STAR(r) => List(En)
 }
 
+def mkeps3(r: Rexp) : List[Bits] = r match {
+  case ONE => Nil
+  case POINT(bss, CHAR(_)) => bss
+  case ALT(r1, r2) => 
+    if (nullable(r1)) mkeps3(r1).map(Lf :: _) else mkeps3(r2).map(Ri :: _)  
+  case SEQ(r1, r2) => 
+    for {
+      b1 <- mkeps3(r1)
+      b2 <- mkeps3(r2)
+    } yield b1 ++ b2
+  case STAR(r) => List(List(En))
+}
+
+// fin function from the paper
+// checks whether a mark is in "final" position
 def fin(r: Rexp) : Boolean = (r: @unchecked) match {
   case ZERO => false
   case ONE => false
@@ -124,110 +140,86 @@ def fin(r: Rexp) : Boolean = (r: @unchecked) match {
 }
 
 def mkfin(r: Rexp) : Bits = r match {
-  case POINT(bs, CHAR(_)) => bs
-  case ALT(r1, r2) => if (fin(r1)) mkfin(r1) else mkfin(r2) 
-
-  case SEQ(r1, r2) if fin(r1) && nullable(r2) =>
-    if(isStar(r2) && fin(r2))
-    {
-    mkfin(r1)++ mkeps(r2) //
-    } else
-    mkfin(r1) ++ mkeps(r2)
-  case SEQ(r1, r2) if fin(r2) =>  mkfin(r2)
+  case POINT(bss, CHAR(_)) => bss.head
+  case ALT(r1, r2) => if (fin(r1)) mkfin(r1) else mkfin(r2)  
+  case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
+  case SEQ(r1, r2) => mkfin(r2)
   case STAR(r) => mkfin(r) ++ List(En)
-
-} 
-
-def isStar(r: Rexp) : Boolean = r match {
-  case STAR(_) => true
-  case _ => false
-} 
-
-
-def mkfinStar(r: Rexp) : Bits = r match {
-  case STAR(r) => mkfin(r) 
-  case _ => mkfin(r)
-} 
+}
 
 def mkfin2(r: Rexp) : Set[Bits] = r match {
-  case POINT(bs, CHAR(_)) => Set(bs)
+  case POINT(bss, CHAR(_)) => Set(bss.head)
   case ALT(r1, r2) if fin(r1) && fin(r2) => mkfin2(r1) | mkfin2(r2)
   case ALT(r1, r2) if fin(r1) => mkfin2(r1)
   case ALT(r1, r2) if fin(r2) => mkfin2(r2) 
 
-  case SEQ(r1, r2) if ((fin(r1) && nullable(r2)) && fin(r2))=>mkfin2(r1).map(_ ++ mkeps(r2)) | mkfin2(r2) // mkfin2(r1).map(_ ++ mkeps(r2)) 
-  case SEQ(r1, r2) if ((fin(r1) && nullable(r2))) =>mkfin2(r1).map(_ ++ mkeps(r2))
+  case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin2(r1).map(_ ++ mkeps(r2)) //| (if (fin(r2)) mkfin2(r2) else Set.empty[Bits])
   case SEQ(r1, r2) => mkfin2(r2)
   case STAR(r) => mkfin2(r).map(_ ++ List(En))
 }
 
+def mkfin3(r: Rexp): List[Bits] = r match {
+  case POINT(bss, CHAR(_)) => bss
+  case ALT(r1, r2) if fin(r1) && fin(r2) => mkfin3(r1) ++ mkfin3(r2)
+  case ALT(r1, r2) if fin(r1) => mkfin3(r1)
+  case ALT(r1, r2) if fin(r2) => mkfin3(r2)
+
+  case SEQ(r1, r2) if fin(r1) && nullable(r2) =>for {
+    b1 <- mkfin3(r1)
+    b2 <- mkeps3(r2)
+  } yield b1 ++ b2
+
+  case SEQ(r1, r2) => mkfin3(r2)
+  case STAR(r) => mkfin3(r).map(_ :+ En)
+} 
+
+
 // shift function from the paper
-def shift(m: Boolean, bs: Bits, r: Rexp, c: Char) : Rexp = (r: @unchecked) match {
+def shift(m: Boolean, bs: List[Bits], r: Rexp, c: Char) : Rexp = 
+  (r: @unchecked) match {
   case ZERO => ZERO
   case ONE => ONE
   case CHAR(d) => if (m && d == c) POINT(bs, CHAR(d)) else CHAR(d)
-  case POINT(_, CHAR(d)) => if (m && d == c) POINT(bs, CHAR(d)) else CHAR(d)
-  case ALT(r1, r2) => ALT(shift(m, bs:+Lf, r1, c), shift(m, bs:+Ri, r2, c))
+  case POINT(bss, CHAR(d)) => if (m && d == c) POINT(bs, CHAR(d)) else CHAR(d)
 
-  case SEQ(r1, r2) if m && nullable(r1) => SEQ(shift(m, bs, r1, c), shift(true, bs:::mkeps(r1) , r2, c))
-  case SEQ(r1, r2) if fin(r1) => SEQ(shift(m, bs, r1, c), shift(true, mkfin(r1), r2, c))
-  case SEQ(r1, r2) => SEQ(shift(m, bs, r1, c), shift(false, Nil, r2, c))
-
-  case STAR(r) if m && fin(r) =>
-    r match {
-      case STAR(rs) => STAR(shift(true, (bs):+Nx , r, c))
-      case _        => STAR(shift(true, (bs):+Nx , r, c))
-    }
-  case STAR(r) if fin(r) =>
-    r match {
-      case STAR(rs) => STAR(shift(true, (mkfin(rs)) , r, c))
-      case _        => STAR(shift(true, (mkfin(r)):+Nx , r, c))
-    }
-  case STAR(r) if m =>STAR(shift(m, bs:+Nx, r, c))
-  case STAR(r) => STAR(shift(false, Nil, r, c)) 
+  case ALT(r1, r2) => ALT(shift(m, bs.map(bits => bits :+ Lf), r1, c), shift(m, bs.map(bits => bits :+ Ri), r2, c))
   
+  case SEQ(r1, r2) if m && nullable(r1) => SEQ(shift(m, bs, r1, c), shift(true, for {b <- bs;s <- mkeps3(r1)} yield b ++ s, r2, c))
+  case SEQ(r1, r2) if fin(r1) => SEQ(shift(m, bs, r1, c), shift(true, mkfin3(r1), r2, c))
+  case SEQ(r1, r2) => SEQ(shift(m, bs, r1, c), shift(false, Nil, r2, c))
+  
+  /* case STAR(r) if m && fin(r) =>
+    STAR(shift(true, mkfin3(r).map(_ ++ List(Nx)) :+ Nx, r, c)) */
+
+  case STAR(r) if fin(r) =>STAR(shift(true, mkfin3(r).map(_ ++ List(Nx)) , r, c))
+  case STAR(r) if m =>STAR(shift(m, bs.map(_ ++ List(Nx)), r, c))
+  case STAR(r) => STAR(shift(false, Nil, r, c))
+
 }
 
-// testing nested star - X-2
-def hasNestedMStar(r: Rexp): Boolean = {
-  def containsMStar(r: Rexp): Boolean = r match {
-    case STAR(_) => true
-    case ALT(r1, r2) => containsMStar(r1) || containsMStar(r2)
-    case SEQ(r1, r2) => containsMStar(r1) || containsMStar(r2)
-    case _ => false
-  }
-  r match {
-    case STAR(inner) => 
-      if (containsMStar(inner)) true
-      else hasNestedMStar(inner)
-    case ALT(r1, r2) => hasNestedMStar(r1) || hasNestedMStar(r2)
-    case SEQ(r1, r2) => hasNestedMStar(r1) || hasNestedMStar(r2)
-    case _ => false
-  }
-}
-
-
+// the main matching function (by using BINIT only in 
+// the first step a mark is shifted into the Rexp)
 def mat(r: Rexp, s: List[Char]) : Rexp = s match {
   case Nil => r
-  case c::cs => cs.foldLeft(shift(true, Nil, r, c))((r, c) => shift(false, Nil, r, c))
+  case c::cs => cs.foldLeft(shift(true, List(Nil), r, c))((r, c) => shift(false, List(Nil), r, c))
 }
 
 def matcher(r: Rexp, s: List[Char]) : Boolean =
   if (s == Nil) nullable(r) else fin(mat(r, s))
 
-def lex(r: Rexp, s: List[Char]) : Option[Set[Bits]] = {
+def lex(r: Rexp, s: List[Char]) : Option[List[Bits]] = {
   if matcher(r, s)
-  then Some(if (s == Nil) Set(mkeps(r)) else mkfin2(mat(r, s)))
+  then Some(if (s == Nil) (mkeps3(r)) else mkfin3(mat(r, s)))
   else None
 }
 
-def lexer(r: Rexp, s: List[Char]) : Option[Set[Val]] = {
+
+def lexer(r: Rexp, s: List[Char]) : Option[List[Val]] = {
   lex(r, s).map(_.map(dec2(r, _)))
 }
-  
+
 
 // pretty-printing Rexps
-
 def implode(ss: Seq[String]) = ss.mkString("\n")
 def explode(s: String) = s.split("\n").toList
 
@@ -246,26 +238,25 @@ def indent(ss: Seq[String]) : String = ss match {
   case _ => "" 
 }
 
-//X-1 deleted - adjusted for test, X-1
 def pp(e: Rexp) : String = (e: @unchecked) match {
   case ZERO => "0\n"
   case ONE => "1\n"
   case CHAR(c) => s"$c\n"
-  case POINT(bs, CHAR(c)) => s"•$c:${bs.mkString(",")}\n" 
-  //case POINT(bs, STAR(r))=> s"•STAR bs=${bs.mkString(",")}\n" ++ pps(r)
+  case POINT(bss, CHAR(c)) => s"•$c:${bss.mkString(",")}\n" 
   case ALT(r1, r2) => "ALT\n" ++ pps(r1, r2)
   case SEQ(r1, r2) => "SEQ\n" ++ pps(r1, r2)
-  case STAR(r) => "STAR\n" ++ pps(r)
+  case STAR(r) => s"STAR\n" ++ pps(r)
 }
 def pps(es: Rexp*) = indent(es.map(pp))
+
 
 
 //%("a")~(%("ab") ~ %("b")) - doesn't work in this version
 @main
 def test1() = {
   println("=====Test====")
-  val br2 = %("a")~(%("ab") ~ %("b"))
-  val s = "ab".toList
+  val br2 = %( "a" | "aa" )
+  val s = "aaaa".toList
   println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
   println(s)
@@ -278,7 +269,7 @@ def test1() = {
   println(s"=final list=")
   println(lex(br2, s))
   println(s"=reference list=") 
-  println(rebit.lex(br2, s))
+  println(rebit.lex(br2, s)) 
 }
 
 //%("a") ~ ("aa"|"a") -  works now - check more input chars
@@ -565,11 +556,8 @@ def weakTestLong() = {
           }
            */
 
-
-
-
-
-/* @main
+/* 
+@main
 def test1() = {
   println("=====Test====")
   val br2 = (ONE | "c") ~ ("cc" | "c")
@@ -587,3 +575,37 @@ def test1() = {
   println(s"=reference list=") 
   println(rebit.lex(br2, s.take(2)))
 } */
+
+/*
+
+def isStar(r: Rexp) : Boolean = r match {
+  case STAR(_) => true
+  case _ => false
+} 
+
+
+def mkfinStar(r: Rexp) : Bits = r match {
+  case STAR(r) => mkfin(r) 
+  case _ => mkfin(r)
+} 
+
+
+// testing nested star - X-2
+def hasNestedMStar(r: Rexp): Boolean = {
+  def containsMStar(r: Rexp): Boolean = r match {
+    case STAR(_) => true
+    case ALT(r1, r2) => containsMStar(r1) || containsMStar(r2)
+    case SEQ(r1, r2) => containsMStar(r1) || containsMStar(r2)
+    case _ => false
+  }
+  r match {
+    case STAR(inner) => 
+      if (containsMStar(inner)) true
+      else hasNestedMStar(inner)
+    case ALT(r1, r2) => hasNestedMStar(r1) || hasNestedMStar(r2)
+    case SEQ(r1, r2) => hasNestedMStar(r1) || hasNestedMStar(r2)
+    case _ => false
+  }
+}
+
+*/
