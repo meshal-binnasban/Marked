@@ -164,10 +164,13 @@ def mkfin3(r: Rexp): List[Bits] = r match {
   case ALT(r1, r2) if fin(r1) => mkfin3(r1)
   case ALT(r1, r2) if fin(r2) => mkfin3(r2)
 
-  case SEQ(r1, r2) if fin(r1) && nullable(r2) =>for {
-    b1 <- mkfin3(r1)
-    b2 <- mkeps3(r2)
-  } yield b1 ++ b2
+  case SEQ(r1, r2) if fin(r1) && nullable(r2) =>
+    val nR1 = for {
+      b1 <- mkfin3(r1)
+      b2 <- mkeps3(r2)
+    } yield b1 ++ b2
+    nR1
+    if (fin(r2)) nR1 ++ mkfin3(r2) else nR1
 
   case SEQ(r1, r2) => mkfin3(r2)
   case STAR(r) => mkfin3(r).map(_ :+ En)
@@ -188,11 +191,19 @@ def shift(m: Boolean, bs: List[Bits], r: Rexp, c: Char) : Rexp =
   case SEQ(r1, r2) if fin(r1) => SEQ(shift(m, bs, r1, c), shift(true, mkfin3(r1), r2, c))
   case SEQ(r1, r2) => SEQ(shift(m, bs, r1, c), shift(false, Nil, r2, c))
   
-  /* case STAR(r) if m && fin(r) =>
-    STAR(shift(true, mkfin3(r).map(_ ++ List(Nx)) :+ Nx, r, c)) */
+  case STAR(r) if m && fin(r)=>
+    val bits=for {b <- bs;s <- (mkfin3(r).map(_ ++ List(Nx)))} yield b ++ s
+      STAR(shift(true,bs.map(_ ++ List(Nx))++mkfin3(r).map(_ ++ List(Nx)), r, c))
 
-  case STAR(r) if fin(r) =>STAR(shift(true, mkfin3(r).map(_ ++ List(Nx)) , r, c))
-  case STAR(r) if m =>STAR(shift(m, bs.map(_ ++ List(Nx)), r, c))
+    
+   
+  case STAR(r) if fin(r) =>
+    val bits= mkfin3(r).map(_ ++ List(Nx))
+    STAR(shift(true, bits , r, c))
+
+  case STAR(r) if m =>
+    val bits=bs.map(_ ++ List(Nx))
+    STAR(shift(m,bits , r, c))
   case STAR(r) => STAR(shift(false, Nil, r, c))
 
 }
@@ -212,7 +223,6 @@ def lex(r: Rexp, s: List[Char]) : Option[List[Bits]] = {
   then Some(if (s == Nil) (mkeps3(r)) else mkfin3(mat(r, s)))
   else None
 }
-
 
 def lexer(r: Rexp, s: List[Char]) : Option[List[Val]] = {
   lex(r, s).map(_.map(dec2(r, _)))
@@ -249,9 +259,7 @@ def pp(e: Rexp) : String = (e: @unchecked) match {
 }
 def pps(es: Rexp*) = indent(es.map(pp))
 
-
-
-//%("a")~(%("ab") ~ %("b")) - doesn't work in this version
+//%("a")~(%("ab") ~ %("b")) 
 @main
 def test1() = {
   println("=====Test====")
@@ -272,7 +280,7 @@ def test1() = {
   println(rebit.lex(br2, s)) 
 }
 
-//%("a") ~ ("aa"|"a") -  works now - check more input chars
+//%("a") ~ ("aa"|"a") 
 @main
 def test2() = {
   println("=====Test====")
@@ -294,7 +302,7 @@ def test2() = {
   println(rebit.lex(br2, s))
 }
 
-//(ONE  |  %("c"|"d")) - works now - check more input chars
+//(ONE  |  %("c"|"d")) 
 @main
 def test3() = {
   println("=====Test====")
@@ -317,7 +325,7 @@ def test3() = {
 }
 
 
-// (ONE|"a") ~ %("a") - works now - check more input chars
+// (ONE|"a") ~ %("a") 
 @main
 def test4() = {
   println("=====Test====")
@@ -341,7 +349,7 @@ def test4() = {
   println(rebit.lex(br2, s))
 }
 
-// ONE |  %( "a" | "aa" ) - works now input aa - check more input chars
+// ONE |  %( "a" | "aa" ) 
 @main
 def test5() = {
   println("=====Test====")
@@ -363,7 +371,7 @@ def test5() = {
 }
 
 //Nested STAR
-//ONE | %(%("a")) - works now - check more input chars
+//ONE | %(%("a")) 
 @main
 def test6() = {
   println("=====Test====")
@@ -382,6 +390,7 @@ def test6() = {
   println(lex(br2, s))
   println(s"=reference list=") 
   println(rebit.lex(br2, s))
+
 }
 
 //%("aa") ~ %(%("a")) - doesn't work in this version
@@ -400,9 +409,22 @@ def test7() = {
   } 
 
   println(s"=final list=")
-  println(lex(br2, s))
+  val sequencesList=lex(br2, s)
+  sequencesList.foreach {
+    list => list.foreach(bits => println(s" $bits"))
+    }
+  
   println(s"=reference list=") 
   println(rebit.lex(br2, s))
+  println(rebit.blexer(br2, s.mkString("")))
+
+  
+  println("Final Marked Values for testing")
+  sequencesList.foreach {
+    list => list.foreach(bits => println(dec2(br2, bits)))
+    }
+  
+  //println(lexer(br2,s)) */
 }
 
 //( %("a") ~ %("a") ) ~ "a" - works now - check more input chars

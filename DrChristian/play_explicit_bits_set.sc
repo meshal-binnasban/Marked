@@ -134,12 +134,14 @@ def mkfin2(r: Rexp) : Set[Bits] = r match {
   case POINT(bss, CHAR(_)) => bss
   case ALT(r1, r2) if fin(r1) && fin(r2) => mkfin2(r1) | mkfin2(r2)
   case ALT(r1, r2) if fin(r1) => mkfin2(r1)
-  case ALT(r1, r2) if fin(r2) => mkfin2(r2) 
+  case ALT(r1, r2) if fin(r2) => mkfin2(r2)  
   case SEQ(r1, r2) if fin(r1) && nullable(r2) =>
-    for {
+    val nR1 = for {
       b1 <- mkfin2(r1)
       b2 <- mkeps2(r2)
     } yield b1 ++ b2
+    nR1
+    //if (fin(r2)) nR1 ++ mkfin2(r2) else nR1 //might be needed in some cases
   case SEQ(r1, r2) => mkfin2(r2)
   case STAR(r) => mkfin2(r).map(_ ++ List(En))
 }
@@ -157,9 +159,7 @@ def shift(m: Boolean, bs: Set[Bits], r: Rexp, c: Char) : Rexp = (r: @unchecked) 
   case SEQ(r1, r2) if fin(r1) => SEQ(shift(m, bs, r1, c), shift(true, mkfin2(r1), r2, c))
   case SEQ(r1, r2) => SEQ(shift(m, bs, r1, c), shift(false, Set.empty[Bits], r2, c))
   
-  /* case STAR(r) if m && fin(r) =>
-    STAR(shift(true, mkfin3(r).map(_ ++ List(Nx)) :+ Nx, r, c)) */
-
+  case STAR(r) if m && fin(r) =>STAR(shift(true,  bs++(mkfin2(r).map(_ ++ List(Nx)) ) , r, c)) 
   case STAR(r) if fin(r) =>STAR(shift(true, mkfin2(r).map(_ ++ List(Nx)) , r, c))
   case STAR(r) if m =>STAR(shift(m, bs.map(_ ++ List(Nx)), r, c))
   case STAR(r) => STAR(shift(false, Set.empty[Bits], r, c))
