@@ -170,7 +170,7 @@ def mkfin3(r: Rexp): List[Bits] = r match {
       b2 <- mkeps3(r2)
     } yield b1 ++ b2
     nR1
-    if (fin(r2)) nR1 ++ mkfin3(r2) else nR1
+   // if (fin(r2)) nR1 ++ mkfin3(r2) else nR1
 
   case SEQ(r1, r2) => mkfin3(r2)
   case STAR(r) => mkfin3(r).map(_ :+ En)
@@ -195,8 +195,6 @@ def shift(m: Boolean, bs: List[Bits], r: Rexp, c: Char) : Rexp =
     val bits=for {b <- bs;s <- (mkfin3(r).map(_ ++ List(Nx)))} yield b ++ s
       STAR(shift(true,bs.map(_ ++ List(Nx))++mkfin3(r).map(_ ++ List(Nx)), r, c))
 
-    
-   
   case STAR(r) if fin(r) =>
     val bits= mkfin3(r).map(_ ++ List(Nx))
     STAR(shift(true, bits , r, c))
@@ -520,11 +518,10 @@ def weakTest() = {
           println(s"mark: ${lex(r, s.toList).get} bder: ${rebit.lex(r, s.toList)}")
 
           //get input to continue or stop
-          print("Continue testing? (y/n): ")
-          val input = scala.io.StdIn.readLine().trim.toLowerCase
-          if (input != "y") {
-            println("End test.")
-            System.exit(0) 
+          print("Type 'N' to exit, anything else to continue: ")
+          val input = scala.io.StdIn.readLine()
+          if (input.trim.toLowerCase == "N") {
+            System.exit(1)
           }
 
 
@@ -559,7 +556,12 @@ def weakTestLong() = {
           println(s"[${i}]- reg: $r str: $s")
           println(s"mark: ${v1s.get} bder: $v2")
           println(s"mark: ${lex(r, s.toList).get} bder: ${rebit.lex(r, s.toList)}")
-          System.exit(1)
+          
+          print("Type 'N' to exit, anything else to continue: ")
+          val input = scala.io.StdIn.readLine()
+          if (input.trim.toLowerCase == "N") {
+            System.exit(1)
+          }
           
         }
       }
