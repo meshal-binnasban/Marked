@@ -115,7 +115,7 @@ def mkeps(r: Rexp) : Bits = r match {
 }
 
 def mkeps3(r: Rexp) : List[Bits] = r match {
-  case ONE => Nil
+  case ONE => List(Nil)
   case POINT(bss, CHAR(_)) => bss
   case ALT(r1, r2) => 
     if (nullable(r1)) mkeps3(r1).map(Lf :: _) else mkeps3(r2).map(Ri :: _)  
@@ -210,7 +210,7 @@ def shift(m: Boolean, bs: List[Bits], r: Rexp, c: Char) : Rexp =
 // the first step a mark is shifted into the Rexp)
 def mat(r: Rexp, s: List[Char]) : Rexp = s match {
   case Nil => r
-  case c::cs => cs.foldLeft(shift(true, List(Nil), r, c))((r, c) => shift(false, List(Nil), r, c))
+  case c::cs => cs.foldLeft(shift(true, List(List()), r, c))((r, c) => shift(false, List(List()), r, c))
 }
 
 def matcher(r: Rexp, s: List[Char]) : Boolean =
@@ -473,8 +473,9 @@ def test9() = {
 @main
 def test10() = {
   println("=====Test====")
-  val br2= ONE | %( "a" | "aa" )
-  val s = "aaa".toList
+  val br2= SEQ(ONE , "a")
+    //ONE | %( "a" | "aa" )
+  val s = "a".toList
   println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
   println(s)
@@ -510,9 +511,10 @@ def weakTest() = {
     val r = enumerate.decode(i)
     if (i % 100_000 == 0) { print("*") }
     for (s <- (regenerate.generate_up_to(alphabet)(10)(r).take(9)) if s != "")
-      { val v1s = Try(lexer(r, s.toList)).getOrElse(None)
-        val v2 = rebit.blexer(r, s)
-        if (v1s.isDefined && !v1s.get.contains(v2)) {
+      { val v1s = Try(lex(r, s.toList)).getOrElse(None)
+        val v2 = rebit.lex(r, s.toList)
+        //v1s.isDefined && !v1s.get.contains(v2)
+        if (!v1s.getOrElse(Nil).contains(v2)) {
           println(s"[$i]reg: $r str: $s")
           println(s"mark: ${v1s.get} bder: $v2")
           println(s"mark: ${lex(r, s.toList).get} bder: ${rebit.lex(r, s.toList)}")
@@ -520,7 +522,7 @@ def weakTest() = {
           //get input to continue or stop
           print("Type 'N' to exit, anything else to continue: ")
           val input = scala.io.StdIn.readLine()
-          if (input.trim.toLowerCase == "N") {
+          if (input.trim.toLowerCase == "n") {
             System.exit(1)
           }
 
@@ -549,17 +551,19 @@ def weakTestLong() = {
     val r = enumerate.decode(i)
     if (i % 100_000 == 0) { print("*") }
     for (s <- (regenerate.generate_up_to(alphabet)(10)(r).take(9)) if s != "")
-      { val v1s = Try(lexer(r, s.toList)).getOrElse(None)
-        val v2 = rebit.blexer(r, s)
-        if (v1s.isDefined && !v1s.get.contains(v2)) {
-        
+      { 
+        val v1s = lex(r, s.toList).getOrElse(List(List()))
+        val v2 = rebit.lex(r, s.toList)
+        //!v1s.getOrElse(Nil).contains(v2)
+        //v1s.isDefined && !v1s.get.contains(v2)
+        if (!v1s.contains(v2)) {
+
           println(s"[${i}]- reg: $r str: $s")
-          println(s"mark: ${v1s.get} bder: $v2")
           println(s"mark: ${lex(r, s.toList).get} bder: ${rebit.lex(r, s.toList)}")
           
           print("Type 'N' to exit, anything else to continue: ")
           val input = scala.io.StdIn.readLine()
-          if (input.trim.toLowerCase == "N") {
+          if (input.trim.toLowerCase == "n") {
             System.exit(1)
           }
           
