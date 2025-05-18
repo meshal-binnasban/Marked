@@ -165,13 +165,12 @@ def mkfin3(r: Rexp): List[Bits] = r match {
   case ALT(r1, r2) if fin(r2) => mkfin3(r2)
 
   case SEQ(r1, r2) if fin(r1) && nullable(r2) =>
-   // val nR1 = 
-    for {
+    val nR1 = for {
       b1 <- mkfin3(r1)
       b2 <- mkeps3(r2)
     } yield b1 ++ b2
    // nR1
-   // if (fin(r2)) nR1 ++ mkfin3(r2) else nR1
+    if (fin(r2)) nR1 ++ mkfin3(r2) else nR1
   case SEQ(r1, r2) => mkfin3(r2)
   case STAR(r) => mkfin3(r).map(_ :+ En)
 } 
@@ -554,9 +553,8 @@ def test9() = {
 @main
 def test10() = {
   println("=====Test====")
-  val br2= SEQ(ONE , "a")
-    //ONE | %( "a" | "aa" )
-  val s = "a".toList
+  val br2= ONE | %("a" ~ %("a") )
+  val s = "aa".toList
   println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
   println(s)
