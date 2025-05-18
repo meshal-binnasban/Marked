@@ -165,13 +165,13 @@ def mkfin3(r: Rexp): List[Bits] = r match {
   case ALT(r1, r2) if fin(r2) => mkfin3(r2)
 
   case SEQ(r1, r2) if fin(r1) && nullable(r2) =>
-    val nR1 = for {
+   // val nR1 = 
+    for {
       b1 <- mkfin3(r1)
       b2 <- mkeps3(r2)
     } yield b1 ++ b2
-    nR1
+   // nR1
    // if (fin(r2)) nR1 ++ mkfin3(r2) else nR1
-
   case SEQ(r1, r2) => mkfin3(r2)
   case STAR(r) => mkfin3(r).map(_ :+ En)
 } 
@@ -191,19 +191,10 @@ def shift(m: Boolean, bs: List[Bits], r: Rexp, c: Char) : Rexp =
   case SEQ(r1, r2) if fin(r1) => SEQ(shift(m, bs, r1, c), shift(true, mkfin3(r1), r2, c))
   case SEQ(r1, r2) => SEQ(shift(m, bs, r1, c), shift(false, Nil, r2, c))
   
-  case STAR(r) if m && fin(r)=>
-    val bits=for {b <- bs;s <- (mkfin3(r).map(_ ++ List(Nx)))} yield b ++ s
-      STAR(shift(true,bs.map(_ ++ List(Nx))++mkfin3(r).map(_ ++ List(Nx)), r, c))
-
-  case STAR(r) if fin(r) =>
-    val bits= mkfin3(r).map(_ ++ List(Nx))
-    STAR(shift(true, bits , r, c))
-
-  case STAR(r) if m =>
-    val bits=bs.map(_ ++ List(Nx))
-    STAR(shift(m,bits , r, c))
+  case STAR(r) if m && fin(r)=>STAR(shift(true,bs.map(_ ++ List(Nx))++mkfin3(r).map(_ ++ List(Nx)), r, c))
+  case STAR(r) if fin(r) =>STAR(shift(true, mkfin3(r).map(_ ++ List(Nx)) , r, c))
+  case STAR(r) if m =>STAR(shift(m,bs.map(_ ++ List(Nx)) , r, c))
   case STAR(r) => STAR(shift(false, Nil, r, c))
-
 }
 
 // the main matching function (by using BINIT only in 
@@ -271,11 +262,21 @@ def test1() = {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
   println(pp(mat(br2, s.take(i + 1))))
   } 
-
   println(s"=final list=")
-  println(lex(br2, s))
+  val sequencesList=lex(br2, s)
+  sequencesList.foreach {
+    list => list.foreach(bits => println(s" $bits"))
+    }
+  
   println(s"=reference list=") 
-  println(rebit.lex(br2, s)) 
+  println(rebit.lex(br2, s))
+  println(rebit.blexer(br2, s.mkString("")))
+
+  
+  println("Final Marked Values for testing")
+  sequencesList.foreach {
+    list => list.foreach(bits => println(dec2(br2, bits)))
+    }
 }
 
 //%("a") ~ ("aa"|"a") 
@@ -293,11 +294,23 @@ def test2() = {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
   println(pp(mat(br2, s.take(i + 1))))
   } 
-
   println(s"=final list=")
-  println(lex(br2, s))
+  val sequencesList=lex(br2, s)
+  sequencesList.foreach {
+    list => list.foreach(bits => println(s" $bits"))
+    }
+  
   println(s"=reference list=") 
   println(rebit.lex(br2, s))
+  println(rebit.blexer(br2, s.mkString("")))
+
+  
+  println("Final Marked Values for testing")
+  sequencesList.foreach {
+    list => list.foreach(bits => println(dec2(br2, bits)))
+    }
+
+
 }
 
 //(ONE  |  %("c"|"d")) 
@@ -315,11 +328,23 @@ def test3() = {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
   println(pp(mat(br2, s.take(i + 1))))
   } 
-
   println(s"=final list=")
-  println(lex(br2, s))
+  val sequencesList=lex(br2, s)
+  sequencesList.foreach {
+    list => list.foreach(bits => println(s" $bits"))
+    }
+  
   println(s"=reference list=") 
   println(rebit.lex(br2, s))
+  println(rebit.blexer(br2, s.mkString("")))
+
+  
+  println("Final Marked Values for testing")
+  sequencesList.foreach {
+    list => list.foreach(bits => println(dec2(br2, bits)))
+    }
+
+
 }
 
 
@@ -340,11 +365,22 @@ def test4() = {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
   println(pp(mat(br2, s.take(i + 1))))
   } 
-
   println(s"=final list=")
-  println(lex(br2, s))
+  val sequencesList=lex(br2, s)
+  sequencesList.foreach {
+    list => list.foreach(bits => println(s" $bits"))
+    }
+  
   println(s"=reference list=") 
   println(rebit.lex(br2, s))
+  println(rebit.blexer(br2, s.mkString("")))
+
+  
+  println("Final Marked Values for testing")
+  sequencesList.foreach {
+    list => list.foreach(bits => println(dec2(br2, bits)))
+    }
+
 }
 
 // ONE |  %( "a" | "aa" ) 
@@ -361,11 +397,21 @@ def test5() = {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
   println(pp(mat(br2, s.take(i + 1))))
   } 
-
   println(s"=final list=")
-  println(lex(br2, s))
+  val sequencesList=lex(br2, s)
+  sequencesList.foreach {
+    list => list.foreach(bits => println(s" $bits"))
+    }
+  
   println(s"=reference list=") 
   println(rebit.lex(br2, s))
+  println(rebit.blexer(br2, s.mkString("")))
+
+  
+  println("Final Marked Values for testing")
+  sequencesList.foreach {
+    list => list.foreach(bits => println(dec2(br2, bits)))
+    }
 }
 
 //Nested STAR
@@ -383,11 +429,21 @@ def test6() = {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
   println(pp(mat(br2, s.take(i + 1))))
   } 
-
   println(s"=final list=")
-  println(lex(br2, s))
+  val sequencesList=lex(br2, s)
+  sequencesList.foreach {
+    list => list.foreach(bits => println(s" $bits"))
+    }
+  
   println(s"=reference list=") 
   println(rebit.lex(br2, s))
+  println(rebit.blexer(br2, s.mkString("")))
+
+  
+  println("Final Marked Values for testing")
+  sequencesList.foreach {
+    list => list.foreach(bits => println(dec2(br2, bits)))
+    }
 
 }
 
@@ -442,9 +498,22 @@ def test8() = {
   } 
 
   println(s"=final list=")
-  println(lex(br2, s))
+  val sequencesList=lex(br2, s)
+  sequencesList.foreach {
+    list => list.foreach(bits => println(s" $bits"))
+    }
+  
   println(s"=reference list=") 
   println(rebit.lex(br2, s))
+  println(rebit.blexer(br2, s.mkString("")))
+
+  
+  println("Final Marked Values for testing")
+  sequencesList.foreach {
+    list => list.foreach(bits => println(dec2(br2, bits)))
+    }
+
+
 }
 
 // ONE | %( %( %("a") ) ) , input aa - doesn't work in this version
@@ -463,9 +532,21 @@ def test9() = {
   } 
 
   println(s"=final list=")
-  println(lex(br2, s))
+  val sequencesList=lex(br2, s)
+  sequencesList.foreach {
+    list => list.foreach(bits => println(s" $bits"))
+    }
+  
   println(s"=reference list=") 
   println(rebit.lex(br2, s))
+  println(rebit.blexer(br2, s.mkString("")))
+
+  
+  println("Final Marked Values for testing")
+  sequencesList.foreach {
+    list => list.foreach(bits => println(dec2(br2, bits)))
+    }
+
 }
 
 
@@ -486,54 +567,27 @@ def test10() = {
   } 
 
   println(s"=final list=")
-  println(lex(br2, s))
+  val sequencesList=lex(br2, s)
+  sequencesList.foreach {
+    list => list.foreach(bits => println(s" $bits"))
+    }
+  
   println(s"=reference list=") 
   println(rebit.lex(br2, s))
+  println(rebit.blexer(br2, s.mkString("")))
+
+  
+  println("Final Marked Values for testing")
+  sequencesList.foreach {
+    list => list.foreach(bits => println(dec2(br2, bits)))
+    }
+
+
 }
 
 import scala.util._
-
 @main
 def weakTest() = {
-  given rexp_cdata : CDATA[Rexp] = List(
-        (0, _ => ONE),
-        (0, _ => ZERO),
-        (0, _ => CHAR('a')),
-        (0, _ => CHAR('b')),
-        (0, _ => CHAR('c')),
-        (1, cs => STAR(cs(0))),
-        (2, cs => ALT(cs(0), cs(1))),
-        (2, cs => SEQ(cs(0), cs(1)))
-      )
-
-  val alphabet = LazyList('a', 'b')
-  for (i <- (0L to 10_000_000L)) {
-    val r = enumerate.decode(i)
-    if (i % 100_000 == 0) { print("*") }
-    for (s <- (regenerate.generate_up_to(alphabet)(10)(r).take(9)) if s != "")
-      { val v1s = Try(lex(r, s.toList)).getOrElse(None)
-        val v2 = rebit.lex(r, s.toList)
-        //v1s.isDefined && !v1s.get.contains(v2)
-        if (!v1s.getOrElse(Nil).contains(v2)) {
-          println(s"[$i]reg: $r str: $s")
-          println(s"mark: ${v1s.get} bder: $v2")
-          println(s"mark: ${lex(r, s.toList).get} bder: ${rebit.lex(r, s.toList)}")
-
-          //get input to continue or stop
-          print("Type 'N' to exit, anything else to continue: ")
-          val input = scala.io.StdIn.readLine()
-          if (input.trim.toLowerCase == "n") {
-            System.exit(1)
-          }
-
-
-        }
-      }
-  }
-}
-
-@main
-def weakTestLong() = {
   given rexp_cdata : CDATA[Rexp] = List(
         (0, _ => ONE),
         (0, _ => ZERO),
@@ -551,12 +605,9 @@ def weakTestLong() = {
     val r = enumerate.decode(i)
     if (i % 100_000 == 0) { print("*") }
     for (s <- (regenerate.generate_up_to(alphabet)(10)(r).take(9)) if s != "")
-      { 
-        val v1s = lex(r, s.toList).getOrElse(List(List()))
-        val v2 = rebit.lex(r, s.toList)
-        //!v1s.getOrElse(Nil).contains(v2)
-        //v1s.isDefined && !v1s.get.contains(v2)
-        if (!v1s.contains(v2)) {
+    { val v1s = Try(lex(r, s.toList)).getOrElse(None)
+      val v2 = rebit.lex(r, s.toList)
+        if (v1s.isDefined && !v1s.get.contains(v2)) {
 
           println(s"[${i}]- reg: $r str: $s")
           println(s"mark: ${lex(r, s.toList).get} bder: ${rebit.lex(r, s.toList)}")
@@ -566,13 +617,102 @@ def weakTestLong() = {
           if (input.trim.toLowerCase == "n") {
             System.exit(1)
           }
-          
+           
+
         }
       }
       i+=1
   }//end whild
   println("\nAll tests passed!")
 }
+
+@main
+def weakTestDecode() = {
+  given rexp_cdata : CDATA[Rexp] = List(
+        (0, _ => ONE),
+        (0, _ => ZERO),
+        (0, _ => CHAR('a')),
+        (0, _ => CHAR('b')),
+        (0, _ => CHAR('c')),
+        (1, cs => STAR(cs(0))),
+        (2, cs => ALT(cs(0), cs(1))),
+        (2, cs => SEQ(cs(0), cs(1)))
+      )
+  val alphabet = LazyList('a', 'b')
+  var i=BigInt(0)
+  val numRegexes=BigInt(10_000_000_000L)
+  while(i<= numRegexes){
+    val r = enumerate.decode(i)
+    if (i % 100_000 == 0) { print("*") }
+    for (s <- (regenerate.generate_up_to(alphabet)(10)(r).take(9)) if s != "")
+    { val v1s = Try(lexer(r, s.toList)).getOrElse(None)
+      val v2 = rebit.blexer(r, s)
+        if (v1s.isDefined && !v1s.get.contains(v2)) {
+
+          println(s"[${i}]- reg: $r str: $s")
+          println(s"mark: ${lex(r, s.toList).get} bder: ${rebit.lex(r, s.toList)}")
+          
+          print("Type 'N' to exit, anything else to continue: ")
+          val input = scala.io.StdIn.readLine()
+          if (input.trim.toLowerCase == "n") {
+            System.exit(1)
+          }
+           
+
+        }
+      }
+      i+=1
+  }//end whild
+  println("\nAll tests passed!")
+}
+
+import scala.collection.parallel.CollectionConverters._
+
+@main
+def weakTestParallel() = {
+  given rexp_cdata : CDATA[Rexp] = List(
+        (0, _ => ONE),
+        (0, _ => ZERO),
+        (0, _ => CHAR('a')),
+        (0, _ => CHAR('b')),
+        (0, _ => CHAR('c')),
+        (1, cs => STAR(cs(0))),
+        (2, cs => ALT(cs(0), cs(1))),
+        (2, cs => SEQ(cs(0), cs(1)))
+      )
+  val alphabet = LazyList('a', 'b')
+  
+  val numRegexes = BigInt(10_000_000_000L)
+  val batchSize = BigInt(1_000_000L) 
+  
+  val batches = (BigInt(0) to numRegexes by batchSize).toVector.par
+  batches.foreach { start =>
+    val end = (start + batchSize - 1).min(numRegexes)
+    for (i <- start to end) {
+      val r = enumerate.decode(i)
+      if (i % 100_000 == 0) { print("*") }
+      for (s <- (regenerate.generate_up_to(alphabet)(10)(r).take(9)) if s != "") {
+        val v1s = lex(r, s.toList).getOrElse(List(List()))
+        val v2 = rebit.lex(r, s.toList)
+        if (!v1s.contains(v2)) {
+          println(s"[${i}]- reg: $r str: $s")
+          println(s"mark: ${lex(r, s.toList).get} bder: ${rebit.lex(r, s.toList)}")
+          print("Type 'N' to exit, anything else to continue: ")
+          val input = scala.io.StdIn.readLine()
+          if (input.trim.toLowerCase == "n") {
+            System.exit(1)
+          }
+        }
+      }
+    }
+  }
+  println("\nAll tests passed!")
+}
+
+
+
+
+
 
 /* 
  if(!hasNestedMStar(r)){
