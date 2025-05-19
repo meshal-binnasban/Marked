@@ -170,8 +170,9 @@ def mkfin3(r: Rexp): List[Bits] = r match {
       b2 <- mkeps3(r2)
     } yield b1 ++ b2
    // nR1
-    if (fin(r2)) nR1 ++ mkfin3(r2) else nR1
-  case SEQ(r1, r2) => mkfin3(r2)
+    if (fin(r2)) mkfin3(r2) else nR1
+    
+  case SEQ(r1, r2) =>mkfin3(r2)
   case STAR(r) => mkfin3(r).map(_ :+ En)
 } 
 
@@ -186,12 +187,16 @@ def shift(m: Boolean, bs: List[Bits], r: Rexp, c: Char) : Rexp =
 
   case ALT(r1, r2) => ALT(shift(m, bs.map(bits => bits :+ Lf), r1, c), shift(m, bs.map(bits => bits :+ Ri), r2, c))
   
-  case SEQ(r1, r2) if m && nullable(r1) => SEQ(shift(m, bs, r1, c), shift(true, for {b <- bs;s <- mkeps3(r1)} yield b ++ s, r2, c))
+  case SEQ(r1, r2) if m && nullable(r1) =>
+    if(fin(r1))
+    SEQ(shift(m, bs, r1, c), shift(true, mkfin3(r1) ++ (for {b <- bs;s <- mkeps3(r1)} yield b ++ s), r2, c))
+    else
+    SEQ(shift(m, bs, r1, c), shift(true, for {b <- bs;s <- mkeps3(r1)} yield b ++ s, r2, c))
   case SEQ(r1, r2) if fin(r1) => SEQ(shift(m, bs, r1, c), shift(true, mkfin3(r1), r2, c))
   case SEQ(r1, r2) => SEQ(shift(m, bs, r1, c), shift(false, Nil, r2, c))
-  
-  case STAR(r) if m && fin(r)=>STAR(shift(true,bs.map(_ ++ List(Nx))++mkfin3(r).map(_ ++ List(Nx)), r, c))
-  case STAR(r) if fin(r) =>STAR(shift(true, mkfin3(r).map(_ ++ List(Nx)) , r, c))
+
+  case STAR(r) if m && fin(r)=>STAR(shift(true,bs.map(_ ++ List(Nx)) ++ mkfin3(r).map(_ ++ List(Nx)), r, c))
+  case STAR(r) if fin(r) =>STAR(shift(true,mkfin3(r).map(_ ++ List(Nx)) , r, c))
   case STAR(r) if m =>STAR(shift(m,bs.map(_ ++ List(Nx)) , r, c))
   case STAR(r) => STAR(shift(false, Nil, r, c))
 }
@@ -553,7 +558,7 @@ def test9() = {
 @main
 def test10() = {
   println("=====Test====")
-  val br2= ONE | %("a" ~ %("a") )
+  val br2= ONE | %( "a" | "aa" )
   val s = "aa".toList
   println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
@@ -579,8 +584,106 @@ def test10() = {
   sequencesList.foreach {
     list => list.foreach(bits => println(dec2(br2, bits)))
     }
+}
 
+// %("a" ~ %("a") ) , input aa -  doesn't work 
+@main
+def test11() = {
+  println("=====Test====")
+  val br2= %("a" ~ %("a") )
+  val s = "aa".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
 
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+
+  println(s"=final list=")
+  val sequencesList=lex(br2, s)
+  sequencesList.foreach {
+    list => list.foreach(bits => println(s" $bits"))
+    }
+  
+  println(s"=reference list=") 
+  println(rebit.lex(br2, s))
+  println(rebit.blexer(br2, s.mkString("")))
+
+  
+  println("Final Marked Values for testing")
+  sequencesList.foreach {
+    list => list.foreach(bits => println(dec2(br2, bits)))
+    }
+}
+
+// %( %("a") ~ "a" ) , input aa -  doesn't work 
+@main
+def test12() = {
+  println("=====Test====")
+  val br2=  %( %("a") ~ ("a") )
+  val s = "aa".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  val reg =mat(br2, s.take(i + 1))
+  println(pp(reg))
+  println(s"Reg=${reg}")
+  } 
+
+  println(s"=final list=")
+  val sequencesList=lex(br2, s)
+  sequencesList.foreach {
+    list => list.foreach(bits => println(s" $bits"))
+    }
+  
+  println(s"=reference list=") 
+  println(rebit.lex(br2, s))
+  println(rebit.blexer(br2, s.mkString("")))
+
+  
+  println("Final Marked Values for testing")
+  sequencesList.foreach {
+    list => list.foreach(bits => println(dec2(br2, bits)))
+    }
+}
+
+// %("a") ~ (%("a") ~ "a" ) , input aa -  doesn't work 
+@main
+def test13() = {
+  println("=====Test====")
+  val br2=  %("a") ~ (%("a") ~ "a" )
+  val s = "aa".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  val reg =mat(br2, s.take(i + 1))
+  println(pp(reg))
+  println(s"Reg=${reg}")
+  } 
+
+  println(s"=final list=")
+  val sequencesList=lex(br2, s)
+  sequencesList.foreach {
+    list => list.foreach(bits => println(s" $bits"))
+    }
+  
+  println(s"=reference list=") 
+  println(rebit.lex(br2, s))
+  println(rebit.blexer(br2, s.mkString("")))
+
+  
+  println("Final Marked Values for testing")
+  sequencesList.foreach {
+    list => list.foreach(bits => println(dec2(br2, bits)))
+    }
 }
 
 import scala.util._
