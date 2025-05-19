@@ -170,7 +170,7 @@ def mkfin3(r: Rexp): List[Bits] = r match {
       b2 <- mkeps3(r2)
     } yield b1 ++ b2
    // nR1
-    if (fin(r2)) mkfin3(r2) else nR1
+    if (fin(r2)) mkfin3(r2) ++ nR1 else nR1 
     
   case SEQ(r1, r2) =>mkfin3(r2)
   case STAR(r) => mkfin3(r).map(_ :+ En)
@@ -658,6 +658,41 @@ def test13() = {
   println("=====Test====")
   val br2=  %("a") ~ (%("a") ~ "a" )
   val s = "aa".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  val reg =mat(br2, s.take(i + 1))
+  println(pp(reg))
+  println(s"Reg=${reg}")
+  } 
+
+  println(s"=final list=")
+  val sequencesList=lex(br2, s)
+  sequencesList.foreach {
+    list => list.foreach(bits => println(s" $bits"))
+    }
+  
+  println(s"=reference list=") 
+  println(rebit.lex(br2, s))
+  println(rebit.blexer(br2, s.mkString("")))
+
+  
+  println("Final Marked Values for testing")
+  sequencesList.foreach {
+    list => list.foreach(bits => println(dec2(br2, bits)))
+    }
+}
+
+
+// %("a") ~ (%("a") ~ "a" ) , input aa -  doesn't work 
+@main
+def test14() = {
+  println("=====Test====")
+  val br2= %("a") ~ %("a")
+  val s = "a".toList
   println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
   println(s)
