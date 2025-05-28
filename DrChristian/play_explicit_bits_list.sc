@@ -819,7 +819,7 @@ def weakTestParallel() = {
   val alphabet = LazyList('a', 'b')
   
   val numRegexes = BigInt(10_000_000_000L)
-  val batchSize = BigInt(1_000_000L) 
+  val batchSize = BigInt(100_000L) 
   
   val batches = (BigInt(0) to numRegexes by batchSize).toVector.par
   batches.foreach { start =>
@@ -828,9 +828,9 @@ def weakTestParallel() = {
       val r = enumerate.decode(i)
       if (i % 100_000 == 0) { print("*") }
       for (s <- (regenerate.generate_up_to(alphabet)(10)(r).take(9)) if s != "") {
-        val v1s = lex(r, s.toList).getOrElse(List(List()))
-        val v2 = rebit.lex(r, s.toList)
-        if (!v1s.contains(v2)) {
+        val v1s = Try(lexer(r, s.toList)).getOrElse(None)
+        val v2 = rebit.blexer(r, s)
+        if (v1s.isDefined && !v1s.get.contains(v2)) {
           println(s"[${i}]- reg: $r str: $s")
           println(s"mark: ${lex(r, s.toList).get} bder: ${rebit.lex(r, s.toList)}")
           print("Type 'N' to exit, anything else to continue: ")
