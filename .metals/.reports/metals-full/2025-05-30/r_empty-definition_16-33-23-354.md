@@ -1,3 +1,14 @@
+error id: file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/DrChristian/play_explicit_bits_set.sc:`<none>`.
+file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/DrChristian/play_explicit_bits_set.sc
+empty definition using pc, found symbol in pc: `<none>`.
+empty definition using semanticdb
+empty definition using fallback
+non-local guesses:
+
+offset: 13729
+uri: file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/DrChristian/play_explicit_bits_set.sc
+text:
+```scala
 //
 // Algorithm from "A Play on Regular Expressions"
 //
@@ -531,7 +542,7 @@ def weakTestParallel() = {
       )
   val alphabet = LazyList('a', 'b')
   
-  val numRegexes = BigInt(10_000_000_000L)
+  val numRegexes = BigInt(10_000@@_000_000L)
   val batchSize = BigInt(100_000L) 
   
   val batches = (BigInt(0) to numRegexes by batchSize).toVector.par
@@ -622,3 +633,9 @@ def hasNestedMStar(r: Rexp): Boolean = {
 }
 
 */
+```
+
+
+#### Short summary: 
+
+empty definition using pc, found symbol in pc: `<none>`.

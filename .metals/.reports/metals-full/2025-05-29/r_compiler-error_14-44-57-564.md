@@ -1,3 +1,16 @@
+file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/DrChristian/play_explicit_bits_list.sc
+### java.lang.IndexOutOfBoundsException: -1
+
+occurred in the presentation compiler.
+
+presentation compiler configuration:
+
+
+action parameters:
+offset: 7643
+uri: file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/DrChristian/play_explicit_bits_list.sc
+text:
+```scala
 //
 // Algorithm from "A Play on Regular Expressions"
 //
@@ -10,6 +23,64 @@ import $file.rexp, rexp._
 import $file.enumerate, enumerate._
 import $file.regenerate//, regenerate._
 import $file.rebit
+
+/*
+abstract class Bit
+case object Z extends Bit {
+  override def toString = "0"
+}
+case object S extends Bit {
+  override def toString = "1"
+}
+
+
+type Bits = List[Bit]
+
+
+// standard regexes
+enum Rexp {
+  case ZERO 
+  case ONE 
+  case CHAR(c: Char) 
+  case ALT(r1: Rexp, r2: Rexp) 
+  case SEQ(r1: Rexp, r2: Rexp) 
+  case STAR(r: Rexp) 
+  case POINT(bs: Bits, r: Rexp)
+}
+
+import Rexp._
+
+// some syntax sugar for regexes
+import scala.language.implicitConversions
+
+def charlist2rexp(s : List[Char]): Rexp = s match {
+  case Nil => ONE
+  case c::Nil => CHAR(c)
+  case c::s => SEQ(CHAR(c), charlist2rexp(s))
+}
+
+// strings are coerced into Rexps
+given Conversion[String, Rexp] = s => charlist2rexp(s.toList)
+
+//val ABCD : Rexp = "abcd"
+
+extension (r: Rexp) {
+  def | (s: Rexp) = ALT(r, s)
+  def % = STAR(r)
+  def ~ (s: Rexp) = SEQ(r, s)
+}
+
+// nullable 
+def nullable(r: Rexp) : Boolean = r match {
+  case ZERO => false
+  case ONE => true
+  case CHAR(d) =>  false
+  case ALT(r1, r2) => nullable(r1) || nullable(r2)
+  case SEQ(r1, r2) => nullable(r1) && nullable(r2)
+  case STAR(r) => true
+  case POINT(_, r) => nullable(r)
+}
+*/ 
 
 
 // decoding of a value from a bitsequence
@@ -81,15 +152,15 @@ def fin(r: Rexp) : Boolean = (r: @unchecked) match {
   case STAR(r) => fin(r)
 }
 
-/* def mkfin(r: Rexp) : Bits = r match {
+def mkfin(r: Rexp) : Bits = r match {
   case POINT(bss, CHAR(_)) => bss.head
   case ALT(r1, r2) => if (fin(r1)) mkfin(r1) else mkfin(r2)  
   case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
   case SEQ(r1, r2) => mkfin(r2)
   case STAR(r) => mkfin(r) ++ List(En)
-} */
+}
 
-/* def mkfin2(r: Rexp) : Set[Bits] = r match {
+def mkfin2(r: Rexp) : Set[Bits] = r match {
   case POINT(bss, CHAR(_)) => Set(bss.head)
   case ALT(r1, r2) if fin(r1) && fin(r2) => mkfin2(r1) | mkfin2(r2)
   case ALT(r1, r2) if fin(r1) => mkfin2(r1)
@@ -98,13 +169,14 @@ def fin(r: Rexp) : Boolean = (r: @unchecked) match {
   case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin2(r1).map(_ ++ mkeps(r2)) //| (if (fin(r2)) mkfin2(r2) else Set.empty[Bits])
   case SEQ(r1, r2) => mkfin2(r2)
   case STAR(r) => mkfin2(r).map(_ ++ List(En))
-} */
+}
 
-def mkfin3(r: Rexp): List[Bits] = r match 
+def mkfin3(r: Rexp): List[Bits] = r match {
   case POINT(bss, CHAR(_)) => bss
   case ALT(r1, r2) if fin(r1) && fin(r2) => mkfin3(r1) ++ mkfin3(r2)
   case ALT(r1, r2) if fin(r1) => mkfin3(r1)
   case ALT(r1, r2) if fin(r2) => mkfin3(r2)
+
   case SEQ(r1, r2) if fin(r1) && nullable(r2) =>
     val nR1 = for {
       b1 <- mkfin3(r1)
@@ -112,24 +184,11 @@ def mkfin3(r: Rexp): List[Bits] = r match
     } yield b1 ++ b2
    // nR1
     if (fin(r2)) mkfin3(r2) ++ nR1 else nR1 
+    
   case SEQ(r1, r2) =>mkfin3(r2)
   case STAR(r) => mkfin3(r).map(_ :+ En)
+} 
 
-
-/* def mkfin4(r: Rexp): List[Bits] = r match 
-  case POINT(bss, CHAR(_)) => bss
-  case ALT(r1, r2) if fin(r1) => mkfin4(r1)
-  case ALT(r1, r2) if fin(r2) => mkfin4(r2)
-  case SEQ(r1, r2) if fin(r1) && nullable(r2) =>
-    val nR1 = for {
-      b1 <- mkfin4(r1)
-      b2 <- mkeps3(r2)
-    } yield b1 ++ b2
-   // nR1
-    if (fin(r2)) mkfin4(r2) ++ nR1 else nR1 
-  case SEQ(r1, r2) =>mkfin4(r2)
-  case STAR(r) => mkfin4(r).map(_ :+ En) */
- 
 
 // shift function from the paper
 def shift(m: Boolean, bs: List[Bits], r: Rexp, c: Char) : Rexp = 
@@ -138,7 +197,9 @@ def shift(m: Boolean, bs: List[Bits], r: Rexp, c: Char) : Rexp =
   case ONE => ONE
   case CHAR(d) => if (m && d == c) POINT(bs, CHAR(d)) else CHAR(d)
   case POINT(bss, CHAR(d)) => if (m && d == c) POINT(bs, CHAR(d)) else CHAR(d)
+
   case ALT(r1, r2) => ALT(shift(m, bs.map(bits => bits :+ Lf), r1, c), shift(m, bs.map(bits => bits :+ Ri), r2, c))
+  
   case SEQ(r1, r2) if m && nullable(r1) =>
     if(fin(r1))
     SEQ(shift(m, bs, r1, c), shift(true, mkfin3(r1) ++ (for {b <- bs;s <- mkeps3(r1)} yield b ++ s), r2, c))
@@ -173,6 +234,7 @@ def lexer(r: Rexp, s: List[Char]) : Option[List[Val]] = {
   lex(r, s).map(_.map(dec2(r, _)))
 }
 
+
 // pretty-printing Rexps
 def implode(ss: Seq[String]) = ss.mkString("\n")
 def explode(s: String) = s.split("\n").toList
@@ -203,24 +265,13 @@ def pp(e: Rexp) : String = (e: @unchecked) match {
 }
 def pps(es: Rexp*) = indent(es.map(pp))
 
-// extracts a string from a value
- def flatten(v: Val) : String = v match {
-   case Empty => ""
-   case Chr(c) => c.toString
-   case Left(v) => flatten(v)
-   case Right(v) => flatten(v)
-   case Sequ(v1, v2) => flatten(v1) ++ flatten(v2)
-   case Stars(vs) => vs.map(flatten).mkString
-   //case Rec(_, v) => flatten(v)
- }
-
-//("a" | "ab") ~ ("bc" | "c")
+//%("a")~(%("ab") ~ %("b")) 
 @main
 def test1() = {
   println("=====Test====")
   //(a + ab)(bc + c)
-  val br2 = ("a" | "ab") ~ ("bc" | "c")
-  val s = "abc".toList
+  val br2 = ("a" | "ab@@")
+  val s = "aaaa".toList
   println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
   println(s)
@@ -242,12 +293,7 @@ def test1() = {
   
   println("Final Marked Values for testing")
   sequencesList.foreach {
-    list => list.foreach(bits => 
-      val v= dec2(br2, bits)
-      println(s"Value=${v}")
-      val vString=flatten(v)
-      println(s"Input string == flatten is: ${vString == s.mkString("")}")
-    )
+    list => list.foreach(bits => println(dec2(br2, bits)))
     }
 }
 
@@ -318,6 +364,7 @@ def test3() = {
 
 
 }
+
 
 // (ONE|"a") ~ %("a") 
 @main
@@ -391,7 +438,7 @@ def test5() = {
 def test6() = {
   println("=====Test====")
   val br2= ONE | %(%("a"))
-  val s = "aaa".toList
+  val s = "aa".toList
   println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
   println(s)
@@ -768,161 +815,111 @@ def weakTestDecode() = {
   }//end whild
   println("\nAll tests passed!")
 }
+/*
+// extracts a string from a value
 
-import scala.collection.parallel.CollectionConverters._
+ def flatten(v: Val) : String = v match {
 
-@main
-def weakTestParallel() = {
-  given rexp_cdata : CDATA[Rexp] = List(
-        (0, _ => ONE),
-        (0, _ => ZERO),
-        (0, _ => CHAR('a')),
-        (0, _ => CHAR('b')),
-        (0, _ => CHAR('c')),
-        (1, cs => STAR(cs(0))),
-        (2, cs => ALT(cs(0), cs(1))),
-        (2, cs => SEQ(cs(0), cs(1)))
-      )
-  val alphabet = LazyList('a', 'b')
-  
-  val numRegexes = BigInt(10_000_000_000L)
-  val batchSize = BigInt(100_000L) 
-  
-  val batches = (BigInt(0) to numRegexes by batchSize).toVector.par
-  batches.foreach { start =>
-    val end = (start + batchSize - 1).min(numRegexes)
-    for (i <- start to end) {
-      val r = enumerate.decode(i)
-      if (i % 100_000 == 0) { print("*") }
-      for (s <- (regenerate.generate_up_to(alphabet)(10)(r).take(9)) if s != "") {
-        val v1s = Try(lexer(r, s.toList)).getOrElse(None)
-        val v2 = rebit.blexer(r, s)
-        if (v1s.isDefined && !v1s.get.contains(v2)) {
-          println(s"[${i}]- reg: $r str: $s")
+   case Empty => ""
+
+   case Chr(c) => c.toString
+
+   case Left(v) => flatten(v)
+
+   case Right(v) => flatten(v)
+
+   case Sequ(v1, v2) => flatten(v1) ++ flatten(v2)
+
+   case Stars(vs) => vs.map(flatten).mkString
+
+   case Rec(_, v) => flatten(v)
+
+ }
+*/
+
+
+
+
+
+/* 
+ if(!hasNestedMStar(r)){
+          println(s"reg: $r str: $s")
+          println(s"mark: ${v1s.get} bder: $v2")
           println(s"mark: ${lex(r, s.toList).get} bder: ${rebit.lex(r, s.toList)}")
-          print("Type 'N' to exit, anything else to continue: ")
-          val input = scala.io.StdIn.readLine()
-          if (input.trim.toLowerCase == "n") {
-            System.exit(1)
+          
+          System.exit(1)
           }
-        }
-      }
-    }
-  }
-  println("\nAll tests passed!")
-}
+           */
 
+/* 
 @main
-def flattenWeakTestParallel() = {
-  given rexp_cdata : CDATA[Rexp] = List(
-        (0, _ => ONE),
-        (0, _ => ZERO),
-        (0, _ => CHAR('a')),
-        (0, _ => CHAR('b')),
-        (0, _ => CHAR('c')),
-        (1, cs => STAR(cs(0))),
-        (2, cs => ALT(cs(0), cs(1))),
-        (2, cs => SEQ(cs(0), cs(1)))
-      )
-  val alphabet = LazyList('a', 'b')
-  
-  val numRegexes = BigInt(10_000_000_000L)
-  val batchSize = BigInt(100_000L) 
-  
-  val batches = (BigInt(0) to numRegexes by batchSize).toVector.par
-  batches.foreach { start =>
-    val end = (start + batchSize - 1).min(numRegexes)
-    for (i <- start to end) {
-      val r = enumerate.decode(i)
-      if (i % 100_000 == 0) { print("*") }
-      for (s <- (regenerate.generate_up_to(alphabet)(10)(r).take(9)) if s != "") {
-       val v1s = Try(lexer(r, s.toList)).getOrElse(None)
-       val v2 = rebit.blexer(r, s)
-       if (v1s.isDefined) {
-        val valuesList: List[Val] = v1s.get
-        val valuesSet: Set[Val] = valuesList.toSet
-        //test for duplicates 
-        if (valuesList.size != valuesSet.size) {
-          println("Duplicate")
-          println(s"All Values : ${valuesList.mkString(", ")}")
-          System.exit(1)
-          }
-        //test for flattened values matching input string
-        val flattenedValues = valuesList.map(flatten)
-        flattenedValues.foreach { flatVal =>if (flatVal != s) {
-          println("Mismatch in flatten")
-          println(s"Flatten value: '$flatVal', Input string: '$s'")
-          System.exit(1)
-          }
-        }
+def test1() = {
+  println("=====Test====")
+  val br2 = (ONE | "c") ~ ("cc" | "c")
+  val s = "cc".toList
+  println("=string=")
+  println(s)
+  println(s"=shift ${s(0)}=")
+  println(pp(mat(br2, s.take(1))))
 
-        // test if derivative's POSIX value is in the list generated by new code  
-        if (!valuesList.contains(v2)) {
-          println(s"Derivative value not found in lexer output!")
-          println(s"v2: $v2")
-          System.exit(1)
-          } 
-          }
+  println(s"=shift ${s(1)}=")
+  println(pp(mat(br2, s.take(2))))
 
-      }// end for
-    }
+  println(s"=final list=")
+  println(lex(br2, s.take(2)))
+  println(s"=reference list=") 
+  println(rebit.lex(br2, s.take(2)))
+} */
+
+/*
+
+def isStar(r: Rexp) : Boolean = r match {
+  case STAR(_) => true
+  case _ => false
+} 
+
+
+def mkfinStar(r: Rexp) : Bits = r match {
+  case STAR(r) => mkfin(r) 
+  case _ => mkfin(r)
+} 
+
+
+// testing nested star - X-2
+def hasNestedMStar(r: Rexp): Boolean = {
+  def containsMStar(r: Rexp): Boolean = r match {
+    case STAR(_) => true
+    case ALT(r1, r2) => containsMStar(r1) || containsMStar(r2)
+    case SEQ(r1, r2) => containsMStar(r1) || containsMStar(r2)
+    case _ => false
   }
-  println("\nAll tests passed!")
+  r match {
+    case STAR(inner) => 
+      if (containsMStar(inner)) true
+      else hasNestedMStar(inner)
+    case ALT(r1, r2) => hasNestedMStar(r1) || hasNestedMStar(r2)
+    case SEQ(r1, r2) => hasNestedMStar(r1) || hasNestedMStar(r2)
+    case _ => false
+  }
 }
 
-@main
-def flattenWeakTest() = {
-  given rexp_cdata : CDATA[Rexp] = List(
-        (0, _ => ONE),
-        (0, _ => ZERO),
-        (0, _ => CHAR('a')),
-        (0, _ => CHAR('b')),
-        (0, _ => CHAR('c')),
-        (1, cs => STAR(cs(0))),
-        (2, cs => ALT(cs(0), cs(1))),
-        (2, cs => SEQ(cs(0), cs(1)))
-      )
-  val alphabet = LazyList('a', 'b')
-  var i=BigInt(0)
-  val numRegexes=BigInt(10_000_000_000L)
-  while(i<= numRegexes){
-    val r = enumerate.decode(i)
-    if (i % 100_000 == 0) { print("*") }
-    for (s <- (regenerate.generate_up_to(alphabet)(10)(r).take(9)) if s != "")
-    { 
-       val v1s = Try(lexer(r, s.toList)).getOrElse(None)
-       val v2 = rebit.blexer(r, s)
-       if (v1s.isDefined) {
-        val valuesList: List[Val] = v1s.get
-        val valuesSet: Set[Val] = valuesList.toSet
-        //test for duplicates 
-        if (valuesList.size != valuesSet.size) {
-          println("Duplicate")
-          println(s"All Values : ${valuesList.mkString(", ")}")
-          System.exit(1)
-          }
-        //test for flattened values matching input string
-        val flattenedValues = valuesList.map(flatten)
-        flattenedValues.foreach { flatVal =>if (flatVal != s) {
-          println("Mismatch in flatten")
-          println(s"Flatten value: '$flatVal', Input string: '$s'")
-          System.exit(1)
-          }
-        }
-
-        // test if derivative's POSIX value is in the list generated by new code  
-        if (!valuesList.contains(v2)) {
-          println(s"Derivative value not found in lexer output!")
-          println(s"v2: $v2")
-          System.exit(1)
-          } 
-          }
-
-      }
-      i+=1
-  }//end whild
-  println("\nAll tests passed!")
-}
+*/
+```
 
 
 
+#### Error stacktrace:
+
+```
+scala.collection.LinearSeqOps.apply(LinearSeq.scala:129)
+	scala.collection.LinearSeqOps.apply$(LinearSeq.scala:128)
+	scala.collection.immutable.List.apply(List.scala:79)
+	dotty.tools.dotc.util.Signatures$.applyCallInfo(Signatures.scala:244)
+	dotty.tools.dotc.util.Signatures$.computeSignatureHelp(Signatures.scala:101)
+	dotty.tools.dotc.util.Signatures$.signatureHelp(Signatures.scala:88)
+	dotty.tools.pc.SignatureHelpProvider$.signatureHelp(SignatureHelpProvider.scala:46)
+	dotty.tools.pc.ScalaPresentationCompiler.signatureHelp$$anonfun$1(ScalaPresentationCompiler.scala:435)
+```
+#### Short summary: 
+
+java.lang.IndexOutOfBoundsException: -1
