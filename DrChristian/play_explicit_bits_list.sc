@@ -838,12 +838,14 @@ def flattenWeakTestParallel() = {
         val v1s = Try(lexer(r, s.toList)).getOrElse(None)
         val v2 = rebit.blexer(r, s)
 
-        v1s.foreach { valuesList =>
-          if (!valuesList.contains(v2)) {
-            println(s"[${i}]- reg: $r str: $s")
-            println(s"mark: ${lex(r, s.toList).get} bder: ${rebit.lex(r, s.toList)}")
-            System.exit(1)
-            }
+        v1s match {
+          case Some(valuesList) => 
+            if (!valuesList.contains(v2)) {
+              println(s"[${i}]- reg: $r str: $s")
+              println(s"mark: ${lex(r, s.toList).get} bder: ${rebit.lex(r, s.toList)}")
+              print("Type 'N' to exit, anything else to continue: ")
+              System.exit(1) 
+          }
           val valuesSet: Set[Val] = valuesList.toSet
           if (valuesList.size != valuesSet.size) {
             println("Duplicate")
@@ -855,15 +857,14 @@ def flattenWeakTestParallel() = {
             if (flatVal != s) {
               println("Mismatch in flatten")
               println(s"Flatten value: '$flatVal', Input string: '$s'")
-              System.exit(1)}
+              System.exit(1)
               }
-         } // end v1s foreach 
-        
-        if (v1s.isEmpty) {
-          println("fail to generate values")
-          System.exit(1)
           }
-          
+          case None =>
+            println("fail to generate values")
+            System.exit(1)
+        } //end of match
+
     }// end for
   }
 }
