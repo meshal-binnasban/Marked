@@ -12,6 +12,18 @@ import $file.regenerate//, regenerate._
 import $file.rebit
 
 
+extension (xs: List[Bits]) {
+  def <*> (ys: List[Bits]): List[Bits] =
+    for (x <- xs; y <- ys) yield x ::: y
+
+  def <+> (y: Bit): List[Bits] =
+    for (x <- xs) yield x :+ y
+
+  def <::>(y: Bit): List[Bits] = 
+    for (x <- xs) yield y :: x
+}
+
+
 // decoding of a value from a bitsequence
 def decode_aux(r: Rexp, bs: Bits) : (Val, Bits) = ((r, bs): @unchecked) match {
   case (ONE, bs) => (Empty, bs)
@@ -47,28 +59,24 @@ def dec2(r: Rexp, bs: Bits) = decode_aux(r, bs) match {
   case _ => throw new Exception("Not decodable")
 }
 
-def mkeps(r: Rexp) : Bits = r match {
-  case ONE => Nil
-  case POINT(bss, CHAR(_)) => bss.head
-  case ALT(r1, r2) => 
-    if (nullable(r1)) Lf :: mkeps(r1) else Ri :: mkeps(r2)  
-  case SEQ(r1, r2) => mkeps(r1) ++ mkeps(r2)
-  case STAR(r) => List(En)
-}
-
-def mkeps3(r: Rexp) : List[Bits] = r match {
+def mkeps3(r: Rexp): List[Bits] = r match {
   case ONE => List(Nil)
-  case POINT(bss, CHAR(_)) => bss
-  case ALT(r1, r2) => 
-    if (nullable(r1)) mkeps3(r1).map(Lf :: _) else mkeps3(r2).map(Ri :: _)  
-  case SEQ(r1, r2) => 
-    for {
-      b1 <- mkeps3(r1)
-      b2 <- mkeps3(r2)
-    } yield b1 ++ b2
+  case ALT(r1, r2) =>
+    if (nullable(r1)) mkeps3(r1) <::> Lf else mkeps3(r2) <::> Ri
+  case SEQ(r1, r2) =>
+    mkeps3(r1) <*> mkeps3(r2)
   case STAR(r) => List(List(En))
 }
 
+/* def mkeps3(r: Rexp): List[Bits] = r match {
+  case ONE => List(Nil)
+  //case POINT(bss, CHAR(_)) => bss
+  case ALT(r1, r2) =>
+    if (nullable(r1)) mkeps3(r1) <::> Lf else mkeps3(r2) <::> Ri
+  case SEQ(r1, r2) =>
+    mkeps3(r1) <*> mkeps3(r2)
+  case STAR(r) => List(List(En))
+} */
 // fin function from the paper
 // checks whether a mark is in "final" position
 def fin(r: Rexp) : Boolean = (r: @unchecked) match {
@@ -81,55 +89,16 @@ def fin(r: Rexp) : Boolean = (r: @unchecked) match {
   case STAR(r) => fin(r)
 }
 
-/* def mkfin(r: Rexp) : Bits = r match {
-  case POINT(bss, CHAR(_)) => bss.head
-  case ALT(r1, r2) => if (fin(r1)) mkfin(r1) else mkfin(r2)  
-  case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin(r1) ++ mkeps(r2)
-  case SEQ(r1, r2) => mkfin(r2)
-  case STAR(r) => mkfin(r) ++ List(En)
-} */
-
-/* def mkfin2(r: Rexp) : Set[Bits] = r match {
-  case POINT(bss, CHAR(_)) => Set(bss.head)
-  case ALT(r1, r2) if fin(r1) && fin(r2) => mkfin2(r1) | mkfin2(r2)
-  case ALT(r1, r2) if fin(r1) => mkfin2(r1)
-  case ALT(r1, r2) if fin(r2) => mkfin2(r2) 
-
-  case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin2(r1).map(_ ++ mkeps(r2)) //| (if (fin(r2)) mkfin2(r2) else Set.empty[Bits])
-  case SEQ(r1, r2) => mkfin2(r2)
-  case STAR(r) => mkfin2(r).map(_ ++ List(En))
-} */
-
 def mkfin3(r: Rexp): List[Bits] = r match 
   case POINT(bss, CHAR(_)) => bss
   case ALT(r1, r2) if fin(r1) && fin(r2) => mkfin3(r1) ++ mkfin3(r2)
   case ALT(r1, r2) if fin(r1) => mkfin3(r1)
   case ALT(r1, r2) if fin(r2) => mkfin3(r2)
   case SEQ(r1, r2) if fin(r1) && nullable(r2) =>
-    val nR1 = for {
-      b1 <- mkfin3(r1)
-      b2 <- mkeps3(r2)
-    } yield b1 ++ b2
-   // nR1
-    if (fin(r2)) mkfin3(r2) ++ nR1 else nR1 
+    val nR1 = mkfin3(r1) <*> mkeps3(r2)
+    if (fin(r2)) mkfin3(r2) ++ nR1 else nR1
   case SEQ(r1, r2) =>mkfin3(r2)
-  case STAR(r) => mkfin3(r).map(_ :+ En)
-
-
-/* def mkfin4(r: Rexp): List[Bits] = r match 
-  case POINT(bss, CHAR(_)) => bss
-  case ALT(r1, r2) if fin(r1) => mkfin4(r1)
-  case ALT(r1, r2) if fin(r2) => mkfin4(r2)
-  case SEQ(r1, r2) if fin(r1) && nullable(r2) =>
-    val nR1 = for {
-      b1 <- mkfin4(r1)
-      b2 <- mkeps3(r2)
-    } yield b1 ++ b2
-   // nR1
-    if (fin(r2)) mkfin4(r2) ++ nR1 else nR1 
-  case SEQ(r1, r2) =>mkfin4(r2)
-  case STAR(r) => mkfin4(r).map(_ :+ En) */
- 
+  case STAR(r) => mkfin3(r) <+> En
 
 // shift function from the paper
 def shift(m: Boolean, bs: List[Bits], r: Rexp, c: Char) : Rexp = 
@@ -138,18 +107,19 @@ def shift(m: Boolean, bs: List[Bits], r: Rexp, c: Char) : Rexp =
   case ONE => ONE
   case CHAR(d) => if (m && d == c) POINT(bs, CHAR(d)) else CHAR(d)
   case POINT(bss, CHAR(d)) => if (m && d == c) POINT(bs, CHAR(d)) else CHAR(d)
-  case ALT(r1, r2) => ALT(shift(m, bs.map(bits => bits :+ Lf), r1, c), shift(m, bs.map(bits => bits :+ Ri), r2, c))
+  case ALT(r1, r2) => ALT(shift(m, (bs <+> Lf) , r1, c), shift(m, (bs <+> Ri) , r2, c))
+
   case SEQ(r1, r2) if m && nullable(r1) =>
     if(fin(r1))
-    SEQ(shift(m, bs, r1, c), shift(true, mkfin3(r1) ++ (for {b <- bs;s <- mkeps3(r1)} yield b ++ s), r2, c))
+    SEQ(shift(m, bs, r1, c), shift(true, mkfin3(r1) ++ (bs <*> mkeps3(r1)), r2, c))
     else
-    SEQ(shift(m, bs, r1, c), shift(true, for {b <- bs;s <- mkeps3(r1)} yield b ++ s, r2, c))
+    SEQ(shift(m, bs, r1, c), shift(true, bs <*> mkeps3(r1), r2, c))
   case SEQ(r1, r2) if fin(r1) => SEQ(shift(m, bs, r1, c), shift(true, mkfin3(r1), r2, c))
   case SEQ(r1, r2) => SEQ(shift(m, bs, r1, c), shift(false, Nil, r2, c))
 
-  case STAR(r) if m && fin(r)=>STAR(shift(true,bs.map(_ ++ List(Nx)) ++ mkfin3(r).map(_ ++ List(Nx)), r, c))
-  case STAR(r) if fin(r) =>STAR(shift(true,mkfin3(r).map(_ ++ List(Nx)) , r, c))
-  case STAR(r) if m =>STAR(shift(m,bs.map(_ ++ List(Nx)) , r, c))
+  case STAR(r) if m && fin(r)=>STAR(shift(true, (bs <+> Nx) ++ (mkfin3(r) <+> Nx), r, c))
+  case STAR(r) if fin(r) =>STAR(shift(true,(mkfin3(r) <+> Nx) , r, c))
+  case STAR(r) if m =>STAR(shift(m,bs <+> Nx , r, c))
   case STAR(r) => STAR(shift(false, Nil, r, c))
 }
 
@@ -204,7 +174,7 @@ def pp(e: Rexp) : String = (e: @unchecked) match {
 def pps(es: Rexp*) = indent(es.map(pp))
 
 // extracts a string from a value
- def flatten(v: Val) : String = v match {
+def flatten(v: Val) : String = v match {
    case Empty => ""
    case Chr(c) => c.toString
    case Left(v) => flatten(v)
@@ -220,8 +190,8 @@ def test1() = {
   println("=====Test====")
   //(a + ab)(bc + c)
   //val br2 = ("a" | "ab") ~ ("bc" | "c")
-  val br2=ALT(STAR(STAR(ONE)),SEQ(SEQ(ALT(CHAR('a'),ZERO),ALT(CHAR('b'),ONE)),SEQ(SEQ(ONE,CHAR('a')),ONE)))
-  val s = "aa".toList
+  val br2=ALT(STAR(ALT(ONE,ONE)),ALT(ALT(STAR(CHAR('c')),SEQ(ONE,CHAR('c'))),SEQ(SEQ(ONE,CHAR('b')),ALT(ZERO,ONE))))
+  val s = "b".toList
   println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
   println(s)
@@ -762,7 +732,6 @@ def weakTestDecode() = {
             System.exit(1)
           }
            
-
         }
       }
       i+=1
@@ -862,6 +831,8 @@ def flattenWeakTestParallel() = {
           }
           case None =>
             println("fail to generate values")
+            println(s"[${i}]- reg: $r str: $s")
+            println(s"mark: ${lex(r, s.toList).get} bder: ${rebit.lex(r, s.toList)}")
             System.exit(1)
         } //end of match
 
