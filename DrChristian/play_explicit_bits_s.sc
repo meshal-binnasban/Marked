@@ -42,11 +42,18 @@ def decode_aux(r: Rexp, bs: Bits) : (Val, Bits) = ((r, bs): @unchecked) match {
     (Sequ(v1, v2), bs2)
   }
   case (STAR(_), En::bs) => (Stars(Nil), bs)
+
   case (STAR(r1), Nx::bs) => {
     val (v, bs1) = decode_aux(r1, bs)
     val (Stars(vs), bs2) = (decode_aux(STAR(r1), bs1)  : @unchecked)
     (Stars(v::vs), bs2)
   }
+  case (NTIMES(r1,n), NxT::bs) => {
+    val (v, bs1) = decode_aux(r1, bs)
+    val (Nt(vs,ns), bs2) = (decode_aux(NTIMES(r1,n-1), bs1)  : @unchecked)
+    (Nt(v::vs,n), bs2)
+  }
+  case (NTIMES(_,_), EnT::bs) => (Nt(Nil,0), bs)
   /*case (STAR(r1), bs) => {
     val (v, bs1) = decode_aux(r1, bs)
     val (Stars(vs), bs2) = (decode_aux(STAR(r1), bs1)  : @unchecked)
@@ -66,6 +73,7 @@ def mkeps3(r: Rexp) : Bits = r match {
   case SEQ(r1, r2) =>
     mkeps3(r1) ++ mkeps3(r2)
   case STAR(r) => List(En)
+  case NTIMES(r, n) => List(EnT)
 }
 
 /* def mkeps3(r: Rexp): List[Bits] = r match {
@@ -79,7 +87,7 @@ def mkeps3(r: Rexp) : Bits = r match {
 } */
 // fin function from the paper
 // checks whether a mark is in "final" position
-def fin(r: Rexp) : Boolean = (r: @unchecked) match {
+def fin(r: Rexp) : Boolean = (r: @unchecked) match 
   case ZERO => false
   case ONE => false
   case CHAR(_) => false
@@ -87,7 +95,44 @@ def fin(r: Rexp) : Boolean = (r: @unchecked) match {
   case ALT(r1, r2) => fin(r1) || fin(r2)
   case SEQ(r1, r2) => (fin(r1) && nullable(r2)) || fin(r2)
   case STAR(r) => fin(r)
-}
+  case NTIMES(r, n) =>
+    if (!fin(r)) false
+    else if (nullable(r)) {
+        mkfin3(r).exists { bits => 
+            var count = 0
+            var flag = false
+            for (b <- bits) {
+                b match {
+                    case NxT => count += 1
+                    case EnT =>
+                        if (count <= n) flag = true
+                        count = 0 
+                    case _ => ()
+                    }
+            }
+            if (count <= n) flag = true
+            flag
+            }
+    } else {
+        mkfin3(r).exists { bits => 
+            var count = 0
+            var flag = false
+            for (b <- bits) {
+                
+                b match {
+                    case NxT => count += 1
+                    case EnT =>
+                        if (count == n) flag = true
+                        count = 0 
+                    case _ => ()
+                    }
+            }
+            if (count == n) flag = true
+            flag
+            }
+  }
+   
+
 
 def mkfin3(r: Rexp): List[Bits] = r match 
   case POINT(bss, CHAR(_)) => bss
@@ -95,11 +140,45 @@ def mkfin3(r: Rexp): List[Bits] = r match
   case ALT(r1, r2) if fin(r1) => mkfin3(r1)
   case ALT(r1, r2) if fin(r2) => mkfin3(r2)
   case SEQ(r1, r2) if fin(r1) && nullable(r2) =>
-    
     val nR1 = mkfin3(r1).map(_ ++ mkeps3(r2))
     if (fin(r2)) mkfin3(r2) ++ nR1 else nR1
   case SEQ(r1, r2) =>mkfin3(r2)
   case STAR(r) => mkfin3(r) <+> En
+  case NTIMES(r, n) =>
+    if nullable(r) then
+      mkfin3(r).filter { bits =>
+        var count = 0
+        var flag = false
+        for (b <- bits) {
+          b match
+            case NxT => count += 1
+            case EnT =>
+              if count <= n then flag = true
+              count = 0
+            case _ => ()
+        }
+        if (count <= n) flag = true
+        flag
+      } <+> EnT
+    else
+      mkfin3(r).filter { bits =>
+        var count = 0
+        var flag = false
+        for (b <- bits) {
+          b match
+            case NxT => count += 1
+            case EnT =>
+              if count == n then flag = true
+              count = 0
+            case _ => ()
+        }
+        if (count == n) flag = true
+        flag
+      } <+> EnT
+/*     if(nullable(r)) 
+      mkfin3(r).filter(bits => bits.count(_ == NxT) <= n).map(_ :+ EnT)
+    else
+    mkfin3(r).filter(bits => bits.count(_ == NxT) == n).map(_ :+ EnT) */
 
 // shift function from the paper
 def shift(m: Boolean, bs: List[Bits], r: Rexp, c: Char) : Rexp = 
@@ -122,7 +201,13 @@ def shift(m: Boolean, bs: List[Bits], r: Rexp, c: Char) : Rexp =
   case STAR(r) if fin(r) =>STAR(shift(true,(mkfin3(r) <+> Nx) , r, c))
   case STAR(r) if m =>STAR(shift(m,bs <+> Nx , r, c))
   case STAR(r) => STAR(shift(false, Nil, r, c))
-}
+
+  // add different annotation to differentiate Ns
+  case NTIMES(r,n) if m && fin(r)=>NTIMES(shift(true, (bs <+> NxT) ++ (mkfin3(r) <+> NxT), r, c),n)
+  case NTIMES(r,n) if fin(r) =>NTIMES(shift(true,(mkfin3(r) <+> NxT) , r, c),n)
+  case NTIMES(r,n) if m =>NTIMES(shift(m,bs <+> NxT , r, c),n)
+  case NTIMES(r,n) => NTIMES(shift(false, Nil, r, c),n)
+}// at fin count?
 
 // the main matching function (by using BINIT only in 
 // the first step a mark is shifted into the Rexp)
@@ -171,6 +256,7 @@ def pp(e: Rexp) : String = (e: @unchecked) match {
   case ALT(r1, r2) => "ALT\n" ++ pps(r1, r2)
   case SEQ(r1, r2) => "SEQ\n" ++ pps(r1, r2)
   case STAR(r) => s"STAR\n" ++ pps(r)
+  case NTIMES(r, n) => s"NTIMES($n)\n" ++ pps(r)
 }
 def pps(es: Rexp*) = indent(es.map(pp))
 
@@ -182,17 +268,17 @@ def flatten(v: Val) : String = v match {
    case Right(v) => flatten(v)
    case Sequ(v1, v2) => flatten(v1) ++ flatten(v2)
    case Stars(vs) => vs.map(flatten).mkString
+   case Nt(vs, _) => vs.map(flatten).mkString
    //case Rec(_, v) => flatten(v)
  }
-
-//("a" | "ab") ~ ("bc" | "c")
+//
 @main
-def test1() = {
+def testNTIMES() = {
   println("=====Test====")
   //(a + ab)(bc + c)
-  //val br2 = ("a" | "ab") ~ ("bc" | "c")
-  val br2=ALT(STAR(ALT(ONE,ONE)),ALT(ALT(STAR(CHAR('c')),SEQ(ONE,CHAR('c'))),SEQ(SEQ(ONE,CHAR('b')),ALT(ZERO,ONE))))
-  val s = "b".toList
+  //val br2 = NTIMES(ONE|"a",3)
+  val br2=ALT(STAR(STAR(STAR(ONE))),SEQ(SEQ(NTIMES(ONE,9),NTIMES(CHAR('a'),9)),NTIMES(STAR(CHAR('a')),9)))
+  val s = "aaaaaaaaaa".toList
   println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
   println(s)
@@ -206,7 +292,7 @@ def test1() = {
   sequencesList.foreach {
     list => list.foreach(bits => println(s" $bits"))
     }
-  
+ 
   println(s"=reference list=") 
   println(rebit.lex(br2, s))
   println(rebit.blexer(br2, s.mkString("")))
@@ -221,6 +307,53 @@ def test1() = {
       println(s"Input string == flatten is: ${vString == s.mkString("")}")
     )
     }
+
+
+  println(s"=-----------=")
+  
+}
+
+
+//("a" | "ab") ~ ("bc" | "c")
+@main
+def test1() = {
+  println("=====Test====")
+  //(a + ab)(bc + c)
+  val br2 = ("a" | "ab") ~ ("c" | "bc" )
+
+  val s = "abc".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+  println(s"=final list=")
+  val sequencesList=lex(br2, s)
+  sequencesList.foreach {
+    list => list.foreach(bits => println(s" $bits"))
+    }
+ 
+  println(s"=reference list=") 
+  println(rebit.lex(br2, s))
+  println(rebit.blexer(br2, s.mkString("")))
+
+  
+  println("Final Marked Values for testing")
+  sequencesList.foreach {
+    list => list.foreach(bits => 
+      val v= dec2(br2, bits)
+      println(s"Value=${v}")
+      val vString=flatten(v)
+      println(s"Input string == flatten is: ${vString == s.mkString("")}")
+    )
+    }
+
+
+  println(s"=-----------=")
+
 }
 
 //%("a") ~ ("aa"|"a") 
@@ -793,7 +926,8 @@ def flattenWeakTestParallel() = {
         (0, _ => CHAR('c')),
         (1, cs => STAR(cs(0))),
         (2, cs => ALT(cs(0), cs(1))),
-        (2, cs => SEQ(cs(0), cs(1)))
+        (2, cs => SEQ(cs(0), cs(1))),
+        (1, cs => NTIMES(cs(0), 9))
       )
   val alphabet = LazyList('a', 'b')
   val numRegexes = BigInt(10_000_000_000L)
@@ -843,5 +977,18 @@ def flattenWeakTestParallel() = {
   println("\nAll tests passed!")
 }
 
+/* case NTIMES(r, n) =>
+  if (!fin(r)) false
+  else {
+    val segments = mkfin3(r).map { bits =>
+      bits.foldLeft(List.empty[Int], 0) {
+        case ((acc, cnt), NxT) => (acc, cnt + 1)
+        case ((acc, cnt), EnT) => (cnt :: acc, 0)
+        case ((acc, cnt), _)   => (acc, cnt)
+      }._1
+    }
 
+    val condition = if (nullable(r)) (k: Int) => k <= n else (k: Int) => k == n
+    segments.exists(_.exists(condition))
+  }*/
 

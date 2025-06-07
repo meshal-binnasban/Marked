@@ -126,12 +126,12 @@ def decode_aux(r: Rexp, bs: Bits) : (Val, Bits) = ((r, bs): @unchecked) match {
   }
   case (STAR(r), En::bs) => (Stars(Nil), bs)
 
-  case (NTIMES(r1,n), Nx::bs) => {
+  case (NTIMES(r1,n), NxT::bs) => {
     val (v, bs1) = decode_aux(r1, bs)
     val (Nt(vs,ns), bs2) = (decode_aux(NTIMES(r1,n-1), bs1)  : @unchecked)
     (Nt(v::vs,n), bs2)
   }
-  case (NTIMES(_,_), En::bs) => (Nt(Nil,0), bs)
+  case (NTIMES(_,_), EnT::bs) => (Nt(Nil,0), bs)
 }
 
 def decode(r: Rexp, bs: Bits) = decode_aux(r, bs) match {
@@ -158,7 +158,7 @@ def bmkeps(r: ARexp) : Bits = r match {
     if (bnullable(r1)) bs ++ bmkeps(r1) else bs ++ bmkeps(r2)  
   case ASEQ(bs, r1, r2) => bs ++ bmkeps(r1) ++ bmkeps(r2)
   case ASTAR(bs, r) => bs ++ List(En)
-  case ANTIMES(bs, r, n) => bs ++ List(En) // new to testX1.
+  case ANTIMES(bs, r, n) => bs ++ List(EnT) // new to testX1.
 }
 
 // derivative of a regular expression w.r.t. a character
@@ -172,7 +172,7 @@ def bder(c: Char, r: ARexp) : ARexp = r match {
     else ASEQ(bs, bder(c, r1), r2)
   case ASTAR(bs, r) => ASEQ(bs, fuse(List(Nx), bder(c, r)), ASTAR(Nil, r))
   case ANTIMES(bs, r, n) => 
-    if (n == 0) AZERO else ASEQ(bs, fuse(List(Nx), bder(c, r)), ANTIMES(Nil, r, n-1)) // new to testX1.
+    if (n == 0) AZERO else ASEQ(bs, fuse(List(NxT), bder(c, r)), ANTIMES(Nil, r, n-1)) // new to testX1.
 }
 
 // derivative w.r.t. a string (iterates bder)

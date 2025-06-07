@@ -150,12 +150,15 @@ def test4() = {
         (1, cs => STAR(cs(0))),
         (2, cs => ALT(cs(0), cs(1))),
         (2, cs => SEQ(cs(0), cs(1))),
-        (1, cs => NOT(cs(0)))
+        (1, cs => NOT(cs(0))),
+        (1, cs => NTIMES(cs(0), 3))
       )
 
   for (i <- (0L to 1000L).par) {
-     println(s"$i: ${decode(i)}")
+    val r = decode(i)
+    if (r.toString.contains("NTIMES")) println(s"$i: $r")
   }
+
 }
 
 
