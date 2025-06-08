@@ -18,8 +18,12 @@ case object S extends Bit {
 }
 */
 
+case object StT extends Bit {
+  override def toString = "St"
+}
+
 case object NxT extends Bit {
-  override def toString = "T"
+  override def toString = "Nt"
 }
 
 case object EnT extends Bit {

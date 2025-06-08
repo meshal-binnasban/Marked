@@ -76,15 +76,6 @@ def mkeps3(r: Rexp) : Bits = r match {
   case NTIMES(r, n) => List(EnT)
 }
 
-/* def mkeps3(r: Rexp): List[Bits] = r match {
-  case ONE => List(Nil)
-  //case POINT(bss, CHAR(_)) => bss
-  case ALT(r1, r2) =>
-    if (nullable(r1)) mkeps3(r1) <::> Lf else mkeps3(r2) <::> Ri
-  case SEQ(r1, r2) =>
-    mkeps3(r1) <*> mkeps3(r2)
-  case STAR(r) => List(List(En))
-} */
 // fin function from the paper
 // checks whether a mark is in "final" position
 def fin(r: Rexp) : Boolean = (r: @unchecked) match 
@@ -95,44 +86,27 @@ def fin(r: Rexp) : Boolean = (r: @unchecked) match
   case ALT(r1, r2) => fin(r1) || fin(r2)
   case SEQ(r1, r2) => (fin(r1) && nullable(r2)) || fin(r2)
   case STAR(r) => fin(r)
-  case NTIMES(r, n) =>
+  case NTIMES(r, n) => 
     if (!fin(r)) false
-    else if (nullable(r)) {
-        mkfin3(r).exists { bits => 
-            var count = 0
-            var flag = false
-            for (b <- bits) {
-                b match {
-                    case NxT => count += 1
-                    case EnT =>
-                        if (count <= n) flag = true
-                        count = 0 
-                    case _ => ()
-                    }
-            }
-            if (count <= n) flag = true
-            flag
-            }
-    } else {
-        mkfin3(r).exists { bits => 
-            var count = 0
-            var flag = false
-            for (b <- bits) {
-                
-                b match {
-                    case NxT => count += 1
-                    case EnT =>
-                        if (count == n) flag = true
-                        count = 0 
-                    case _ => ()
-                    }
-            }
-            if (count == n) flag = true
-            flag
-            }
-  }
-   
+    else {
+        val nullableR = nullable(r)
+        mkfin3(r).exists(bits => isValidNT(bits, 0, false,n, nullableR))
+        }
+ 
 
+
+def isValidNT(bs: Bits, count: Int, insideNt: Boolean, n: Int, nullableR: Boolean): Boolean = bs match {
+  case Nil => if (nullableR) count <= n else count == n
+  case EnT :: tail =>
+    if ( (count <= n && nullableR) || (count == n)) true
+    else isValidNT(tail, 0, false, n, nullableR)
+  case NxT :: tail if insideNt =>
+    isValidNT(tail, count + 1, true, n, nullableR)
+  case NxT :: tail =>
+    isValidNT(tail, 1, true, n, nullableR)
+  case _ :: tail =>
+    isValidNT(tail, count, insideNt, n, nullableR)
+}
 
 def mkfin3(r: Rexp): List[Bits] = r match 
   case POINT(bss, CHAR(_)) => bss
@@ -144,41 +118,10 @@ def mkfin3(r: Rexp): List[Bits] = r match
     if (fin(r2)) mkfin3(r2) ++ nR1 else nR1
   case SEQ(r1, r2) =>mkfin3(r2)
   case STAR(r) => mkfin3(r) <+> En
-  case NTIMES(r, n) =>
-    if nullable(r) then
-      mkfin3(r).filter { bits =>
-        var count = 0
-        var flag = false
-        for (b <- bits) {
-          b match
-            case NxT => count += 1
-            case EnT =>
-              if count <= n then flag = true
-              count = 0
-            case _ => ()
-        }
-        if (count <= n) flag = true
-        flag
-      } <+> EnT
-    else
-      mkfin3(r).filter { bits =>
-        var count = 0
-        var flag = false
-        for (b <- bits) {
-          b match
-            case NxT => count += 1
-            case EnT =>
-              if count == n then flag = true
-              count = 0
-            case _ => ()
-        }
-        if (count == n) flag = true
-        flag
-      } <+> EnT
-/*     if(nullable(r)) 
-      mkfin3(r).filter(bits => bits.count(_ == NxT) <= n).map(_ :+ EnT)
-    else
-    mkfin3(r).filter(bits => bits.count(_ == NxT) == n).map(_ :+ EnT) */
+  case NTIMES(r, n) => 
+    val nullableR = nullable(r)
+    mkfin3(r).filter(bits => isValidNT(bits, 0, false, n, nullableR)) <+> EnT
+
 
 // shift function from the paper
 def shift(m: Boolean, bs: List[Bits], r: Rexp, c: Char) : Rexp = 
@@ -204,7 +147,7 @@ def shift(m: Boolean, bs: List[Bits], r: Rexp, c: Char) : Rexp =
 
   // add different annotation to differentiate Ns
   case NTIMES(r,n) if m && fin(r)=>NTIMES(shift(true, (bs <+> NxT) ++ (mkfin3(r) <+> NxT), r, c),n)
-  case NTIMES(r,n) if fin(r) =>NTIMES(shift(true,(mkfin3(r) <+> NxT) , r, c),n)
+  case NTIMES(r,n) if fin(r) =>NTIMES(shift(true, (mkfin3(r) <+> NxT)  , r, c),n)
   case NTIMES(r,n) if m =>NTIMES(shift(m,bs <+> NxT , r, c),n)
   case NTIMES(r,n) => NTIMES(shift(false, Nil, r, c),n)
 }// at fin count?
@@ -275,10 +218,10 @@ def flatten(v: Val) : String = v match {
 @main
 def testNTIMES() = {
   println("=====Test====")
-  //(a + ab)(bc + c)
-  //val br2 = NTIMES(ONE|"a",3)
-  val br2=ALT(STAR(STAR(STAR(ONE))),SEQ(SEQ(NTIMES(ONE,9),NTIMES(CHAR('a'),9)),NTIMES(STAR(CHAR('a')),9)))
-  val s = "aaaaaaaaaa".toList
+  //val br2 = SEQ( SEQ(NTIMES(ONE,2) , NTIMES("a",2)) , NTIMES(STAR("a"),2)  )  //working now
+  val br2=NTIMES(STAR(NTIMES("a",2)),2) // close the ntimes list early when counting in fin
+
+  val s = "aa".toList
   println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
   println(s)
@@ -293,9 +236,11 @@ def testNTIMES() = {
     list => list.foreach(bits => println(s" $bits"))
     }
  
-  println(s"=reference list=") 
-  println(rebit.lex(br2, s))
-  println(rebit.blexer(br2, s.mkString("")))
+  println(s"=reference list=")
+  val blist=rebit.lex(br2, s)
+  println(blist)
+  val bvalue=rebit.blexer(br2, s.mkString(""))
+  println(bvalue)
 
   
   println("Final Marked Values for testing")
@@ -310,6 +255,13 @@ def testNTIMES() = {
 
 
   println(s"=-----------=")
+  if(sequencesList.exists(_.contains(blist))) {
+    println("match")
+
+  } else {
+    println("error")
+    println(s"sequencesList: ${sequencesList} , blist: ${blist}")
+  }
   
 }
 
@@ -977,18 +929,77 @@ def flattenWeakTestParallel() = {
   println("\nAll tests passed!")
 }
 
-/* case NTIMES(r, n) =>
-  if (!fin(r)) false
-  else {
-    val segments = mkfin3(r).map { bits =>
-      bits.foldLeft(List.empty[Int], 0) {
-        case ((acc, cnt), NxT) => (acc, cnt + 1)
-        case ((acc, cnt), EnT) => (cnt :: acc, 0)
-        case ((acc, cnt), _)   => (acc, cnt)
-      }._1
-    }
 
-    val condition = if (nullable(r)) (k: Int) => k <= n else (k: Int) => k == n
-    segments.exists(_.exists(condition))
-  }*/
 
+/*   
+in fin - working but bit slow
+ if (!fin(r)) false
+    else if (nullable(r)) {
+        mkfin3(r).exists { bits => 
+            var count = 0
+            var flag = false
+            for (b <- bits) {
+                b match {
+                    case NxT => count += 1
+                    case EnT =>
+                        if (count <= n) flag = true
+                        count = 0 
+                    case _ => ()
+                    }
+            }
+            if (count <= n) flag = true
+            flag
+            }
+    } else {
+        mkfin3(r).exists { bits => 
+            var count = 0
+            var flag = false
+            for (b <- bits) {
+                
+                b match {
+                    case NxT => count += 1
+                    case EnT =>
+                        if (count == n) flag = true
+                        count = 0 
+                    case _ => ()
+                    }
+            }
+            if (count == n) flag = true
+            flag
+            }
+  } */
+
+/*
+in mkfin - working but bit slow
+case NTIMES(r, n) =>
+    if nullable(r) then
+      mkfin3(r).filter { bits =>
+        var count = 0
+        var flag = false
+        for (b <- bits) {
+          b match
+            case NxT => count += 1
+            case EnT =>
+              if count <= n then flag = true
+              count = 0
+            case _ => ()
+        }
+        if (count <= n) flag = true
+        flag
+      } <+> EnT
+    else
+      mkfin3(r).filter { bits =>
+        var count = 0
+        var flag = false
+        for (b <- bits) {
+          b match
+            case NxT => count += 1
+            case EnT =>
+              if count == n then flag = true
+              count = 0
+            case _ => ()
+        }
+        if (count == n) flag = true
+        flag
+      } <+> EnT
+      */
