@@ -48,6 +48,7 @@ def decode_aux(r: Rexp, bs: Bits) : (Val, Bits) = ((r, bs): @unchecked) match {
     val (Stars(vs), bs2) = (decode_aux(STAR(r1), bs1)  : @unchecked)
     (Stars(v::vs), bs2)
   }
+  
   case (NTIMES(r1,n), NxT::bs) => {
     val (v, bs1) = decode_aux(r1, bs)
     val (Nt(vs,ns), bs2) = (decode_aux(NTIMES(r1,n-1), bs1)  : @unchecked)
@@ -76,6 +77,87 @@ def mkeps3(r: Rexp) : Bits = r match {
   case NTIMES(r, n) => List(EnT)
 }
 
+def stripPoints(r: Rexp): Rexp = r match {
+  case POINT(_, CHAR(c)) => CHAR(c)
+  case POINT(_, r1)      => stripPoints(r1)
+  case SEQ(r1, r2)       => SEQ(stripPoints(r1), stripPoints(r2))
+  case ALT(r1, r2)       => ALT(stripPoints(r1), stripPoints(r2))
+  case STAR(r1)          => STAR(stripPoints(r1))
+  case NTIMES(r1, n)     => NTIMES(stripPoints(r1), n)
+  case _                 => r
+}
+
+def decode_checked(r: Rexp, bs: Bits): (Val, Bits) = ((r, bs): @unchecked) match {
+  case (ONE, bs) => (Empty, bs)
+
+  case (CHAR(c), bs) => (Chr(c), bs)
+
+  case (ALT(r1, r2), Lf :: bs) =>
+    val (v, bs1) = decode_checked(r1, bs)
+    (Left(v), bs1)
+
+  case (ALT(r1, r2), Ri :: bs) =>
+    val (v, bs1) = decode_checked(r2, bs)
+    (Right(v), bs1)
+
+  case (SEQ(r1, r2), bs) =>
+    val (v1, bs1) = decode_checked(r1, bs)
+    val (v2, bs2) = decode_checked(r2, bs1)
+    (Sequ(v1, v2), bs2)
+
+  case (STAR(r1), bs) =>
+    def loop(bs: Bits, acc: List[Val]): (List[Val], Bits) = bs match {
+      case Nx :: rest =>
+        val (v, bs1) = decode_checked(r1, rest)
+        loop(bs1, acc :+ v)
+      case En :: rest =>
+        (acc, rest)
+      case _ =>
+        throw new Exception(s"Invalid STAR bit sequence at $bs")
+    }
+
+    val (vs, bs1) = loop(bs, Nil)
+    (Stars(vs), bs1)
+
+  case (NTIMES(r1, n), bs) =>
+    def loop(bs: Bits, acc: List[Val]): (List[Val], Bits) = bs match {
+      case NxT :: rest =>
+        val (v, bs1) = decode_checked(r1, rest)
+        loop(bs1, acc :+ v)
+      case EnT :: rest =>
+        (acc, rest)
+      case _ =>
+        throw new Exception(s"Invalid NTIMES bit sequence at $bs")
+    }
+
+    val (vs, bs1) = loop(bs, Nil)
+    (Nt(vs, n), bs1)
+}
+
+// use r to count the iterations of ntimes, maybe for loop
+// similar to decode
+
+
+/*  // maybe add start annotation and count until you find another start then add old count to a variable and so on?
+def isValidNT(bs: Bits, count: Int, insideNt: Boolean, n: Int, nullableR: Boolean): Boolean = bs match {
+  case Nil => if (nullableR) count <= n else count == n
+  case EnT :: tail =>
+    if ( (count <= n && nullableR) || (count == n)){
+    println(s"count = $count inside ${EnT::tail}") // debug
+    true
+    }else isValidNT(tail, 0, false, n, nullableR)
+  case StT :: tail => 
+    println(s"count = $count inside ${StT::tail}")
+    isValidNT(tail, 0, true, n, nullableR) 
+  case NxT :: tail if insideNt =>
+    isValidNT(tail, count + 1, true, n, nullableR)
+  case NxT :: tail =>
+    isValidNT(tail, 1, true, n, nullableR)
+  case _ :: tail =>
+    isValidNT(tail, count, insideNt, n, nullableR)
+} */
+
+
 // fin function from the paper
 // checks whether a mark is in "final" position
 def fin(r: Rexp) : Boolean = (r: @unchecked) match 
@@ -86,27 +168,7 @@ def fin(r: Rexp) : Boolean = (r: @unchecked) match
   case ALT(r1, r2) => fin(r1) || fin(r2)
   case SEQ(r1, r2) => (fin(r1) && nullable(r2)) || fin(r2)
   case STAR(r) => fin(r)
-  case NTIMES(r, n) => 
-    if (!fin(r)) false
-    else {
-        val nullableR = nullable(r)
-        mkfin3(r).exists(bits => isValidNT(bits, 0, false,n, nullableR))
-        }
- 
-
-
-def isValidNT(bs: Bits, count: Int, insideNt: Boolean, n: Int, nullableR: Boolean): Boolean = bs match {
-  case Nil => if (nullableR) count <= n else count == n
-  case EnT :: tail =>
-    if ( (count <= n && nullableR) || (count == n)) true
-    else isValidNT(tail, 0, false, n, nullableR)
-  case NxT :: tail if insideNt =>
-    isValidNT(tail, count + 1, true, n, nullableR)
-  case NxT :: tail =>
-    isValidNT(tail, 1, true, n, nullableR)
-  case _ :: tail =>
-    isValidNT(tail, count, insideNt, n, nullableR)
-}
+  case NTIMES(r, n) => fin(r)
 
 def mkfin3(r: Rexp): List[Bits] = r match 
   case POINT(bss, CHAR(_)) => bss
@@ -118,9 +180,8 @@ def mkfin3(r: Rexp): List[Bits] = r match
     if (fin(r2)) mkfin3(r2) ++ nR1 else nR1
   case SEQ(r1, r2) =>mkfin3(r2)
   case STAR(r) => mkfin3(r) <+> En
-  case NTIMES(r, n) => 
-    val nullableR = nullable(r)
-    mkfin3(r).filter(bits => isValidNT(bits, 0, false, n, nullableR)) <+> EnT
+  case NTIMES(r, n) => mkfin3(r) <+> EnT
+
 
 
 // shift function from the paper
@@ -147,7 +208,7 @@ def shift(m: Boolean, bs: List[Bits], r: Rexp, c: Char) : Rexp =
 
   // add different annotation to differentiate Ns
   case NTIMES(r,n) if m && fin(r)=>NTIMES(shift(true, (bs <+> NxT) ++ (mkfin3(r) <+> NxT), r, c),n)
-  case NTIMES(r,n) if fin(r) =>NTIMES(shift(true, (mkfin3(r) <+> NxT)  , r, c),n)
+  case NTIMES(r,n) if fin(r) =>NTIMES(shift(true, (mkfin3(r) <+> NxT) , r, c),n)
   case NTIMES(r,n) if m =>NTIMES(shift(m,bs <+> NxT , r, c),n)
   case NTIMES(r,n) => NTIMES(shift(false, Nil, r, c),n)
 }// at fin count?
