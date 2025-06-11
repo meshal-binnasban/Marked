@@ -202,12 +202,11 @@ def shift(m: Boolean, bs: List[Bits], r: Rexp, c: Char) : Rexp =
   case STAR(r) if m =>STAR(shift(m,bs <+> Nx , r, c))
   case STAR(r) => STAR(shift(false, Nil, r, c))
 
-  // add different annotation to differentiate Ns
   case NTIMES(r,n) if m && fin(r)=>NTIMES(shift(true, (bs <+> NxT) ++ (mkfin3(r) <+> NxT), r, c),n)
   case NTIMES(r,n) if fin(r) =>NTIMES(shift(true, (mkfin3(r) <+> NxT) , r, c),n)
   case NTIMES(r,n) if m =>NTIMES(shift(m,bs <+> NxT , r, c),n)
   case NTIMES(r,n) => NTIMES(shift(false, Nil, r, c),n)
-}// at fin count?
+}/
 
 // the main matching function (by using BINIT only in 
 // the first step a mark is shifted into the Rexp)
