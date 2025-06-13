@@ -79,7 +79,6 @@ def mkeps3(r: Rexp) : Bits = r match {
 
 def stripPoints(r: Rexp): Rexp = r match {
   case POINT(_, CHAR(c)) => CHAR(c)
-  case POINT(_, r1)      => stripPoints(r1)
   case SEQ(r1, r2)       => SEQ(stripPoints(r1), stripPoints(r2))
   case ALT(r1, r2)       => ALT(stripPoints(r1), stripPoints(r2))
   case STAR(r1)          => STAR(stripPoints(r1))
@@ -94,36 +93,31 @@ def decode_checked(r: Rexp, bs: Bits) = decode_checked_aux(r, bs) match {
 
 def decode_checked_aux(r: Rexp, bs: Bits): (Val, Bits) = ((r, bs): @unchecked) match {
   case (ONE, bs) => (Empty, bs)
-
   case (CHAR(c), bs) => (Chr(c), bs)
-
   case (ALT(r1, r2), Lf :: bs) =>
     val (v, bs1) = decode_checked_aux(r1, bs)
     (Left(v), bs1)
-
   case (ALT(r1, r2), Ri :: bs) =>
     val (v, bs1) = decode_checked_aux(r2, bs)
     (Right(v), bs1)
-
   case (SEQ(r1, r2), bs) =>
     val (v1, bs1) = decode_checked_aux(r1, bs)
     val (v2, bs2) = decode_checked_aux(r2, bs1)
     (Sequ(v1, v2), bs2)
-
   case (STAR(r1), Nx :: bs) =>
     val (v, bs1) = decode_checked_aux(r1, bs)
     val (Stars(vs), bs2) = (decode_checked_aux(STAR(r1), bs1)  : @unchecked)
     (Stars(v::vs), bs2)
   case (STAR(_), En :: bs) => (Stars(Nil), bs)
 
-  case (NTIMES(r1,n), NxT::bs) if n > 0 => {
+  case (NTIMES(r1,n), NxT::bs) if n > 0 => 
     val (v, bs1) = decode_checked_aux(r1, bs)
     val (Nt(vs,ns), bs2) = (decode_checked_aux(NTIMES(r1,n-1), bs1)  : @unchecked)
     (Nt(v::vs,n), bs2)
-  }
+  
   case (NTIMES(r1, n), EnT :: bs) =>
     if (n == 0 || nullable(r1)) (Nt(Nil, n), bs)
-    else throw new Exception(s"Early NTIMES termination but $n repetitions remain and $r1 is not nullable")
+    else throw new Exception(s"$n iterations remain and $r1 is not nullable")
 }
 
 def fin(r: Rexp) : Boolean = (r: @unchecked) match 
@@ -158,6 +152,7 @@ def hasNTIMES(r: Rexp): Boolean = r match {
 
 def finFinal(r: Rexp): Boolean = 
   if (!hasNTIMES(r)) fin(r)
+
   else fin(r) && mkfin3(r).exists { bits =>
     try {
       decode_checked(stripPoints(r), bits)
@@ -170,13 +165,16 @@ def finFinal(r: Rexp): Boolean =
 def mkfin3Final(r: Rexp): List[Bits] = {
   val originalR = stripPoints(r)
   if (!hasNTIMES(r)) mkfin3(r)
-  else mkfin3(r).filter { bits =>
-    try {
-      decode_checked(originalR, bits)
-      true
-    } catch {
-      case _: Exception => false
-    }
+  else 
+    {
+      mkfin3(r).filter { bits =>
+      try {
+        decode_checked(originalR, bits)
+        true
+      } catch {
+        case _: Exception => false
+      }
+      }
   }
 }
 
@@ -189,6 +187,7 @@ def shift(m: Boolean, bs: List[Bits], r: Rexp, c: Char) : Rexp =
   case POINT(bss, CHAR(d)) => if (m && d == c) POINT(bs, CHAR(d)) else CHAR(d)
   case ALT(r1, r2) => ALT(shift(m, (bs <+> Lf) , r1, c), shift(m, (bs <+> Ri) , r2, c))
 
+
   case SEQ(r1, r2) if m && nullable(r1) =>
     if(fin(r1))
     SEQ(shift(m, bs, r1, c), shift(true, mkfin3(r1) ++ (bs.map(_ ++ mkeps3(r1))), r2, c))
@@ -196,6 +195,11 @@ def shift(m: Boolean, bs: List[Bits], r: Rexp, c: Char) : Rexp =
     SEQ(shift(m, bs, r1, c), shift(true, (bs.map(_ ++ mkeps3(r1))), r2, c))
   case SEQ(r1, r2) if fin(r1) => SEQ(shift(m, bs, r1, c), shift(true, mkfin3(r1), r2, c))
   case SEQ(r1, r2) => SEQ(shift(m, bs, r1, c), shift(false, Nil, r2, c))
+
+
+
+
+
 
   case STAR(r) if m && fin(r)=>STAR(shift(true, (bs <+> Nx) ++ (mkfin3(r) <+> Nx), r, c))
   case STAR(r) if fin(r) =>STAR(shift(true,(mkfin3(r) <+> Nx) , r, c))
@@ -206,7 +210,7 @@ def shift(m: Boolean, bs: List[Bits], r: Rexp, c: Char) : Rexp =
   case NTIMES(r,n) if fin(r) =>NTIMES(shift(true, (mkfin3(r) <+> NxT) , r, c),n)
   case NTIMES(r,n) if m =>NTIMES(shift(m,bs <+> NxT , r, c),n)
   case NTIMES(r,n) => NTIMES(shift(false, Nil, r, c),n)
-}/
+}
 
 // the main matching function (by using BINIT only in 
 // the first step a mark is shifted into the Rexp)
@@ -270,14 +274,34 @@ def flatten(v: Val) : String = v match {
    case Nt(vs, _) => vs.map(flatten).mkString
    //case Rec(_, v) => flatten(v)
  }
-//
+
+
+// multiple arguments ?
+
+def selectPOSIX(r: Rexp, sequences:List[Bits]): Bits = {
+  
+  for (bits <- sequences) yield {
+   println(s"bits=${bits}")
+
+   
+
+
+
+
+
+  } 
+
+  List() //placeholder
+}
+
+
 @main
 def testNTIMES() = {
   println("=====Test====")
   //val br2 = SEQ( SEQ(NTIMES(ONE,2) , NTIMES("a",2)) , NTIMES(STAR("a"),2)  )  //working now
-  val br2=NTIMES(STAR(NTIMES("a",1)),1) // close the ntimes list early when counting in fin
+  val br2=STAR(STAR(STAR("a"))) // close the ntimes list early when counting in fin
 
-  val s = "aa".toList
+  val s = "aaaaaa".toList
   println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
   println(s)
@@ -298,7 +322,7 @@ def testNTIMES() = {
   val bvalue=rebit.blexer(br2, s.mkString(""))
   println(bvalue)
 
-  
+  println("+------------------------------+")
   println("Final Marked Values for testing")
   sequencesList.foreach {
     list => list.foreach(bits => 
@@ -327,7 +351,6 @@ def testNTIMES() = {
   
 }
 
-
 //("a" | "ab") ~ ("bc" | "c")
 @main
 def test1() = {
@@ -348,13 +371,12 @@ def test1() = {
   val sequencesList=lex(br2, s)
   sequencesList.foreach {
     list => list.foreach(bits => println(s" $bits"))
+    
     }
- 
   println(s"=reference list=") 
   println(rebit.lex(br2, s))
   println(rebit.blexer(br2, s.mkString("")))
-
-  
+  println(s"=-----------------------------=")
   println("Final Marked Values for testing")
   sequencesList.foreach {
     list => list.foreach(bits => 
@@ -362,12 +384,16 @@ def test1() = {
       println(s"Value=${v}")
       val vString=flatten(v)
       println(s"Input string == flatten is: ${vString == s.mkString("")}")
-    )
-    }
+    )}
 
-
-  println(s"=-----------=")
-
+  println(s"=-----------------------------=")
+  sequencesList match {
+    case Some(bitsList) =>
+      println(s"POSIX = ${selectPOSIX(br2, bitsList)}")
+    case None =>
+      println("No valid bit sequences — input does not match regex.")
+  }
+  
 }
 
 //%("a") ~ ("aa"|"a") 
@@ -395,16 +421,16 @@ def test2() = {
   println(rebit.lex(br2, s))
   println(rebit.blexer(br2, s.mkString("")))
 
-  
+  println("+------------------------------+")
   println("Final Marked Values for testing")
   sequencesList.foreach {
     list => list.foreach(bits => println(dec2(br2, bits)))
     }
-
-
+  println("+------------------------------+")
 }
 
 //(ONE  |  %("c"|"d")) 
+
 @main
 def test3() = {
   println("=====Test====")
@@ -414,7 +440,7 @@ def test3() = {
   println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
   println(s)
-
+  
   for (i <- s.indices) {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
   println(pp(mat(br2, s.take(i + 1))))
@@ -424,18 +450,13 @@ def test3() = {
   sequencesList.foreach {
     list => list.foreach(bits => println(s" $bits"))
     }
-  
   println(s"=reference list=") 
   println(rebit.lex(br2, s))
   println(rebit.blexer(br2, s.mkString("")))
-
-  
   println("Final Marked Values for testing")
   sequencesList.foreach {
     list => list.foreach(bits => println(dec2(br2, bits)))
     }
-
-
 }
 
 // (ONE|"a") ~ %("a") 
@@ -991,77 +1012,67 @@ def flattenWeakTestParallel() = {
   println("\nAll tests passed!")
 }
 
+@main
+def flattenStrongTestParallel() = {
+  given rexp_cdata: CDATA[Rexp] = List(
+    (0, _ => ONE),
+    (0, _ => ZERO),
+    (0, _ => CHAR('a')),
+    (0, _ => CHAR('b')),
+    (0, _ => CHAR('c')),
+    (1, cs => STAR(cs(0))),
+    (2, cs => ALT(cs(0), cs(1))),
+    (2, cs => SEQ(cs(0), cs(1))),
+    (1, cs => NTIMES(cs(0), 9))
+  )
 
+  val alphabet = LazyList('a', 'b')
+  val numRegexes = BigInt(10_000_000_000L)
+  val batchSize = BigInt(100_000L)
+  val batches = (BigInt(0) to numRegexes by batchSize).toVector.par
 
-/*   
-in fin - working but bit slow
- if (!fin(r)) false
-    else if (nullable(r)) {
-        mkfin3(r).exists { bits => 
-            var count = 0
-            var flag = false
-            for (b <- bits) {
-                b match {
-                    case NxT => count += 1
-                    case EnT =>
-                        if (count <= n) flag = true
-                        count = 0 
-                    case _ => ()
-                    }
-            }
-            if (count <= n) flag = true
-            flag
-            }
-    } else {
-        mkfin3(r).exists { bits => 
-            var count = 0
-            var flag = false
-            for (b <- bits) {
-                
-                b match {
-                    case NxT => count += 1
-                    case EnT =>
-                        if (count == n) flag = true
-                        count = 0 
-                    case _ => ()
-                    }
-            }
-            if (count == n) flag = true
-            flag
-            }
-  } */
+  batches.foreach { start =>
+    val end = (start + batchSize - 1).min(numRegexes)
+    for (i <- start to end) {
+      val r = enumerate.decode(i)
+      if (i % 100_000 == 0) print("*")
 
-/*
-in mkfin - working but bit slow
-case NTIMES(r, n) =>
-    if nullable(r) then
-      mkfin3(r).filter { bits =>
-        var count = 0
-        var flag = false
-        for (b <- bits) {
-          b match
-            case NxT => count += 1
-            case EnT =>
-              if count <= n then flag = true
-              count = 0
-            case _ => ()
+      for (s <- regenerate.generate_up_to(alphabet)(10)(r).take(9) if s.nonEmpty) {
+        val v1s = Try(lexer(r, s.toList)).getOrElse(None)
+        val v2 = rebit.blexer(r, s)
+
+        v1s match {
+          case Some(valuesList) =>
+
+            if (!valuesList.contains(v2)) {
+              println(s"[${i}]- reg: $r str: $s")
+              println(s"valuesList: ${valuesList.head}\nV2: $v2")
+              println(s"Mark: ${lex(r, s.toList).get}")
+              println(s"nDerivative: ${rebit.lex(r, s.toList)}")
+              System.exit(1)
+            }
+
+            val flat = flatten(valuesList.head)
+
+            if (flat != s) {
+              println("Mismatch in flatten")
+              println(s"Flattened POSIX1: '$flat'")
+              println(s"Expected string:  '$s'")
+              System.exit(1)
+            }
+
+          case None =>
+            println("fail to generate values")
+            println(s"[${i}]- reg: $r str: $s")
+            println(s"mark: ${lex(r, s.toList).get}")
+            println(s"bder: ${rebit.lex(r, s.toList)}")
+            System.exit(1)
         }
-        if (count <= n) flag = true
-        flag
-      } <+> EnT
-    else
-      mkfin3(r).filter { bits =>
-        var count = 0
-        var flag = false
-        for (b <- bits) {
-          b match
-            case NxT => count += 1
-            case EnT =>
-              if count == n then flag = true
-              count = 0
-            case _ => ()
-        }
-        if (count == n) flag = true
-        flag
-      } <+> EnT
-      */
+      }
+    }
+  }
+
+  println("\nAll tests passed!")
+}
+
+
