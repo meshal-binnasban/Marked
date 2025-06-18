@@ -18,18 +18,38 @@ case object S extends Bit {
 }
 */
 
-case object StT extends Bit {
-  override def toString = "St"
+case object St extends Bit {
+  override def toString = "("
+}
+case object Cl extends Bit {
+  override def toString = ")"
 }
 
+// Bits of NTIMES
 case object NxT extends Bit {
   override def toString = "Nt"
 }
-
 case object EnT extends Bit {
   override def toString = "Et"
 }
+// End of Bits of NTIMES
 
+// Bits of the SEQ
+case object Sq extends Bit {
+  override def toString = "S"
+}
+// End of Bits of the SEQ
+// Bits of Character Consumption
+case object Ch extends Bit {
+  override def toString = "C"
+}
+case object Ep extends Bit {
+  override def toString = "Ep"
+}
+// End of Bits of Character Consumption
+
+
+//original Bits
 case object Lf extends Bit {
   override def toString = "L"
 }

@@ -19,6 +19,9 @@ extension (xs: List[Bits]) {
   def <+> (y: Bit): List[Bits] =
     for (x <- xs) yield x :+ y
 
+  def <++>(ys: Bits): List[Bits] =
+    xs.map(_ ++ ys) 
+
   def <::>(y: Bit): List[Bits] = 
     for (x <- xs) yield y :: x
 }
@@ -68,7 +71,7 @@ def dec2(r: Rexp, bs: Bits) = decode_aux(r, bs) match {
 }
 
 def mkeps3(r: Rexp) : Bits = r match {
-  case ONE => Nil
+  case ONE => List(Ep,Cl)
   case ALT(r1, r2) =>
     if (nullable(r1)) Lf :: mkeps3(r1) else Ri :: mkeps3(r2)
   case SEQ(r1, r2) =>
@@ -132,11 +135,12 @@ def fin(r: Rexp) : Boolean = (r: @unchecked) match
 
 def mkfin3(r: Rexp): List[Bits] = r match 
   case POINT(bss, CHAR(_)) => bss
-  case ALT(r1, r2) if fin(r1) && fin(r2) => mkfin3(r1) ++ mkfin3(r2)
+  case ALT(r1, r2) if fin(r1) && fin(r2) =>
+     mkfin3(r1) ++ mkfin3(r2)
   case ALT(r1, r2) if fin(r1) => mkfin3(r1)
   case ALT(r1, r2) if fin(r2) => mkfin3(r2)
   case SEQ(r1, r2) if fin(r1) && nullable(r2) =>
-    val nR1 = mkfin3(r1).map(_ ++ mkeps3(r2))
+    val nR1 = mkfin3(r1).map(_ ++ (Sq::mkeps3(r2))) 
     if (fin(r2)) mkfin3(r2) ++ nR1 else nR1
   case SEQ(r1, r2) =>mkfin3(r2)
   case STAR(r) => mkfin3(r) <+> En
@@ -183,30 +187,23 @@ def shift(m: Boolean, bs: List[Bits], r: Rexp, c: Char) : Rexp =
   (r: @unchecked) match {
   case ZERO => ZERO
   case ONE => ONE
-  case CHAR(d) => if (m && d == c) POINT(bs, CHAR(d)) else CHAR(d)
-  case POINT(bss, CHAR(d)) => if (m && d == c) POINT(bs, CHAR(d)) else CHAR(d)
-  case ALT(r1, r2) => ALT(shift(m, (bs <+> Lf) , r1, c), shift(m, (bs <+> Ri) , r2, c))
+  case CHAR(d) => if (m && d == c) POINT((bs <+> Ch) <+> Cl , CHAR(d)) else CHAR(d)
+  case POINT(bss, CHAR(d)) => if (m && d == c) POINT((bs <+> Ch) <+> Cl , CHAR(d)) else CHAR(d)
+  case ALT(r1, r2) => ALT(shift(m, (bs <+> Lf) <::> St , r1, c), shift(m, (bs <+> Ri) <::> St , r2, c))
 
-
-  case SEQ(r1, r2) if m && nullable(r1) =>
-    if(fin(r1))
-    SEQ(shift(m, bs, r1, c), shift(true, mkfin3(r1) ++ (bs.map(_ ++ mkeps3(r1))), r2, c))
-    else
-    SEQ(shift(m, bs, r1, c), shift(true, (bs.map(_ ++ mkeps3(r1))), r2, c))
-  case SEQ(r1, r2) if fin(r1) => SEQ(shift(m, bs, r1, c), shift(true, mkfin3(r1), r2, c))
-  case SEQ(r1, r2) => SEQ(shift(m, bs, r1, c), shift(false, Nil, r2, c))
-
-
-
-
-
+  case SEQ(r1, r2) if m && nullable(r1) && fin(r1) =>
+    SEQ(shift(m, bs <::> St, r1, c), shift(true, (mkfin3(r1) <+> Sq ) ++ ((bs <++> mkeps3(r1)) <+> Sq ) <+> Cl, r2, c))
+  case SEQ(r1, r2) if m && nullable(r1)=> SEQ(shift(m, bs <::> St , r1, c), shift(true, ((bs <++> mkeps3(r1)) <+> Sq) <+> Cl , r2, c))
+  case SEQ(r1, r2) if fin(r1) => SEQ(shift(m, bs <::> St , r1, c), shift(true, (mkfin3(r1) <+> Sq ), r2, c))
+  case SEQ(r1, r2) => SEQ(shift(m, bs <::> St , r1, c), shift(false, Nil, r2, c))
 
   case STAR(r) if m && fin(r)=>STAR(shift(true, (bs <+> Nx) ++ (mkfin3(r) <+> Nx), r, c))
   case STAR(r) if fin(r) =>STAR(shift(true,(mkfin3(r) <+> Nx) , r, c))
   case STAR(r) if m =>STAR(shift(m,bs <+> Nx , r, c))
   case STAR(r) => STAR(shift(false, Nil, r, c))
 
-  case NTIMES(r,n) if m && fin(r)=>NTIMES(shift(true, (bs <+> NxT) ++ (mkfin3(r) <+> NxT), r, c),n)
+  //case NTIMES(r,n) if n <= 0 => NTIMES(r, 0) 
+  case NTIMES(r,n) if m && fin(r)=>NTIMES(shift(true, ((bs <+> NxT)) ++ (mkfin3(r) <+> NxT), r, c),n-1)
   case NTIMES(r,n) if fin(r) =>NTIMES(shift(true, (mkfin3(r) <+> NxT) , r, c),n)
   case NTIMES(r,n) if m =>NTIMES(shift(m,bs <+> NxT , r, c),n)
   case NTIMES(r,n) => NTIMES(shift(false, Nil, r, c),n)
@@ -220,11 +217,11 @@ def mat(r: Rexp, s: List[Char]) : Rexp = s match {
 }
 
 def matcher(r: Rexp, s: List[Char]) : Boolean =
-  if (s == Nil) nullable(r) else finFinal(mat(r, s))
+  if (s == Nil) nullable(r) else fin(mat(r, s))
 
 def lex(r: Rexp, s: List[Char]) : Option[List[Bits]] = {
   if matcher(r, s)
-  then Some(if (s == Nil) (List(mkeps3(r))) else mkfin3Final(mat(r, s)))
+  then Some(if (s == Nil) (List(mkeps3(r))) else mkfin3(mat(r, s)))
   else None
 }
 
@@ -275,90 +272,106 @@ def flatten(v: Val) : String = v match {
    //case Rec(_, v) => flatten(v)
  }
 
-
 // multiple arguments ?
+import scala.math.Ordering.Implicits.seqOrdering
 
-def selectPOSIX(r: Rexp, sequences:List[Bits]): Bits = {
-  
-  for (bits <- sequences) yield {
-   println(s"bits=${bits}")
+def selectPOSIX(sequences: List[Bits]): Bits =
+  sequences.minBy(bits =>bits.zipWithIndex.collect { case (Ch, i) => i })
 
-   
+def revertToRawBits2(sequences: List[Bits]): List[Bits] =
+  sequences.map(_.filter(bit => bit != Sq && bit != Ch && bit != Ep  && bit != Ep && bit != St && bit != Cl ))
+ 
+def revertToRawBits(bits: Bits): Bits =
+  bits.filter(bit => bit != Sq && bit != Ch && bit != Ep  && bit != Ep && bit != St && bit != Cl)
 
-
-
-
-
-  } 
-
-  List() //placeholder
+def printHelper(sequencesListOption: Option[List[Bits]], r: Rexp, derivBits:Bits, derivVal:Val) = {
+  val sequencesList=sequencesListOption.getOrElse(List())
+  println("+--------Final Marked Bits and Values--------+") 
+  for ((bits, i) <- sequencesList.zipWithIndex) {
+    
+    println(s"${i+1}- { ${bits.mkString(", ")} }") 
+    // println(s"Value= ${dec2(br2, bits)}")
+  }
+  println("+--------Testing New Select Functions--------+")
+  val selectedBits = revertToRawBits(selectPOSIX(sequencesList))
+  val selectedValue=dec2(r, selectedBits)
+  println(s"selectPOSIX result: { ${selectedBits.mkString(", ")} }")
+  println(s"selectPOSIX Value: ${selectedValue}")
+  println("+--------       Reference List       --------+")
+  println(s"1- { ${derivBits.mkString(", ")} }")
+  println(s"Value= ${derivVal}")
+  //println("+--------------------------------------------+")
+  println(s"+--------Flatten & Value Equiality Tests--------+")
+  if (selectedBits == derivBits && flatten(selectedValue) == flatten(derivVal)) {
+    println("Matched Bits & Flatten Value.")
+  } else {
+    println(s"No Match, ${flatten(selectedValue)} != ${flatten(derivVal)}")
+  }
 }
 
+def posixPriorityNorm(v: Val): List[(Int, Int)] = v match {
+  case Empty      => List((0, 0))          // No character consumed
+  case Chr(_)     => List((1, 0))          // 1 char consumed
+  case rexp.Left(v1)  => posixPriorityNorm(v1).map { case (c, a) => (c, a + 0) }
+  case rexp.Right(v1) => posixPriorityNorm(v1).map { case (c, a) => (c, a + 1) }
+  case Sequ(v1, v2)   =>
+    val norm1 = posixPriorityNorm(v1)
+    val norm2 = posixPriorityNorm(v2)
+    // Merge counts from both parts
+    norm1.zipAll(norm2, (0, 0), (0, 0)).map {
+      case ((c1, a1), (c2, a2)) => (c1 + c2, a1 + a2)
+    }
+  case Stars(vs)      =>
+    vs.map(posixPriorityNorm).flatten
+  case Nt(vs, _)      =>
+    vs.map(posixPriorityNorm).flatten
+}
+
+def selectPOSIXMarked(r: Rexp, candidates: List[Bits]): Bits = {
+  val decodedCandidates = candidates.flatMap(bits =>
+    scala.util.Try((bits, dec2(r, bits))).toOption)
+
+  if (decodedCandidates.isEmpty) List.empty[Bit]
+  else decodedCandidates.minBy { case (_, value) => posixPriorityNorm(value) }._1
+}
 
 @main
 def testNTIMES() = {
   println("=====Test====")
   //val br2 = SEQ( SEQ(NTIMES(ONE,2) , NTIMES("a",2)) , NTIMES(STAR("a"),2)  )  //working now
-  val br2=STAR(STAR(STAR("a"))) // close the ntimes list early when counting in fin
+  val br2=NTIMES(STAR(NTIMES("a",1)),2) // close the ntimes list early when counting in fin
 
-  val s = "aaaaaa".toList
+  val s = "aa".toList
   println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
+
   println(s)
 
   for (i <- s.indices) {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
   println(pp(mat(br2, s.take(i + 1))))
   } 
-  println(s"=final list=")
-  val sequencesList=lex(br2, s)
-  sequencesList.foreach {
-    list => list.foreach(bits => println(s" $bits"))
-    }
- 
-  println(s"=reference list=")
-  val blist=rebit.lex(br2, s)
-  println(blist)
-  val bvalue=rebit.blexer(br2, s.mkString(""))
-  println(bvalue)
 
-  println("+------------------------------+")
-  println("Final Marked Values for testing")
-  sequencesList.foreach {
-    list => list.foreach(bits => 
-      val v= dec2(br2, bits)
-      println(s"Value=${v}")
-      val vString=flatten(v)
-      println(s"Input string == flatten is: ${vString == s.mkString("")}")
-    )
-    }
-
-
-  println(s"=-----------=")
-  if(sequencesList.exists(_.contains(blist))) {
-    println("match")
-
-  } else {
-    println("error")
-    println(s"sequencesList: ${sequencesList} , blist: ${blist}")
-  }
-
-  val r = NTIMES(STAR(NTIMES(CHAR('a'), 2)), 2)
-  val bs = List(NxT, Nx, NxT, NxT, EnT, En, EnT) 
-  println(bs)
-  println(s"decode_checked: ${decode_checked(r, bs)}")
-  println(s"dec2: ${dec2(r, bs)}")
+  val markSequencesList=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal) 
   
 }
 
-//("a" | "ab") ~ ("bc" | "c")
+//%( %( "a" | "c"  )  )  |   ("c" | (ZERO | "a" )) ~ ("ab" | ("b"|ONE))
 @main
 def test1() = {
   println("=====Test====")
   //(a + ab)(bc + c)
-  val br2 = ("a" | "ab") ~ ("c" | "bc" )
-
-  val s = "abc".toList
+  val br2= ALT(ALT("a","c"),SEQ("a",ONE))
+    
+    //%( %( "a" | "c"  )  )  |  ("c" | (ZERO | "a" )) ~ ("ab" | ("b"|ONE))
+    
+    //
+    
+    // 
+  val s = "a".toList
   println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
   println(s)
@@ -367,33 +380,15 @@ def test1() = {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
   println(pp(mat(br2, s.take(i + 1))))
   } 
-  println(s"=final list=")
-  val sequencesList=lex(br2, s)
-  sequencesList.foreach {
-    list => list.foreach(bits => println(s" $bits"))
-    
-    }
-  println(s"=reference list=") 
-  println(rebit.lex(br2, s))
-  println(rebit.blexer(br2, s.mkString("")))
-  println(s"=-----------------------------=")
-  println("Final Marked Values for testing")
-  sequencesList.foreach {
-    list => list.foreach(bits => 
-      val v= dec2(br2, bits)
-      println(s"Value=${v}")
-      val vString=flatten(v)
-      println(s"Input string == flatten is: ${vString == s.mkString("")}")
-    )}
 
-  println(s"=-----------------------------=")
-  sequencesList match {
-    case Some(bitsList) =>
-      println(s"POSIX = ${selectPOSIX(br2, bitsList)}")
-    case None =>
-      println("No valid bit sequences — input does not match regex.")
-  }
-  
+  val markSequencesList=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal) 
+
+  val sequences = markSequencesList.getOrElse(List())
+  println(s"Selected Bits: ${selectPOSIXBits(sequences,br2)}")
+
 }
 
 //%("a") ~ ("aa"|"a") 
@@ -411,22 +406,13 @@ def test2() = {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
   println(pp(mat(br2, s.take(i + 1))))
   } 
-  println(s"=final list=")
-  val sequencesList=lex(br2, s)
-  sequencesList.foreach {
-    list => list.foreach(bits => println(s" $bits"))
-    }
-  
-  println(s"=reference list=") 
-  println(rebit.lex(br2, s))
-  println(rebit.blexer(br2, s.mkString("")))
 
-  println("+------------------------------+")
-  println("Final Marked Values for testing")
-  sequencesList.foreach {
-    list => list.foreach(bits => println(dec2(br2, bits)))
-    }
-  println("+------------------------------+")
+  val markSequencesList=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal)
+  val sequences = markSequencesList.getOrElse(List())
+  println(s"Selected Bits: ${selectPOSIXBits(sequences,br2)}")
 }
 
 //(ONE  |  %("c"|"d")) 
@@ -445,18 +431,13 @@ def test3() = {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
   println(pp(mat(br2, s.take(i + 1))))
   } 
-  println(s"=final list=")
-  val sequencesList=lex(br2, s)
-  sequencesList.foreach {
-    list => list.foreach(bits => println(s" $bits"))
-    }
-  println(s"=reference list=") 
-  println(rebit.lex(br2, s))
-  println(rebit.blexer(br2, s.mkString("")))
-  println("Final Marked Values for testing")
-  sequencesList.foreach {
-    list => list.foreach(bits => println(dec2(br2, bits)))
-    }
+
+  val markSequencesList=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal)
+  val sequences = markSequencesList.getOrElse(List())
+  println(s"Selected Bits: ${selectPOSIXBits(sequences,br2)}")
 }
 
 // (ONE|"a") ~ %("a") 
@@ -476,22 +457,13 @@ def test4() = {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
   println(pp(mat(br2, s.take(i + 1))))
   } 
-  println(s"=final list=")
-  val sequencesList=lex(br2, s)
-  sequencesList.foreach {
-    list => list.foreach(bits => println(s" $bits"))
-    }
-  
-  println(s"=reference list=") 
-  println(rebit.lex(br2, s))
-  println(rebit.blexer(br2, s.mkString("")))
 
-  
-  println("Final Marked Values for testing")
-  sequencesList.foreach {
-    list => list.foreach(bits => println(dec2(br2, bits)))
-    }
-
+  val markSequencesList=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal)
+  val sequences = markSequencesList.getOrElse(List())
+  println(s"Selected Bits: ${selectPOSIXBits(sequences,br2)}")
 }
 
 // ONE |  %( "a" | "aa" ) 
@@ -508,21 +480,13 @@ def test5() = {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
   println(pp(mat(br2, s.take(i + 1))))
   } 
-  println(s"=final list=")
-  val sequencesList=lex(br2, s)
-  sequencesList.foreach {
-    list => list.foreach(bits => println(s" $bits"))
-    }
-  
-  println(s"=reference list=") 
-  println(rebit.lex(br2, s))
-  println(rebit.blexer(br2, s.mkString("")))
 
-  
-  println("Final Marked Values for testing")
-  sequencesList.foreach {
-    list => list.foreach(bits => println(dec2(br2, bits)))
-    }
+  val markSequencesList=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal)
+  val sequences = markSequencesList.getOrElse(List())
+  println(s"Selected Bits: ${selectPOSIXBits(sequences,br2)}")
 }
 
 //Nested STAR
@@ -540,22 +504,14 @@ def test6() = {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
   println(pp(mat(br2, s.take(i + 1))))
   } 
-  println(s"=final list=")
-  val sequencesList=lex(br2, s)
-  sequencesList.foreach {
-    list => list.foreach(bits => println(s" $bits"))
-    }
-  
-  println(s"=reference list=") 
-  println(rebit.lex(br2, s))
-  println(rebit.blexer(br2, s.mkString("")))
 
+  val markSequencesList=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal)
   
-  println("Final Marked Values for testing")
-  sequencesList.foreach {
-    list => list.foreach(bits => println(dec2(br2, bits)))
-    }
-
+  val sequences = markSequencesList.getOrElse(List())
+  println(s"Selected Bits: ${selectPOSIXBits(sequences,br2)}")
 }
 
 //%("aa") ~ %(%("a")) - doesn't work in this version
@@ -567,29 +523,18 @@ def test7() = {
   println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
   println(s)
-
+  
   for (i <- s.indices) {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
   println(pp(mat(br2, s.take(i + 1))))
   } 
 
-  println(s"=final list=")
-  val sequencesList=lex(br2, s)
-  sequencesList.foreach {
-    list => list.foreach(bits => println(s" $bits"))
-    }
-  
-  println(s"=reference list=") 
-  println(rebit.lex(br2, s))
-  println(rebit.blexer(br2, s.mkString("")))
-
-  
-  println("Final Marked Values for testing")
-  sequencesList.foreach {
-    list => list.foreach(bits => println(dec2(br2, bits)))
-    }
-  
-  //println(lexer(br2,s)) */
+  val markSequencesList=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal)
+  val sequences = markSequencesList.getOrElse(List())
+  println(s"Selected Bits: ${selectPOSIXBits(sequences,br2)}")
 }
 
 //( %("a") ~ %("a") ) ~ "a" - works now - check more input chars
@@ -608,23 +553,12 @@ def test8() = {
   println(pp(mat(br2, s.take(i + 1))))
   } 
 
-  println(s"=final list=")
-  val sequencesList=lex(br2, s)
-  sequencesList.foreach {
-    list => list.foreach(bits => println(s" $bits"))
-    }
-  
-  println(s"=reference list=") 
-  println(rebit.lex(br2, s))
-  println(rebit.blexer(br2, s.mkString("")))
-
-  
-  println("Final Marked Values for testing")
-  sequencesList.foreach {
-    list => list.foreach(bits => println(dec2(br2, bits)))
-    }
-
-
+  val markSequencesList=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal)
+  val sequences = markSequencesList.getOrElse(List())
+  println(s"Selected Bits: ${selectPOSIXBits(sequences,br2)}")
 }
 
 // ONE | %( %( %("a") ) ) , input aa - doesn't work in this version
@@ -642,24 +576,13 @@ def test9() = {
   println(pp(mat(br2, s.take(i + 1))))
   } 
 
-  println(s"=final list=")
-  val sequencesList=lex(br2, s)
-  sequencesList.foreach {
-    list => list.foreach(bits => println(s" $bits"))
-    }
-  
-  println(s"=reference list=") 
-  println(rebit.lex(br2, s))
-  println(rebit.blexer(br2, s.mkString("")))
-
-  
-  println("Final Marked Values for testing")
-  sequencesList.foreach {
-    list => list.foreach(bits => println(dec2(br2, bits)))
-    }
-
+  val markSequencesList=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal)
+  val sequences = markSequencesList.getOrElse(List())
+  println(s"Selected Bits: ${selectPOSIXBits(sequences,br2)}")
 }
-
 
 // ONE | %( "a" | "aa" ) , input aaa - doesn't work in this version
 @main
@@ -676,21 +599,12 @@ def test10() = {
   println(pp(mat(br2, s.take(i + 1))))
   } 
 
-  println(s"=final list=")
-  val sequencesList=lex(br2, s)
-  sequencesList.foreach {
-    list => list.foreach(bits => println(s" $bits"))
-    }
-  
-  println(s"=reference list=") 
-  println(rebit.lex(br2, s))
-  println(rebit.blexer(br2, s.mkString("")))
-
-  
-  println("Final Marked Values for testing")
-  sequencesList.foreach {
-    list => list.foreach(bits => println(dec2(br2, bits)))
-    }
+  val markSequencesList=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal)
+  val sequences = markSequencesList.getOrElse(List())
+  println(s"Selected Bits: ${selectPOSIXBits(sequences,br2)}")
 }
 
 // %("a" ~ %("a") ) , input aa -  doesn't work 
@@ -708,21 +622,12 @@ def test11() = {
   println(pp(mat(br2, s.take(i + 1))))
   } 
 
-  println(s"=final list=")
-  val sequencesList=lex(br2, s)
-  sequencesList.foreach {
-    list => list.foreach(bits => println(s" $bits"))
-    }
-  
-  println(s"=reference list=") 
-  println(rebit.lex(br2, s))
-  println(rebit.blexer(br2, s.mkString("")))
-
-  
-  println("Final Marked Values for testing")
-  sequencesList.foreach {
-    list => list.foreach(bits => println(dec2(br2, bits)))
-    }
+  val markSequencesList=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal)
+  val sequences = markSequencesList.getOrElse(List())
+  println(s"Selected Bits: ${selectPOSIXBits(sequences,br2)}")
 }
 
 // %( %("a") ~ "a" ) , input aa -  doesn't work 
@@ -734,29 +639,18 @@ def test12() = {
   println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
   println(s)
-
+  
   for (i <- s.indices) {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
-  val reg =mat(br2, s.take(i + 1))
-  println(pp(reg))
-  println(s"Reg=${reg}")
+  println(pp(mat(br2, s.take(i + 1))))
   } 
 
-  println(s"=final list=")
-  val sequencesList=lex(br2, s)
-  sequencesList.foreach {
-    list => list.foreach(bits => println(s" $bits"))
-    }
-  
-  println(s"=reference list=") 
-  println(rebit.lex(br2, s))
-  println(rebit.blexer(br2, s.mkString("")))
-
-  
-  println("Final Marked Values for testing")
-  sequencesList.foreach {
-    list => list.foreach(bits => println(dec2(br2, bits)))
-    }
+  val markSequencesList=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal)
+  val sequences = markSequencesList.getOrElse(List())
+  println(s"Selected Bits: ${selectPOSIXBits(sequences,br2)}")
 }
 
 // %("a") ~ (%("a") ~ "a" ) , input aa -  doesn't work 
@@ -771,26 +665,15 @@ def test13() = {
 
   for (i <- s.indices) {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
-  val reg =mat(br2, s.take(i + 1))
-  println(pp(reg))
-  println(s"Reg=${reg}")
+  println(pp(mat(br2, s.take(i + 1))))
   } 
 
-  println(s"=final list=")
-  val sequencesList=lex(br2, s)
-  sequencesList.foreach {
-    list => list.foreach(bits => println(s" $bits"))
-    }
-  
-  println(s"=reference list=") 
-  println(rebit.lex(br2, s))
-  println(rebit.blexer(br2, s.mkString("")))
-
-  
-  println("Final Marked Values for testing")
-  sequencesList.foreach {
-    list => list.foreach(bits => println(dec2(br2, bits)))
-    }
+  val markSequencesList=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal)
+  val sequences = markSequencesList.getOrElse(List())
+  println(s"Selected Bits: ${selectPOSIXBits(sequences,br2)}")
 }
 
 
@@ -806,26 +689,198 @@ def test14() = {
 
   for (i <- s.indices) {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
-  val reg =mat(br2, s.take(i + 1))
-  println(pp(reg))
-  println(s"Reg=${reg}")
+  println(pp(mat(br2, s.take(i + 1))))
   } 
 
-  println(s"=final list=")
-  val sequencesList=lex(br2, s)
-  sequencesList.foreach {
-    list => list.foreach(bits => println(s" $bits"))
-    }
-  
-  println(s"=reference list=") 
-  println(rebit.lex(br2, s))
-  println(rebit.blexer(br2, s.mkString("")))
+  val markSequencesList=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal)
+  val sequences = markSequencesList.getOrElse(List())
+  println(s"Selected Bits: ${selectPOSIXBits(sequences,br2)}")
+}
 
-  
-  println("Final Marked Values for testing")
-  sequencesList.foreach {
-    list => list.foreach(bits => println(dec2(br2, bits)))
-    }
+//("a" | "ab") ~ ("bc" | "c")
+@main
+def test15() = {
+  println("=====Test====")
+  //(a + ab)(bc + c)
+  val br2 = ("a" | "ab") ~ ("c" | "bc" )
+  val s = "abc".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+
+  val markSequencesList=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal) 
+  val sequences = markSequencesList.getOrElse(List())
+  println(s"Selected Bits: ${selectPOSIXBits(sequences,br2)}")
+}
+
+
+@main 
+def experiment() = {
+
+  println("=====Test====")
+  //(a + ab)(bc + c)
+  /* val br2 =ALT(STAR(STAR(ALT(CHAR('a'),ZERO))),SEQ(ALT(ALT(ONE,CHAR('b')),SEQ(CHAR('c'),ONE)),SEQ(SEQ(CHAR('c'),ONE),STAR(CHAR('c'))))) */
+  val br2 = "a" ~ ("ac"|"c") //ALT("a" , "ac")
+  val s = "ac".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+
+  val markSequencesList=lex(br2, s)
+  val sequencesList=markSequencesList.getOrElse(List())
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal) 
+
+}
+
+
+
+def selectPOSIXBits(sequences: List[Bits],r:Rexp): Bits =
+  sequences.foreach { bitsE =>
+    val bits = revertToRawBits(bitsE)
+    println(s"Bits: ${bits}")
+    println(s" Norm: ${priorityNorm(dec2(r, bits))}")
+  }
+  List()
+
+
+type Position = List[Int]
+type NormList = List[(Position, Int)]
+
+/* def priorityNorm(v: Val): NormList = {
+
+  def visit(v: Val, path: Position): (Int, NormList) = v match {
+    case Empty =>
+      (0, List((path, 0)))
+
+    case Chr(_) =>
+      (1, List((path, 1)))
+
+    case Sequ(v1, v2) =>
+      val norm1 = visit(v1, path :+ 1)
+      val norm2 = visit(v2, path :+ 2)
+      val total = norm1._1 + norm2._1
+      val combined = norm1._2 ++ norm2._2
+      (total, (path, total) :: combined)
+
+    case Left(v1) =>
+      val norm = visit(v1, path :+ 1)
+      (norm._1, (path, norm._1) :: norm._2)
+
+    case Right(v1) =>
+      val norm = visit(v1, path :+ 2)
+      (norm._1, (path, norm._1) :: norm._2)
+
+    case Stars(vs) =>
+      val norms = vs.zipWithIndex.map { case (vi, i) => visit(vi, path :+ (i + 1)) }
+      val total = norms.map(_._1).sum
+      val all = norms.flatMap(_._2)
+      (total, (path, total) :: all)
+
+    case Nt(vs, _) =>
+      val norms = vs.zipWithIndex.map { case (vi, i) => visit(vi, path :+ (i + 1)) }
+      val total = norms.map(_._1).sum
+      val all = norms.flatMap(_._2)
+      (total, (path, total) :: all)
+  }
+
+  val result = visit(v, Nil)
+  println(s"Priority Norm: ${result}")
+  result._2.sortBy(_._1) 
+}
+
+def compareBitPaths(r: Rexp, bits1: Bits, bits2: Bits): Int = {
+  val val1 = dec2(r, bits1)
+  val val2 = dec2(r, bits2)
+
+  val norms1: Map[Position, Int] = priorityNorm(val1).toMap
+  val norms2: Map[Position, Int] = priorityNorm(val2).toMap
+
+  val allPositions: List[Position] = (norms1.keySet ++ norms2.keySet).toList.sorted
+
+  allPositions.find { pos =>
+    norms1.getOrElse(pos, -1) != norms2.getOrElse(pos, -1)
+  } match {
+    case Some(p) =>
+      val n1 = norms1.getOrElse(p, -1)
+      val n2 = norms2.getOrElse(p, -1)
+      (n1, n2) match {
+        case (a, b) if a > b => 1
+        case (a, b) if a < b => -1
+        case _               => 0
+      } 
+
+    case None =>
+      0  // Fully equal
+  }
+} */
+
+def priorityNorm(v: Val): List[String] = {
+
+  def visit(v: Val, path: String): (Int, List[String]) = v match {
+    case Empty =>
+      (0, List(s"$path-0"))
+
+    case Chr(_) =>
+      (1, List(s"$path-1"))
+
+    case Sequ(v1, v2) =>
+      val (n1, list1) = visit(v1, if (path.isEmpty) "1" else s"$path.1")
+      val (n2, list2) = visit(v2, if (path.isEmpty) "2" else s"$path.2")
+      val total = n1 + n2
+      val current = s"$path-$total"
+      (total, current :: (list1 ++ list2))
+
+    case Left(v1) =>
+      val (n, list) = visit(v1, if (path.isEmpty) "1" else s"$path.1")
+      val current = s"$path-$n"
+      (n, current :: list)
+
+    case Right(v1) =>
+      val (n, list) = visit(v1, if (path.isEmpty) "2" else s"$path.2")
+      val current = s"$path-$n"
+      (n, current :: list)
+
+    case Stars(vs) =>
+      val norms = vs.zipWithIndex.map { case (vi, i) =>
+        val subPath = if (path.isEmpty) s"${i + 1}" else s"$path.${i + 1}"
+        visit(vi, subPath)
+      }
+      val total = norms.map(_._1).sum
+      val all = norms.flatMap(_._2)
+      val current = s"$path-$total"
+      (total, current :: all)
+
+    case Nt(vs, _) =>
+      val norms = vs.zipWithIndex.map { case (vi, i) =>
+        val subPath = if (path.isEmpty) s"${i + 1}" else s"$path.${i + 1}"
+        visit(vi, subPath)
+      }
+      val total = norms.map(_._1).sum
+      val all = norms.flatMap(_._2)
+      val current = s"$path-$total"
+      (total, current :: all)
+  }
+
+  val (_, result) = visit(v, "Λ")
+  result.sorted
 }
 
 import scala.util._
@@ -1022,8 +1077,8 @@ def flattenStrongTestParallel() = {
     (0, _ => CHAR('c')),
     (1, cs => STAR(cs(0))),
     (2, cs => ALT(cs(0), cs(1))),
-    (2, cs => SEQ(cs(0), cs(1))),
-    (1, cs => NTIMES(cs(0), 9))
+    (2, cs => SEQ(cs(0), cs(1)))
+   // (1, cs => NTIMES(cs(0), 9))
   )
 
   val alphabet = LazyList('a', 'b')
@@ -1038,41 +1093,55 @@ def flattenStrongTestParallel() = {
       if (i % 100_000 == 0) print("*")
 
       for (s <- regenerate.generate_up_to(alphabet)(10)(r).take(9) if s.nonEmpty) {
-        val v1s = Try(lexer(r, s.toList)).getOrElse(None)
+        val markedBitsList = Try(lex(r, s.toList)).getOrElse(None)
         val v2 = rebit.blexer(r, s)
 
-        v1s match {
-          case Some(valuesList) =>
+        markedBitsList match {
+          case Some(bitsList) =>
+            try{
+                val selectedBits = selectPOSIXMarked(r,revertToRawBits2(bitsList))
+                val selectedValue = dec2(r, selectedBits)
 
-            if (!valuesList.contains(v2)) {
-              println(s"[${i}]- reg: $r str: $s")
-              println(s"valuesList: ${valuesList.head}\nV2: $v2")
-              println(s"Mark: ${lex(r, s.toList).get}")
-              println(s"nDerivative: ${rebit.lex(r, s.toList)}")
-              System.exit(1)
-            }
-
-            val flat = flatten(valuesList.head)
-
-            if (flat != s) {
-              println("Mismatch in flatten")
-              println(s"Flattened POSIX1: '$flat'")
-              println(s"Expected string:  '$s'")
-              System.exit(1)
-            }
-
+                if (selectedValue != v2) {
+                  println(s"[${i}]- reg: $r str: $s")
+                  println(s"selected Bits: ${selectedBits}")
+                  println(s"Selected Value: ${selectedValue}")
+                  println(s"All Bits List: ${bitsList}")
+                  println(s"Derivative Bits: ${rebit.lex(r, s.toList)}")
+                  println(s"Derivative Value: ${v2}")
+                  print("Type 'N' to exit, anything else to continue: ")
+                  val input = scala.io.StdIn.readLine()
+                  if (input.trim.toLowerCase == "n") {
+                    System.exit(1)
+                  }
+                }
+                val flat = flatten(selectedValue)
+                if (flat != s) {
+                  println("Mismatch in flatten")
+                  println(s"Flattened Marked Value: '$flat'")
+                  println(s"Expected string:  '$s'")
+                  System.exit(1)
+                }
+              } catch {
+                  case e: Exception =>
+                    println(s"Error processing regex: $r, string: $s")
+                    println(s"Exception: ${e.getMessage}")
+                    System.exit(1)
+                    }
           case None =>
             println("fail to generate values")
             println(s"[${i}]- reg: $r str: $s")
             println(s"mark: ${lex(r, s.toList).get}")
             println(s"bder: ${rebit.lex(r, s.toList)}")
             System.exit(1)
-        }
+
+        }//
       }
     }
   }
 
   println("\nAll tests passed!")
 }
+
 
 
