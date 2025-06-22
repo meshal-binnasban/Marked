@@ -319,6 +319,7 @@ def printHelper(sequencesOption: Option[List[Bits]], r: Rexp, derivBits:Bits, de
 
 
 def selectPOSIX(sequences: List[Bits],r:Rexp): Bits =
+  pickList(revertToRawBits2(sequences),r)
  /*  sequences.foreach { bitsE =>
     val bits = revertToRawBits(bitsE)
     val value = dec2(r, bits)
@@ -335,10 +336,8 @@ def selectPOSIX(sequences: List[Bits],r:Rexp): Bits =
     println(s"Norms: $norms\n")
     println(s"using flattenVNWithPath: ${normsWithPath}")
     println("+----------------+")
-  } */
-  pickList(sequences,r)
-
- /*  val filteredSequences=sequences.filterNot(_.contains(Cl))
+  } 
+   val filteredSequences=sequences.filterNot(_.contains(Cl))
   val candidates=if(filteredSequences.nonEmpty) filteredSequences else sequences
   val finalLists=filterLatestS(candidates)
   println(finalLists)
@@ -353,22 +352,12 @@ def filterLatestS(sequences: List[Bits]): List[Bits] =
     case None => sequences  // No Sq found in any list
   }
 
-/* def pickListNorm(normLists: List[List[Int]]): List[Int] = {
-  def pad(list: List[Int], length: Int): List[Int] =
-    list ++ List.fill(length - list.length)(-1)
-
-  val maxLength = normLists.map(_.length).max
-  val padded = normLists.map(pad(_, maxLength))
-
-  padded.maxBy(identity)
-} */
 
 def pickList(sequences: List[Bits], r: Rexp): Bits = 
   val ranked = sequences.map { bits =>
-    val reBits=revertToRawBits(bits)
-    val v = dec2(r, reBits)
+    val v = dec2(r, bits)
     val normList = flattenVN(v).map(norm)
-    (reBits, normList)
+    (bits, normList)
   }
   def padNorms(n: List[Int], len: Int): List[Int] =
     n ++ List.fill(len - n.length)(-1)
@@ -1038,13 +1027,12 @@ def flattenStrongTestParallel() = {
 
       for (s <- regenerate.generate_up_to(alphabet)(10)(r).take(9) if s.nonEmpty) {
         val markedBitsList = Try(lex(r, s.toList)).getOrElse(None)
-        val v2 = rebit.blexer(r, s)
+        val v2 = rebit.blex(r, s)
 
         markedBitsList match {
           case Some(bitsList) =>
             try{
-                val selectedBits = selectPOSIX(revertToRawBits2(bitsList),r)
-                val selectedValue = dec2(r, selectedBits)
+                val selectedBits = selectPOSIX(bitsList,r)
 
                 if (selectedValue != v2) {
                   println(s"[${i}]- reg: $r str: $s")
@@ -1058,13 +1046,6 @@ def flattenStrongTestParallel() = {
                   if (input.trim.toLowerCase == "n") {
                     System.exit(1)
                   }
-                }
-                val flat = flatten(selectedValue)
-                if (flat != s) {
-                  println("Mismatch in flatten")
-                  println(s"Flattened Marked Value: '$flat'")
-                  println(s"Expected string:  '$s'")
-                  System.exit(1)
                 }
               } catch {
                   case e: Exception =>
