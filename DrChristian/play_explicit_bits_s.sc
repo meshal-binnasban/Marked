@@ -203,8 +203,8 @@ def shift(m: Boolean, bs: List[Bits], r: Rexp, c: Char) : Rexp =
   case SEQ(r1, r2) if fin(r1) => SEQ(shift(m, bs , r1, c), shift(true, (mkfin3(r1) <+> Sq ), r2, c))
   case SEQ(r1, r2) => SEQ(shift(m, bs , r1, c), shift(false, Nil, r2, c))
 
-  case STAR(r) if m && fin(r)=>STAR(shift(true, (bs <+> Nx) ++ ((mkfin3(r) <+> Sq2) <+> Nx), r, c))
-  case STAR(r) if fin(r) =>STAR(shift(true,(mkfin3(r) <+> Sq2 )<+> Nx , r, c))
+  case STAR(r) if m && fin(r)=>STAR(shift(true, (bs <+> Nx) ++ ((mkfin3(r)) <+> Nx), r, c))
+  case STAR(r) if fin(r) =>STAR(shift(true,(mkfin3(r) )<+> Nx , r, c))
   case STAR(r) if m =>STAR(shift(m,bs <+> Nx , r, c))
   case STAR(r) => STAR(shift(false, Nil, r, c))
 
@@ -336,37 +336,67 @@ def selectPOSIX(sequences: List[Bits],r:Rexp): Bits =
     println(s"Norms: $norms\n")
     println(s"using flattenVNWithPath: ${normsWithPath}")
     println("+----------------+")
-  } 
-   val filteredSequences=sequences.filterNot(_.contains(Cl))
-  val candidates=if(filteredSequences.nonEmpty) filteredSequences else sequences
-  val finalLists=filterLatestS(candidates)
-  println(finalLists)
-  finalLists.head */
-
-
-def filterLatestS(sequences: List[Bits]): List[Bits] = 
-  val positions = sequences.map(_.lastIndexOf(Sq))
-  val maxPosOption = positions.filter(_ != -1).maxOption
-  maxPosOption match {
-    case Some(maxPos) => sequences.filter(_.lastIndexOf(Sq) == maxPos)
-    case None => sequences  // No Sq found in any list
   }
+  pickList(revertToRawBits2(sequences),r)  */
 
-
-def pickList(sequences: List[Bits], r: Rexp): Bits = 
-  val ranked = sequences.map { bits =>
-    val v = dec2(r, bits)
-    val normList = flattenVN(v).map(norm)
-    (bits, normList)
+// norm comparison code
+def pickList(sequences: List[Bits], r: Rexp): Bits = {
+  sequences.reduceLeft { (a, b) =>
+    if (compareNormPath(flattenVNWithPath2(dec2(r, a)), flattenVNWithPath2(dec2(r, b))) <= 0) a else b
   }
-  def padNorms(n: List[Int], len: Int): List[Int] =
-    n ++ List.fill(len - n.length)(-1)
-  val maxLen = ranked.map(_._2.length).max
+}
 
-  ranked.maxBy { 
-    case (bits, norms) => padNorms(norms, maxLen)
-    }._1
+def pickList2(sequences: List[Bits], r: Rexp): Bits = {
+  sequences.reduceLeft { (a, b) =>
+    val pathNormA = flattenVNWithPath2(dec2(r, a))
+    val pathNormB = flattenVNWithPath2(dec2(r, b))
 
+    val comparision = compareNormPath(pathNormA, pathNormB)
+    if (comparision <= 0) a else b
+  }
+}
+
+import scala.math.Ordering.Implicits._
+
+def compareNormPath(listA: List[(List[Int], Int)], listB: List[(List[Int], Int)]): Int = (listA, listB) match 
+  case (Nil, Nil) => 0  // two lists are equal
+  case (Nil, _)   => -1 // list a is shorter, consider it better? 
+  case (_, Nil)   => 1 // list b is shorter, consider it better?                    
+  case ((pathA, normA) :: restA, (pathB, normB) :: restB) =>
+    if (normA != normB) {
+      if (normA > normB) -1 // list a has higher norm
+      else 1   // list b has higher norm
+    } else {
+      if (pathA < pathB) -1 //list a has smaller path, consider it better? 
+      else if (pathA > pathB) 1 //list b has smaller path, consider it better? 
+      else compareNormPath(restA, restB)      // 0, go to next elements
+    }
+
+def flattenVNWithPath2(v: Val, path: List[Int] = List(0)): List[(List[Int], Int)] = v match 
+  case Sequ(v1, v2) =>
+    (path, norm(v)) ::
+      flattenVNWithPath2(v1, path :+ 1) ++
+      flattenVNWithPath2(v2, path :+ 2)
+
+  case Left(v1) =>
+    (path, norm(v)) ::
+      flattenVNWithPath2(v1, path :+ 1)
+
+  case Right(v1) =>
+    (path, norm(v)) ::
+      flattenVNWithPath2(v1, path :+ 2)
+
+  case Stars(vs) =>
+    (path, norm(v)) :: vs.zipWithIndex.flatMap { case (vi, i) => flattenVNWithPath2(vi, path :+ (i + 1))}
+
+  case Nt(vs, _) =>
+    (path, norm(v)) ::
+      vs.zipWithIndex.flatMap { case (vi, i) =>
+        flattenVNWithPath2(vi, path :+ (i + 1))
+      }
+
+  case _ =>
+    List((path, norm(v)))
 
 def flattenVN(v: Val): List[Val] = v match {
 /*   case Empty =>
@@ -421,6 +451,8 @@ def flattenVNWithPath(v: Val, path: String = "Λ"): List[(Val, String)] = v matc
     List((v, path))
 }
 
+
+//end of norm comparison
 @main
 def testNTIMES() = {
   println("=====Test====")
@@ -545,11 +577,11 @@ def test4() = {
   printHelper(markSequencesList,br2, derivBits, derivVal)
 }
 
-// ONE |  %( "a" | "aa" ) 
+//  %( "a" | "aa" ) 
 @main
 def test5() = {
   println("=====Test====")
-  val br2= ONE |  %( "a" | "aa" )
+  val br2= %( "a" | "aa" )
   val s = "aa".toList
   println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
@@ -791,12 +823,10 @@ def test15() = {
 
 @main 
 def test16() = {
-
   println("=====Test====")
   val br2 = (("a"|"b") | ("ab")) ~ (("bc") | ("c" | "b"))
   //#9 in notes: (ONE | "c") ~ ("cc" | "c") input cc
   //#10 in notes: (("a"|"b") | ("ab")) ~ (("bc") | ("c" | "b")) input abc
-
   // %("a") ~ %("a")
   val s = "abc".toList
   println(s"Regex:\n${pp(br2)}\n")
@@ -807,14 +837,34 @@ def test16() = {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
   println(pp(mat(br2, s.take(i + 1))))
   } 
-
   val markSequencesList=lex(br2, s)
   val sequencesList=markSequencesList.getOrElse(List())
   val derivBits  = rebit.lex(br2, s)
   val derivVal=rebit.blexer(br2, s.mkString(""))
   printHelper(markSequencesList,br2, derivBits, derivVal) 
-
 }
+
+@main 
+def test17() = {
+  println("=====Test====")
+  val br2 = (%( %( ONE ~ ZERO ) ) |   (("b"|ZERO) ~"ab")  |   ( ("a"|"c")   | ("a" ~ ONE))    )    
+
+  val s = "a".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+  val markSequencesList=lex(br2, s)
+  val sequencesList=markSequencesList.getOrElse(List())
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal) 
+}
+
 
 import scala.util._
 @main
@@ -1001,7 +1051,7 @@ def flattenWeakTestParallel() = {
 }
 
 @main
-def flattenStrongTestParallel() = {
+def strongTestParallel() = {
   given rexp_cdata: CDATA[Rexp] = List(
     (0, _ => ONE),
     (0, _ => ZERO),
@@ -1027,20 +1077,20 @@ def flattenStrongTestParallel() = {
 
       for (s <- regenerate.generate_up_to(alphabet)(10)(r).take(9) if s.nonEmpty) {
         val markedBitsList = Try(lex(r, s.toList)).getOrElse(None)
-        val v2 = rebit.blex(r, s)
+        val v2 = rebit.lex(r, s.toList)
 
         markedBitsList match {
           case Some(bitsList) =>
             try{
                 val selectedBits = selectPOSIX(bitsList,r)
 
-                if (selectedValue != v2) {
+                if (selectedBits != v2) {
                   println(s"[${i}]- reg: $r str: $s")
                   println(s"selected Bits: ${selectedBits}")
-                  println(s"Selected Value: ${selectedValue}")
+                  //println(s"Selected Value: ${selectedValue}")
                   println(s"All Bits List: ${bitsList}")
-                  println(s"Derivative Bits: ${rebit.lex(r, s.toList)}")
-                  println(s"Derivative Value: ${v2}")
+                  println(s"Derivative Bits: ${v2}")
+                 // println(s"Derivative Value: ${v2}")
                   print("Type 'N' to exit, anything else to continue: ")
                   val input = scala.io.StdIn.readLine()
                   if (input.trim.toLowerCase == "n") {
