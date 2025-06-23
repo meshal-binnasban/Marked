@@ -196,7 +196,7 @@ def shift(m: Boolean, bs: List[Bits], r: Rexp, c: Char) : Rexp =
   case ALT(r1, r2) => ALT(shift(m, (bs <+> Lf)  , r1, c), shift(m, (bs <+> Ri) , r2, c))
 
   case SEQ(r1, r2) if m && nullable(r1) && fin(r1) => //maybe no need with mkfin ?
-    SEQ(shift(m, bs , r1, c), shift(true, (mkfin3(r1)<+> Sq) ++ ((bs <++> mkeps3(r1)) <+> Sq2), r2, c))
+    SEQ(shift(m, bs , r1, c), shift(true, ((mkfin3(r1)<+> Sq) <+>Sq2) ++ ((bs <++> mkeps3(r1)) <+> Sq2), r2, c))
   case SEQ(r1, r2) if m && nullable(r1)=> 
     SEQ(shift(m, bs , r1, c), shift(true, ((bs <++> mkeps3(r1)) <+> Sq2) , r2, c))
 
@@ -317,27 +317,8 @@ def printHelper(sequencesOption: Option[List[Bits]], r: Rexp, derivBits:Bits, de
   } */
 }
 
-
 def selectPOSIX(sequences: List[Bits],r:Rexp): Bits =
   pickList(revertToRawBits2(sequences),r)
- /*  sequences.foreach { bitsE =>
-    val bits = revertToRawBits(bitsE)
-    val value = dec2(r, bits)
-    println(s"Bits: { ${bits.mkString(", ")} }")
-
-    val flattenedNodes = flattenVN(value)
-    val norms= flattenedNodes.map(norm)
-    
-    val normsWithPath= flattenVNWithPath(value).map {
-      case (v, path) => s"$path-${norm(v)}"
-      }
-    println(s"Original Value : ${value}\n")
-    println(s"using flattenVN: ${flattenedNodes}")
-    println(s"Norms: $norms\n")
-    println(s"using flattenVNWithPath: ${normsWithPath}")
-    println("+----------------+")
-  }
-  pickList(revertToRawBits2(sequences),r)  */
 
 // norm comparison code
 def pickList(sequences: List[Bits], r: Rexp): Bits = {
@@ -453,6 +434,380 @@ def flattenVNWithPath(v: Val, path: String = "Λ"): List[(Val, String)] = v matc
 
 
 //end of norm comparison
+
+//("a" | "ab") ~ ("bc" | "c") // choose late S, but needs structure to know
+@main
+def test1() = {
+  println("=====Test====")
+  val br2= ("a" | "ab") ~ ("bc" | "c")
+  val s = "abc".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+
+  val markSequencesList=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal) 
+
+}
+
+//%("a") ~ ("aa"|"a")  // choose late S 
+@main
+def test2() = {
+  println("=====Test====")
+
+  val br2= %("a") ~ ("aa"|"a")
+  val s = "aaaaa".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+
+  val markSequencesList=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal)
+}
+
+// (ONE|"a") ~ %("a") // choose one without Sq2 as it indicates choosing empty for r1
+@main
+def test3() = {
+  println("=====Test====")
+  val br2= (ONE|"a") ~ %("a")
+  val s = "aaa".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+
+  val markSequencesList=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal)
+}
+
+//  %( "a" | "aa" ) // STAR, maybe have some count of consumption at each iteration, or add S and late is better? 
+@main
+def test4() = {
+  println("=====Test====")
+  val br2= %( "a" | "aa" )
+  val s = "aa".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+
+  val markSequencesList=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal)
+}
+
+//Nested STAR
+// %(%("a")) // STAR, maybe have some count of consumption at each iteration, or add S and late is better? 
+@main
+def test5() = {
+  println("=====Test====")
+  val br2=  %(%("a"))
+  val s = "aa".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+
+  val markSequencesList=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal)
+  
+}
+
+//%("aa") ~ %(%("a")) // STAR, maybe have some count of consumption at each iteration, or add S and late is better? also, eliminate Sq2 works
+@main
+def test6() = {
+  println("=====Test====")
+  val br2= %("aa") ~ %(%("a"))
+  val s = "aaa".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+  
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+
+  val markSequencesList=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal)
+}
+
+//( %("a") ~ %("a") ) ~ "a"  // STAR, maybe have some count of consumption at each iteration, or add S and late is better? also, late S and eliminate Sq2 works
+@main
+def test7() = {
+  println("=====Test====")
+  val br2= ( %("a") ~ %("a") ) ~ "a"
+  val s = "aaa".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+
+  val markSequencesList=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal)
+
+}
+
+//  %( %( %("a") ) )   // STAR, maybe have some count of consumption at each iteration, or add S and late is better? 
+@main
+def test8() = {
+  println("=====Test====")
+  val br2=  %( %( %("a") ) )  
+  val s = "aa".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+
+  val markSequencesList=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal)
+}
+
+// %( "a" | "aa" ) // STAR, maybe have some count of consumption at each iteration, or add S and late is better?
+@main
+def test9() = {
+  println("=====Test====")
+  val br2=  %( "a" | "aa" )
+  val s = "aa".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+
+  val markSequencesList=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal)
+
+}
+
+// %("a" ~ %("a") ) // STAR, maybe have some count of consumption at each iteration, or add S and late is better?
+@main
+def test10() = {
+  println("=====Test====")
+  val br2= %("a" ~ %("a") )
+  val s = "aaa".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+
+  val markSequencesList=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal)
+
+}
+
+// %( %("a") ~ "a" ) // STAR, maybe have some count of consumption at each iteration, or add S and late is better? 
+@main
+def test11() = {
+  println("=====Test====")
+  val br2=  %( %("a") ~ ("a") )
+  val s = "aa".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+  
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+
+  val markSequencesList=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal)
+
+}
+
+// %("a") ~ (%("a") ~ "a" )  // choose late S, but needs structure to know, this has two bit sequences that didn't consume in r1 SEQ, but one sequence is posix and it is the one that consumes outer SEQ r1 then don't consume inner SEQ r1. logic should work of late S and avoid Sq2, if other sequence that consumes in outer r1 and inner r1 then it will be picked.
+@main
+def test12() = {
+  println("=====Test====")
+  val br2=  %("a") ~ (%("a") ~ "a" )
+  val s = "aa".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+
+  val markSequencesList=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal)
+
+}
+
+
+// %("a") ~ (%("a") ~ "a" ) // posix will be picked by late S logic, since other bit sequence didn't consume r1 (Sq2)
+@main
+def test13() = {
+  println("=====Test====")
+  val br2= %("a") ~ %("a")
+  val s = "a".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+
+  val markSequencesList=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal)
+
+}
+
+//(("a"|"b") | ("ab")) ~ (("bc") | ("c" | "b")) // choose late S, but needs structure to know
+@main 
+def test14() = {
+  println("=====Test====")
+  val br2 = (("a"|"b") | ("ab")) ~ (("bc") | ("c" | "b"))
+  val s = "abc".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+  val markSequencesList=lex(br2, s)
+  val sequencesList=markSequencesList.getOrElse(List())
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal) 
+}
+
+
+//(%( %( ONE ~ ZERO ) ) |  (("b"|ZERO) ~"ab")  |   ( ("a"|"c")   | ("a" ~ ONE)))  // choose left in alt logic should work.  
+@main 
+def test15() = {
+  println("=====Test====")
+  val br2 = (%( %( ONE ~ ZERO ) ) |   (("b"|ZERO) ~"ab")  |   ( ("a"|"c")   | ("a" ~ ONE))    )    
+
+  val s = "a".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+  val markSequencesList=lex(br2, s)
+  val sequencesList=markSequencesList.getOrElse(List())
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal) 
+}
+
+//(ONE | "c") ~ ("cc" | "c") // late S and avoid not consuming in r1 of SEQ (Sq2)
+@main 
+def test16() = {
+  println("=====Test====")
+  val br2 = (ONE | "c") ~ ("cc" | "c")
+  val s = "cc".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+  val markSequencesList=lex(br2, s)
+  val sequencesList=markSequencesList.getOrElse(List())
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal) 
+}
+  //#10 in notes: (("a"|"b") | ("ab")) ~ (("bc") | ("c" | "b")) input abc
+  // %("a") ~ %("a")
+
+
+//(("a"|"b") | ("ab")) ~ (("bc") | ("c" | "b")) // choose late S, but needs structure to know
+@main 
+def test17() = {
+  println("=====Test====")
+  val br2 = (("a"|"b") | ("ab")) ~ (("bc") | ("c" | "b")) 
+  val s = "abc".toList
+  println(s"Regex:\n${pp(br2)}\n")
+  println("=string=")
+  println(s)
+
+  for (i <- s.indices) {
+  println(s"\n ${i + 1}- =shift ${s(i)}=")
+  println(pp(mat(br2, s.take(i + 1))))
+  } 
+  val markSequencesList=lex(br2, s)
+  val sequencesList=markSequencesList.getOrElse(List())
+  val derivBits  = rebit.lex(br2, s)
+  val derivVal=rebit.blexer(br2, s.mkString(""))
+  printHelper(markSequencesList,br2, derivBits, derivVal) 
+}
+
 @main
 def testNTIMES() = {
   println("=====Test====")
@@ -476,395 +831,6 @@ def testNTIMES() = {
   printHelper(markSequencesList,br2, derivBits, derivVal) 
   
 }
-
-//%( %( "a" | "c"  )  )  |   ("c" | (ZERO | "a" )) ~ ("ab" | ("b"|ONE))
-@main
-def test1() = {
-  println("=====Test====")
-  //(a + ab)(bc + c)
-  val br2= ALT(ALT("a","c"),SEQ("a",ONE))
-    
-    //%( %( "a" | "c"  )  )  |  ("c" | (ZERO | "a" )) ~ ("ab" | ("b"|ONE))
-    
-    //
-    
-    // 
-  val s = "a".toList
-  println(s"Regex:\n${pp(br2)}\n")
-  println("=string=")
-  println(s)
-
-  for (i <- s.indices) {
-  println(s"\n ${i + 1}- =shift ${s(i)}=")
-  println(pp(mat(br2, s.take(i + 1))))
-  } 
-
-  val markSequencesList=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s)
-  val derivVal=rebit.blexer(br2, s.mkString(""))
-  printHelper(markSequencesList,br2, derivBits, derivVal) 
-
-
-}
-
-//%("a") ~ ("aa"|"a") 
-@main
-def test2() = {
-  println("=====Test====")
-
-  val br2= %("a") ~ ("aa"|"a")
-  val s = "aaaaa".toList
-  println(s"Regex:\n${pp(br2)}\n")
-  println("=string=")
-  println(s)
-
-  for (i <- s.indices) {
-  println(s"\n ${i + 1}- =shift ${s(i)}=")
-  println(pp(mat(br2, s.take(i + 1))))
-  } 
-
-  val markSequencesList=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s)
-  val derivVal=rebit.blexer(br2, s.mkString(""))
-  printHelper(markSequencesList,br2, derivBits, derivVal)
-}
-
-//(ONE  |  %("c"|"d")) 
-
-@main
-def test3() = {
-  println("=====Test====")
-  val br2 = (ONE  |  %("c"|"d"))
-  //val br2= STAR( STAR("a") )
-  val s = "ccc".toList
-  println(s"Regex:\n${pp(br2)}\n")
-  println("=string=")
-  println(s)
-  
-  for (i <- s.indices) {
-  println(s"\n ${i + 1}- =shift ${s(i)}=")
-  println(pp(mat(br2, s.take(i + 1))))
-  } 
-
-  val markSequencesList=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s)
-  val derivVal=rebit.blexer(br2, s.mkString(""))
-  printHelper(markSequencesList,br2, derivBits, derivVal)
-
-}
-
-// (ONE|"a") ~ %("a") 
-@main
-def test4() = {
-  println("=====Test====")
-  //val br2 =STAR( STAR("a") )
- // val br2=SEQ(STAR(CHAR('a')),STAR(CHAR('a')))
-  //val br2=SEQ(ALT(ONE,CHAR('a')),STAR(CHAR('a')))
-  val br2= (ONE|"a") ~ %("a")
-  val s = "aaa".toList
-  println(s"Regex:\n${pp(br2)}\n")
-  println("=string=")
-  println(s)
-
-  for (i <- s.indices) {
-  println(s"\n ${i + 1}- =shift ${s(i)}=")
-  println(pp(mat(br2, s.take(i + 1))))
-  } 
-
-  val markSequencesList=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s)
-  val derivVal=rebit.blexer(br2, s.mkString(""))
-  printHelper(markSequencesList,br2, derivBits, derivVal)
-}
-
-//  %( "a" | "aa" ) 
-@main
-def test5() = {
-  println("=====Test====")
-  val br2= %( "a" | "aa" )
-  val s = "aa".toList
-  println(s"Regex:\n${pp(br2)}\n")
-  println("=string=")
-  println(s)
-
-  for (i <- s.indices) {
-  println(s"\n ${i + 1}- =shift ${s(i)}=")
-  println(pp(mat(br2, s.take(i + 1))))
-  } 
-
-  val markSequencesList=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s)
-  val derivVal=rebit.blexer(br2, s.mkString(""))
-  printHelper(markSequencesList,br2, derivBits, derivVal)
-}
-
-//Nested STAR
-//ONE | %(%("a")) 
-@main
-def test6() = {
-  println("=====Test====")
-  val br2= ONE | %(%("a"))
-  val s = "aaa".toList
-  println(s"Regex:\n${pp(br2)}\n")
-  println("=string=")
-  println(s)
-
-  for (i <- s.indices) {
-  println(s"\n ${i + 1}- =shift ${s(i)}=")
-  println(pp(mat(br2, s.take(i + 1))))
-  } 
-
-  val markSequencesList=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s)
-  val derivVal=rebit.blexer(br2, s.mkString(""))
-  printHelper(markSequencesList,br2, derivBits, derivVal)
-  
-}
-
-//%("aa") ~ %(%("a")) - doesn't work in this version
-@main
-def test7() = {
-  println("=====Test====")
-  val br2= %("aa") ~ %(%("a"))
-  val s = "aaa".toList
-  println(s"Regex:\n${pp(br2)}\n")
-  println("=string=")
-  println(s)
-  
-  for (i <- s.indices) {
-  println(s"\n ${i + 1}- =shift ${s(i)}=")
-  println(pp(mat(br2, s.take(i + 1))))
-  } 
-
-  val markSequencesList=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s)
-  val derivVal=rebit.blexer(br2, s.mkString(""))
-  printHelper(markSequencesList,br2, derivBits, derivVal)
-}
-
-//( %("a") ~ %("a") ) ~ "a" - works now - check more input chars
-@main
-def test8() = {
-  println("=====Test====")
-  val br2= ( %("a") ~ %("a") ) ~ "a"
-  //val br2=ALT(ONE,STAR(ALT(CHAR('a'),SEQ(CHAR('a'),CHAR('a')))))
-  val s = "aaa".toList
-  println(s"Regex:\n${pp(br2)}\n")
-  println("=string=")
-  println(s)
-
-  for (i <- s.indices) {
-  println(s"\n ${i + 1}- =shift ${s(i)}=")
-  println(pp(mat(br2, s.take(i + 1))))
-  } 
-
-  val markSequencesList=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s)
-  val derivVal=rebit.blexer(br2, s.mkString(""))
-  printHelper(markSequencesList,br2, derivBits, derivVal)
-
-}
-
-// ONE | %( %( %("a") ) ) , input aa - doesn't work in this version
-@main
-def test9() = {
-  println("=====Test====")
-  val br2= ONE | %( %( %("a") ) )  
-  val s = "aa".toList
-  println(s"Regex:\n${pp(br2)}\n")
-  println("=string=")
-  println(s)
-
-  for (i <- s.indices) {
-  println(s"\n ${i + 1}- =shift ${s(i)}=")
-  println(pp(mat(br2, s.take(i + 1))))
-  } 
-
-  val markSequencesList=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s)
-  val derivVal=rebit.blexer(br2, s.mkString(""))
-  printHelper(markSequencesList,br2, derivBits, derivVal)
-}
-
-// ONE | %( "a" | "aa" ) , input aaa - doesn't work in this version
-@main
-def test10() = {
-  println("=====Test====")
-  val br2= ONE | %( "a" | "aa" )
-  val s = "aa".toList
-  println(s"Regex:\n${pp(br2)}\n")
-  println("=string=")
-  println(s)
-
-  for (i <- s.indices) {
-  println(s"\n ${i + 1}- =shift ${s(i)}=")
-  println(pp(mat(br2, s.take(i + 1))))
-  } 
-
-  val markSequencesList=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s)
-  val derivVal=rebit.blexer(br2, s.mkString(""))
-  printHelper(markSequencesList,br2, derivBits, derivVal)
-
-}
-
-// %("a" ~ %("a") ) , input aa -  doesn't work 
-@main
-def test11() = {
-  println("=====Test====")
-  val br2= %("a" ~ %("a") )
-  val s = "aaa".toList
-  println(s"Regex:\n${pp(br2)}\n")
-  println("=string=")
-  println(s)
-
-  for (i <- s.indices) {
-  println(s"\n ${i + 1}- =shift ${s(i)}=")
-  println(pp(mat(br2, s.take(i + 1))))
-  } 
-
-  val markSequencesList=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s)
-  val derivVal=rebit.blexer(br2, s.mkString(""))
-  printHelper(markSequencesList,br2, derivBits, derivVal)
-
-}
-
-// %( %("a") ~ "a" ) , input aa -  doesn't work 
-@main
-def test12() = {
-  println("=====Test====")
-  val br2=  %( %("a") ~ ("a") )
-  val s = "aa".toList
-  println(s"Regex:\n${pp(br2)}\n")
-  println("=string=")
-  println(s)
-  
-  for (i <- s.indices) {
-  println(s"\n ${i + 1}- =shift ${s(i)}=")
-  println(pp(mat(br2, s.take(i + 1))))
-  } 
-
-  val markSequencesList=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s)
-  val derivVal=rebit.blexer(br2, s.mkString(""))
-  printHelper(markSequencesList,br2, derivBits, derivVal)
-
-}
-
-// %("a") ~ (%("a") ~ "a" ) , input aa -  doesn't work 
-@main
-def test13() = {
-  println("=====Test====")
-  val br2=  %("a") ~ (%("a") ~ "a" )
-  val s = "aa".toList
-  println(s"Regex:\n${pp(br2)}\n")
-  println("=string=")
-  println(s)
-
-  for (i <- s.indices) {
-  println(s"\n ${i + 1}- =shift ${s(i)}=")
-  println(pp(mat(br2, s.take(i + 1))))
-  } 
-
-  val markSequencesList=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s)
-  val derivVal=rebit.blexer(br2, s.mkString(""))
-  printHelper(markSequencesList,br2, derivBits, derivVal)
-
-}
-
-
-// %("a") ~ (%("a") ~ "a" ) , input aa -  doesn't work 
-@main
-def test14() = {
-  println("=====Test====")
-  val br2= %("a") ~ %("a")
-  val s = "a".toList
-  println(s"Regex:\n${pp(br2)}\n")
-  println("=string=")
-  println(s)
-
-  for (i <- s.indices) {
-  println(s"\n ${i + 1}- =shift ${s(i)}=")
-  println(pp(mat(br2, s.take(i + 1))))
-  } 
-
-  val markSequencesList=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s)
-  val derivVal=rebit.blexer(br2, s.mkString(""))
-  printHelper(markSequencesList,br2, derivBits, derivVal)
-
-}
-
-//("a" | "ab") ~ ("bc" | "c")
-@main
-def test15() = {
-  println("=====Test====")
-  //(a + ab)(bc + c)
-  val br2 = ("a" | "ab") ~ ("c" | "bc" )
-  //val br2="a" |"b"
-  val s = "abc".toList
-  println(s"Regex:\n${pp(br2)}\n")
-  println("=string=")
-  println(s)
-
-  for (i <- s.indices) {
-  println(s"\n ${i + 1}- =shift ${s(i)}=")
-  println(pp(mat(br2, s.take(i + 1))))
-  } 
-
-  val markSequencesList=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s)
-  val derivVal=rebit.blexer(br2, s.mkString(""))
-  printHelper(markSequencesList,br2, derivBits, derivVal) 
-}
-
-
-@main 
-def test16() = {
-  println("=====Test====")
-  val br2 = (("a"|"b") | ("ab")) ~ (("bc") | ("c" | "b"))
-  //#9 in notes: (ONE | "c") ~ ("cc" | "c") input cc
-  //#10 in notes: (("a"|"b") | ("ab")) ~ (("bc") | ("c" | "b")) input abc
-  // %("a") ~ %("a")
-  val s = "abc".toList
-  println(s"Regex:\n${pp(br2)}\n")
-  println("=string=")
-  println(s)
-
-  for (i <- s.indices) {
-  println(s"\n ${i + 1}- =shift ${s(i)}=")
-  println(pp(mat(br2, s.take(i + 1))))
-  } 
-  val markSequencesList=lex(br2, s)
-  val sequencesList=markSequencesList.getOrElse(List())
-  val derivBits  = rebit.lex(br2, s)
-  val derivVal=rebit.blexer(br2, s.mkString(""))
-  printHelper(markSequencesList,br2, derivBits, derivVal) 
-}
-
-@main 
-def test17() = {
-  println("=====Test====")
-  val br2 = (%( %( ONE ~ ZERO ) ) |   (("b"|ZERO) ~"ab")  |   ( ("a"|"c")   | ("a" ~ ONE))    )    
-
-  val s = "a".toList
-  println(s"Regex:\n${pp(br2)}\n")
-  println("=string=")
-  println(s)
-
-  for (i <- s.indices) {
-  println(s"\n ${i + 1}- =shift ${s(i)}=")
-  println(pp(mat(br2, s.take(i + 1))))
-  } 
-  val markSequencesList=lex(br2, s)
-  val sequencesList=markSequencesList.getOrElse(List())
-  val derivBits  = rebit.lex(br2, s)
-  val derivVal=rebit.blexer(br2, s.mkString(""))
-  printHelper(markSequencesList,br2, derivBits, derivVal) 
-}
-
 
 import scala.util._
 @main
