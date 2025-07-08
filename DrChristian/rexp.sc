@@ -18,6 +18,14 @@ case object S extends Bit {
 }
 */
 
+// Bits of NTIMES
+case object NxT extends Bit {
+  override def toString = "Nt"
+}
+case object EnT extends Bit {
+  override def toString = "Et"
+}
+// End of Bits of NTIMES
 
 case object St extends Bit {
   override def toString = "("
@@ -29,7 +37,6 @@ case object Cl extends Bit {
 case object Sq2 extends Bit {
   override def toString = "Se"
 }
-
 // Bits of the SEQ
 case object Sq extends Bit {
   override def toString = "S"
@@ -44,15 +51,6 @@ case object Ep extends Bit {
   override def toString = "Ep"
 }
 // End of Bits of Character Consumption
-
-// Bits of NTIMES
-case object NxT extends Bit {
-  override def toString = "Nt"
-}
-case object EnT extends Bit {
-  override def toString = "Et"
-}
-// End of Bits of NTIMES
 
 //original Bits
 case object Lf extends Bit {
@@ -70,7 +68,18 @@ case object En extends Bit {
 
 type Bits = List[Bit]
 
-
+case class Mark(
+  mark: Boolean,
+  bits: List[Bits],
+  str: List[Char],
+  consumed: List[Char]
+) {
+  override def toString: String = {
+    val bitsStr = bits.map(_.mkString(",")).mkString("/")
+    val strStr = str.mkString
+    s"(mark=$mark, bits=$bitsStr, remaining='$str', consumed= $consumed )"
+  }
+}
 
 // regular expressions
 abstract class Rexp
@@ -83,7 +92,9 @@ case class STAR(r: Rexp) extends Rexp
 case class NTIMES(r: Rexp,n:Int) extends Rexp // new to testX1.
 // only used by re-generate to generate non-matching strings
 case class NOT(r: Rexp) extends Rexp 
-case class POINT(bs: List[Bits], r: Rexp) extends Rexp
+case class POINT(mk: Mark, r: Rexp) extends Rexp
+case class APPOINT(mk: Mark, r: Rexp) extends Rexp // active/passive point
+
 //List[Bits] for file:play_explicit_List.sc
 
 def charlist2rexp(s : List[Char]): Rexp = s match {
@@ -110,7 +121,7 @@ def nullable(r: Rexp) : Boolean = r match {
   case ALT(r1, r2) => nullable(r1) || nullable(r2)
   case SEQ(r1, r2) => nullable(r1) && nullable(r2)
   case STAR(_) => true
-  case NTIMES(r, n) => n == 0 || nullable(r) // new to testX1.
+  case NTIMES(r, n) => n == 0 || nullable(r) 
   case POINT(_, r) => nullable(r)
 }
 
@@ -132,9 +143,6 @@ def ders(s: List[Char], r: Rexp) : Rexp = s match {
   case c::s => ders(s, der(c, r))
 }
 
-
-
-
 // values
 abstract class Val
 case object Empty extends Val
@@ -154,7 +162,7 @@ def mkeps(r: Rexp) : Val = r match {
     if (nullable(r1)) Left(mkeps(r1)) else Right(mkeps(r2))
   case SEQ(r1, r2) => Sequ(mkeps(r1), mkeps(r2))
   case STAR(r) => Stars(Nil)
-  case NTIMES(r, n) => Nt(Nil, 0) // new to testX1.
+  case NTIMES(r, n) => Nt(Nil, 0)
 }
 
 def inj(r: Rexp, c: Char, v: Val) : Val = (r, v) match {
@@ -165,15 +173,30 @@ def inj(r: Rexp, c: Char, v: Val) : Val = (r, v) match {
   case (ALT(r1, r2), Left(v1)) => Left(inj(r1, c, v1))
   case (ALT(r1, r2), Right(v2)) => Right(inj(r2, c, v2))
   case (CHAR(d), Empty) => Chr(c)
-  //case (ONE, Empty) => Chr(c)
 }
 
 // lexing functions without simplification
-def lex(r: Rexp, s: List[Char]) : Val = s match {
+/* def lex(r: Rexp, s: List[Char]) : Val = s match {
   case Nil => if (nullable(r)) mkeps(r) else
     { throw new Exception("lexing error") }
   case c::cs => inj(r, c, lex(der(c, r), cs))
-}
+} */
+
+def lex(r: Rexp, s: List[Char]): Val = s match
+  case Nil =>
+    if nullable(r) then
+      val rv = mkeps(r)
+      println(s"mkeps → $rv")
+      rv
+    else throw new Exception("lexing error")
+
+  case c :: cs =>
+    val derivative = der(c, r)
+    println(draw(derivative))
+    val pValue = lex(derivative, cs)
+    val result = inj(r, c, pValue)
+    println(s"inj $c → $result")
+    result
 
 
 // simplification
@@ -181,7 +204,8 @@ def simp(r: Rexp) : Rexp = r match {
   case ALT(r1, r2) => (simp(r1), simp(r2)) match {
     case (ZERO, r2s) => r2s
     case (r1s, ZERO) => r1s
-    case (r1s, r2s) => if (r1s == r2s) r1s else ALT (r1s, r2s)
+    case (r1s, r2s) => //ALT (r1s, r2s)
+      if (r1s == r2s) r1s else ALT (r1s, r2s)
   }
   case SEQ(r1, r2) =>  (simp(r1), simp(r2)) match {
     case (ZERO, _) => ZERO
@@ -220,7 +244,9 @@ def draw(e: Rexp) =
 
 @main 
 def test() = {
-      val r = STAR("ab" | "cd")
+      val r = ("a" | "ab") ~ ("c" | "bc")
       println(s"reg: $r")
-      println(draw(r)) 
+      //println(draw(r))
+      println(s"Final Value= ${lex(r,"abc".toList)}")
+
 }

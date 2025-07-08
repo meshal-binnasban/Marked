@@ -96,7 +96,8 @@ def intern(r: Rexp) : ARexp = r match {
     AALT(Nil, fuse(List(Lf), intern(r1)), fuse(List(Ri), intern(r2)))
   case SEQ(r1, r2) => ASEQ(Nil, intern(r1), intern(r2))
   case STAR(r) => ASTAR(Nil, intern(r))
-  case NTIMES(r, n) => ANTIMES(Nil, intern(r),n) // new to testX1.
+  case NTIMES(r, n) => ANTIMES(Nil, intern(r),n)
+  //case INIT(r1) => intern(r1)
 }
 
 
@@ -132,6 +133,7 @@ def decode_aux(r: Rexp, bs: Bits) : (Val, Bits) = ((r, bs): @unchecked) match {
     (Nt(v::vs,n), bs2)
   }
   case (NTIMES(_,_), EnT::bs) => (Nt(Nil,0), bs)
+  //case (INIT(r1), bs) => decode_aux(r1, bs) 
 }
 
 def decode(r: Rexp, bs: Bits) = decode_aux(r, bs) match {
@@ -185,6 +187,35 @@ def bders (r: ARexp, s: List[Char]) : ARexp = s match {
 def blex(r: ARexp, s: List[Char]) : Bits = s match {
   case Nil => if (bnullable(r)) bmkeps(r) else throw new Exception("Not matched")
   case c::cs => blex(bder(c, r), cs)
+}
+
+def bsimp(r: ARexp): ARexp = r match
+  case AALT(bs, r1, r2) => (bsimp(r1), bsimp(r2)) match 
+      case (AZERO, r2s) => fuse(bs, r2s)
+      case (r1s, AZERO) => fuse(bs, r1s)
+      //case (AZERO, AZERO) => AZERO
+      case (r1s, r2s) => AALT(bs, r1s, r2s)
+  case ASEQ(bs, r1, r2) => (bsimp(r1), bsimp(r2)) match 
+      case (AZERO, _) => AZERO
+      case (_, AZERO) => AZERO
+      case (r1s, r2s) => ASEQ(bs, r1s, r2s)
+  case ASTAR(bs, r1) => bsimp(r1) match 
+      case AZERO => AONE(bs :+ En)
+      case r1s => ASTAR(bs, r1s)
+  case ANTIMES(bs, r1, n) => bsimp(r1) match 
+      case AZERO if n == 0 => AONE(bs :+ EnT)
+      case AZERO => AZERO
+      case r1s => ANTIMES(bs, r1s, n)
+  case r => r
+
+def unintern(r: ARexp): Rexp = r match {
+  case AZERO => ZERO
+  case AONE(_) => ONE                    
+  case ACHAR(_, c) => CHAR(c)
+  case AALT(_, r1, r2) => ALT(unintern(r1), unintern(r2))
+  case ASEQ(_, r1, r2) => SEQ(unintern(r1), unintern(r2))
+  case ASTAR(_, r) => STAR(unintern(r))
+  case ANTIMES(_, r, n) => NTIMES(unintern(r), n)
 }
 
 def lex(r: Rexp, s: List[Char]) : Bits = blex(intern(r), s)
