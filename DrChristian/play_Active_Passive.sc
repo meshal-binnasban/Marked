@@ -42,9 +42,8 @@ def mkeps3(r: Rexp) : Bits = r match {
 def fin(r: Rexp) : Boolean = (r: @unchecked) match 
   case ZERO => false
   case ONE => false
-  //case APPOINT(mk, ONE) => if(mk.str.isEmpty) true else false
   case CHAR(_) => false
-  case APPOINT(_, CHAR(_)) => true 
+  case POINT(_, CHAR(_)) => true 
   case ALT(r1, r2) => fin(r1) || fin(r2)
   case SEQ(r1, r2) => (fin(r1) && nullable(r2)) || fin(r2)
  // case STAR(r) => fin(r)
@@ -52,7 +51,7 @@ def fin(r: Rexp) : Boolean = (r: @unchecked) match
  // case INIT(r1) => fin(r1) 
 
 def mkfin3(r: Rexp): List[Bits] = r match 
-  case APPOINT(mark, CHAR(_)) => mark.bits
+  case POINT(mark, CHAR(_)) => mark.bits
   case ALT(r1, r2) if fin(r1) && fin(r2) => mkfin3(r1) ::: mkfin3(r2)
   case ALT(r1, r2) if fin(r1) => mkfin3(r1)
   case ALT(r1, r2) if fin(r2) => mkfin3(r2)
@@ -64,7 +63,7 @@ def mkfin3(r: Rexp): List[Bits] = r match
   //case INIT(r1) => mkfin3(r1) 
 
 def mkfin4(r: Rexp): List[Bits] = r match 
-  case APPOINT(mark, CHAR(_)) =>mark.bits
+  case POINT(mark, CHAR(_)) =>mark.bits
   case ALT(r1, r2) if fin(r1)  => mkfin4(r1) 
   case ALT(r1, r2)  => mkfin4(r2)
   case SEQ(r1, r2) if fin(r1) && nullable(r2)  => mkfin4(r1).map(_ ++ (mkeps3(r2))) 
@@ -88,14 +87,14 @@ def shift(mk: Mark ,r: Rexp): (Rexp,List[(Mark, List[Char])]) = r match
   case CHAR(d) =>
     if(mk.mark && mk.str.nonEmpty && mk.str.head == d) {
       val mark=mk.copy(bits = mk.bits, str = mk.str.tail, consumed = mk.consumed :+ d)
-     (APPOINT(mark,CHAR(d)) , List((mark, List(d))))
+      (POINT(mark,CHAR(d)) , List((mark, List(d))))
     }else {
       (CHAR(d), Nil)
     }
-  case APPOINT(_,CHAR(d)) => 
+  case POINT(_,CHAR(d)) => 
     if(mk.mark && mk.str.nonEmpty && mk.str.head == d) {
-      val mark=mk.copy(bits = mk.bits <+> Ch, str = mk.str.tail, consumed = mk.consumed :+ d)
-      (APPOINT(mark,CHAR(d)) , List((mark, List(d))))
+      val mark=mk.copy(bits = mk.bits, str = mk.str.tail, consumed = mk.consumed :+ d)
+      (POINT(mark,CHAR(d)) , List((mark, List(d))))
     }else {
       (CHAR(d), Nil)
     }
@@ -142,7 +141,7 @@ def shift(mk: Mark ,r: Rexp): (Rexp,List[(Mark, List[Char])]) = r match
 
 
 def mat(r: Rexp, s: List[Char], prnt: Boolean = false): Rexp = {
-  val initMk = Mark(mark = true, active = true, bits = List(List()), str = s, consumed= List())
+  val initMk = Mark(mark = true, bits = List(List()), str = s, consumed= List())
   val lis = shift(initMk, r)
   println(s"Initial Regex: \n${pp(r)}\n after shifts: \n${pp(lis._1)}\n marks: ${lis._2}\n")
   lis._1
@@ -172,7 +171,6 @@ def rb2(r:Rexp): Rexp = r match {
 
 def erase(r: Rexp): Rexp = r match {
   case POINT(_, CHAR(c)) => CHAR(c)
-  case APPOINT(_, CHAR(c)) => CHAR(c)
   case SEQ(r1, r2)       => SEQ(erase(r1), erase(r2))
   case ALT(r1, r2)       => ALT(erase(r1), erase(r2))
   case STAR(r1)          => STAR(erase(r1))
@@ -198,13 +196,6 @@ def simp(r: Rexp): Rexp = r match
 
   case r => r
 
-// multiple arguments ?
-import scala.math.Ordering.Implicits.seqOrdering
-def revertToRawBits2(sequences: List[Bits]): List[Bits] =
-  sequences.map(_.filter(bit => bit != Sq && bit != Ch && bit != Ep  && bit != Ep && bit != St && bit != Cl && bit != Sq2 ))
- 
-def revertToRawBits(bits: Bits): Bits =
-  bits.filter(bit => bit != Sq && bit != Ch && bit != Ep  && bit != Ep && bit != St && bit != Cl && bit != Sq2)
 
 
 //(ONE | "a" ) ~ ( "a" | "aa" )
@@ -213,7 +204,7 @@ def test1() = {
   println("=====Test====")
   //val br2 = (ONE | "a" ) ~ ( "a" | "aa" )
   val br2= (ONE | "a") ~ ("a" | "aa")
-  val s = "aa".toList
+  val s = "aaa".toList
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
   mat(br2, s,true)
@@ -395,9 +386,8 @@ def indent(ss: Seq[String]) : String = ss match {
 def pp(e: Rexp) : String = (e: @unchecked) match { 
   case ZERO => "0\n"
   case ONE => s"1 \n"
-  case APPOINT(mark,ONE) => s"*1: ${mark} \n"
   case CHAR(c) => s"$c\n"
-  case APPOINT(mark, CHAR(c)) => s"•$c:${mark}\n" 
+  case POINT(mark, CHAR(c)) => s"•$c:${mark}\n" 
   case ALT(r1, r2) => "ALT\n" ++ pps(r1, r2)
   case SEQ(r1, r2) => "SEQ\n" ++ pps(r1, r2)
   case STAR(r) => s"STAR\n" ++ pps(r)

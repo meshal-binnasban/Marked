@@ -39,55 +39,65 @@ def fin(r: Rexp) : Boolean = (r: @unchecked) match
   case SEQ(r1, r2) => (fin(r1) && nullable(r2)) || fin(r2)
 
 def mkfin(r: Rexp): List[Bits] = r match 
-  case POINT(mark, CHAR(_)) =>mark.bits
-  case ALT(r1, r2) if fin(r1)  => mkfin(r1) 
-  case ALT(r1, r2)  => mkfin(r2)
-  case SEQ(r1, r2) if fin(r1) && nullable(r2)  => mkfin(r1).map(_ ++ (mkeps2(r2))) 
+  case POINT(mark, CHAR(_)) =>
+    if(mark.str.nonEmpty) {
+      println(s"mkfin: mark=  ${mark} No Match")
+      List()//no match
+    } else {
+      mark.bits
+    }
+  case ALT(r1, r2) if fin(r1) && fin(r2) => mkfin(r1) ::: mkfin(r2)
+  case ALT(r1, r2) if fin(r1) => mkfin(r1)
+  case ALT(r1, r2) if fin(r2) => mkfin(r2)
+  case SEQ(r1, r2) if fin(r1) && nullable(r2) && fin(r2) => mkfin(r2) ::: mkfin(r1).map(_ ++ (mkeps2(r2))) 
+  case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin(r1).map(_ ::: (mkeps2(r2))) 
   case SEQ(r1, r2) => mkfin(r2)
+  //case STAR(r) => (mkfin2(r) <+> En )
+  //case NTIMES(r, n) => mkfin2(r) <+> EnT
+  //case INIT(r1) => mkfin2(r1) 
 
-def shift(mk: Mark ,r: Rexp): (Rexp,List[(Mark, List[Char])]) = r match 
+def shift(mk: Mark ,r: Rexp): (Rexp,List[Mark]) = r match 
   case ZERO => (ZERO, Nil)
-  case ONE => (ONE,List((mk.copy(bits=mk.bits), List() )))
+  case ONE => (ONE,List(mk.copy(bits=mk.bits)))
   case CHAR(d) =>
     if(mk.mark && mk.str.nonEmpty && mk.str.head == d) {
         val mark=mk.copy(bits = mk.bits, str = mk.str.tail, consumed = mk.consumed :+ d)
-        (POINT(mark,CHAR(d)) , List((mark, List(d))))
+        (POINT(mark,CHAR(d)) , List(mark))
     }else {
       (CHAR(d), Nil)
     }
   case POINT(_,CHAR(d)) => 
     if(mk.mark && mk.str.nonEmpty && mk.str.head == d) {
       val mark=mk.copy(bits = mk.bits, str = mk.str.tail, consumed = mk.consumed :+ d)
-      (POINT(mark,CHAR(d)) , List((mark, List(d))))
+      (POINT(mark,CHAR(d)) , List(mark))
     }else {
       (CHAR(d), Nil)
     }
   case ALT(r1, r2) => 
-    val (shiftR1,markRemainListR1)=shift(mk.copy(bits=mk.bits <+>Lf),r1)
-    val (shiftR2,markRemainListR2)=shift(mk.copy(bits=mk.bits <+>Ri),r2)
-    (ALT(shiftR1,shiftR2),(markRemainListR1 ++ markRemainListR2))//.sortBy(_._2.length) )//.distinctBy(_._2) 
+    val (shiftR1,markListR1)=shift(mk.copy(bits=mk.bits <+>Lf),r1)
+    val (shiftR2,markListR2)=shift(mk.copy(bits=mk.bits <+>Ri),r2)
+    (ALT(shiftR1,shiftR2),(markListR1 ++ markListR2))
   
   case SEQ(r1, r2) =>
     val (r1Shifted, r1Marks) = shift(mk, r1)
-    println(s"${pp(r1Shifted)}\nr1Marks: \n${r1Marks.sortBy(_._2.length).reverse}\n")
-    r1Marks.sortBy(_._2.length).reverse.headOption match {
-      case Some((m1, c1)) =>
+    sortByRemainingInput(r1Marks).headOption match {
+      case Some((m1)) =>
         val fin1 = fin(r1)
         val m2pre = m1.copy(mark = true)
         val (r2Shifted, r2Marks) = shift(m2pre, r2)
-        println(s"${pp(r2Shifted)}\nr2Marks: \n${r2Marks.sortBy(_._2.length).reverse}\n")
-        val updatedMarks = r2Marks.map { case (m2, c2) =>
+        val updatedMarks = r2Marks.map { case (m2) =>
           val bits = if (fin1) m1.bits else m2.bits
           val updated = m2.copy(bits = bits)
-          (updated, c1 ++ c2)
+          (updated)
         }
-
-        (SEQ(r1Shifted, r2Shifted), updatedMarks.sortBy(_._2.length))
-
+        (SEQ(r1Shifted, r2Shifted), sortByRemainingInput(updatedMarks) )
       case None =>
         (SEQ(r1Shifted, r2), Nil)
     }
 
+def sortByRemainingInput(marks: List[Mark]): List[Mark] = {
+  marks.sortBy(_.str.length)
+}
 
 def mat(r: Rexp, s: List[Char], prnt: Boolean = false): Rexp = {
   val initMk = Mark(mark = true, bits = List(List()), str = s, consumed= List())
@@ -144,31 +154,30 @@ def simp(r: Rexp): Rexp = r match
 
   case r => r
 
+//case of nullable
 //(ONE | "a" ) ~ ( "a" | "aa" )
 @main 
 def test1() = {
   println("=====Test====")
   //val br2 = (ONE | "a" ) ~ ( "a" | "aa" )
   val br2= (ONE | "a") ~ ("a" | "aa")
-  val s = "aa".toList
+  val s = "aaaa".toList
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
-  mat(br2, s,true)
-  println(s"=end=")
-
 /*   for (i <- s.indices) {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
   println(pp(mat(br2, s.take(i + 1))))
-  }   */ 
+  }   */  
+  //println(pp(mat(br2,s)))
 
-/*   val markSequencesList=lex(br2, s)
+  val markSequencesList=lex(br2, s)
   val sequencesList=markSequencesList.getOrElse(List())
-  val derivBits  = rebit.lex(br2, s)
+   val derivBits  = rebit.lex(br2, s)
   val derivVal=rebit.blexer(br2, s.mkString(""))
 
   println(s"sequencesList: ${sequencesList}")
   println(s"derivBits: ${derivBits}")
-  println(s"derivVal: ${derivVal}")   */
+  println(s"derivVal: ${derivVal}")    
 }
 
 //("a" | "ab") ~ ("c" | "bc")
