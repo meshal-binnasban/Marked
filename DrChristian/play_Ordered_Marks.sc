@@ -1,14 +1,8 @@
-//
-// Algorithm from "A Play on Regular Expressions"
-//
-// augmented with bitsequences
-
-
 
 import scala.language.implicitConversions
 import $file.rexp, rexp._
 import $file.enumerate, enumerate._
-import $file.regenerate//, regenerate._
+import $file.regenerate, regenerate._
 import $file.rebit
 
 
@@ -28,48 +22,28 @@ extension (xs: List[Bits]) {
 
 
 def mkeps2(r: Rexp) : Bits = r match {
-  //case APPOINT(mark, ONE) => List(Ep)
   case ONE => List(Ep)
   case ALT(r1, r2) =>
     if (nullable(r1)) Lf :: mkeps2(r1) else Ri :: mkeps2(r2)
   case SEQ(r1, r2) =>
     mkeps2(r1) ++ mkeps2(r2)
- // case STAR(r) => List(En)
-  //case NTIMES(r, n) => List(EnT)
-  //case INIT(r1) => mkeps3(r1) 
+
 }
 
 def fin(r: Rexp) : Boolean = (r: @unchecked) match 
   case ZERO => false
   case ONE => false
-  //case APPOINT(mk, ONE) => if(mk.str.isEmpty) true else false
   case CHAR(_) => false
   case POINT(_, CHAR(_)) => true 
   case ALT(r1, r2) => fin(r1) || fin(r2)
   case SEQ(r1, r2) => (fin(r1) && nullable(r2)) || fin(r2)
- // case STAR(r) => fin(r)
- // case NTIMES(r, n) => fin(r)
- // case INIT(r1) => fin(r1) 
 
 def mkfin(r: Rexp): List[Bits] = r match 
-  case POINT(mark, CHAR(_)) => mark.bits
-  case ALT(r1, r2) if fin(r1) && fin(r2) => mkfin(r1) ::: mkfin(r2)
-  case ALT(r1, r2) if fin(r1) => mkfin(r1)
-  case ALT(r1, r2) if fin(r2) => mkfin(r2)
-  case SEQ(r1, r2) if fin(r1) && nullable(r2) && fin(r2) => mkfin(r2) ::: mkfin(r1).map(_ ++ (mkeps2(r2))) 
-  case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin(r1).map(_ ::: (mkeps2(r2))) 
-  case SEQ(r1, r2) => mkfin(r2)
-  //case STAR(r) => (mkfin(r) <+> En )
-  //case NTIMES(r, n) => mkfin(r) <+> EnT
-  //case INIT(r1) => mkfin(r1) 
-
-def mkfin2(r: Rexp): List[Bits] = r match 
   case POINT(mark, CHAR(_)) =>mark.bits
-  case ALT(r1, r2) if fin(r1)  => mkfin2(r1) 
-  case ALT(r1, r2)  => mkfin2(r2)
-  case SEQ(r1, r2) if fin(r1) && nullable(r2)  => mkfin2(r1).map(_ ++ (mkeps2(r2))) 
-  case SEQ(r1, r2) => mkfin2(r2)
-
+  case ALT(r1, r2) if fin(r1)  => mkfin(r1) 
+  case ALT(r1, r2)  => mkfin(r2)
+  case SEQ(r1, r2) if fin(r1) && nullable(r2)  => mkfin(r1).map(_ ++ (mkeps2(r2))) 
+  case SEQ(r1, r2) => mkfin(r2)
 
 def shift(mk: Mark ,r: Rexp): (Rexp,List[(Mark, List[Char])]) = r match 
   case ZERO => (ZERO, Nil)
@@ -95,37 +69,22 @@ def shift(mk: Mark ,r: Rexp): (Rexp,List[(Mark, List[Char])]) = r match
   
   case SEQ(r1, r2) =>
     val (r1Shifted, r1Marks) = shift(mk, r1)
-    println(s"[SEQ] r1Marks (${r1Marks.length}):")
-    r1Marks.foreach { case (m, cs) =>
-      println(s"  r1Mark: ${m}, consumed: ${cs.mkString}")
-    }
-
+    println(s"${pp(r1Shifted)}\nr1Marks: \n${r1Marks.sortBy(_._2.length).reverse}\n")
     r1Marks.sortBy(_._2.length).reverse.headOption match {
       case Some((m1, c1)) =>
         val fin1 = fin(r1)
         val m2pre = m1.copy(mark = true)
-        println(s"[SEQ] Selected best mark from r1: $m1")
-        println(s"[SEQ] fin1 = $fin1")
-        println(s"[SEQ] Shifting r2 with: $m2pre")
-
         val (r2Shifted, r2Marks) = shift(m2pre, r2)
-
-        println(s"[SEQ] r2Marks (${r2Marks.length}):")
-        r2Marks.foreach { case (m, cs) =>
-          println(s"  r2Mark: ${m}, consumed: ${cs.mkString}")
-        }
-
+        println(s"${pp(r2Shifted)}\nr2Marks: \n${r2Marks.sortBy(_._2.length).reverse}\n")
         val updatedMarks = r2Marks.map { case (m2, c2) =>
           val bits = if (fin1) m1.bits else m2.bits
           val updated = m2.copy(bits = bits)
-          println(s"[SEQ] Final mark: $updated, total consumed: ${(c1 ++ c2).mkString}")
           (updated, c1 ++ c2)
         }
 
         (SEQ(r1Shifted, r2Shifted), updatedMarks.sortBy(_._2.length))
 
       case None =>
-        println("[SEQ] No valid mark from r1 — skipping r2")
         (SEQ(r1Shifted, r2), Nil)
     }
 
@@ -133,7 +92,6 @@ def shift(mk: Mark ,r: Rexp): (Rexp,List[(Mark, List[Char])]) = r match
 def mat(r: Rexp, s: List[Char], prnt: Boolean = false): Rexp = {
   val initMk = Mark(mark = true, bits = List(List()), str = s, consumed= List())
   val lis = shift(initMk, r)
-  println(s"Initial Regex: \n${pp(r)}\n after shifts: \n${pp(lis._1)}\n marks: ${lis._2}\n")
   lis._1
 }
 
@@ -143,7 +101,7 @@ def matcher(r: Rexp, s: List[Char]) : Boolean =
 
 def lex(r: Rexp, s: List[Char]): Option[List[Bits]] =
   if matcher(r, s)
-  then Some(if (s == Nil) List(mkeps2(r)) else mkfin2(mat(r, s)))
+  then Some(if (s == Nil) List(mkeps2(r)) else mkfin(mat(r, s)))
   else None
 
 def lexer(r: Rexp, s: List[Char]) : Option[List[Val]] = {
@@ -203,14 +161,14 @@ def test1() = {
   println(pp(mat(br2, s.take(i + 1))))
   }   */ 
 
-  val markSequencesList=lex(br2, s)
+/*   val markSequencesList=lex(br2, s)
   val sequencesList=markSequencesList.getOrElse(List())
   val derivBits  = rebit.lex(br2, s)
   val derivVal=rebit.blexer(br2, s.mkString(""))
 
   println(s"sequencesList: ${sequencesList}")
   println(s"derivBits: ${derivBits}")
-  println(s"derivVal: ${derivVal}")  
+  println(s"derivVal: ${derivVal}")   */
 }
 
 //("a" | "ab") ~ ("c" | "bc")
@@ -395,3 +353,15 @@ def flatten(v: Val) : String = v match {
    case Nt(vs, _) => vs.map(flatten).mkString
    //case Rec(_, v) => flatten(v)
  }
+
+/* def mkfin2(r: Rexp): List[Bits] = r match 
+  case POINT(mark, CHAR(_)) => mark.bits
+  case ALT(r1, r2) if fin(r1) && fin(r2) => mkfin2(r1) ::: mkfin2(r2)
+  case ALT(r1, r2) if fin(r1) => mkfin2(r1)
+  case ALT(r1, r2) if fin(r2) => mkfin2(r2)
+  case SEQ(r1, r2) if fin(r1) && nullable(r2) && fin(r2) => mkfin2(r2) ::: mkfin2(r1).map(_ ++ (mkeps2(r2))) 
+  case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin2(r1).map(_ ::: (mkeps2(r2))) 
+  case SEQ(r1, r2) => mkfin2(r2)
+  //case STAR(r) => (mkfin2(r) <+> En )
+  //case NTIMES(r, n) => mkfin2(r) <+> EnT
+  //case INIT(r1) => mkfin2(r1)  */

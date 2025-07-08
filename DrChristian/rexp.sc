@@ -18,40 +18,15 @@ case object S extends Bit {
 }
 */
 
-// Bits of NTIMES
 case object NxT extends Bit {
-  override def toString = "Nt"
+  override def toString = "Nx"
 }
 case object EnT extends Bit {
-  override def toString = "Et"
-}
-// End of Bits of NTIMES
-
-case object St extends Bit {
-  override def toString = "("
-}
-case object Cl extends Bit {
-  override def toString = ")"
-}
-
-case object Sq2 extends Bit {
-  override def toString = "Se"
-}
-// Bits of the SEQ
-case object Sq extends Bit {
-  override def toString = "S"
-}
-// End of Bits of the SEQ
-
-// Bits of Character Consumption
-case object Ch extends Bit {
-  override def toString = "C"
+  override def toString = "En"
 }
 case object Ep extends Bit {
   override def toString = "Ep"
 }
-// End of Bits of Character Consumption
-
 //original Bits
 case object Lf extends Bit {
   override def toString = "L"
@@ -76,8 +51,7 @@ case class Mark(
 ) {
   override def toString: String = {
     val bitsStr = bits.map(_.mkString(",")).mkString("/")
-    val strStr = str.mkString
-    s"(mark=$mark, bits=$bitsStr, remaining='$str', consumed= $consumed )"
+    s"(mark=$mark, bits=$bitsStr, remaining='${str.mkString}', consumed= ${consumed.mkString} )"
   }
 }
 
