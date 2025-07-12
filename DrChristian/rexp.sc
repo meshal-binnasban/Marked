@@ -47,11 +47,12 @@ case class Mark(
   mark: Boolean,
   bits: List[Bits],
   str: List[Char],
-  consumed: List[Char]
+  consumed: List[Char],
+  originalLength: Int=0
 ) {
   override def toString: String = {
     val bitsStr = bits.map(_.mkString(",")).mkString("/")
-    s"(mark=$mark, bits=$bitsStr, remaining='${str.mkString}', consumed= ${consumed.mkString} )"
+    s"(mark=$mark, bits=$bitsStr, remaining='${str.mkString}', consumed= ${consumed.mkString} , originalLength=$originalLength )"
   }
 }
 
@@ -97,6 +98,7 @@ def nullable(r: Rexp) : Boolean = r match {
   case STAR(_) => true
   case NTIMES(r, n) => n == 0 || nullable(r) 
   case POINT(_, r) => nullable(r)
+  
 }
 
 def der(c: Char, r: Rexp) : Rexp = r match {

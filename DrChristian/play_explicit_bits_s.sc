@@ -186,7 +186,7 @@ def shift(m: Boolean, bs: List[Bits], r: Rexp, c: Char) : Rexp =
   case POINT(bss, CHAR(d)) => if (m && d == c) POINT((bs <+> Ch)  , CHAR(d)) else CHAR(d) // <+> Cl
   case ALT(r1, r2) => ALT(shift(m, (bs <+>Lf)   , r1, c), shift(m, (bs <+> Ri)    , r2, c)) // <::> St
 
-  case SEQ(r1, r2) if m && nullable(r1) && fin(r1) => //maybe no need with mkfin ?
+  case SEQ(r1, r2) if m && nullable(r1) && fin(r1) => 
     SEQ(shift(m, bs , r1, c), shift(true, ((mkfin3(r1)<+> Sq)) ++ ((bs <++> mkeps3(r1)) <+> Sq2), r2, c)) //r1:<+> St r2: <::> St
   case SEQ(r1, r2) if m && nullable(r1)=> 
     SEQ(shift(m, bs  , r1, c), shift(true, ((bs <++> mkeps3(r1)) <+> Sq2)  , r2, c)) //r1: <+> St r2: <::> St

@@ -183,6 +183,9 @@ def bders (r: ARexp, s: List[Char]) : ARexp = s match {
   case c::s => bders(bder(c, r), s)
 }
 
+def matcher (r: Rexp , s: String ) : Boolean =
+  bnullable(bders(intern(r), s.toList))
+
 // unsimplified lexing function (produces a value)
 def blex(r: ARexp, s: List[Char]) : Bits = s match {
   case Nil => if (bnullable(r)) bmkeps(r) else throw new Exception("Not matched")

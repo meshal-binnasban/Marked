@@ -22,7 +22,8 @@ extension (xs: List[Bits]) {
 
 
 def mkeps2(r: Rexp) : Bits = r match {
-  case ONE => List(Ep)
+  case ONE => Nil//List(Ep)
+  case POINT(mk,ONE) => Nil
   case ALT(r1, r2) =>
     if (nullable(r1)) Lf :: mkeps2(r1) else Ri :: mkeps2(r2)
   case SEQ(r1, r2) =>
@@ -34,14 +35,15 @@ def fin(r: Rexp) : Boolean = (r: @unchecked) match
   case ZERO => false
   case ONE => false
   case CHAR(_) => false
-  case POINT(_, CHAR(_)) => true 
+  case POINT(_, CHAR(_)) => true
+  case POINT(mk, ONE) => if(mk.consumed.length == mk.originalLength) true else false //maybe just false
   case ALT(r1, r2) => fin(r1) || fin(r2)
   case SEQ(r1, r2) => (fin(r1) && nullable(r2)) || fin(r2)
 
 def mkfin(r: Rexp): List[Bits] = r match 
   case POINT(mark, CHAR(_)) =>
-    if(mark.str.nonEmpty) {
-      println(s"mkfin: mark=  ${mark} No Match")
+    if(mark.consumed.length != mark.originalLength) {
+      //println(s"mkfin: mark=  ${mark} No Match")
       List()//no match
     } else {
       mark.bits
@@ -56,51 +58,60 @@ def mkfin(r: Rexp): List[Bits] = r match
   //case NTIMES(r, n) => mkfin2(r) <+> EnT
   //case INIT(r1) => mkfin2(r1) 
 
-def shift(mk: Mark ,r: Rexp): (Rexp,List[Mark]) = r match 
-  case ZERO => (ZERO, Nil)
-  case ONE => (ONE,List(mk.copy(bits=mk.bits)))
-  case CHAR(d) =>
-    if(mk.mark && mk.str.nonEmpty && mk.str.head == d) {
-        val mark=mk.copy(bits = mk.bits, str = mk.str.tail, consumed = mk.consumed :+ d)
-        (POINT(mark,CHAR(d)) , List(mark))
-    }else {
-      (CHAR(d), Nil)
-    }
-  case POINT(_,CHAR(d)) => 
-    if(mk.mark && mk.str.nonEmpty && mk.str.head == d) {
-      val mark=mk.copy(bits = mk.bits, str = mk.str.tail, consumed = mk.consumed :+ d)
-      (POINT(mark,CHAR(d)) , List(mark))
-    }else {
-      (CHAR(d), Nil)
-    }
-  case ALT(r1, r2) => 
-    val (shiftR1,markListR1)=shift(mk.copy(bits=mk.bits <+>Lf),r1)
-    val (shiftR2,markListR2)=shift(mk.copy(bits=mk.bits <+>Ri),r2)
-    (ALT(shiftR1,shiftR2),(markListR1 ++ markListR2))
-  
-  case SEQ(r1, r2) =>
-    val (r1Shifted, r1Marks) = shift(mk, r1)
-    sortByRemainingInput(r1Marks).headOption match {
-      case Some((m1)) =>
-        val fin1 = fin(r1)
-        val m2pre = m1.copy(mark = true)
-        val (r2Shifted, r2Marks) = shift(m2pre, r2)
-        val updatedMarks = r2Marks.map { case (m2) =>
-          val bits = if (fin1) m1.bits else m2.bits
-          val updated = m2.copy(bits = bits)
-          (updated)
-        }
-        (SEQ(r1Shifted, r2Shifted), sortByRemainingInput(updatedMarks) )
-      case None =>
-        (SEQ(r1Shifted, r2), Nil)
-    }
+def shift(mk: Mark ,r: Rexp): (Rexp,List[Mark]) = 
+    println(s"shift:\nmark: ${mk}\n${pp(r)}") ;
+    r match 
+        case ZERO => (ZERO, Nil)
+        case ONE => (POINT(mk.copy(bits=mk.bits),ONE), List(mk.copy(bits=mk.bits)))
+        case CHAR(d) =>
+            if(mk.mark && mk.str.nonEmpty && mk.str.head == d) {
+        /*         if(mk.consumed.length > mk.originalLength){
+                    println(s" longer than original, mk: ${mk}")
+                } */
+                val mark=mk.copy(bits = mk.bits, str = mk.str.tail, consumed = mk.consumed :+ d)
+                (POINT(mark,CHAR(d)) , List(mark))
+            }else {
+            (CHAR(d), Nil)
+            }
+        case POINT(_,CHAR(d)) => 
+            if(mk.mark && mk.str.nonEmpty && mk.str.head == d) {
+            val mark=mk.copy(bits = mk.bits, str = mk.str.tail, consumed = mk.consumed :+ d)
+            (POINT(mark,CHAR(d)) , List(mark))
+            }else {
+            (CHAR(d), Nil)
+            }
+        case ALT(r1, r2) => 
+            val (shiftR1,markListR1)=shift(mk.copy(bits=mk.bits <+>Lf),r1)
+            val (shiftR2,markListR2)=shift(mk.copy(bits=mk.bits <+>Ri),r2)
+            //println(s"ALT: shiftR1: \n${pp(shiftR1)}\nshiftR2:\n${pp(shiftR2)}\nmarks: ${markListR1 ++ markListR2}")
+            (ALT(shiftR1,shiftR2),(markListR1 ++ markListR2))
+        
+        case SEQ(r1, r2) =>
+            //println(s"r1 nullable: ${nullable(r1)} , r2 nullable: ${nullable(r2)}")
+            val (r1Shifted, r1Marks) = shift(mk, r1)
+            val sortedMarks = sortByRemainingInput(r1Marks)
+            println(s"SEQ r1 Marks:")
+            sortedMarks.foreach{ m =>
+            println(s"-${m}")
+            }
+            val bestFinal = sortedMarks.map { m1 =>
+            val m2 = m1.copy(mark = true)
+            val (r2Shifted, r2Marks) = shift(m2, r2)
+            val sorted = sortByRemainingInput(r2Marks)
+            val result = SEQ(r1Shifted, r2Shifted)
+            (result, sorted)
+            }.find { case (result, _) =>
+            fin(result)
+            }
+            bestFinal.getOrElse((SEQ(r1Shifted, r2), Nil))
+
 
 def sortByRemainingInput(marks: List[Mark]): List[Mark] = {
   marks.sortBy(_.str.length)
 }
 
 def mat(r: Rexp, s: List[Char], prnt: Boolean = false): Rexp = {
-  val initMk = Mark(mark = true, bits = List(List()), str = s, consumed= List())
+  val initMk = Mark(mark = true, bits = List(List()), str = s, consumed= List(), originalLength = s.length)
   val lis = shift(initMk, r)
   lis._1
 }
@@ -161,7 +172,7 @@ def test1() = {
   println("=====Test====")
   //val br2 = (ONE | "a" ) ~ ( "a" | "aa" )
   val br2= (ONE | "a") ~ ("a" | "aa")
-  val s = "aaaa".toList
+  val s = "a".toList
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 /*   for (i <- s.indices) {
@@ -172,7 +183,7 @@ def test1() = {
 
   val markSequencesList=lex(br2, s)
   val sequencesList=markSequencesList.getOrElse(List())
-   val derivBits  = rebit.lex(br2, s)
+  val derivBits  = rebit.lex(br2, s)
   val derivVal=rebit.blexer(br2, s.mkString(""))
 
   println(s"sequencesList: ${sequencesList}")
@@ -260,23 +271,24 @@ def test4() = {
 @main
 def test5() = {
   println("=====Test====")
-  val br2= "aa" | "bb"
-  val s = "bb".toList
+  val br2= ( ("a" | "b") ~ (ONE | "a") ) ~ "a"
+  
+  val s = "aa".toList
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
-  
+  println(s"mat: ${pp(mat(br2, s))}")
 
 /*   for (i <- s.indices) {
   println(s"\n ${i + 1}- =shift ${s(i)}=")
   println(pp(mat(br2, s.take(i + 1))))
   }   */ 
 
-  val markSequencesList=lex(br2, s)
-  val sequencesList=markSequencesList.getOrElse(List())
+  //val markSequencesList=lex(br2, s)
+  //val sequencesList=markSequencesList.getOrElse(List())
   val derivBits  = rebit.lex(br2, s)
   val derivVal=rebit.blexer(br2, s.mkString(""))
 
-  println(s"sequencesList: ${sequencesList}")
+  //println(s"sequencesList: ${sequencesList}")
   println(s"derivBits: ${derivBits}")
   println(s"derivVal: ${derivVal}") 
 }
@@ -342,7 +354,8 @@ def pp(e: Rexp) : String = (e: @unchecked) match {
   case ZERO => "0\n"
   case ONE => s"1 \n"
   case CHAR(c) => s"$c\n"
-  case POINT(mark, CHAR(c)) => s"•$c:${mark}\n" 
+  case POINT(mark, CHAR(c)) => s"•$c:${mark}\n"
+  case POINT(mark, ONE) => s"1:${mark}\n" 
   case ALT(r1, r2) => "ALT\n" ++ pps(r1, r2)
   case SEQ(r1, r2) => "SEQ\n" ++ pps(r1, r2)
   case STAR(r) => s"STAR\n" ++ pps(r)
@@ -363,14 +376,47 @@ def flatten(v: Val) : String = v match {
    //case Rec(_, v) => flatten(v)
  }
 
-/* def mkfin2(r: Rexp): List[Bits] = r match 
-  case POINT(mark, CHAR(_)) => mark.bits
-  case ALT(r1, r2) if fin(r1) && fin(r2) => mkfin2(r1) ::: mkfin2(r2)
-  case ALT(r1, r2) if fin(r1) => mkfin2(r1)
-  case ALT(r1, r2) if fin(r2) => mkfin2(r2)
-  case SEQ(r1, r2) if fin(r1) && nullable(r2) && fin(r2) => mkfin2(r2) ::: mkfin2(r1).map(_ ++ (mkeps2(r2))) 
-  case SEQ(r1, r2) if fin(r1) && nullable(r2) => mkfin2(r1).map(_ ::: (mkeps2(r2))) 
-  case SEQ(r1, r2) => mkfin2(r2)
-  //case STAR(r) => (mkfin2(r) <+> En )
-  //case NTIMES(r, n) => mkfin2(r) <+> EnT
-  //case INIT(r1) => mkfin2(r1)  */
+
+import scala.collection.parallel.CollectionConverters._
+
+@main
+def strongTestParallel() = {
+  given rexp_cdata : CDATA[Rexp] = List(
+        (0, _ => ONE),
+        (0, _ => ZERO),
+        (0, _ => CHAR('a')),
+        (0, _ => CHAR('b')),
+        (0, _ => CHAR('c')),
+       // (1, cs => STAR(cs(0))),
+        (2, cs => ALT(cs(0), cs(1))),
+        (2, cs => SEQ(cs(0), cs(1)))
+      )
+  val alphabet = LazyList('a', 'b')
+  
+  val numRegexes = BigInt(10_000_000_000L)
+  val batchSize = BigInt(100_000L) 
+  
+  val batches = (BigInt(0) to numRegexes by batchSize).toVector.par
+  batches.foreach { start =>
+    val end = (start + batchSize - 1).min(numRegexes)
+    for (i <- start to end) {
+      val r = enumerate.decode(i)
+      if (i % 100_000 == 0) { print("*") }
+      for (s <- (regenerate.generate_up_to(alphabet)(10)(r).take(9)) if s != "") {
+        val v1s = lex(r, s.toList)
+        val v2 = rebit.lex(r, s.toList)
+        if (v1s.isDefined && !v1s.get.contains(v2)) {
+          println(s"[${i}]- reg: $r str: $s")
+          println(s"marked: ${lex(r, s.toList).get} derivative: ${rebit.lex(r, s.toList)}")
+          print("Type 'N' to exit, anything else to continue: ")
+          val input = scala.io.StdIn.readLine()
+          if (input.trim.toLowerCase == "n") {
+            System.exit(1)
+          }
+        }
+      }
+    }
+  }
+  println("\nAll tests passed!")
+}
+
