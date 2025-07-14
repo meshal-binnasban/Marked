@@ -126,6 +126,8 @@ def test5() = {
   }
 }
 
+
+
 // pretty-printing Rexps
 def implode(ss: Seq[String]) = ss.mkString("\n")
 def explode(s: String) = s.split("\n").toList
@@ -173,7 +175,7 @@ def flatten(v: Val) : String = v match {
 import scala.collection.parallel.CollectionConverters._
 
 @main
-def strongTestNoSTARParallel() = {
+def strongTestNoBitsNoSTARParallel() = {
   given rexp_cdata : CDATA[Rexp] = List(
         (0, _ => ONE),
         (0, _ => ZERO),

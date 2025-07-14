@@ -44,15 +44,16 @@ case object En extends Bit {
 type Bits = List[Bit]
 
 case class Mark(
-  mark: Boolean,
-  bits: List[Bits],
+  //mark: Boolean,
+  bits: Bits, //List[Bits],
   str: List[Char],
-  consumed: List[Char],
-  originalLength: Int=0
+  priority: Int =0
+  //consumed: List[Char],
+  //originalLength: Int=0
 ) {
   override def toString: String = {
-    val bitsStr = bits.map(_.mkString(",")).mkString("/")
-    s"(mark=$mark, bits=$bitsStr, remaining='${str.mkString}', consumed= ${consumed.mkString} , originalLength=$originalLength )"
+    s"(str='${str.mkString}', bits=${bits.mkString(",")} , priority= $priority)"
+    //s"(mark=$mark, bits=$bitsStr, remaining='${str.mkString}', consumed= ${consumed.mkString} , originalLength=$originalLength )"
   }
 }
 
