@@ -74,12 +74,7 @@ def shift(ms: Marks ,r: Rexp): Marks =
                 if (nullable(r2))
                 (shift(shift(ms, r1).reshuffle, r2) ::: shift(ms, r1)).prune
                 else {
-                    //println(s"SEQ\n recieved ms=$ms\n")
-                    val shiftR1=shift(ms, r1).reshuffle
-                    //println(s"shift r1= $shiftR1")
-                    val seqMarks=shift(shiftR1, r2)
-                    println(s"After shift r2=$seqMarks \n")
-                    seqMarks.prune
+                    shift(shift(ms, r1).reshuffle, r2).prune
                     }
                 } 
         case STAR(r) => shift(shift(ms, r), STAR(r)) ::: ms
@@ -206,9 +201,9 @@ def test4() = {
 @main
 def test5() = {
   println("=====Test====")
-  val br2= ( ("a" | "b") ~ (ONE | "a") ) ~ "a"
-  
-  val s = "aa"
+  val br2= "ab"
+  //( ("a" | "b") ~ (ONE | "a") ) ~ "a"
+  val s = "ab"
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 
@@ -220,7 +215,7 @@ def test5() = {
   println(s"marks: ${marks}")
   println(s"marked Bits: ${markedBits}")
   println(s"derivBits: ${derivBits}")
-  println(s"derivVal: ${derivVal}")   
+  println(s"derivVal: ${derivVal}") 
 }
 
 // decoding of a value from a bitsequence
@@ -308,7 +303,7 @@ def flatten(v: Val) : String = v match {
 import scala.collection.parallel.CollectionConverters._
 
 @main
-def strongTestNoBitsNoONENoSTARParallel() = {
+def strongTestNoONENoSTARParallel() = {
   given rexp_cdata : CDATA[Rexp] = List(
         //(0, _ => ONE),
         (0, _ => ZERO),
@@ -331,9 +326,9 @@ def strongTestNoBitsNoONENoSTARParallel() = {
       val r = enumerate.decode(i)
       if (i % 100_000 == 0) { print("*") }
       for (s <- (regenerate.generate_up_to(alphabet)(10)(r).take(9)) if s != "") {
-          val markedMatcher=matcher(r, s)
-          val derMatcher= rebit.matcher(r, s)
-          if (markedMatcher != derMatcher) {
+          val markedBits=lex(r, s).getOrElse(Nil)
+          val derBits= rebit.lex(r, s.toList)
+          if (markedBits != derBits) {
             println(s"[${i}]-\n reg: $r \nstr: $s")
             println(s"\n${pp(r)}")
             print("Type 'N' to exit, anything else to continue: ")
