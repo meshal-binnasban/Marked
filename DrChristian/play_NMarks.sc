@@ -43,12 +43,12 @@ def shift(ms: Marks ,r: Rexp): Marks =
         case ONE => Nil 
         case CHAR(d) =>
             for (m <- ms if m.str != Nil && m.str.head == d) yield m.copy(str=m.str.tail,priority=m.priority)
-        case ALT(r1, r2) =>(shift(ms<:+> Lf, r1) ::: shift(ms <:+> Ri, r2)) //.prune
+        case ALT(r1, r2) =>(shift(ms<:+> Lf, r1) ::: shift(ms <:+> Ri, r2)).reshuffle //.prune
         case SEQ(r1, r2) if nullable(r1) && nullable(r2) =>
             val r1NullableMarks=((shift(ms, r1)) ::: (ms <::+> mkeps2(r1)))
             val r2NullableMarks=(shift(ms, r1) <::+> mkeps2(r2))
 
-            (  r1NullableMarks.reshuffle.flatMap(m => shift(List(m), r2)) ::: r2NullableMarks.reshuffle  )
+            (  r2NullableMarks.reshuffle ::: r1NullableMarks.reshuffle.flatMap(m => shift(List(m), r2))  ).reshuffle
 
             //(shift(shift(ms, r1) ::: (ms<::+> mkeps2(r1)), r2) ::: (shift(ms, r1)<::+> mkeps2(r2)) )
 
@@ -58,7 +58,8 @@ def shift(ms: Marks ,r: Rexp): Marks =
 
         case SEQ(r1, r2) if nullable(r2) =>
            ( (shift(ms, r1) <::+> mkeps2(r2)) ::: (shift(ms, r1).reshuffle.flatMap(m => shift(List(m), r2)))).reshuffle
-        
+        //   (shift(ms, r1).reshuffle.flatMap(m => shift(List(m), r2)))).reshuffle ::: ( (shift(ms, r1) <::+> mkeps2(r2))
+
         case SEQ(r1, r2) =>
             (shift(ms, r1).reshuffle.flatMap(m => shift(List(m), r2)))
 
@@ -300,7 +301,29 @@ def test9() = {
   println(result)
 }
 
-//ALT(ALT(ONE,ALT(ONE,ALT(ONE,CHAR(a)))),ALT(ALT(ALT(ZERO,ONE),ALT(CHAR(a),ZERO)),ALT(ONE,SEQ(CHAR(a),CHAR(a))))) 
+//(ONE | "a") | (("a" | "aa") ~ (ONE | "a"))
+@main
+def test10() = {
+  println("=====Test====")
+  val br2=((ONE | (ZERO | "b")) | (((("a" ~ ZERO) | ("b" | "c")) | ((ONE | "a") ~ (ONE | "a")))))
+
+  val s = "b"
+  println(s"Regex:\n${pp(br2)}\n")
+  println(s"=string=\n$s")
+
+  val markedBits=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s.toList)
+  val derivVal=rebit.blexer(br2, s)
+
+  val marks=lexMarks(br2, s)
+  println(s"marks: ${marks}")
+  println(s"marked Bits: ${markedBits}")
+  println(s"derivBits: ${derivBits}")
+  println(s"derivVal: ${derivVal}")  
+  val result=matcher(br2, s)
+  println(result)
+}
+
 // decoding of a value from a bitsequence
 def decode_aux(r: Rexp, bs: Bits) : (Val, Bits) = ((r, bs): @unchecked) match {
   case (ONE, bs) => (Empty, bs)
