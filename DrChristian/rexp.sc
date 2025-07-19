@@ -46,13 +46,12 @@ type Bits = List[Bit]
 case class Mark(
   //mark: Boolean,
   bits: Bits, //List[Bits],
-  str: List[Char],
-  priority: Int =0
+  str: List[Char]
   //consumed: List[Char],
   //originalLength: Int=0
 ) {
   override def toString: String = {
-    s"(str='${str.mkString}', bits=${bits.mkString(",")} , priority= $priority)"
+    s"(str='${str.mkString}', bits=${bits.mkString(",")})"
     //s"(mark=$mark, bits=$bitsStr, remaining='${str.mkString}', consumed= ${consumed.mkString} , originalLength=$originalLength )"
   }
 }
