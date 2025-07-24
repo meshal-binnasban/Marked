@@ -63,7 +63,7 @@ case object ONE extends Rexp
 case class CHAR(c: Char) extends Rexp
 case class ALT(r1: Rexp, r2: Rexp) extends Rexp
 case class SEQ(r1: Rexp, r2: Rexp) extends Rexp 
-case class STAR(r: Rexp) extends Rexp 
+case class STAR(r: Rexp,mode:Boolean = false) extends Rexp 
 case class NTIMES(r: Rexp,n:Int) extends Rexp // new to testX1.
 // only used by re-generate to generate non-matching strings
 case class NOT(r: Rexp) extends Rexp 
@@ -95,7 +95,7 @@ def nullable(r: Rexp) : Boolean = r match {
   case CHAR(_) => false
   case ALT(r1, r2) => nullable(r1) || nullable(r2)
   case SEQ(r1, r2) => nullable(r1) && nullable(r2)
-  case STAR(_) => true
+  case STAR(_,_) => true
   case NTIMES(r, n) => n == 0 || nullable(r) 
   case POINT(_, r) => nullable(r)
   
@@ -109,7 +109,7 @@ def der(c: Char, r: Rexp) : Rexp = r match {
   case SEQ(r1, r2) =>
     if (nullable(r1)) ALT(SEQ(der(c, r1), r2), der(c, r2))
     else SEQ(der(c, r1), r2)
-  case STAR(r) => SEQ(der(c, r), STAR(r))
+  case STAR(r,m) => SEQ(der(c, r), STAR(r,m))
   case NTIMES(r, n) => if (n == 0) ZERO else SEQ(der(c, r), NTIMES(r, n-1)) // new to testX1.
 }
 
@@ -137,12 +137,12 @@ def mkeps(r: Rexp) : Val = r match {
   case ALT(r1, r2) =>
     if (nullable(r1)) Left(mkeps(r1)) else Right(mkeps(r2))
   case SEQ(r1, r2) => Sequ(mkeps(r1), mkeps(r2))
-  case STAR(r) => Stars(Nil)
+  case STAR(r,m) => Stars(Nil)
   case NTIMES(r, n) => Nt(Nil, 0)
 }
 
 def inj(r: Rexp, c: Char, v: Val) : Val = (r, v) match {
-  case (STAR(r), Sequ(v1, Stars(vs))) => Stars(inj(r, c, v1)::vs)
+  case (STAR(r,m), Sequ(v1, Stars(vs))) => Stars(inj(r, c, v1)::vs)
   case (SEQ(r1, r2), Sequ(v1, v2)) => Sequ(inj(r1, c, v1), v2)
   case (SEQ(r1, r2), Left(Sequ(v1, v2))) => Sequ(inj(r1, c, v1), v2)
   case (SEQ(r1, r2), Right(v2)) => Sequ(mkeps(r1), inj(r2, c, v2))
@@ -209,7 +209,7 @@ def draw_r(e: Rexp, prefix: String, more: Boolean) : String = {
     case CHAR(c) => s"$c"
     case ALT(r1, r2) => s"ALT" ++ draw_rs(List(r1, r2), childPrefix)
     case SEQ(r1, r2) => s"SEQ" ++ draw_rs(List(r1, r2), childPrefix)
-    case STAR(r) => s"STAR" ++ draw_r(r, childPrefix, false)
+    case STAR(r,m) => s"STAR" ++ draw_r(r, childPrefix, false)
     case NTIMES(r, n) => s"NTIMES($n)" ++ draw_r(r, childPrefix, false) // new to testX1.
   })
 }
