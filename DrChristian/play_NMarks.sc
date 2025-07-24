@@ -343,7 +343,8 @@ def test9() = {
 @main 
 def test10() = {
   println("=====Test====")
-  val br2= %(ONE | "a")
+  val br2= ((ONE | "a") | "aa")
+    //%(ONE | "a")
   val s = "a" * 10
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
