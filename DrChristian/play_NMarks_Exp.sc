@@ -109,14 +109,16 @@ def shift(ms: Marks, r: Rexp, consumed: Boolean = false): (Marks, Boolean) =
             }  */  
         case STAR(r, m) =>
             val (rMarks,c1)=shift( (ms <:+> Nx ), r, false)
-            //println(s"rMarks= $rMarks")
+            //println(s"rMarks= $rMarks, r=\n${pp(r)} c1=$c1")
             if (c1){
                 //val (sms,cs)=shift(List(rMarks.reshuffle.head),STAR(r),false)
                 val (sms, cs) = if rMarks.reshuffle.nonEmpty then shift(List(rMarks.reshuffle.head), STAR(r), false) else (Nil, false)
-                (sms.reshuffle.pruneA ::: (ms<:+> En).pruneA, cs)
+                
+                (sms.reshuffle.prune ::: (ms<:+> En).prune, true)
                 }else {
                     //(rMarks,false)
-                ( (  (ms<:+> En) ::: (rMarks<:+>En)  ).reshuffle.pruneA , false) //::: (rMarks<:+>En) for nested STAR? //(ms<:+> En) ::: for ONE
+                    val msBits=if(nullable(r)) ms<::+>mkeps2(r) else ms<:+>En
+                    ( ( (ms<:+>En)::: (rMarks<:+>En)).reshuffle.pruneA , false) //::: (rMarks<:+>En) for nested STAR? //(ms<:+> En) ::: for ONE
                 } 
                     
                     
@@ -151,7 +153,7 @@ def matcher(r: Rexp, s: String) : Boolean =
   val (marks, consumedFlag) = shift(List(im), r)
 /*   println(s"------------------------\nLast Marks:")
   marks.foreach(m => println(s"-$m") )
-  println("------------------------")  */ 
+  println("------------------------")  */  
   marks.exists(_.str == Nil)
 
 def lex(r: Rexp, s: String): Option[Bits] =
@@ -560,12 +562,36 @@ def test16() = {
     println("Mismatched")
 }
 
-//
+//( %("a" ~ ONE) )
 @main
 def test17() = {
   println("=====Test====")
   val br2= ( %("a" ~ ONE) )
   val s = "aa"
+  println(s"Regex:\n${pp(br2)}\n")
+  println(s"=string=\n$s")
+
+  val markedBits=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s.toList)
+  val derivVal=rebit.blexer(br2, s)
+
+  println(s"marked Bits: ${markedBits}")
+  println(s"derivBits: ${derivBits}\n------------------------")
+  println(s"derivVal: ${derivVal}")
+
+  println("------------------------")
+  if(markedBits.getOrElse(Nil) == derivBits) 
+  println("Matched Derivative")
+  else
+    println("Mismatched")
+}
+
+//(%(ONE)| %("a"| %("b")))
+@main
+def test18() = {
+  println("=====Test====")
+  val br2= ( %("a"| %("b")))
+  val s = "ba"
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 
