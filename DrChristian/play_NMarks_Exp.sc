@@ -111,10 +111,8 @@ def shift(ms: Marks, r: Rexp, consumed: Boolean = false): (Marks, Boolean) =
             val (rMarks,c1)=shift( (ms <:+> Nx ), r, false)
             //println(s"rMarks= $rMarks")
             if (c1){
-                //val starList = rMarks.reshuffle.pruneA.map(m => shift(List(m), STAR(r), c1))
-                val (sms,cs)=shift(List(rMarks.reshuffle.head),STAR(r),false)
-                //val sms = starList.flatMap(_._1) // ::: (ms<:+> En)
-                //val cs = starList.exists(_._2)
+                //val (sms,cs)=shift(List(rMarks.reshuffle.head),STAR(r),false)
+                val (sms, cs) = if rMarks.reshuffle.nonEmpty then shift(List(rMarks.reshuffle.head), STAR(r), false) else (Nil, false)
                 (sms.reshuffle.pruneA ::: (ms<:+> En).pruneA, cs)
                 }else {
                     //(rMarks,false)
