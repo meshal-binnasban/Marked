@@ -88,13 +88,30 @@ def shift(ms: Marks, r: Rexp, consumed: Boolean = false): (Marks, Boolean) =
             val c2 = r2Lists.exists(_._2)
             (r2ms.reshuffle, c1 || c2) 
         
-        case STAR(r, m) if (m) =>
+/*         case STAR(r, m) if (m) =>
           val (rms,cr) = shift((ms<:+> Nx), r, consumed)
           (rms<:+> En,cr)
         case STAR(r, m) =>
-            val (rms, cr) = shift((ms <:+> Nx), r, false)
-            val (sms,cs) =shift((rms), STAR(r,!cr), cr) 
-            ( (  (rms<:+>En) ::: (sms) ).reshuffle ,cs)       
+          //val (rms, cr) = shift((ms <:+> Nx), r, false)
+          val rLists = (ms <:+> Nx).reshuffle.map(m => shift(List(m), r, false))
+          val rms = rLists.flatMap(_._1)
+          val cr = rLists.exists(_._2)
+          val (sms,cs) =shift((rms), STAR(r,!cr), cr) 
+          ( (  (rms<:+>En) ::: (sms) ).reshuffle ,cs)    */     
+        
+         case STAR(r, m) =>
+          //val (rms, _) = shift(ms <:+> Nx, r, consumed) 
+          val rLists = (ms <:+> Nx).reshuffle.map(m => shift(List(m), r, consumed))
+          val rms = rLists.flatMap(_._1)
+          if (rms.isEmpty) {
+            ((rms) ,false)
+            } else {
+              //like seq by shifting one by one?
+            val (sms, _) = shift(rms, STAR(r, false), false)
+            (( (rms <:+> En) ::: sms  ).reshuffle, true)
+              } 
+        
+        
         }
 
 
@@ -124,9 +141,9 @@ extension (ms: List[Mark])
 def matcher(r: Rexp, s: String) : Boolean =
   val im = Mark(bits = List(), str = s.toList)
   val (marks, consumedFlag) = shift(List(im), r)
-  println(s"------------------------\nLast Marks:")
+   println(s"------------------------\nLast Marks:")
   marks.foreach(m => println(s"-$m") )
-  println("------------------------")   
+  println("------------------------") 
   marks.exists(_.str == Nil)
 
 def lex(r: Rexp, s: String): Option[Bits] =
@@ -609,6 +626,29 @@ def test19() = {
     println("Mismatched")
 }
 
+// %( "bb" | "b" )
+@main
+def test20() = {
+  println("=====Test====")
+  val br2= %( "bb" | "b" )
+  val s = "bbb"
+  println(s"Regex:\n${pp(br2)}\n")
+  println(s"=string=\n$s")
+
+  val markedBits=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s.toList)
+  val derivVal=rebit.blexer(br2, s)
+
+  println(s"marked Bits: ${markedBits}")
+  println(s"derivBits: ${derivBits}\n------------------------")
+  println(s"derivVal: ${derivVal}")
+
+  println("------------------------")
+  if(markedBits.getOrElse(Nil) == derivBits) 
+  println("Matched Derivative")
+  else
+    println("Mismatched")
+}
 // decoding of a value from a bitsequence
 def decode_aux(r: Rexp, bs: Bits) : (Val, Bits) = ((r, bs): @unchecked) match {
   case (ONE, bs) => (Empty, bs)
