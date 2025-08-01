@@ -95,7 +95,7 @@ def intern(r: Rexp) : ARexp = r match {
   case ALT(r1, r2) => 
     AALT(Nil, fuse(List(Lf), intern(r1)), fuse(List(Ri), intern(r2)))
   case SEQ(r1, r2) => ASEQ(Nil, intern(r1), intern(r2))
-  case STAR(r,m) => ASTAR(Nil, intern(r))
+  case STAR(r) => ASTAR(Nil, intern(r))
   case NTIMES(r, n) => ANTIMES(Nil, intern(r),n)
   //case INIT(r1) => intern(r1)
 }
@@ -120,12 +120,12 @@ def decode_aux(r: Rexp, bs: Bits) : (Val, Bits) = ((r, bs): @unchecked) match {
     val (v2, bs2) = decode_aux(r2, bs1)
     (Sequ(v1, v2), bs2)
   }
-  case (STAR(r1,m), Nx::bs) => {
+  case (STAR(r1), Nx::bs) => {
     val (v, bs1) = decode_aux(r1, bs)
     val (Stars(vs), bs2) = (decode_aux(STAR(r1), bs1)  : @unchecked)
     (Stars(v::vs), bs2)
   }
-  case (STAR(r,m), En::bs) => (Stars(Nil), bs)
+  case (STAR(r), En::bs) => (Stars(Nil), bs)
 
   case (NTIMES(r1,n), NxT::bs) => {
     val (v, bs1) = decode_aux(r1, bs)
@@ -272,7 +272,7 @@ def ppr(e: Rexp) : String = (e: @unchecked) match {
   case CHAR(c) => s"$c\n"
   case ALT(r1, r2) => "ALT\n" ++ pprs(r1, r2)
   case SEQ(r1, r2) => "SEQ\n" ++ pprs(r1, r2)
-  case STAR(r,m) => "STAR\n" ++ pprs(r)
+  case STAR(r) => "STAR\n" ++ pprs(r)
   case NTIMES(r, n) => s"NTIMES:$n\n" ++ pprs(r) // new to testX1.
 }
 def pprs(es: Rexp*) = indent(es.map(ppr))

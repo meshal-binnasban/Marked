@@ -31,89 +31,48 @@ def mkeps2(r: Rexp) : Bits = r match {
   case ONE => Nil//List(Ep)
   case ALT(r1, r2) =>if (nullable(r1)) Lf :: mkeps2(r1) else Ri :: mkeps2(r2)
   case SEQ(r1, r2) => mkeps2(r1) ++ mkeps2(r2)
-  case STAR(r,m) => List(En)
+  case STAR(r) => List(En)
 }
 
 type Marks = List[Mark]
-def shift(ms: Marks, r: Rexp, consumed: Boolean = false): (Marks, Boolean) = 
+def shift(ms: Marks, r: Rexp): Marks = 
     //println(s"${pp(r)}\nms=$ms")
-    if (ms == Nil) (Nil, false)
+    if (ms == Nil) Nil
     else (r: @unchecked) match {
-        case ZERO => (Nil, false)
-        case ONE => (Nil, true)
+        case ZERO => Nil
+        case ONE => Nil
         case CHAR(d) =>
-            val cms = for (m <- ms if m.str != Nil && m.str.head == d) yield m.copy(str = m.str.tail)
-            (cms, cms.nonEmpty)
+            for (m <- ms if m.str != Nil && m.str.head == d) yield m.copy(str = m.str.tail)
         case ALT(r1, r2) =>
-            val (lms, c1) = shift(ms <:+> Lf, r1, consumed)
-            val (rms, c2) = shift(ms <:+> Ri, r2, consumed)
-            ((lms ::: rms).reshuffle, c1 || c2)
-            //println(s"in ALT, Left ms=$lms, Right ms=$rms")
-/*             if(nullable(r1)){
-                if(nullable(r2))
-                
-                (( (lms ::: (ms <::+> mkeps2(r1)) ) :::  (rms ::: (ms <::+> mkeps2(r2)) )).reshuffle.prune, c1 || c2)
-                else
-                    (( (lms ::: (ms <::+> mkeps2(r1)) ) :::  (rms)).reshuffle.prune, c1 || c2)
-            }else{
-                if(nullable(r2))
-                (( (lms) :::  (rms ::: (ms <::+> mkeps2(r2)) )).reshuffle.prune, c1 || c2)
-                else
-                    ((lms ::: rms).reshuffle.prune, c1 || c2)
-            } */
+            ( shift(ms <:+> Lf, r1) ::: shift(ms <:+> Ri, r2) ).reshuffle
          case SEQ(r1, r2) if nullable(r1) && nullable(r2) =>
-            val (r1ms, c1) = shift(ms, r1, consumed)
-            val r2Lists = (r1ms ::: (ms <::+> mkeps2(r1))).reshuffle.map(m => shift(List(m), r2, false))
-            val r2ms = r2Lists.flatMap(_._1)
-            val c2 = r2Lists.exists(_._2)
-            (((r1ms <::+> mkeps2(r2)).reshuffle ::: r2ms).reshuffle.prune, c1 || c2)
+            val r1ms= shift(ms, r1)
+            val r2ms = (r1ms ::: (ms <::+> mkeps2(r1))).flatMap(m => shift(List(m), r2))//reshuffle here
+            ((r1ms <::+> mkeps2(r2)).reshuffle ::: r2ms).reshuffle
         case SEQ(r1, r2) if nullable(r1) =>
-            val (r1ms, c1) = shift(ms, r1, consumed)
-            //println(s"r1 SEQ ms=$ms\nr1ms=$r1ms")
-            val r2Lists = (r1ms.reshuffle ::: (ms <::+> mkeps2(r1))).map(m => shift(List(m), r2, false))
-            val r2ms = r2Lists.flatMap(_._1)
-            val c2 = r2Lists.exists(_._2)
-            (r2ms.reshuffle.prune, c1 || c2)
+            val r1ms = shift(ms, r1)
+            val r2ms = (r1ms ::: (ms <::+> mkeps2(r1))).flatMap(m => shift(List(m), r2))//reshuffle here
+            r2ms.reshuffle
         case SEQ(r1, r2) if nullable(r2) =>
-            val (r1ms, c1) = shift(ms, r1, consumed)
-            val r2Lists = r1ms.reshuffle.map(m => shift(List(m), r2, c1))
-            val r2ms = r2Lists.flatMap(_._1)
-            val c2 = r2Lists.exists(_._2)
-            (((r1ms <::+> mkeps2(r2)) ::: r2ms).reshuffle.prune, r1ms.nonEmpty || c2)
-           
+            val r1ms = shift(ms, r1)
+            val r2ms = r1ms.flatMap(m => shift(List(m), r2))//reshuffle here
+            ( (r1ms <::+> mkeps2(r2)) ::: r2ms).reshuffle
         case SEQ(r1, r2) =>
-            val (r1ms, c1) = shift(ms, r1, consumed)
-            val r2Lists = r1ms.reshuffle.map(m => shift(List(m), r2, c1))
-            val r2ms = r2Lists.flatMap(_._1)
-            val c2 = r2Lists.exists(_._2)
-            (r2ms.reshuffle, c1 || c2) 
-        
-/*         case STAR(r, m) if (m) =>
-          val (rms,cr) = shift((ms<:+> Nx), r, consumed)
-          (rms<:+> En,cr)
-        case STAR(r, m) =>
-          //val (rms, cr) = shift((ms <:+> Nx), r, false)
-          val rLists = (ms <:+> Nx).reshuffle.map(m => shift(List(m), r, false))
-          val rms = rLists.flatMap(_._1)
-          val cr = rLists.exists(_._2)
-          val (sms,cs) =shift((rms), STAR(r,!cr), cr) 
-          ( (  (rms<:+>En) ::: (sms) ).reshuffle ,cs)    */     
-        
-         case STAR(r, m) =>
-          //val (rms, _) = shift(ms <:+> Nx, r, consumed) 
-          val rLists = (ms <:+> Nx).reshuffle.map(m => shift(List(m), r, consumed))
-          val rms = rLists.flatMap(_._1)
-          println(s"r marks count=${rms.length}")
+            val r1ms = shift(ms, r1)
+            val r2ms = r1ms.flatMap(m => shift(List(m), r2))//reshuffle here
+            r2ms.reshuffle     
+         case STAR(r) =>
+          val rms = (ms <:+> Nx).flatMap(m => shift(List(m), r))//reshuffle here
+         // println(s"r marks count=${rms.length}")
           if (rms.isEmpty) {
-            ((rms) ,false)
+            (rms)
             } else {
-              //like seq by shifting one by one?
-            val (sms, _) = shift(rms, STAR(r, false), false)
-            println(s"STAR marks count=${( (rms <:+> En) ::: sms  ).length}")
-            (( (rms <:+> En) ::: sms  ).reshuffle, true)
-              } 
-        
-        
+            val sms = shift(rms, STAR(r))
+            //println(s"STAR marks count=${( (rms <:+> En) ::: sms  ).length}")
+            //( (rms <:+> En) ::: sms  ).reshuffle.prune.foreach(m => println(s"-$m") )
+            ( (rms <:+> En) ::: sms  ).reshuffle.prune
+            } 
+
         }
 
 
@@ -142,16 +101,17 @@ extension (ms: List[Mark])
 
 def matcher(r: Rexp, s: String) : Boolean =
   val im = Mark(bits = List(), str = s.toList)
-  val (marks, consumedFlag) = shift(List(im), r)
-   println(s"------------------------\nLast Marks:")
+  val marks = shift(List(im), r)
+  //println(s"-------------End of 1 Match-----------\n")
+/*   println(s"------------------------\nLast Marks:")
   marks.foreach(m => println(s"-$m") )
-  println("------------------------") 
+  println("------------------------")  */
   marks.exists(_.str == Nil)
 
 def lex(r: Rexp, s: String): Option[Bits] =
   if matcher(r, s) then
     if s.toList == Nil then Some(mkeps2(r))
-    else Some(shift(List(Mark(bits = List(), str = s.toList)), r)._1.head.bits)
+    else Some(shift(List(Mark(bits = List(), str = s.toList)), r).head.bits)
   else None
 
 def lexMarks(r: Rexp, s: String): Option[Marks] =
@@ -159,7 +119,7 @@ def lexMarks(r: Rexp, s: String): Option[Marks] =
     if s.toList == Nil then 
         //println("Empty string, not returning marks for now, later will adjust mkeps to return the empty maybe?")
         None
-    else Some(shift(List(Mark(bits = List(), str = s.toList)), r)._1)
+    else Some(shift(List(Mark(bits = List(), str = s.toList)), r))
   else None
 
 /* def lexer(r: Rexp, s: List[Char]) : Option[List[Val]] = {
@@ -176,9 +136,7 @@ def test1() = {
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 
-  matcher(br2,s)
-
-/*   val markedBits=lex(br2, s)
+  val markedBits=lex(br2, s)
   val derivBits  = rebit.lex(br2, s.toList)
   val derivVal=rebit.blexer(br2, s)
 
@@ -190,7 +148,7 @@ def test1() = {
   if(markedBits.getOrElse(Nil) == derivBits) 
   println("Matched Derivative")
   else
-    println("Mismatched") */
+    println("Mismatched") 
 }
 
 // %(%("a"))
@@ -668,9 +626,9 @@ def decode_aux(r: Rexp, bs: Bits) : (Val, Bits) = ((r, bs): @unchecked) match {
     val (v2, bs2) = decode_aux(r2, bs1)
     (Sequ(v1, v2), bs2)
   }
-  case (STAR(_,_), En::bs) => (Stars(Nil), bs)
+  case (STAR(_), En::bs) => (Stars(Nil), bs)
 
-  case (STAR(r1,m), Nx::bs) => {
+  case (STAR(r1), Nx::bs) => {
     val (v, bs1) = decode_aux(r1, bs)
     val (Stars(vs), bs2) = (decode_aux(STAR(r1), bs1)  : @unchecked)
     (Stars(v::vs), bs2)
@@ -714,7 +672,7 @@ def pp(e: Rexp) : String = (e: @unchecked) match {
   case CHAR(c) => s"$c\n"
   case ALT(r1, r2) => "ALT\n" ++ pps(r1, r2)
   case SEQ(r1, r2) => "SEQ\n" ++ pps(r1, r2)
-  case STAR(r,m) => s"STAR, m=$m\n" ++ pps(r)
+  case STAR(r) => s"STAR\n" ++ pps(r)
   case NTIMES(r, n) => s"NTIMES($n)\n" ++ pps(r)
 }
 
@@ -776,45 +734,3 @@ def testAll() = {
   }// end of batches.foreach
   println("\nAll tests passed!")
 }// end of strongTestNoSTARParallel
-
-import scala.concurrent.*
-import scala.concurrent.duration.*
-import scala.concurrent.ExecutionContext.Implicits.global
-
-
-/*         case SEQ(r1, r2) =>
-            val (r1ms, c1) = shift(ms, r1, consumed)
-            val r2Lists = r1ms.reshuffle.map(m => shift(List(m), r2, c1))
-            val r2ms = r2Lists.flatMap(_._1)
-            val c2 = r2Lists.exists(_._2)
-            (r2ms.reshuffle.prune, c1 || c2) */
-
-/*                 val (rMarks,c1)=shift( (ms <:+> Nx ), r, false)
-println(s"rMarks= $rMarks")
-if (c1){
-val starList = rMarks.reshuffle.map(m => shift(List(m), STAR(r), c1))
-val sms = starList.flatMap(_._1) ::: (ms<:+> En)
-val cs = starList.exists(_._2)
-(sms.reshuffle.prune, cs)
-}else {
-( (  (ms<:+> En) ::: (rMarks<:+>En)  ).reshuffle.pruneA , false) //::: (rMarks<:+>En) for nested STAR? //(ms<:+> En) ::: for ONE
-}
-
-}*/
-
-/*          case STAR(r,m) if(nullable(r))=>
-            if(!consumed){ //
-                val (rMarks,c1)=shift( (ms <:+> Nx ), r, false)
-                if (c1)
-                    {
-                    val starList = rMarks.reshuffle.map(m => shift(List(m), STAR(r), true))
-                    val sms = starList.flatMap(_._1) ::: (ms<:+> En)
-                    val cs = starList.exists(_._2)
-                    (sms.reshuffle.pruneA, cs)
-                    }else {
-                        ( ( (ms<:+> En) :::  (rMarks<:+>En)  ).reshuffle.pruneA , false) //::: (rMarks<:+>En) for nested STAR? //(ms<:+> En) ::: for ONE
-                        }
-            }
-            else{
-                (ms<:+>En,false)
-            }  */ 
