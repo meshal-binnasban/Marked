@@ -44,23 +44,23 @@ def shift(ms: Marks, r: Rexp): Marks =
         case CHAR(d) =>
             for (m <- ms if m.str != Nil && m.str.head == d) yield m.copy(str = m.str.tail)
         case ALT(r1, r2) =>
-            ( shift(ms <:+> Lf, r1) ::: shift(ms <:+> Ri, r2) ).reshuffle
+            ( shift(ms <:+> Lf, r1) ::: shift(ms <:+> Ri, r2) ).reshuffle.prune
          case SEQ(r1, r2) if nullable(r1) && nullable(r2) =>
             val r1ms= shift(ms, r1)
             val r2ms = (r1ms ::: (ms <::+> mkeps2(r1))).flatMap(m => shift(List(m), r2))//reshuffle here
-            ((r1ms <::+> mkeps2(r2)).reshuffle ::: r2ms).reshuffle
+            ((r1ms <::+> mkeps2(r2)).reshuffle ::: r2ms).reshuffle.prune
         case SEQ(r1, r2) if nullable(r1) =>
             val r1ms = shift(ms, r1)
             val r2ms = (r1ms ::: (ms <::+> mkeps2(r1))).flatMap(m => shift(List(m), r2))//reshuffle here
-            r2ms.reshuffle
+            r2ms.reshuffle.prune
         case SEQ(r1, r2) if nullable(r2) =>
             val r1ms = shift(ms, r1)
             val r2ms = r1ms.flatMap(m => shift(List(m), r2))//reshuffle here
-            ( (r1ms <::+> mkeps2(r2)) ::: r2ms).reshuffle
+            ( (r1ms <::+> mkeps2(r2)) ::: r2ms).reshuffle.prune
         case SEQ(r1, r2) =>
             val r1ms = shift(ms, r1)
             val r2ms = r1ms.flatMap(m => shift(List(m), r2))//reshuffle here
-            r2ms.reshuffle     
+            r2ms.reshuffle.prune    
          case STAR(r) =>
           val rms = (ms <:+> Nx).flatMap(m => shift(List(m), r))//reshuffle here
          // println(s"r marks count=${rms.length}")
