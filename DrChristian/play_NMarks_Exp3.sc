@@ -44,20 +44,20 @@ def shifts(ms: Marks, r: Rexp): Marks =
         case CHAR(d) =>
             for (m <- ms if m.str != Nil && m.str.head == d) yield m.copy(str = m.str.tail)
         case ALT(r1, r2) =>
-            ( shifts(ms <:+> Lf, r1) ::: shifts(ms <:+> Ri, r2) )
+           ( (shifts(ms <:+> Lf, r1) )  ::: (shifts(ms <:+> Ri, r2))  )
         case SEQ(r1,r2) => {
-            val ms1 = shifts(ms, r1)
+            val ms1 = shifts(ms, r1).reshuffle
             (nullable(r1), nullable(r2)) match {
-                case (true, true) =>  shifts(ms1 ::: (ms <::+> mkeps2(r1)), r2) ::: (ms1 <::+> mkeps2(r2)).prune
-                case (true, false) => shifts(ms1 ::: (ms<::+> mkeps2(r1)), r2).prune
-                case (false, true) => shifts(ms1, r2) ::: (ms1 <::+>mkeps2(r2)).prune
-                case (false, false) => shifts(ms1, r2).prune
+                case (true, true) =>(ms1 <::+>mkeps2(r2)) ::: ms1.flatMap( m => shifts(List(m), r2)) ::: shifts(ms <::+> mkeps2(r1) ,r2)
+                case (true, false) =>(ms1).flatMap( m => shifts(List(m), r2)) ::: shifts((ms<::+> mkeps2(r1)),r2)
+                case (false, true) => (ms1 <::+>mkeps2(r2)) ::: ms1.flatMap( m => shifts(List(m), r2))   
+                case (false, false) => ms1.flatMap( m => shifts(List(m), r2))
         }
       }
         case STAR(r) =>
-            val ms1 = shifts(ms<:+>Nx, r)
-            ( (ms1 <:+> En)::: shifts(ms1, STAR(r)))
-          
+            val ms1 = shifts(ms<:+>Nx, r).reshuffle
+            (  (ms1 <:+> En) ::: ms1.flatMap( m=> shifts(List(m), STAR(r))) )
+            //(  (ms1 <:+> En) ::: shifts(ms1, STAR(r))  ) 
 
         }
 
@@ -87,10 +87,9 @@ extension (ms: List[Mark])
 def matcher(r: Rexp, s: String) : Boolean =
   val im = Mark(bits = List(), str = s.toList)
   val marks = shifts(List(im), r)
-  println(s"-------------End of 1 Match-----------\n")
-  //println(s"------------------------\nList Marks:$marks")
-  marks.collectEmpty.foreach(m => println(s"-$m") )
-  println("------------------------")  
+ // println(s"-------------End of 1 Match-----------\n")
+ // marks.foreach(m => println(s"-$m") )
+ // println("------------------------")  
   marks.exists(_.str == Nil)
 
 def lex(r: Rexp, s: String): Option[Bits] =
@@ -311,7 +310,7 @@ def test8() = {
 def test9() = {
   println("=====Test====")
   val br2= %("a") ~ %("a")
-  val s = "a" * 100
+  val s = "a" * 10
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 
@@ -335,7 +334,7 @@ def test10() = {
   println("=====Test====")
   val br2= %((ONE | "a") | "aa")
     //%(ONE | "a")
-  val s = "a" * 2
+  val s = "a" * 3
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 
@@ -594,6 +593,58 @@ def test20() = {
   else
     println("Mismatched")
 }
+
+// ( "a" ~ %("b") ) ~ ( ("b"|ONE) ~ "a" )
+@main
+def test21() = {
+  println("=====Test====")
+  val br2= ( "a" ~ %("b") ) ~ ( ("b"|ONE) ~ "a" )
+  val s = "aba" // or abb?
+  println(s"Regex:\n${pp(br2)}\n")
+  println(s"=string=\n$s")
+
+  val markedBits=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s.toList)
+  val derivVal=rebit.blexer(br2, s)
+
+  println(s"marked Bits: ${markedBits}")
+  println(s"derivBits: ${derivBits}\n------------------------")
+  println(s"derivVal: ${derivVal}")
+
+  println("------------------------")
+  if(markedBits.getOrElse(Nil) == derivBits) 
+  println("Matched Derivative")
+  else
+    println("Mismatched")
+}
+
+// %( %("a"|"c") ) | ("c" | ("a" | ONE) ) ~ ("ab" | "b" )  
+@main
+def test22() = {
+  println("=====Test====")
+  val br2=  ("c" | ("a" | ONE) ) ~ ("ab" | "b" )  
+  val s = "ab" // or abb?
+  println(s"Regex:\n${pp(br2)}\n")
+  println(s"=string=\n$s")
+
+  val markedBits=lex(br2, s)
+  val derivBits  = rebit.lex(br2, s.toList)
+  val derivVal=rebit.blexer(br2, s)
+
+  println(s"marked Bits: ${markedBits}")
+  println(s"derivBits: ${derivBits}\n------------------------")
+  println(s"derivVal: ${derivVal}")
+
+  println("------------------------")
+  if(markedBits.getOrElse(Nil) == derivBits) 
+  println("Matched Derivative")
+  else
+    println("Mismatched")
+}
+
+
+
+
 // decoding of a value from a bitsequence
 def decode_aux(r: Rexp, bs: Bits) : (Val, Bits) = ((r, bs): @unchecked) match {
   case (ONE, bs) => (Empty, bs)
@@ -719,3 +770,58 @@ def testAll() = {
   }// end of batches.foreach
   println("\nAll tests passed!")
 }// end of strongTestNoSTARParallel
+
+@main
+def testExamples(): Unit = {
+  val tests = List(
+    ("test1", %(%("aa")), "aa"),
+    ("test2", %("a"), "aaa"),
+    ("test3", %("aa") ~ %(%("a")), "aaaaaa"),
+    ("test4", (%("a") ~ %("a")) ~ "a", "aaa"),
+    ("test5", %(%(%("a"))), "aa"),
+    ("test6", %("a" ~ %("a")), "aaa"),
+    ("test7", %(%("a") ~ "a"), "aaa"),
+    ("test8", %("a") ~ (%("a") ~ "a"), "aaa"),
+    ("test9", %("a") ~ %("a"), "a" * 10),
+    ("test10", %((ONE | "a") | "aa"), "aaa"),
+    ("test11", (ONE | "a") ~ ("a" | "aa"), "aaa"),
+    ("test12", ("a" | "ab") ~ ("c" | "bc"), "abc"),
+    ("test13", (("a" | "b") | "ab") ~ ("bc" | "c" | "b"), "abc"),
+    ("test14", (ONE | (ONE | "bc")) | (("a" | ONE) ~ ("a" | "aa")), "aa"),
+    ("test15", (("a" | "b") ~ (ONE | "a")) ~ "a", "aa"),
+    ("test16", ((ONE | "c") | %(ONE)) ~ "b", "b"),
+    ("test17", %("a" ~ ONE), "aa"),
+    ("test18", %("a" | %("b")), "ba"),
+    ("test19", %(%("a") | "ab"), "aabaab"),
+    ("test20", %("bb" | "b"), "bbb"),
+    ("test21", ("a" ~ %("b")) ~ (("b" | ONE) ~ "a"), "aba"),
+    ("test22", ("c" | ("a" | ONE)) ~ ("ab" | "b"), "ab")
+  )
+
+  var passed = 0
+  var failed = 0
+
+  tests.zipWithIndex.foreach {
+    case ((label, r, s), i) =>
+      val marked = lex(r, s).getOrElse(Nil)
+      val deriv  = rebit.lex(r, s.toList)
+
+      if (marked != deriv) {
+        failed += 1
+        
+        println(s"\n\u001b[31mTest ${i + 1} FAILED: $label")
+        println(s"Regex:\n${pp(r)}")
+        println(s"Input string: $s")
+        println(s"Marked bits    : $marked")
+        println(s"Derivative bits: $deriv\u001b[0m")
+        println("--------------------------------------------------")
+      } else {
+        passed += 1
+        println(s"Test ${i + 1} passed: $label")
+      }
+  }
+
+  println(s"\n==== Test Summary ====")
+  println(s"Passed: $passed")
+  println(s"Failed: $failed")
+}

@@ -164,7 +164,8 @@ def bmkeps(r: ARexp) : Bits = r match {
 }
 
 // derivative of a regular expression w.r.t. a character
-def bder(c: Char, r: ARexp) : ARexp = r match {
+def bder(c: Char, r: ARexp) : ARexp = 
+  r match {
   case AZERO => AZERO
   case AONE(_) => AZERO
   case ACHAR(bs, d) => if (c == d) AONE(bs) else AZERO
@@ -303,4 +304,26 @@ def test1() = {
 
   println(s"=final result for ${s.take(3)}=")
   println(blex(br, s.take(3)))
+}
+
+@main
+def test2() = {
+  println("=====Test====")
+  val r = ("a" | "ab") ~ ("b" | ONE)
+  val br = intern(r)
+  val s = "ab".toList
+  println("=string=")
+  println(s)
+  println("=orig=")
+  println(ppr(r))
+  println("=intern=")
+  println(pp(br))
+  println(s"=der ${s(0)}=")
+  println(pp(bders(br, s.take(1))))
+
+  println(s"=der ${s(1)}=")
+  println(pp(bders(br, s.take(2))))
+
+  println(s"=final result for ${s.take(2)}=")
+  println(blex(br, s.take(2)))
 }
