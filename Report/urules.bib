@@ -1,0 +1,104 @@
+@inproceedings{Fischer2010,
+  author = {S.~Fischer and F.~Huch and T.~Wilke},
+  title = {{A} {P}lay on {R}egular {E}xpressions: {F}unctional {P}earl},
+  year = {2010},
+  url = {https://doi.org/10.1145/1863543.1863594},
+  doi = {10.1145/1863543.1863594},
+  booktitle = {Proc.~of the 15th ACM SIGPLAN International
+               Conference on Functional Programming (ICFP)},
+  pages = {357--368},
+  numpages = {12}
+}
+
+@article{Asperti2010,
+  author       = {A.~Asperti and C.~Sacerdoti Coen and E.~Tassi},
+  title        = {{R}egular {E}xpressions, au point},
+  journal      = {arXiv, http://arxiv.org/abs/1010.2604},
+  year         = {2010}
+}
+
+@article{Brzozowski1964,
+author = {Brzozowski, Janusz A.},
+title = {Derivatives of Regular Expressions},
+year = {1964},
+url = {https://doi.org/10.1145/321239.321249}, 
+doi = {10.1145/321239.321249},
+pages = {481–494},
+numpages = {14},
+issue_date = {Oct. 1964},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {11}, number = {4}, issn = {0004-5411}, 
+url = {https://doi.org/10.1145/321239.321249}, 
+doi = {10.1145/321239.321249}, 
+journal = {J. ACM}, month = oct  }
+
+@article{Antimirov1996,
+  author = {V.~Antimirov},
+  title = {Partial Derivatives of Regular Expressions and Finite Automaton Constructions},
+  journal = {Theoretical Computer Science},
+  volume = {155},
+  number = {2},
+  pages = {291--319},
+  year = {1996},
+  doi = {10.1016/0304-3975(95)00182-4}
+}
+
+@article{Owens2009,
+  author = {S.~Owens and J.~Reppy and A.~Turon},
+  title = {Regular-expression derivatives re-examined},
+  journal = {Journal of Functional Programming},
+  volume = {19},
+  number = {2},
+  pages = {173--190},
+  year = {2009},
+  doi = {10.1017/S0956796809007201}
+}
+
+@article{Sulzmann2014,
+  author = {M.~Sulzmann and K.~F.~Lu},
+  title = {POSIX regular expression parsing with derivatives},
+  journal = {Science of Computer Programming},
+  volume = {89},
+  pages = {179--193},
+  year = {2014},
+  doi = {10.1016/j.scico.2013.10.009}
+}
+
+@inproceedings{Might2011,
+  author    = {Matthew Might and David Darais and Daniel Spiewak},
+  title     = {Parsing with Derivatives: A Functional Pearl},
+  booktitle = {Proceedings of the 16th ACM SIGPLAN International Conference on Functional Programming (ICFP)},
+  year      = {2011},
+  pages     = {189--195},
+  publisher = {ACM},
+  doi       = {10.1145/2034773.2034801}
+}
+
+@inbook{TanAndUrban2023,
+title = "POSIX Lexing with Bitcoded Derivatives",
+abstract = "Sulzmann and Lu describe a lexing algorithm that calculates Brzozowski derivatives using bitcodes annotated to regular expressions. Their algorithm generates POSIX values which encode the information of how a regular expression matches a string - that is, which part of the string is matched by which part of the regular expression. This information is needed in the context of lexing in order to extract and to classify tokens. The purpose of the bitcodes is to generate POSIX values incrementally while derivatives are calculated. They also help with designing an {"}aggressive{"} simplification function that keeps the size of derivatives finitely bounded. Without simplification the size of some derivatives can grow arbitrarily big, resulting in an extremely slow lexing algorithm. In this paper we describe a variant of Sulzmann and Lu's algorithm: Our variant is a recursive functional program, whereas Sulzmann and Lu's version involves a fixpoint construction. We (i) prove in Isabelle/HOL that our variant is correct and generates unique POSIX values (no such proof has been given for the original algorithm by Sulzmann and Lu); we also (ii) establish finite bounds for the size of our derivatives",
+author = "Chengsong Tan and Christian Urban",
+year = "2023",
+month = apr,
+day = "18",
+language = "English",
+pages = "26:1--26:18",
+editor = "Adam Naumowicz and Ren{\'e} Thiemann",
+booktitle = "14th International Conference on Interactive Theorem Proving (ITP 2023)",
+}
+
+@InProceedings{NipkowTraytel2014,
+author="Nipkow, Tobias
+and Traytel, Dmitriy",
+editor="Klein, Gerwin
+and Gamboa, Ruben",
+title="Unified Decision Procedures for Regular Expression Equivalence",
+booktitle="Interactive Theorem Proving",
+year="2014",
+publisher="Springer International Publishing",
+address="Cham",
+pages="450--466",
+abstract="We formalize a unified framework for verified decision procedures for regular expression equivalence. Five recently published formalizations of such decision procedures (three based on derivatives, two on marked regular expressions) can be obtained as instances of the framework. We discover that the two approaches based on marked regular expressions, which were previously thought to be the same, are different, and we prove a quotient relation between the automata produced by them. The common framework makes it possible to compare the performance of the different decision procedures in a meaningful way.",
+isbn="978-3-319-08970-6"
+}

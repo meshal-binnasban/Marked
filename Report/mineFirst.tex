@@ -1,0 +1,96 @@
+\documentclass[11pt]{article}
+\title{Progress Report - 9 Months}       
+\author{Meshal Binnasban}               
+\date{\today} 
+
+\begin{document}
+
+\maketitle
+This is the Nine Months Report showing my work during the last 9 months.
+\section{Outline}
+\begin{enumerate}
+\item Derivatives
+\item Exploding size
+\item add simplification (still examples where they explode)
+\item motivation (partial derivatives and that they grow cubically)
+\item marks
+\end{enumerate}
+
+\subsection{Derivatives}
+brief summary of litrateure about derivatives
+some explanation of how the derivatives are built and some examples.
+maybe some explanation of auotamta or if they are implicit?
+
+\subsection{Problems}
+the size of the derivatives could grow infinte. some examples to illustrate that.
+
+\subsection{Simplification}
+even with simplifications added, the size is not ideal, some examples explode in size. show some examples .
+
+\subsection{Motivation}
+the need for an algorithm that not only do matching but lexing with posix semantics. show some examples maybe
+when this is required
+
+\subsection{Marked Approach}
+show litrateure of marked apporach, of ficher \cite{Fischer2010} and asperti \cite{Asperti2010}. explain how 
+they are built, what are the details of them. they only do matching, the work for this phd is to extend
+them to do lexing, as far as we are aware, this hasnt been done in litrateure. 
+\subsubsection{Work So Far}
+the work began by implmentiong the marked approach in scala, inspited by ficher article play \cite{Fischer2010}
+at the begining the algorithm was only matching a string to regex. through the work, we developed several 
+versions of the algorithm to extract values of matching. we started by interperting a boolean value associated
+with node/CHAR constructors to represent a match of that char. another version uses a new constructor point
+that has wraps around the char consteuctor representing a mark.
+we used bitcodes seqeunces to represent the how a match happend, which is akin to the one used with the derivatives approach, the bit codes in derivatives work 
+// explain the derivatives bitcode here//
+\begin{enumerate}
+    \item the first version managed to extract \emph{a} value, this value sometimes match the posix value but sometime not. 
+this due to the way the points move through the regex with the structure of this version. some points/marks are replaced 
+during the matching process and some of the erase points have the posix value.
+we use a function called \emph{mkfin} to extract the bit code when part/all regex is in final state, and mkeps
+to extract how the empty string matched in case of nullable r.  it works by going through the regex,
+building up the bits as it goes through the regex, with bits of the following: L/0 for Left and R/1 for Right, 0/N for starting a new 
+iteration of STAR and E/1 for Ending it. 
+
+the details and definitions of shift is found below:
+
+m is mode indicating wheather we need to introduce a new mark inside the regex or not, this is needed to 
+be true at the begining, and in some other case as shown below:
+
+- shift and how it works-
+- some examples- 
+
+this is an exmple of how shift works:
+shift (m,a,r) %in here open big { pointing to each part of the defnitions.
+
+1- if r=char -> check if m "&" a==c in CHAR
+2- if r=+ -> shift both left and Right
+3- if r= seq -> (shift into r1 m true).r2  if not nullable r1, if nullable r1, then shift r1 m true.r2 and shift r1 m true . shift r2 m true. if r1 is fin then shift r2
+4- if r= star -> shift r
+
+- some example could be: mention regex like 1+a . a then show how this version matches and extract values.
+
+    \item second version, passes a bit sequence in shift, if there is a match, the point constructor will 
+wrap around char and save the list of bits inside. later on, the mkfin will extract the list from the 
+points that makes the regex in a final state, show the definition of shift here, and some example to
+illustrate how that works. the problem we were facing that some paths gets replaced.
+- shift and how it works-
+- some examples- 
+
+    \item third versiopn maintains a list of lists of the bit sequences, this version produce a list of bit
+sequences, we conducted extensive test up to more than 10 billion examples were enumerated using this 'quote
+the source/reference of the enumerate code' to enumerate examples and then match with the strings using
+the proven derivatives approach and our algoeithm, the posix value generated from derivatives were always
+among the lists generated, with observation, we strongly (not yet proven) that this version generate 
+all the possible paths that the regex can match the string, the details of this version is found below:
+
+- shift and how it works-
+- some examples- 
+
+\end{enumerate}
+
+
+\bibliographystyle{abbrv}
+\bibliography{urules}
+
+\end{document}

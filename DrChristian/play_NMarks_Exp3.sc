@@ -24,7 +24,12 @@ extension (ms: List[Mark]) {
   def <:+>(b: Bit): List[Mark] = 
     ms.map(m => m.copy(bits = m.bits :+ b))
   def <::+>(bs: Bits): List[Mark] = 
-    ms.map(m=> m.copy(bits= m.bits ::: bs))
+    ms.map(m=> m.copy(bits= m.bits ::: bs)) 
+}
+extension (m: Mark) {
+  def <:+>(b: Bit): Mark = 
+     m.copy(bits = m.bits :+ b)
+  
 }
 
 def mkeps2(r: Rexp) : Bits = r match {
@@ -42,21 +47,22 @@ def shifts(ms: Marks, r: Rexp): Marks =
         case ZERO => Nil
         case ONE => Nil
         case CHAR(d) =>
-            for (m <- ms if m.str != Nil && m.str.head == d) yield m.copy(str = m.str.tail)
+          for (m <- ms if m.str != Nil && m.str.head == d) yield m.copy(str = m.str.tail)
         case ALT(r1, r2) =>
-           ( (shifts(ms <:+> Lf, r1) )  ::: (shifts(ms <:+> Ri, r2))  )
+          ((shifts(ms <:+> Lf, r1) ) ::: (shifts(ms <:+> Ri, r2)) )
         case SEQ(r1,r2) => {
-            val ms1 = shifts(ms, r1).reshuffle
-            (nullable(r1), nullable(r2)) match {
-                case (true, true) =>(ms1 <::+>mkeps2(r2)) ::: ms1.flatMap( m => shifts(List(m), r2)) ::: shifts(ms <::+> mkeps2(r1) ,r2)
-                case (true, false) =>(ms1).flatMap( m => shifts(List(m), r2)) ::: shifts((ms<::+> mkeps2(r1)),r2)
-                case (false, true) => (ms1 <::+>mkeps2(r2)) ::: ms1.flatMap( m => shifts(List(m), r2))   
-                case (false, false) => ms1.flatMap( m => shifts(List(m), r2))
+          val ms1 = shifts(ms, r1).reshuffle
+          (nullable(r1), nullable(r2)) match {
+            case (true, true) =>(ms1 <::+>mkeps2(r2)) ::: ms1.flatMap( m => shifts(List(m), r2)) ::: shifts(ms <::+> mkeps2(r1) ,r2)
+            case (true, false) => (ms1).flatMap( m => shifts(List(m), r2)) ::: shifts((ms<::+> mkeps2(r1)),r2)
+            case (false, true) => (ms1 <::+>mkeps2(r2)) ::: ms1.flatMap( m => shifts(List(m), r2))   
+            case (false, false) => //shifts(ms1,r2)
+              ms1.flatMap( m => shifts(List(m), r2))
         }
       }
         case STAR(r) =>
             val ms1 = shifts(ms<:+>Nx, r).reshuffle
-            (  (ms1 <:+> En) ::: ms1.flatMap( m=> shifts(List(m), STAR(r))) )
+            ( (ms1 <:+> En) ::: ms1.flatMap( m=> shifts(List(m), STAR(r)))   )
             //(  (ms1 <:+> En) ::: shifts(ms1, STAR(r))  ) 
 
         }
@@ -71,25 +77,15 @@ extension (ms: List[Mark])
             seenEmpty = true
             m
             }
-  def pruneA: List[Mark] =
-    val seen = scala.collection.mutable.Set[Int]()
-    ms.filter { m =>
-        val len = m.str.length
-        if (seen.contains(len)) false
-        else {
-        seen += len
-        true
-        }
-    }
   def collectEmpty: List[Mark] =
     ms.filter(m => m.str == Nil)
 
 def matcher(r: Rexp, s: String) : Boolean =
   val im = Mark(bits = List(), str = s.toList)
   val marks = shifts(List(im), r)
- // println(s"-------------End of 1 Match-----------\n")
- // marks.foreach(m => println(s"-$m") )
- // println("------------------------")  
+   println(s"-------------End of 1 matcher call-----------\n")
+  marks.foreach(m => println(s"-$m") )
+  println("------------------------")   
   marks.exists(_.str == Nil)
 
 def lex(r: Rexp, s: String): Option[Bits] =
@@ -98,17 +94,19 @@ def lex(r: Rexp, s: String): Option[Bits] =
     else Some(shifts(List(Mark(bits = List(), str = s.toList)), r).collectEmpty.head.bits)
   else None
 
-def lexMarks(r: Rexp, s: String): Option[Marks] =
+def lexM(r: Rexp, s: String): Option[Marks] =
   if matcher(r, s) then
-    if s.toList == Nil then 
-        //println("Empty string, not returning marks for now, later will adjust mkeps to return the empty maybe?")
-        None
+    if s.toList == Nil then None
     else Some(shifts(List(Mark(bits = List(), str = s.toList)), r))
   else None
 
-/* def lexer(r: Rexp, s: List[Char]) : Option[List[Val]] = {
-  lex(r, s).map(_.map(dec2(r, _)))
-} */
+def lexer(r: Rexp, s: String) : Option[Val] = {
+  lex(r, s).map(dec2(r, _))
+} 
+
+def lexerMarks(r: Rexp, s: String) : Option[List[Val]] = {
+  lexM(r, s).map(_.map(m => dec2(r, m.bits)))
+}
 
 
 // %( "a" | "aa" )
@@ -119,20 +117,8 @@ def test1() = {
   val s = "aa"
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
-
-  val markedBits=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s.toList)
-  val derivVal=rebit.blexer(br2, s)
-
-  println(s"marked Bits: ${markedBits}")
-  println(s"derivBits: ${derivBits}\n------------------------")
-  println(s"derivVal: ${derivVal}")
-
-  println("------------------------")
-  if(markedBits.getOrElse(Nil) == derivBits) 
-  println("Matched Derivative")
-  else
-    println("Mismatched") 
+  
+  commonTestCode(br2, s)
 }
 
 // %(%("a"))
@@ -146,19 +132,7 @@ def test2() = {
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 
-  val markedBits=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s.toList)
-  val derivVal=rebit.blexer(br2, s)
-
-  println(s"marked Bits: ${markedBits}")
-  println(s"derivBits: ${derivBits}\n------------------------")
-  println(s"derivVal: ${derivVal}")
-
-  println("------------------------")
-  if(markedBits.getOrElse(Nil) == derivBits) 
-  println("Matched Derivative")
-  else
-    println("Mismatched")
+  commonTestCode(br2, s)
 }
 
 //%("aa") ~ %(%("a")) 
@@ -170,19 +144,8 @@ def test3() = {
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 
-  val markedBits=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s.toList)
-  val derivVal=rebit.blexer(br2, s)
+  commonTestCode(br2, s)  
 
-  println(s"marked Bits: ${markedBits}")
-  println(s"derivBits: ${derivBits}\n------------------------")
-  println(s"derivVal: ${derivVal}")
-
-  println("------------------------")
-  if(markedBits.getOrElse(Nil) == derivBits) 
-  println("Matched Derivative")
-  else
-    println("Mismatched") 
 }
 
 //( %("a") ~ %("a") ) ~ "a"
@@ -194,19 +157,8 @@ def test4() = {
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 
-  val markedBits=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s.toList)
-  val derivVal=rebit.blexer(br2, s)
-
-  println(s"marked Bits: ${markedBits}")
-  println(s"derivBits: ${derivBits}\n------------------------")
-  println(s"derivVal: ${derivVal}")
-
-  println("------------------------")
-  if(markedBits.getOrElse(Nil) == derivBits) 
-  println("Matched Derivative")
-  else
-    println("Mismatched")
+  commonTestCode(br2, s)
+  
 }
 
 //%( %( %("a") ) ) 
@@ -218,19 +170,10 @@ def test5() = {
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 
-  val markedBits=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s.toList)
-  val derivVal=rebit.blexer(br2, s)
+  commonTestCode(br2, s)
+  
+  
 
-  println(s"marked Bits: ${markedBits}")
-  println(s"derivBits: ${derivBits}\n------------------------")
-  println(s"derivVal: ${derivVal}")
-
-  println("------------------------")
-  if(markedBits.getOrElse(Nil) == derivBits) 
-  println("Matched Derivative")
-  else
-    println("Mismatched")
 }
 
 // %("a" ~ %("a") )
@@ -242,19 +185,9 @@ def test6() = {
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 
-  val markedBits=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s.toList)
-  val derivVal=rebit.blexer(br2, s)
+  commonTestCode(br2, s)
 
-  println(s"marked Bits: ${markedBits}")
-  println(s"derivBits: ${derivBits}\n------------------------")
-  println(s"derivVal: ${derivVal}")
-
-  println("------------------------")
-  if(markedBits.getOrElse(Nil) == derivBits) 
-  println("Matched Derivative")
-  else
-    println("Mismatched")
+  
 }
 
 // %( %("a") ~ "a" )
@@ -266,19 +199,7 @@ def test7() = {
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 
-  val markedBits=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s.toList)
-  val derivVal=rebit.blexer(br2, s)
-
-  println(s"marked Bits: ${markedBits}")
-  println(s"derivBits: ${derivBits}\n------------------------")
-  println(s"derivVal: ${derivVal}")
-
-  println("------------------------")
-  if(markedBits.getOrElse(Nil) == derivBits) 
-  println("Matched Derivative")
-  else
-    println("Mismatched")
+  commonTestCode(br2, s)
 }
 
 // %("a") ~ (%("a") ~ "a" )
@@ -290,19 +211,7 @@ def test8() = {
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 
-  val markedBits=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s.toList)
-  val derivVal=rebit.blexer(br2, s)
-
-  println(s"marked Bits: ${markedBits}")
-  println(s"derivBits: ${derivBits}\n------------------------")
-  println(s"derivVal: ${derivVal}")
-
-  println("------------------------")
-  if(markedBits.getOrElse(Nil) == derivBits) 
-  println("Matched Derivative")
-  else
-    println("Mismatched")
+  commonTestCode(br2, s)
 }
 
 // %("a") ~ %("a")
@@ -314,19 +223,7 @@ def test9() = {
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 
-  val markedBits=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s.toList)
-  val derivVal=rebit.blexer(br2, s)
-
-  println(s"marked Bits: ${markedBits}")
-  println(s"derivBits: ${derivBits}\n------------------------")
-  println(s"derivVal: ${derivVal}")
-
-  println("------------------------")
-  if(markedBits.getOrElse(Nil) == derivBits) 
-  println("Matched Derivative")
-  else
-    println("Mismatched")
+  commonTestCode(br2, s)
 }
 // %(ONE | "a")
 @main 
@@ -338,19 +235,7 @@ def test10() = {
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 
-  val markedBits=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s.toList)
-  val derivVal=rebit.blexer(br2, s)
-
-  println(s"marked Bits: ${markedBits}")
-  println(s"derivBits: ${derivBits}\n------------------------")
-  println(s"derivVal: ${derivVal}")
-
-  println("------------------------")
-  if(markedBits.getOrElse(Nil) == derivBits) 
-  println("Matched Derivative")
-  else
-    println("Mismatched")
+  commonTestCode(br2, s)
 }
 
 
@@ -363,19 +248,7 @@ def test11() = {
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 
-  val markedBits=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s.toList)
-  val derivVal=rebit.blexer(br2, s)
-
-  println(s"marked Bits: ${markedBits}")
-  println(s"derivBits: ${derivBits}\n------------------------")
-  println(s"derivVal: ${derivVal}")
-
-  println("------------------------")
-  if(markedBits.getOrElse(Nil) == derivBits) 
-  println("Matched Derivative")
-  else
-    println("Mismatched")
+  commonTestCode(br2, s)
 }
 
 //("a" | "ab") ~ ("c" | "bc")
@@ -387,19 +260,7 @@ def test12() = {
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 
-  val markedBits=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s.toList)
-  val derivVal=rebit.blexer(br2, s)
-
-  println(s"marked Bits: ${markedBits}")
-  println(s"derivBits: ${derivBits}\n------------------------")
-  println(s"derivVal: ${derivVal}")
-
-  println("------------------------")
-  if(markedBits.getOrElse(Nil) == derivBits) 
-  println("Matched Derivative")
-  else
-    println("Mismatched")
+  commonTestCode(br2, s)
 }
 
 //(("a"|"b") | ("ab")) ~ (("bc") | ("c" | "b"))
@@ -411,19 +272,7 @@ def test13() = {
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 
-  val markedBits=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s.toList)
-  val derivVal=rebit.blexer(br2, s)
-
-  println(s"marked Bits: ${markedBits}")
-  println(s"derivBits: ${derivBits}\n------------------------")
-  println(s"derivVal: ${derivVal}")
-
-  println("------------------------")
-  if(markedBits.getOrElse(Nil) == derivBits) 
-  println("Matched Derivative")
-  else
-    println("Mismatched")
+  commonTestCode(br2, s)
 }
 
 //( ONE | ( ONE | "bc" )  )  | ( "a"| ONE ) ~ ("a" | "aa")
@@ -435,19 +284,7 @@ def test14() = {
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 
-  val markedBits=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s.toList)
-  val derivVal=rebit.blexer(br2, s)
-
-  println(s"marked Bits: ${markedBits}")
-  println(s"derivBits: ${derivBits}\n------------------------")
-  println(s"derivVal: ${derivVal}")
-
-  println("------------------------")
-  if(markedBits.getOrElse(Nil) == derivBits) 
-  println("Matched Derivative")
-  else
-    println("Mismatched")
+  commonTestCode(br2, s)
 }
 
 //( ("a" | "b") ~ (ONE | "a") ) ~ "a"
@@ -459,19 +296,7 @@ def test15() = {
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 
-  val markedBits=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s.toList)
-  val derivVal=rebit.blexer(br2, s)
-
-  println(s"marked Bits: ${markedBits}")
-  println(s"derivBits: ${derivBits}\n------------------------")
-  println(s"derivVal: ${derivVal}")
-
-  println("------------------------")
-  if(markedBits.getOrElse(Nil) == derivBits) 
-  println("Matched Derivative")
-  else
-    println("Mismatched")
+  commonTestCode(br2, s)
 }
 
 //( (ONE|"c") | %(ONE) ) ~ ("b") 
@@ -483,19 +308,7 @@ def test16() = {
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 
-  val markedBits=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s.toList)
-  val derivVal=rebit.blexer(br2, s)
-
-  println(s"marked Bits: ${markedBits}")
-  println(s"derivBits: ${derivBits}\n------------------------")
-  println(s"derivVal: ${derivVal}")
-
-  println("------------------------")
-  if(markedBits.getOrElse(Nil) == derivBits) 
-  println("Matched Derivative")
-  else
-    println("Mismatched")
+  commonTestCode(br2, s)
 }
 
 //( %("a" ~ ONE) )
@@ -507,19 +320,7 @@ def test17() = {
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 
-  val markedBits=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s.toList)
-  val derivVal=rebit.blexer(br2, s)
-
-  println(s"marked Bits: ${markedBits}")
-  println(s"derivBits: ${derivBits}\n------------------------")
-  println(s"derivVal: ${derivVal}")
-
-  println("------------------------")
-  if(markedBits.getOrElse(Nil) == derivBits) 
-  println("Matched Derivative")
-  else
-    println("Mismatched")
+  commonTestCode(br2, s)
 }
 
 //(%(ONE)| %("a"| %("b")))
@@ -531,19 +332,7 @@ def test18() = {
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 
-  val markedBits=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s.toList)
-  val derivVal=rebit.blexer(br2, s)
-
-  println(s"marked Bits: ${markedBits}")
-  println(s"derivBits: ${derivBits}\n------------------------")
-  println(s"derivVal: ${derivVal}")
-
-  println("------------------------")
-  if(markedBits.getOrElse(Nil) == derivBits) 
-  println("Matched Derivative")
-  else
-    println("Mismatched")
+  commonTestCode(br2, s)
 }
 
 //( %( %("a") | "ab"))
@@ -555,19 +344,7 @@ def test19() = {
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 
-  val markedBits=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s.toList)
-  val derivVal=rebit.blexer(br2, s)
-
-  println(s"marked Bits: ${markedBits}")
-  println(s"derivBits: ${derivBits}\n------------------------")
-  println(s"derivVal: ${derivVal}")
-
-  println("------------------------")
-  if(markedBits.getOrElse(Nil) == derivBits) 
-  println("Matched Derivative")
-  else
-    println("Mismatched")
+  commonTestCode(br2, s)
 }
 
 // %( "bb" | "b" )
@@ -579,43 +356,19 @@ def test20() = {
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 
-  val markedBits=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s.toList)
-  val derivVal=rebit.blexer(br2, s)
-
-  println(s"marked Bits: ${markedBits}")
-  println(s"derivBits: ${derivBits}\n------------------------")
-  println(s"derivVal: ${derivVal}")
-
-  println("------------------------")
-  if(markedBits.getOrElse(Nil) == derivBits) 
-  println("Matched Derivative")
-  else
-    println("Mismatched")
+  commonTestCode(br2, s)
 }
 
 // ( "a" ~ %("b") ) ~ ( ("b"|ONE) ~ "a" )
 @main
 def test21() = {
   println("=====Test====")
-  val br2= ( "a" ~ %("b") ) ~ ( ("b"|ONE) ~ "a" )
+  val br2= ( "a" ~ %("b") ) ~ ( ("b" | ONE) ~ "a" )
   val s = "aba" // or abb?
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 
-  val markedBits=lex(br2, s)
-  val derivBits  = rebit.lex(br2, s.toList)
-  val derivVal=rebit.blexer(br2, s)
-
-  println(s"marked Bits: ${markedBits}")
-  println(s"derivBits: ${derivBits}\n------------------------")
-  println(s"derivVal: ${derivVal}")
-
-  println("------------------------")
-  if(markedBits.getOrElse(Nil) == derivBits) 
-  println("Matched Derivative")
-  else
-    println("Mismatched")
+  commonTestCode(br2, s)
 }
 
 // %( %("a"|"c") ) | ("c" | ("a" | ONE) ) ~ ("ab" | "b" )  
@@ -631,10 +384,19 @@ def test22() = {
   val derivBits  = rebit.lex(br2, s.toList)
   val derivVal=rebit.blexer(br2, s)
 
+  commonTestCode(br2, s)
+}
+
+def commonTestCode( br2 : Rexp, s : String ) = {
+  val markedBits=lex(br2, s)
+  val markedVal=lexer(br2, s)
+  val derivBits  = rebit.lex(br2, s.toList)
+  val derivVal=rebit.blexer(br2, s)
+
   println(s"marked Bits: ${markedBits}")
   println(s"derivBits: ${derivBits}\n------------------------")
   println(s"derivVal: ${derivVal}")
-
+  println(s"marked Val: ${markedVal}")
   println("------------------------")
   if(markedBits.getOrElse(Nil) == derivBits) 
   println("Matched Derivative")
@@ -642,6 +404,60 @@ def test22() = {
     println("Mismatched")
 }
 
+@main
+def testExamples(): Unit = {
+  val tests = List(
+    ("test1", %(%("aa")), "aa"),
+    ("test2", %("a"), "aaa"),
+    ("test3", %("aa") ~ %(%("a")), "aaaaaa"),
+    ("test4", (%("a") ~ %("a")) ~ "a", "aaa"),
+    ("test5", %(%(%("a"))), "aa"),
+    ("test6", %("a" ~ %("a")), "aaa"),
+    ("test7", %(%("a") ~ "a"), "aaa"),
+    ("test8", %("a") ~ (%("a") ~ "a"), "aaa"),
+    ("test9", %("a") ~ %("a"), "a" * 10),
+    ("test10", %((ONE | "a") | "aa"), "aaa"),
+    ("test11", (ONE | "a") ~ ("a" | "aa"), "aaa"),
+    ("test12", ("a" | "ab") ~ ("c" | "bc"), "abc"),
+    ("test13", (("a" | "b") | "ab") ~ ("bc" | "c" | "b"), "abc"),
+    ("test14", (ONE | (ONE | "bc")) | (("a" | ONE) ~ ("a" | "aa")), "aa"),
+    ("test15", (("a" | "b") ~ (ONE | "a")) ~ "a", "aa"),
+    ("test16", ((ONE | "c") | %(ONE)) ~ "b", "b"),
+    ("test17", %("a" ~ ONE), "aa"),
+    ("test18", %("a" | %("b")), "ba"),
+    ("test19", %(%("a") | "ab"), "aabaab"),
+    ("test20", %("bb" | "b"), "bbb"),
+    ("test21", ("a" ~ %("b")) ~ (("b" | ONE) ~ "a"), "aba"),
+    ("test22", ("c" | ("a" | ONE)) ~ ("ab" | "b"), "ab")
+  )
+
+  var passed = 0
+  var failed = 0
+
+  tests.zipWithIndex.foreach {
+    case ((label, r, s), i) =>
+      val marked = lex(r, s).getOrElse(Nil)
+      val deriv  = rebit.lex(r, s.toList)
+
+      if (marked != deriv) {
+        failed += 1
+        
+        println(s"\n\u001b[31mTest ${i + 1} FAILED: $label")
+        println(s"Regex:\n${pp(r)}")
+        println(s"Input string: $s")
+        println(s"Marked bits    : $marked")
+        println(s"Derivative bits: $deriv\u001b[0m")
+        println("--------------------------------------------------")
+      } else {
+        passed += 1
+        println(s"Test ${i + 1} passed: $label")
+      }
+  }
+
+  println(s"\n==== Test Summary ====")
+  println(s"Passed: $passed")
+  println(s"Failed: $failed")
+}
 
 
 
@@ -771,57 +587,3 @@ def testAll() = {
   println("\nAll tests passed!")
 }// end of strongTestNoSTARParallel
 
-@main
-def testExamples(): Unit = {
-  val tests = List(
-    ("test1", %(%("aa")), "aa"),
-    ("test2", %("a"), "aaa"),
-    ("test3", %("aa") ~ %(%("a")), "aaaaaa"),
-    ("test4", (%("a") ~ %("a")) ~ "a", "aaa"),
-    ("test5", %(%(%("a"))), "aa"),
-    ("test6", %("a" ~ %("a")), "aaa"),
-    ("test7", %(%("a") ~ "a"), "aaa"),
-    ("test8", %("a") ~ (%("a") ~ "a"), "aaa"),
-    ("test9", %("a") ~ %("a"), "a" * 10),
-    ("test10", %((ONE | "a") | "aa"), "aaa"),
-    ("test11", (ONE | "a") ~ ("a" | "aa"), "aaa"),
-    ("test12", ("a" | "ab") ~ ("c" | "bc"), "abc"),
-    ("test13", (("a" | "b") | "ab") ~ ("bc" | "c" | "b"), "abc"),
-    ("test14", (ONE | (ONE | "bc")) | (("a" | ONE) ~ ("a" | "aa")), "aa"),
-    ("test15", (("a" | "b") ~ (ONE | "a")) ~ "a", "aa"),
-    ("test16", ((ONE | "c") | %(ONE)) ~ "b", "b"),
-    ("test17", %("a" ~ ONE), "aa"),
-    ("test18", %("a" | %("b")), "ba"),
-    ("test19", %(%("a") | "ab"), "aabaab"),
-    ("test20", %("bb" | "b"), "bbb"),
-    ("test21", ("a" ~ %("b")) ~ (("b" | ONE) ~ "a"), "aba"),
-    ("test22", ("c" | ("a" | ONE)) ~ ("ab" | "b"), "ab")
-  )
-
-  var passed = 0
-  var failed = 0
-
-  tests.zipWithIndex.foreach {
-    case ((label, r, s), i) =>
-      val marked = lex(r, s).getOrElse(Nil)
-      val deriv  = rebit.lex(r, s.toList)
-
-      if (marked != deriv) {
-        failed += 1
-        
-        println(s"\n\u001b[31mTest ${i + 1} FAILED: $label")
-        println(s"Regex:\n${pp(r)}")
-        println(s"Input string: $s")
-        println(s"Marked bits    : $marked")
-        println(s"Derivative bits: $deriv\u001b[0m")
-        println("--------------------------------------------------")
-      } else {
-        passed += 1
-        println(s"Test ${i + 1} passed: $label")
-      }
-  }
-
-  println(s"\n==== Test Summary ====")
-  println(s"Passed: $passed")
-  println(s"Failed: $failed")
-}

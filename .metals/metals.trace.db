@@ -1,0 +1,63 @@
+2025-06-12 10:10:46.961090+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "DEPENDENCY_SOURCE" not found; SQL statement:
+select build_target_uri from dependency_source where text_document_uri = ?; [42102-232]
+2025-06-12 10:10:50.282317+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "DEPENDENCY_SOURCE" not found (this database is empty); SQL statement:
+select build_target_uri from dependency_source where text_document_uri = ?; [42104-232]
+2025-06-12 10:10:51.295852+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "DEPENDENCY_SOURCE" not found (this database is empty); SQL statement:
+select build_target_uri from dependency_source where text_document_uri = ?; [42104-232]
+2025-06-12 10:10:51.428072+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "DEPENDENCY_SOURCE" not found (this database is empty); SQL statement:
+select build_target_uri from dependency_source where text_document_uri = ?; [42104-232]
+2025-06-12 10:10:51.463764+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "DEPENDENCY_SOURCE" not found (this database is empty); SQL statement:
+select build_target_uri from dependency_source where text_document_uri = ?; [42104-232]
+2025-06-12 10:10:51.501553+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "DEPENDENCY_SOURCE" not found (this database is empty); SQL statement:
+select build_target_uri from dependency_source where text_document_uri = ?; [42104-232]
+2025-06-12 10:10:51.535857+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "DEPENDENCY_SOURCE" not found (this database is empty); SQL statement:
+select build_target_uri from dependency_source where text_document_uri = ?; [42104-232]
+2025-06-12 10:10:52.295811+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "DEPENDENCY_SOURCE" not found (this database is empty); SQL statement:
+select build_target_uri from dependency_source where text_document_uri = ?; [42104-232]
+2025-06-12 10:10:52.338301+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "DEPENDENCY_SOURCE" not found (this database is empty); SQL statement:
+select build_target_uri from dependency_source where text_document_uri = ?; [42104-232]
+2025-06-12 10:10:52.364397+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "DEPENDENCY_SOURCE" not found (this database is empty); SQL statement:
+select build_target_uri from dependency_source where text_document_uri = ?; [42104-232]
+2025-06-12 10:10:52.371872+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "DEPENDENCY_SOURCE" not found (this database is empty); SQL statement:
+select build_target_uri from dependency_source where text_document_uri = ?; [42104-232]
+2025-06-12 10:10:52.382723+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "DEPENDENCY_SOURCE" not found (this database is empty); SQL statement:
+select build_target_uri from dependency_source where text_document_uri = ?; [42104-232]
+2025-06-12 10:10:52.385173+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "DEPENDENCY_SOURCE" not found (this database is empty); SQL statement:
+select build_target_uri from dependency_source where text_document_uri = ?; [42104-232]
+2025-06-12 10:10:52.398836+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "DEPENDENCY_SOURCE" not found (this database is empty); SQL statement:
+select build_target_uri from dependency_source where text_document_uri = ?; [42104-232]
+2025-06-12 10:10:52.422586+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "DEPENDENCY_SOURCE" not found (this database is empty); SQL statement:
+select build_target_uri from dependency_source where text_document_uri = ?; [42104-232]
+2025-06-12 10:10:52.436258+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "DEPENDENCY_SOURCE" not found (this database is empty); SQL statement:
+select build_target_uri from dependency_source where text_document_uri = ?; [42104-232]
+2025-06-12 10:10:52.443634+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "DEPENDENCY_SOURCE" not found (this database is empty); SQL statement:
+select build_target_uri from dependency_source where text_document_uri = ?; [42104-232]
+2025-06-12 10:10:52.446744+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "DEPENDENCY_SOURCE" not found (this database is empty); SQL statement:
+select build_target_uri from dependency_source where text_document_uri = ?; [42104-232]
+2025-06-12 10:10:52.447785+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "DEPENDENCY_SOURCE" not found (this database is empty); SQL statement:
+select build_target_uri from dependency_source where text_document_uri = ?; [42104-232]
+2025-06-12 10:10:52.448596+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "DEPENDENCY_SOURCE" not found (this database is empty); SQL statement:
+select build_target_uri from dependency_source where text_document_uri = ?; [42104-232]
+2025-06-12 10:10:52.450604+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "DEPENDENCY_SOURCE" not found (this database is empty); SQL statement:
+select build_target_uri from dependency_source where text_document_uri = ?; [42104-232]
