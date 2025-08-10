@@ -37,6 +37,7 @@ def mkeps2(r: Rexp) : Bits = r match {
   case ALT(r1, r2) =>if (nullable(r1)) Lf :: mkeps2(r1) else Ri :: mkeps2(r2)
   case SEQ(r1, r2) => mkeps2(r1) ++ mkeps2(r2)
   case STAR(r) => List(En)
+  case NTIMES(r, n) => List(EnT)
 }
 
 type Marks = List[Mark]
@@ -48,22 +49,38 @@ def shifts(ms: Marks, r: Rexp): Marks =
         case ONE => Nil
         case CHAR(d) =>
           for (m <- ms if m.str != Nil && m.str.head == d) yield m.copy(str = m.str.tail)
-        case ALT(r1, r2) =>
-          ((shifts(ms <:+> Lf, r1) ) ::: (shifts(ms <:+> Ri, r2)) )
+        case ALT(r1, r2) =>  
+         // ((shifts(ms <:+> Lf, r1) ) ::: (shifts(ms <:+> Ri, r2)) )
+         ms.flatMap { m => (shifts(List(m <:+> Lf), r1) ::: shifts(List(m <:+> Ri), r2))}        
         case SEQ(r1,r2) => {
           val ms1 = shifts(ms, r1).reshuffle
           (nullable(r1), nullable(r2)) match {
-            case (true, true) =>(ms1 <::+>mkeps2(r2)) ::: ms1.flatMap( m => shifts(List(m), r2)) ::: shifts(ms <::+> mkeps2(r1) ,r2)
-            case (true, false) => (ms1).flatMap( m => shifts(List(m), r2)) ::: shifts((ms<::+> mkeps2(r1)),r2)
+            case (true, true) => (ms1 <::+>mkeps2(r2)) ::: ms1.flatMap( m => shifts(List(m), r2))  ::: shifts(ms <::+> mkeps2(r1) ,r2)
+            case (true, false) => ms1.flatMap( m => shifts(List(m), r2))   ::: shifts((ms<::+> mkeps2(r1)),r2)
             case (false, true) => (ms1 <::+>mkeps2(r2)) ::: ms1.flatMap( m => shifts(List(m), r2))   
-            case (false, false) => //shifts(ms1,r2)
-              ms1.flatMap( m => shifts(List(m), r2))
-        }
+            case (false, false) => ms1.flatMap( m => shifts(List(m), r2))      
+        } 
       }
         case STAR(r) =>
             val ms1 = shifts(ms<:+>Nx, r).reshuffle
             ( (ms1 <:+> En) ::: ms1.flatMap( m=> shifts(List(m), STAR(r)))   )
             //(  (ms1 <:+> En) ::: shifts(ms1, STAR(r))  ) 
+       
+        case NTIMES(r,n) if n == 0 => (ms <:+> EnT)
+        //case NTIMES(r,n) if n < 0 => Nil
+        case NTIMES(r,n) =>
+          val ms1 = shifts(ms<:+>NxT, r).reshuffle
+          
+          val emptyMs= ms.collectEmpty
+          if((emptyMs.nonEmpty && n != 0) && !nullable(r)){ 
+            Nil
+            } else{
+              if(nullable(r))
+              ( (ms1<:+> EnT) ::: ms1.flatMap( m=> shifts(List(m), NTIMES(r,n-1)))   )
+              else
+              ( ms1.flatMap( m=> shifts(List(m), NTIMES(r,n-1)))   )
+              }
+            
 
         }
 
@@ -83,9 +100,9 @@ extension (ms: List[Mark])
 def matcher(r: Rexp, s: String) : Boolean =
   val im = Mark(bits = List(), str = s.toList)
   val marks = shifts(List(im), r)
-   println(s"-------------End of 1 matcher call-----------\n")
+  /* println(s"-------------End of 1 matcher call-----------\n")
   marks.foreach(m => println(s"-$m") )
-  println("------------------------")   
+  println("------------------------")     */
   marks.exists(_.str == Nil)
 
 def lex(r: Rexp, s: String): Option[Bits] =
@@ -387,16 +404,33 @@ def test22() = {
   commonTestCode(br2, s)
 }
 
+// 23-NTIMES("a",3)
+// 24- NTIMES(%("a"),14) input a 
+// 25- NTIMES("a",3)| "a" - input a 
+// 26- %( %(  NTIMES("a",6)  ) ) | %("a") input a * 7
+@main
+def test23() = {
+  println("=====Test====")
+  val br2=  NTIMES(%("a"),14)
+  val s = "a" * 1
+  println(s"Regex:\n${pp(br2)}\n")
+  println(s"=string=\n$s")
+
+  commonTestCode(br2, s)
+}
+
+
+
 def commonTestCode( br2 : Rexp, s : String ) = {
   val markedBits=lex(br2, s)
-  val markedVal=lexer(br2, s)
+  //val markedVal=lexer(br2, s)
   val derivBits  = rebit.lex(br2, s.toList)
   val derivVal=rebit.blexer(br2, s)
 
   println(s"marked Bits: ${markedBits}")
   println(s"derivBits: ${derivBits}\n------------------------")
   println(s"derivVal: ${derivVal}")
-  println(s"marked Val: ${markedVal}")
+  //println(s"marked Val: ${markedVal}")
   println("------------------------")
   if(markedBits.getOrElse(Nil) == derivBits) 
   println("Matched Derivative")
@@ -428,7 +462,11 @@ def testExamples(): Unit = {
     ("test19", %(%("a") | "ab"), "aabaab"),
     ("test20", %("bb" | "b"), "bbb"),
     ("test21", ("a" ~ %("b")) ~ (("b" | ONE) ~ "a"), "aba"),
-    ("test22", ("c" | ("a" | ONE)) ~ ("ab" | "b"), "ab")
+    ("test22", ("c" | ("a" | ONE)) ~ ("ab" | "b"), "ab"),
+    ("test23", NTIMES("a", 3), "a" * 3),
+    ("test24", NTIMES(%("a"), 2), "a" * 3),
+    ("test25", NTIMES("a",3)| "a", "a" * 1),
+    ("test26", %( %(  NTIMES("a",2)  ) ) | %("a"), "a" * 3)
   )
 
   var passed = 0
@@ -458,8 +496,6 @@ def testExamples(): Unit = {
   println(s"Passed: $passed")
   println(s"Failed: $failed")
 }
-
-
 
 // decoding of a value from a bitsequence
 def decode_aux(r: Rexp, bs: Bits) : (Val, Bits) = ((r, bs): @unchecked) match {
@@ -554,6 +590,7 @@ def testAll() = {
         (0, _ => CHAR('b')),
         (0, _ => CHAR('c')),
         (1, cs => STAR(cs(0))),
+        (1, cs => NTIMES(cs(0),new scala.util.Random().nextInt(30) + 1 )),
         (2, cs => ALT(cs(0), cs(1))),
         (2, cs => SEQ(cs(0), cs(1)))
       )
@@ -587,3 +624,15 @@ def testAll() = {
   println("\nAll tests passed!")
 }// end of strongTestNoSTARParallel
 
+
+
+/*
+          (nullable(r1), nullable(r2)) match {
+            case (true, true) =>(ms1 <::+>mkeps2(r2)) ::: ms1.flatMap( m => shifts(List(m), r2)) ::: shifts(ms <::+> mkeps2(r1) ,r2)
+            case (true, false) => (ms1).flatMap( m => shifts(List(m), r2)) ::: shifts((ms<::+> mkeps2(r1)),r2)
+            case (false, true) => (ms1 <::+>mkeps2(r2)) ::: ms1.flatMap( m => shifts(List(m), r2))   
+            case (false, false) => //shifts(ms1,r2)
+              ms1.flatMap( m => shifts(List(m), r2))
+        }
+
+*/

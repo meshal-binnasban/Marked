@@ -1,4 +1,6 @@
 \documentclass[12pt]{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
 \title{Progress Report - 9 Months}
 \author{Meshal Binnasban}
 \date{\today}
@@ -33,6 +35,7 @@ the underlying method is adaptable to other representations.
 The long-term aim is to develop a matching algorithm that consistently yields POSIX-disambiguated values for all 
 regular expressions and to formally verify its correctness, with potential extensions to symbolic or automata-theoretic 
 frameworks.
+
 \newpage
 \section{Derivatives}
 
@@ -155,6 +158,8 @@ the POSIX parse tree:
 \[
 \texttt{Seq(Right(Seq('a', 'b')), Right(Empty))}
 \]
+
+******add functions definitions; der , mkeps, fuse, intern******
 \subsection{Size Explosion.} %%//needs more, for example, show that attempts to simplification not help that much// 
 
 Even with aggressive simplifications—as shown by Sulzmann and another variant of the algorithm in \emph{POSIX Lexing with Bitcoded Derivatives}~\cite{TanAndUrban2023}— 
@@ -166,36 +171,266 @@ removing redundant subterms and collapsing identical alternatives, the size rema
 Even Antimirov’s partial derivatives~\cite{Antimirov1996}, which do not track POSIX parse values, may produce cubic growth in worst cases.
 
 \section{Marked Approach}
+The marked approach is a method for regular expression matching that tracks the progress of matching by inserting marks into the regular expression. 
+As noted by Nipkow and Traytel~\cite{NipkowTraytel2014}, the concept of marks dates back to earlier works, but recent work by Fischer~\cite{Fischer2010} 
+and a variation by Asperti~\cite{Asperti2010} developed the idea further in a modern form.
 
-The marked approach is a method for regular expression matching that tracks the progress of matching by inserting marks into the regular expression.
-As noted by Nipkow and Traytel~\cite{NipkowTraytel2014}, the idea wasn't new, but recent developments were made by Fischer~\cite{Fischer2010} and a 
-variation by Asperti~\cite{Asperti2010}. This approach allows for more efficient matching, particularly in complex expressions. The regular expression
+This approach allows for more efficient matching, particularly in complex expressions. The regular expression
 itself does not grow in size; instead, marks are inserted into it. With each input character, these marks move (or shift) according to a set of rules.
 At the end of the input, the expression is evaluated to determine whether the marks are in positions that make the expression final, meaning whether 
 the expression accepts the string.
  
 There is a slight difference in the interpretation of marks in the works of Fischer~\cite{Fischer2010} and Asperti~\cite{Asperti2010}.
-In Fischer's work, marks are inserted after a character has been matched or consumed, indicating a matched character or subexpression. 
+In Fischer's work, marks are inserted after a character has been matched, indicating a matched character or subexpression. 
 In contrast, Asperti interprets the positions of the marks as indicating the ability to match a character. With each character consumed,
 the marks are moved through the regex into new positions that indicate the next character that can be consumed. Similar to Fischer’s work,
 at the end, the regex is evaluated to determine whether it is in a final state; in Asperti’s case, this means that the marks are in positions 
 where the regex can accept the empty string, which reflects that all input characters have been consumed. If the marks were not in those positions,
 it would mean that some characters were not properly matched and the expression should not be accepted.
 
-\subsection{Motivation for a Marked Approach.}
-add the fact that marks after contains marks before.
+\subsection{Motivation for a Marked Approach}
 
-Inspired by the work of Fischer et al. and Asperti et al.~\cite{Fischer2010, Asperti2010}, the marked approach offers an alternative. It inserts \emph{points} into regexes to represent where in the expression the matching is occurring.
+The marked approach offers an alternative to derivatives for regular expression matching. It depends on \emph{moving/shifting} markers
+around the regex instead of creating new subexpressions. Our main motivation is that this method could potentially support fast and 
+high-performance POSIX matching and value extraction, based on how it handles matching and avoids the limitations found in the derivatives approach.
 
-Our aim is to extend the marked approach to:
+Inspired by the works of Fischer et al. and Asperti et al.~\cite{Fischer2010, Asperti2010}, we aim to leverage the marked approach and extend it to 
+handle POSIX-compliant disambiguation, as well as complex constructors used in modern regexes, such as bounded repetitions and intersections. The work
+we are doing is mostly inspired by the algorithm described by Fischer~\cite{Fischer2010}. As shown by Nipkow and Traytel~\cite{NipkowTraytel2014}, the
+pre-mark algorithm (from Asperti) is actually a special case of the post-mark algorithm (from Fischer), so Fischer’s version appears to be the most 
+suitable base for extending to POSIX value disambiguation.
+
+
+\subsection{Versions and Implementation}
+
+We began our work by implementing the marked approach as described by Fischer~\cite{Fischer2010} in the Scala language.  
+the marks are \emph{shifted} through the regular expression with each input character. The process starts with an initial mark inserted 
+at the beginning, which is then moved step-by-step as the input is consumed. This is carried out by a function called \emph{shift}, which performs the 
+core logic of the algorithm. The initial specification of this function is given below, as we have developed several versions throughout our work.
+
+\subsubsection*{Scala Implementation of Fischer’s Marked Approach}
+The following describes the shifting behavior as defined by Fischer~\cite{Fischer2010}.
+\[
+  shift (m,c,r) \rightarrow Marked\, r
+\]
+The three arguments are: the regular expression to match against, a boolean indicating whether to introduce a new mark or just move existing ones, and 
+the input character. The boolean determines the mode of operation: when set to \texttt{true}, a new mark is introduced; otherwise, the function shifts 
+the existing marks. In our implementation, we added a boolean attribute to the \texttt{CHAR} constructor to represent a marked character. In later versions, 
+we use a wrapper constructor around \texttt{CHAR} to explicitly represent a marked character.
+
+  \[
+\begin{array}{rcl}
+  shift(m,c,\textbf{0})              & \stackrel{\text{def}}{=} & \textbf{0} \\\\
+  shift(m,c,\textbf{1})              & \stackrel{\text{def}}{=} & \textbf{1} \\\\
+  shift(m,c,d)              & \stackrel{\text{def}}{=} &
+   \begin{cases}
+    \bullet d & \text{if  \( c=d \land m \)}\\
+    d         & \text{otherwise}\\
+   \end{cases} \\\\
+
+  shift(m,c, r_1 + r_2)     & \stackrel{\text{def}}{=} & shift(m,c,r1) + shift(m,c,r2) \\\\
+  shift(m,c, r_1 \cdot r_2) & \stackrel{\text{def}}{=} &
+    \begin{cases}
+      shift(m,c,r_1) \cdot shift(true,c,r_2)  & \text{if $m$ $\land$ $nullable$  $r_1$ } \\
+      shift(m,c,r_1) \cdot shift(true,c,r_2)  & \text{if $fin(r_1)$} \\
+      shift(m,c,r_1) \cdot shift(false,c,r_2) & \text{otherwise}
+    \end{cases} \\\\
+  shift(m,c, r^*)           & \stackrel{\text{def}}{=} &
+    \begin{cases}
+      shift(m,c,r^*)    &  \\
+      shift(true,c,r^*) & \text{if $fin(r)$} \\
+     % shift(false,c,r^*) & \text{otherwise}
+    \end{cases}
+\end{array}
+\]
+
+\noindent
+Shifting marks for the base cases \texttt{ZERO} and \texttt{ONE} is straightforward, as they cannot have any marks on them.
+
 \begin{itemize}
-\item Extract full match values
-\item Represent all possible parse trees via bitcodes
-\item Support POSIX-compliant disambiguation
-\item Handle complex constructs like STAR and NTIMES
+  \item \textbf{Character case} $(d)$:  
+  A mark is set if the character matches the input character and the mode is \texttt{true}.  
+  The mode controls how marks propagate through the regular expression.
+
+  \item \textbf{Alternative case} $(r_1 + r_2)$:  
+  Marks are shifted into both branches, since either branch could match the same input character.
+
+  \item \textbf{Sequence case} $(r_1 \cdot r_2)$:  
+  \begin{itemize}
+    \item If neither $r_1$ is nullable nor in a final position, shift only into $r_1$, indicating that we are matching the first part of the sequence.
+    \item If $r_1$ is nullable and can be skipped, also shift into $r_2$ so that both parts can begin matching.
+    \item If $\mathit{fin}(r_1)$ holds (meaning $r_1$ has finished matching), shift into $r_2$ to begin matching its part.
+  \end{itemize}
+
+  \item \textbf{Star case} $(r^*)$:  
+  Shift into the subexpression if the mode is \texttt{true} or if the subexpression is in a final position.
 \end{itemize}
 
-\subsection{Future Work}
+Helper Functions Definitions:
+\begin{itemize}
+\item $fin(regex) \rightarrow Boolean $
+  \[
+\begin{array}{rcl}
+  fin(\textbf{0})              & \stackrel{\text{def}}{=} & false \\
+  fin(\textbf{1})              & \stackrel{\text{def}}{=} & false \\
+  fin(c)              & \stackrel{\text{def}}{=} & false \\
+  fin(\bullet c)      & \stackrel{\text{def}}{=} & true \\
+  fin(r_1 + r_1)      & \stackrel{\text{def}}{=} & \text{ $fin(r_1)$ $\lor$ $fin(r_2)$}\\ 
+  fin(r_1 \cdot r_1)  & \stackrel{\text{def}}{=} & \text{ ($fin(r_1)$ $\land$ $nullable(r_2)$) $\lor$ $fin(r_2)$}\\
+  fin(r^*)            & \stackrel{\text{def}}{=} & fin(r)  
+\end{array}
+\]
+
+\item $nullable(regex) \rightarrow Boolean $
+  \[
+\begin{array}{rcl}
+  nullable(\textbf{0})         & \stackrel{\text{def}}{=} & false \\
+  nullable(\textbf{1})              & \stackrel{\text{def}}{=} & true \\
+  nullable(c)              & \stackrel{\text{def}}{=} & false \\
+  nullable(r_1 + r_1)      & \stackrel{\text{def}}{=} & \text{ $nullable(r_1)$ $\lor$ $nullable(r_2)$}\\ 
+  nullable(r_1 \cdot r_1)      & \stackrel{\text{def}}{=} & \text{ ($nullable(r_1)$ $\land$ $nullable(r_2)$)}\\
+  nullable(r^*)      & \stackrel{\text{def}}{=} & true 
+\end{array}
+\]
+
+\end{itemize}
+This first implementation of the algorithm, provides only acceptance checking without any value construction, 
+the followingsubsections describe the different versions we have developed so far.
+
+\subsubsection{Bit-Annotated POINT, version 1}
+In this version, we extended the marked approach to include bitcodes that annotate the marks that is being 
+shifted through the regex. inspired by Sulzmann and Lu~\cite{Sulzmann2014}, we introduced a bitcode in form 
+of a list that is attached to each mark, and it gets built as the marks are shifted. 
+
+This version produce a value but not necessarily the posix preferred value. We use the bit annotations 
+Z as 0 and S as 1 similar to what was done in the bitcoded derivative.
+in this, the function shift takes one more extra argument; Bits which is a List of Bits. 
+when we shift through this function, we add bits to the list, if a mark is to be added (to leafe charachter nodes),
+then this list will be stored in the POINT constructor that wraps around the marked charachter constructor. We 
+define two more functions, mkfin, which is responsible of extracting the list of bit of a final constructor, that
+is, extract the path by bits of how the expression matched, and mkeps, which is responsible for extracting the list
+of bit of a nullable expression matching the empty string, the bits show the path that lead to matching the empty string,
+the defitiantion are found below starting with the shift function:
+
+\[
+\begin{array}{rcl}
+  shift(m,bs,c,0)              & \stackrel{\text{def}}{=} & 0 \\\\
+  shift(m,bs,c,1)              & \stackrel{\text{def}}{=} & 1 \\\\
+  shift(m,bs,c,d)              & \stackrel{\text{def}}{=} & 
+   \begin{cases}
+    \bullet_{bs} \, d & \text{if  $ m \land d = c $}\\
+    d                 & \text{otherwise}
+   \end{cases} \\\\
+
+  shift(m,bs,c, r_1 + r_2)     & \stackrel{\text{def}}{=} & shift(m,bs \, \oplus \, Z,c,r_1) + shift(m,bs \, \oplus \, S,c,r_2) \\\\
+  
+  shift(m,bs,c, r_1 \cdot r_2) & \stackrel{\text{def}}{=} &
+  \begin{cases}
+      shift(m,bs,c,r_1)  \cdot shift(true,bs \textbf{ ++ } mkeps(r_1),c,r_2) & \text{if $ m \land nullable(r_1) $}\\
+      shift(m,bs,c,r_1)  \cdot shift(true,mkfin(r_1),c,r_2)                  & \text{if $ fin(r_1) $}\\
+      shift(m,bs,c,r_1)  \cdot shift(false,[\,],c,r_2)                       & \text{otherwise} 
+    \end{cases}  \\
+
+  shift(m,bs,c,(r)^*)          & \stackrel{\text{def}}{=} &
+    \begin{cases}
+      (shift(m,bs \, \oplus \, Z,c,r))^*                & \text{if $ m $} \\
+      (shift(true,bs \textbf{ ++ } (mkfin(r) \oplus S),c,r))^* & \text{if \( m \land fin(r) \)} \\
+      (shift(true,mkfin(r) \oplus Z,c,r))^* & \text{if \( fin(r) \)} \\
+      (shift(false,[\,],c,r))^*           & \text{otherwise}
+    \end{cases}
+\end{array}
+\]
+
+The  $\oplus$ denotes adding a bit at the end of a bit list, and ++ denotes the concatenation of two bit lists. 
+The symbols $Z$ (or $0$) and $S$ (or $1$) are used to represent left and right choices, respectively.
+
+\textbf{Alternative case} $(r_1 + r_2)$: 
+\begin{itemize}
+  \item We shift as before and annotate the direction of the match with $Z$ or $S$, adding this bit to the list of bits.
+\end{itemize}
+
+\textbf{Sequence case} $(r_1 \cdot r_2)$:
+\begin{itemize}
+    \item If $r_1$ is nullable, we shift a mark to both $r_1$ and $r_2$, passing $bs$ to $r_1$ (representing the current 
+    path leading to this expression) and $bs \, ++ \, \texttt{mkeps}$ to $r_2$, where \texttt{mkeps} returns the bits for 
+    an empty-string match. This corresponds to the path for this sequence when the first part is skipped.
+    \item If $r_1$ is in a final position (meaning it has finished matching), we pass a mark to $r_2$ with the bit list 
+    describing how $r_1$ was matched, extracted using the \texttt{mkfin} function.
+    \item Otherwise, we pass a new mark to $r_1$ only, with $bs$ representing how we reached $r_1$ in this sequence.
+\end{itemize}
+
+\textbf{Star case} $(r^*)$:
+\begin{itemize}
+    \item If only we are introducing a new mark, we pass $bs$, representing the bits that describe how the $r^*$ expression
+     was reached and append Z to indicate a new iteration has begun.
+    \item If we are introducing a new mark and $r$ is in a final position, we pass $bs \, ++ \, \texttt{mkfin}(r)$, combining
+     the bits representing the path to $r^*$ with the bits from 
+    \texttt{mkfin} that describe how $r$ reached its final position with S representing an end of one iteration. So to say, 
+    to append the bitcode for how r reaches a final position to the bitcode of the new mark to be introduced to the STAR.
+    \item If $r$ is in a final position, then we pass mkfin which describe how $r$ reached its final position and then append
+     Z representing the begining of a new iteration.
+    \item If no new mark is introduced, the existing ones are moved by passing an empty list of bits.
+\end{itemize}
+
+Next, we present two examples of matching a string and extracting a value.  
+The first example demonstrates how the bit sequence is constructed during matching,  
+while the second illustrates why the algorithm does not always produce the POSIX-preferred value.  
+In version~1, when shifting to a point (an already marked character) and the character matches again,  
+the associated bit list is overwritten.  
+This behaviour can cause value erasure and, in certain cases, the loss of the POSIX-preferred value,  
+as will be shown in the second example.
+
+
+\begin{enumerate}
+  \item \textbf{Example 1:} $'ba' \rightarrow (a \cdot b + b \cdot a)$
+  \[
+    \begin{array}{rcl}
+      shift \; b & \rightarrow & (a \cdot b) + (\;_{\{S\}} \bullet b \cdot a)\\\\
+      shift \; a & \rightarrow & (a \cdot b) + (b \cdot \,_{\{S\}} \bullet a)\\
+    \end{array}
+  \]
+  With no further calls to \texttt{shift}, \texttt{mkfin} is called because the regular expression 
+  has reached a final position, indicated by a mark at the end of the right-hand subexpression in 
+  the alternative. \texttt{mkfin} then retrieves the bit list $\{S,S\}$.
+
+  \item \textbf{Example 2:} $'aaa' \rightarrow (a + a \cdot a)^*$
+  \[
+    \begin{array}{rcl}
+      shift \; a & \rightarrow & (_{\{Z,Z\}} \bullet a + \;_{\{Z,S\}} \bullet a \cdot a)^*\\\\
+      shift \; a & \rightarrow & (_{\{Z,Z,Z,Z\}} \bullet a + \;_{\{Z,Z,Z,S\}} \bullet a \cdot \;_{\{Z,S\}} \bullet a)^*\\\\
+      shift \; a & \rightarrow & (_{\{Z,Z,Z,Z,Z,Z\}} \bullet a + \;_{\{Z,Z,Z,Z,Z,S\}} \bullet a \cdot \;_{\{Z,Z,Z,S\}} \bullet a)\\
+    \end{array}
+  \]
+  In this example, after the first shift on $a$, a mark is placed on the left branch with bits $\{Z,Z\}$,
+  indicating the start of a \texttt{STAR} iteration followed by a left choice. In the right subexpression,
+  the mark on $r_1$ of the $a b$ sequence carries bits $\{Z,S\}$, representing the start of the \texttt{STAR}
+  iteration followed by a right choice. 
+  
+  
+  \indent By the third shift, the bits in the right subexpression $\{Z,S\}$ are overwritten, when they should 
+  instead be preserved. These bits correspond to the POSIX-preferred match, which starts by matching the 
+  right-hand side first, then performing another iteration to match the left-hand side. The correct bit sequence
+   in that case would be $\{Z,S,Z,Z\}$, with the final $S$ marking the end of the \texttt{STAR} iteration. This 
+   behaviour arises because the \texttt{POINT} wrapper stores only a single bit list at a time, and in this version
+    there is no clearly defined ordering of marks.
+
+\end{enumerate}
+The annotation can become difficult to follow, which motivated us to introduce additional symbols 
+  in later versions. For instance, we use \(N\) to denote the beginning of a \texttt{STAR} iteration
+  (in place of \(Z\)) and \(E\) to denote the end of an iteration (in place of \(S\)).
+
+
+\subsubsection{Bit-Annotated POINT, version 2}
+we are fairly sure/strongly think that this version produces all possible values including the posix value.
+\subsubsection{Input-Carrying Marks}
+in this version, we modified the marks to have them carry the input string. initially, the full string is added to
+the initial mark which will be shifted through the regex, each time a charachter match, the charachter will be removed
+from the string of the mark. a match happen when there is a mark with an empty string/matching the empty string.
+marks are organized in order of posix value, we are fairly sure/think of that. basically, the only reordering happens at
+SEQ case, after shifting through the first part, this is to reorder the marks based on remaining strings meaning that
+the marks with shorter remaining strings will be at the front of the list.
+
+\section{Future Work}
 This project focuses on implementing and validating a correct and efficient marked regular expression matcher under POSIX disambiguation. Several directions remain open and are planned for the next stages of the PhD:
 
 \begin{itemize}

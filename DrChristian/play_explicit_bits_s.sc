@@ -28,7 +28,7 @@ extension (xs: List[Bits]) {
 
 
 // decoding of a value from a bitsequence
-def decode_aux(r: Rexp, bs: Bits) : (Val, Bits) = ((r, bs): @unchecked) match {
+/* def decode_aux(r: Rexp, bs: Bits) : (Val, Bits) = ((r, bs): @unchecked) match {
   case (ONE(bss), bs) => (Empty, bs)
   case (CHAR(c), bs) => (Chr(c), bs)
   case (ALT(r1, r2), Lf::bs) => {
@@ -64,17 +64,17 @@ def decode_aux(r: Rexp, bs: Bits) : (Val, Bits) = ((r, bs): @unchecked) match {
 def dec2(r: Rexp, bs: Bits) = decode_aux(r, bs) match {
   case (v, Nil) => v
   case _ => throw new Exception("Not decodable")
-}
+} */
 
 def mkeps3(r: Rexp) : Bits = r match {
-  case ONE(bss) => List(Ep)
+  case ONE => List(Ep)
   case ALT(r1, r2) =>
     if (nullable(r1)) Lf :: mkeps3(r1) else Ri :: mkeps3(r2)
   case SEQ(r1, r2) =>
     mkeps3(r1) ++ mkeps3(r2)
   case STAR(r) => List(En)
   case NTIMES(r, n) => List(EnT)
-  case INIT(r1) => mkeps3(r1) 
+  //case INIT(r1) => mkeps3(r1) 
 }
 
 
@@ -85,7 +85,7 @@ def decode_checked(r: Rexp, bs: Bits) = decode_checked_aux(r, bs) match {
 }
 
 def decode_checked_aux(r: Rexp, bs: Bits): (Val, Bits) = ((r, bs): @unchecked) match {
-  case (ONE(bss), bs) => (Empty, bs)
+  case (ONE, bs) => (Empty, bs)
   case (CHAR(c), bs) => (Chr(c), bs)
   case (ALT(r1, r2), Lf :: bs) =>
     val (v, bs1) = decode_checked_aux(r1, bs)
@@ -111,7 +111,7 @@ def decode_checked_aux(r: Rexp, bs: Bits): (Val, Bits) = ((r, bs): @unchecked) m
   case (NTIMES(r1, n), EnT :: bs) =>
     if (n == 0 || nullable(r1)) (Nt(Nil, n), bs)
     else throw new Exception(s"$n iterations remain and $r1 is not nullable")
-  case (INIT(r1), bs) =>  decode_checked_aux(r1, bs) 
+  //case (INIT(r1), bs) =>  decode_checked_aux(r1, bs) 
 }
 
 def fin(r: Rexp) : Boolean = (r: @unchecked) match 
@@ -123,7 +123,7 @@ def fin(r: Rexp) : Boolean = (r: @unchecked) match
   case SEQ(r1, r2) => (fin(r1) && nullable(r2)) || fin(r2)
   case STAR(r) => fin(r)
   case NTIMES(r, n) => fin(r)
-  case INIT(r1) => fin(r1) 
+  //case INIT(r1) => fin(r1) 
 
 def mkfin3(r: Rexp): List[Bits] = r match 
   case POINT(bss, CHAR(_)) => bss
@@ -135,7 +135,7 @@ def mkfin3(r: Rexp): List[Bits] = r match
   case SEQ(r1, r2) => mkfin3(r2)
   case STAR(r) => (mkfin3(r) <+> En )
   case NTIMES(r, n) => mkfin3(r) <+> EnT
-  case INIT(r1) => mkfin3(r1) 
+  //case INIT(r1) => mkfin3(r1) 
 
 
 //temp ntimes solution
@@ -181,7 +181,7 @@ def mkfin3Final(r: Rexp): List[Bits] = {
 def shift(m: Boolean, bs: List[Bits], r: Rexp, c: Char) : Rexp = 
   (r: @unchecked) match {
   case ZERO => ZERO
-  case ONE(bss) => ONE(bss)
+  case ONE => ONE
   case CHAR(d) => if (m && d == c)  POINT((bs <+> Ch) , CHAR(d)) else CHAR(d)
   case POINT(bss, CHAR(d)) => if (m && d == c) POINT((bs <+> Ch)  , CHAR(d)) else CHAR(d) // <+> Cl
   case ALT(r1, r2) => ALT(shift(m, (bs <+>Lf)   , r1, c), shift(m, (bs <+> Ri)    , r2, c)) // <::> St
@@ -204,7 +204,7 @@ def shift(m: Boolean, bs: List[Bits], r: Rexp, c: Char) : Rexp =
   case NTIMES(r,n) if fin(r) =>NTIMES(shift(true, (mkfin3(r) <+> NxT) , r, c),n)
   case NTIMES(r,n) if m =>NTIMES(shift(m,bs <+> NxT , r, c),n)
   case NTIMES(r,n) => NTIMES(shift(false, Nil, r, c),n)
-  case INIT(r1) => INIT(shift(true, bs, r1, c)) 
+  //case INIT(r1) => INIT(shift(true, bs, r1, c)) 
 }
 
 def mat(r: Rexp, s: List[Char], prnt: Boolean = false): Rexp = s match 
@@ -357,27 +357,27 @@ def lexer(r: Rexp, s: List[Char]) : Option[List[Val]] = {
 }
 
 def rb2(r:Rexp): Rexp = r match {
-  case CHAR(_) | ONE(_) | ZERO => ZERO
-  case POINT(bss, CHAR(d)) => ONE(bss)
+  case CHAR(_) | ONE | ZERO => ZERO
+  case POINT(bss, CHAR(d)) => ONE
   case ALT(r1,r2) => rb2(r1) | rb2(r2)
   case SEQ(r1,r2) =>SEQ(rb2(r1) ,erase(r2)) | rb2(r2)
   case STAR(r1) => rb2(r1) | erase(STAR(r1))
-  case INIT(r1) => rb2(r1) 
+  //case INIT(r1) => rb2(r1) 
 }
 
 def rb(r: Rexp): Set[Rexp] = r match {
-  case CHAR(_) | ONE(_) | ZERO => Set()
-  case POINT(bss, CHAR(_)) => Set(ONE(bss))
+  case CHAR(_) | ONE | ZERO => Set()
+  case POINT(bss, CHAR(_)) => Set(ONE)
   case ALT(r1, r2) => rb(r1) | rb(r2)
   case SEQ(r1, r2) => rb(r1).map(r => SEQ(r, erase(r2))) | rb(r2)
   case STAR(r1) => rb(r1).map(r => SEQ(r, erase(STAR(r1))))
-  case INIT(r1) => rb(r1)
+ // case INIT(r1) => rb(r1)
 }
 
 def rb3(r:Rexp,bs:Bits): (Rexp,Bits) = r match {
-  case CHAR(_) | ONE(_) | ZERO => (ZERO,bs)
+  case CHAR(_) | ONE | ZERO => (ZERO,bs)
   case POINT(bss, CHAR(d)) => 
-    (ONE(bss),revertToRawBits(bss.head))
+    (ONE,revertToRawBits(bss.head))
   case ALT(r1, r2) =>
     (ALT(rb3(r1,bs)._1,rb3(r2,bs)._1),bs.tail)
   case SEQ(r1,r2) =>
@@ -397,8 +397,8 @@ def erase(r: Rexp): Rexp = r match {
   case ALT(r1, r2)       => ALT(erase(r1), erase(r2))
   case STAR(r1)          => STAR(erase(r1))
   case NTIMES(r1, n)     => NTIMES(erase(r1), n)
-  case ONE(_) => ONE(Nil)
-  case INIT(r1) => erase(r1)
+  case ONE => ONE
+  //case INIT(r1) => erase(r1)
   case _                 => r
 }
 
@@ -416,17 +416,17 @@ def simp(r: Rexp): Rexp = r match
     //case (ONE , r2s) => r2s
     //case (r1s , ONE) => r1s
     case (r1s , r2s) => SEQ(r1s , r2s)
-  case INIT(r1) => simp(r1) // might need to return INIT of r1
+  //case INIT(r1) => simp(r1) // might need to return INIT of r1
   case r => r
 
 def mkeps2(r: Rexp) : List[Bits] = r match {
-  case ONE(bs) => bs
+  case ONE => Nil
   case ALT(r1, r2) => 
     if (nullable(r1))  mkeps2(r1) else mkeps2(r2)  
   case SEQ(r1, r2) => mkeps2(r1) ++ mkeps2(r2)
   case STAR(r) => List(List(En)) 
   case NTIMES(r, n) => List(List(EnT)) 
-  case INIT(r1) => mkeps2(r1)
+  //case INIT(r1) => mkeps2(r1)
 }
 
 def mkepsPoint(r: Rexp): List[Bits] = r match
@@ -439,7 +439,7 @@ def mkepsPoint(r: Rexp): List[Bits] = r match
   case SEQ(r1, r2) if nullablePoint(r1) => mkepsPoint(r1)
   case SEQ(r1, r2) => mkepsPoint(r2)
   case STAR(r) =>mkepsPoint(r)
-  case INIT(r1) => mkepsPoint(r1)
+  //case INIT(r1) => mkepsPoint(r1)
   case _ => Nil
 
 def nullablePoint(r: Rexp): Boolean = r match {
@@ -448,7 +448,7 @@ def nullablePoint(r: Rexp): Boolean = r match {
   case SEQ(r1, r2) => nullablePoint(r1) || nullablePoint(r2)
   case STAR(r) => nullablePoint(r)
   case NTIMES(r, _) => nullablePoint(r)
-  case INIT(r) => nullablePoint(r)
+  //case INIT(r) => nullablePoint(r)
   case _ => false
 }
 
@@ -607,14 +607,14 @@ def indent(ss: Seq[String]) : String = ss match {
 
 def pp(e: Rexp) : String = (e: @unchecked) match { 
   case ZERO => "0\n"
-  case ONE(bs) => s"1 nullable {${bs.mkString(",")}} \n"
+  case ONE => s"1 nullable  \n"
   case CHAR(c) => s"$c\n"
   case POINT(bss, CHAR(c)) => s"•$c:${bss.mkString(",")}\n" 
   case ALT(r1, r2) => "ALT\n" ++ pps(r1, r2)
   case SEQ(r1, r2) => "SEQ\n" ++ pps(r1, r2)
   case STAR(r) => s"STAR\n" ++ pps(r)
   case NTIMES(r, n) => s"NTIMES($n)\n" ++ pps(r)
-  case INIT(r1) => pps(r1)
+  //case INIT(r1) => pps(r1)
 }
 
 def pps(es: Rexp*) = indent(es.map(pp))
@@ -634,12 +634,12 @@ def flatten(v: Val) : String = v match {
 // multiple arguments ?
 import scala.math.Ordering.Implicits.seqOrdering
 
-def revertToRawBits2(sequences: List[Bits]): List[Bits] =
+/* def revertToRawBits2(sequences: List[Bits]): List[Bits] =
   sequences.map(_.filter(bit => bit != Sq && bit != Ch && bit != Ep  && bit != Ep && bit != St && bit != Cl && bit != Sq2 ))
  
 def revertToRawBits(bits: Bits): Bits =
   bits.filter(bit => bit != Sq && bit != Ch && bit != Ep  && bit != Ep && bit != St && bit != Cl && bit != Sq2)
-
+ */
 def printHelper(sequencesOption: Option[List[Bits]], r: Rexp, derivBits:Bits, derivVal:Val) = {
   val sequences=sequencesOption.getOrElse(List())
   println("+--------Final Marked Bits and Values--------+") 
@@ -677,7 +677,7 @@ def printHelper(sequencesOption: Option[List[Bits]], r: Rexp, derivBits:Bits, de
 @main
 def test1() = {
   println("=====Test====")
-  val br2= INIT(("a" | "ab") ~ ("c" | "bc"))
+  val br2= (("a" | "ab") ~ ("c" | "bc"))
     //%("aa") | ("aa" ~ ONE)
   val s = "abc".toList
   println(s"Regex:\n${pp(br2)}\n")
@@ -728,7 +728,7 @@ def test2() = {
 @main
 def test3() = {
   println("=====Test====")
-  val br2= ( ONE(Nil) |"a") ~ %("a")
+  val br2= ( ONE |"a") ~ %("a")
   val s = "aaa".toList
   println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
@@ -974,7 +974,7 @@ def test14() = {
   println("=string=")
   println(s)
 
-  val testR= (ONE(Nil) ~ ("bc"| ("c"|"b")) ) | ((ONE(Nil) ~ "c")| ONE(Nil))
+  val testR= (ONE ~ ("bc"| ("c"|"b")) ) | ((ONE ~ "c")| ONE)
   println(s"pp TestR=\n${pp(testR)}")
   println(s"nullable testR=${nullable(testR)}") 
   println(s"mkepsVal=${mkeps(testR)}")
@@ -995,7 +995,7 @@ def test14() = {
 @main 
 def test15() = {
   println("=====Test====")
-  val br2 = (%( %( ONE(Nil) ~ ZERO ) ) |   (("b"|ZERO) ~"ab")  |   ( ("a"|"c")   | ("a" ~ ONE(Nil)))    )    
+  val br2 = (%( %( ONE ~ ZERO ) ) |   (("b"|ZERO) ~"ab")  |   ( ("a"|"c")   | ("a" ~ ONE))    )    
 
   val s = "a".toList
   println(s"Regex:\n${pp(br2)}\n")
@@ -1017,7 +1017,7 @@ def test15() = {
 @main 
 def test16() = {
   println("=====Test====")
-  val br2 = (ONE(Nil) | "c") ~ ("cc" | "c")
+  val br2 = (ONE | "c") ~ ("cc" | "c")
   val s = "cc".toList
   println(s"Regex:\n${pp(br2)}\n")
   println("=string=")
@@ -1039,7 +1039,7 @@ def test16() = {
 @main 
 def test17() = {
   println("=====Test====")
-  val br2 = (ONE(Nil) | "a" ) ~ ( "a" | "aa" )
+  val br2 = (ONE | "a" ) ~ ( "a" | "aa" )
   
   val s = "aa".toList
   println(s"Regex:\n${pp(br2)}\n")
@@ -1061,7 +1061,7 @@ def test17() = {
 @main 
 def test18() = {
   println("=====Test====")
-  val br2 = ( ONE(Nil) | ( ONE(Nil) | "bc" )  )  | ( "a"| ONE(Nil) ) ~ ("a" | "aa")
+  val br2 = ( ONE | ( ONE | "bc" )  )  | ( "a"| ONE ) ~ ("a" | "aa")
   //(  ONE(Nil) | ( ONE(Nil) | "bc" )  )  | ( (ZERO ~ ZERO) | ("a"| ONE(Nil)) ) ~ ("a" | "aa")
      
   val s = "aa".toList
@@ -1109,7 +1109,7 @@ import scala.util._
 @main
 def weakTest() = {
   given rexp_cdata : CDATA[Rexp] = List(
-        (0, _ => ONE(Nil)),
+       // (0, _ => ONE(Nil)),
         (0, _ => ZERO),
         (0, _ => CHAR('a')),
         (0, _ => CHAR('b')),
@@ -1149,7 +1149,7 @@ def weakTest() = {
 @main
 def weakTestDecode() = {
   given rexp_cdata : CDATA[Rexp] = List(
-        (0, _ => ONE(Nil)),
+      //  (0, _ => ONE(Nil)),
         (0, _ => ZERO),
         (0, _ => CHAR('a')),
         (0, _ => CHAR('b')),
@@ -1190,7 +1190,7 @@ import scala.collection.parallel.CollectionConverters._
 @main
 def weakTestParallel() = {
   given rexp_cdata : CDATA[Rexp] = List(
-        (0, _ => ONE(Nil)),
+        //(0, _ => ONE(Nil)),
         (0, _ => ZERO),
         (0, _ => CHAR('a')),
         (0, _ => CHAR('b')),
@@ -1231,7 +1231,7 @@ def weakTestParallel() = {
 @main
 def flattenWeakTestParallel() = {
   given rexp_cdata : CDATA[Rexp] = List(
-        (0, _ => ONE(Nil)),
+      //  (0, _ => ONE(Nil)),
         (0, _ => ZERO),
         (0, _ => CHAR('a')),
         (0, _ => CHAR('b')),
@@ -1292,7 +1292,7 @@ def flattenWeakTestParallel() = {
 @main
 def strongTestParallel() = {
   given rexp_cdata: CDATA[Rexp] = List(
-    (0, _ => ONE(Nil)),
+   // (0, _ => ONE(Nil)),
     (0, _ => ZERO),
     (0, _ => CHAR('a')),
     (0, _ => CHAR('b')),
@@ -1360,7 +1360,7 @@ def strongTestParallel() = {
 @main
 def rbDerTestParallel() = {
   given rexp_cdata: CDATA[Rexp] = List(
-    (0, _ => ONE(Nil)),
+  //  (0, _ => ONE(Nil)),
     (0, _ => ZERO),
     (0, _ => CHAR('a')),
     (0, _ => CHAR('b')),
@@ -1402,7 +1402,7 @@ def rbDerTestParallel() = {
 @main
 def rbDerTest() = {
   given rexp_cdata: CDATA[Rexp] = List(
-    (0, _ => ONE(Nil)),
+ //   (0, _ => ONE(Nil)),
     (0, _ => ZERO),
     (0, _ => CHAR('a')),
     (0, _ => CHAR('b')),
