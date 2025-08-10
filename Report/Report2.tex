@@ -302,16 +302,15 @@ In this version, we extended the marked approach to include bitcodes that annota
 shifted through the regex. inspired by Sulzmann and Lu~\cite{Sulzmann2014}, we introduced a bitcode in form 
 of a list that is attached to each mark, and it gets built as the marks are shifted. 
 
-This version produce a value but not necessarily the posix preferred value. We use the bit annotations 
-Z as 0 and S as 1 similar to what was done in the bitcoded derivative.
-in this, the function shift takes one more extra argument; Bits which is a List of Bits. 
-when we shift through this function, we add bits to the list, if a mark is to be added (to leafe charachter nodes),
-then this list will be stored in the POINT constructor that wraps around the marked charachter constructor. We 
-define two more functions, mkfin, which is responsible of extracting the list of bit of a final constructor, that
-is, extract the path by bits of how the expression matched, and mkeps, which is responsible for extracting the list
-of bit of a nullable expression matching the empty string, the bits show the path that lead to matching the empty string,
-the defitiantion are found below starting with the shift function:
-
+This version produces a value but not necessarily the POSIX-preferred value. We use the bit annotations $Z$ 
+(or 0) and $S$ (or 1), similar to the bitcoded derivative. In this version, the function $shift$ takes an 
+additional argument, $Bits$, which is a list of $Bit$ elements. When we shift through this function, bits 
+are added to the list. If a mark is to be added to a leaf character node, this list is stored in the 
+\texttt{POINT} constructor that wraps the marked character constructor.
+We define two additional functions: \texttt{mkfin}, which extracts the bit sequence of a final constructor 
+(that is, the path, in bits, describing how the expression matched), and \texttt{mkeps}, which extracts the
+ bit sequence of a nullable expression matching the empty string (showing the path that led to the 
+ empty-string match). The definitions are given below, starting with the $shift$ function.
 \[
 \begin{array}{rcl}
   shift(m,bs,c,0)              & \stackrel{\text{def}}{=} & 0 \\\\
@@ -415,11 +414,13 @@ as will be shown in the second example.
     there is no clearly defined ordering of marks.
 
 \end{enumerate}
-The annotation can become difficult to follow, which motivated us to introduce additional symbols 
-  in later versions. For instance, we use \(N\) to denote the beginning of a \texttt{STAR} iteration
-  (in place of \(Z\)) and \(E\) to denote the end of an iteration (in place of \(S\)).
+The annotation can become difficult to follow, which motivated us to introduce additional symbols forming sequences
+ (transitioning from a bit-based representation to sequences) in later versions. For instance, we use $N$ to denote 
+ the beginning of a \texttt{STAR} iteration (replacing $Z$) and $E$ to denote the end of an iteration (replacing $S$).
 
+ \newpage
 
+*** below are more of a self note ***
 \subsubsection{Bit-Annotated POINT, version 2}
 we are fairly sure/strongly think that this version produces all possible values including the posix value.
 \subsubsection{Input-Carrying Marks}
@@ -430,6 +431,7 @@ marks are organized in order of posix value, we are fairly sure/think of that. b
 SEQ case, after shifting through the first part, this is to reorder the marks based on remaining strings meaning that
 the marks with shorter remaining strings will be at the front of the list.
 
+*** from previous report ***
 \section{Future Work}
 This project focuses on implementing and validating a correct and efficient marked regular expression matcher under POSIX disambiguation. Several directions remain open and are planned for the next stages of the PhD:
 
