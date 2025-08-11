@@ -61,7 +61,7 @@ def testAll() = {
   var totalShifts      = 0.0
   var regexCount       = 0L
 
-  for (i <- (0L to 100_000L)) {//100_000_000L
+  for (i <- (0L to 1_000_000L)) {//100_000_000L
     val r = enumerate.decode(i)
     if (i % 100_000 == 0) { print("*") }
     for (s <- (regenerate.generate_up_to(alphabet)(10)(r).take(9)) if s != "")
@@ -106,7 +106,7 @@ def testAllP() = {
   var totalShifts      = 0.0
   var regexCount       = 0L
 
-  val numRegexes = BigInt(10_000_000L)
+  val numRegexes = BigInt(100_000_000L)
   val batchSize = BigInt(100_000L) 
   
   val batches = (BigInt(0) to numRegexes by batchSize).toVector.par
@@ -136,3 +136,38 @@ def testAllP() = {
   val list=List( ("Derivatives", totalDerivatives / regexCount), ("Play",totalPlay / regexCount), ("Shifts",totalShifts / regexCount))
   list.sortBy(_._2).foreach { case (name, avg) => println(s"$name = $avg")}
 }// end of testAllP
+
+@main
+def testEvilD() = {
+  val EVIL1 = %( %("a") ) ~ "b"
+  for (i <- 0 to 7_000_000 by 500_000) {
+    val s = "a" * i        // + "b"     
+    val der    = time_needed(100, Derivatives.matcher(EVIL1, s))
+    println(s"i= $i  Derivatives= $der")
+  }
+}
+
+@main
+def testEvilP() = {
+  val EVIL1 = %( %("a") ) ~ "b"
+  for (i <- 0 to 7_000_000 by 500_000) {
+    val s = "a" * i        // + "b"     
+    val play    = time_needed(100, Play.matcher(EVIL1, s))
+    println(s"i= $i  Play= $play")
+  }
+}
+
+@main
+def testEvilS() = {
+  val EVIL1 = %( %("a") ) ~ "b"
+  for (i <- 0 to 7_000_000 by 500_000) {
+    val s = "a" * i        // + "b"     
+    val shifts    = time_needed(100, Shifts.matcher(EVIL1, s))
+    println(s"i= $i  Shifts= $shifts")
+  }
+}
+
+@main
+def allEvil() = { testEvilD(); testEvilP(); testEvilS(); } 
+
+
