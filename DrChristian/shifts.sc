@@ -38,9 +38,7 @@ def nullable(r: Rexp) : Boolean = r match {
 type Marks = List[String]
 
 // shifts function 
-def shifts(ms: Marks, r: Rexp) : Marks = 
-  if (ms == Nil) Nil else {
-    r match {
+def shifts(ms: Marks, r: Rexp) : Marks = simp(r) match {
       case ZERO => Nil
       case ONE => Nil
       case CHAR(c) => for (m <- ms; if m != "" && m.head == c) yield m.tail
@@ -55,11 +53,51 @@ def shifts(ms: Marks, r: Rexp) : Marks =
         }
       }
       case STAR(r) => {
-        val ms1 = shifts(ms, r)
-        ms1 ::: shifts(ms1, STAR(r)) 
+        val ms1 = shifts(ms, r).prune2
+        if(ms1.isEmpty) ms1
+        else
+       ( ms1 ::: shifts(ms1, STAR(r))).prune2 
       }
     }
+
+extension (ms: Marks)
+  def reshuffle: Marks = ms.sortBy(m => (m.length))
+  def prune2: Marks = 
+    var seen = Set.empty[String]
+    ms.filter { m =>
+      val keep = !seen.contains(m)
+      if (keep)
+        seen += m
+      keep
   }
+
+def simp(r: Rexp): Rexp = r match {
+  case ALT(r1, r2) =>
+    (simp(r1), simp(r2)) match {
+      case (ZERO, r2s)      => r2s
+      case (r1s, ZERO)      => r1s
+      case (x, y) if x == y => x
+      case (r1s, r2s)       => ALT(r1s, r2s)
+    }
+  case SEQ(r1, r2) =>
+    (simp(r1), simp(r2)) match {
+      case (ZERO, _)  => ZERO
+      case (_, ZERO)  => ZERO
+      case (ONE, r2s) => r2s
+      case (r1s, ONE) => r1s
+      case (r1s, r2s) => SEQ(r1s, r2s)
+    }
+  case STAR(r1) =>
+    simp(r1) match {
+      case ZERO        => ONE
+      case ONE         => ONE
+      case STAR(inner) => STAR(inner)     
+      case r1s         => STAR(r1s)      
+    }
+  case r => r
+}
+
+
 
 // the main matching function 
 def matcher(r: Rexp, s: String) : Boolean = {
@@ -143,4 +181,12 @@ def test7() = {
   println(s"res: ${matcher(r, s)}")
 }
 
-
+@main
+def test8() = {
+  println("=====Test====")
+  val r=  %( %("a") ) //~ "b"
+  val s = "a" * 2263 //+ "b"
+  println(s"Regex:\n${(r)}\n")
+  println(s"=string=\n$s")
+  println(s"res: ${matcher(r, s)}")
+}

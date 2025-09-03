@@ -64,7 +64,9 @@ case class CHAR(c: Char) extends Rexp
 case class ALT(r1: Rexp, r2: Rexp) extends Rexp
 case class SEQ(r1: Rexp, r2: Rexp) extends Rexp 
 case class STAR(r: Rexp) extends Rexp 
-case class NTIMES(r: Rexp,n:Int) extends Rexp // new to testX1.
+case class NTIMES(r: Rexp,n:Int) extends Rexp 
+case class AND(r1: Rexp,r2: Rexp) extends Rexp 
+
 // only used by re-generate to generate non-matching strings
 case class NOT(r: Rexp) extends Rexp 
 case class POINT(mk: Mark, r: Rexp) extends Rexp
@@ -95,6 +97,7 @@ def nullable(r: Rexp) : Boolean = r match {
   case CHAR(_) => false
   case ALT(r1, r2) => nullable(r1) || nullable(r2)
   case SEQ(r1, r2) => nullable(r1) && nullable(r2)
+  case AND(r1, r2) => nullable(r1) && nullable(r2)
   case STAR(_) => true
   case NTIMES(r, n) => n == 0 || nullable(r) 
   case POINT(_, r) => nullable(r)

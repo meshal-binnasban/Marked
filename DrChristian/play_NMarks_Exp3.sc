@@ -41,51 +41,90 @@ def mkeps2(r: Rexp) : Bits = r match {
 }
 
 type Marks = List[Mark]
-def shifts(ms: Marks, r: Rexp): Marks = 
-    //println(s"${pp(r)}\nms=$ms")
-    if (ms == Nil) Nil
-    else (r: @unchecked) match {
-        case ZERO => Nil
-        case ONE => Nil
-        case CHAR(d) =>
-          for (m <- ms if m.str != Nil && m.str.head == d) yield m.copy(str = m.str.tail)
-        case ALT(r1, r2) =>  
-         // ((shifts(ms <:+> Lf, r1) ) ::: (shifts(ms <:+> Ri, r2)) )
-         ms.flatMap { m => (shifts(List(m <:+> Lf), r1) ::: shifts(List(m <:+> Ri), r2))}        
-        case SEQ(r1,r2) => {
-          val ms1 = shifts(ms, r1).reshuffle
-          (nullable(r1), nullable(r2)) match {
-            case (true, true) => (ms1 <::+>mkeps2(r2)) ::: ms1.flatMap( m => shifts(List(m), r2))  ::: shifts(ms <::+> mkeps2(r1) ,r2)
-            case (true, false) => ms1.flatMap( m => shifts(List(m), r2))   ::: shifts((ms<::+> mkeps2(r1)),r2)
-            case (false, true) => (ms1 <::+>mkeps2(r2)) ::: ms1.flatMap( m => shifts(List(m), r2))   
-            case (false, false) => ms1.flatMap( m => shifts(List(m), r2))      
-        } 
-      }
-        case STAR(r) =>
-            val ms1 = shifts(ms<:+>Nx, r).reshuffle
-            ( (ms1 <:+> En) ::: ms1.flatMap( m=> shifts(List(m), STAR(r)))   )
-            //(  (ms1 <:+> En) ::: shifts(ms1, STAR(r))  ) 
-       
-        case NTIMES(r,n) if n == 0 => (ms <:+> EnT)
-        //case NTIMES(r,n) if n < 0 => Nil
-        case NTIMES(r,n) =>
-          val ms1 = shifts(ms<:+>NxT, r).reshuffle
-          
-          val emptyMs= ms.collectEmpty
-          if((emptyMs.nonEmpty && n != 0) && !nullable(r)){ 
-            Nil
-            } else{
-              if(nullable(r))
-              ( (ms1<:+> EnT) ::: ms1.flatMap( m=> shifts(List(m), NTIMES(r,n-1)))   )
-              else
-              ( ms1.flatMap( m=> shifts(List(m), NTIMES(r,n-1)))   )
-              }
-            
+def shifts(mss: Marks, r: Rexp): Marks =
+  val ms=mss.prune2 
+  (simp(r): @unchecked) match {
+  case ZERO => Nil
+  case ONE => Nil
+  case CHAR(d) => for (m <- ms if m.str != Nil && m.str.head == d) yield m.copy(str = m.str.tail)
+  case ALT(r1, r2) =>  
+     ((shifts(ms <:+> Lf, r1) ) ::: (shifts(ms <:+> Ri, r2)) ).prune2 
 
+  case SEQ(r1,r2) => {
+    val ms1 = shifts(ms, r1).prune2.reshuffle
+    (nullable(r1), nullable(r2)) match {
+      case (true, true) =>
+        val r1Consume=(ms1 <::+>mkeps2(r2))
+        val r1r2Consume= ms1.flatMap( m => shifts(List(m), r2))
+        val r2Consume= shifts((ms <::+> mkeps2(r1)) ,r2)
+        val returned= ((r1Consume.prune2 ::: r1r2Consume.prune2).prune2  ::: r2Consume.prune2).prune2
+        returned
+      case (true, false) => (ms1.flatMap( m => shifts(List(m), r2)).prune2   ::: shifts((ms<::+> mkeps2(r1)),r2)).prune2 
+      case (false, true) => ((ms1 <::+>mkeps2(r2)).prune2 ::: ms1.flatMap( m => shifts(List(m), r2))).prune2 
+      case (false, false) => ms1.flatMap( m => shifts(List(m), r2)).prune2
+      } 
+  }
+  case STAR(r) =>
+      val ms1 = shifts((ms<:+>Nx), r).prune2
+      if(ms1.isEmpty) Nil else
+        val returned=( (ms1 <:+> En) ::: ms1.flatMap( m=> shifts(List(m), STAR(r)).prune2).prune2   )
+        returned.prune2
+  
+  case NTIMES(r,n) if n == 0 => (ms <:+> EnT)
+  //case NTIMES(r,n) if n < 0 => Nil
+  case NTIMES(r,n) =>
+    if((ms.collectEmpty.nonEmpty && n != 0) && !nullable(r)){ 
+      Nil
+      } else{
+        val ms1 = shifts(ms<:+>NxT, r).reshuffle
+        if(nullable(r))
+        ( (ms1<:+> EnT) ::: ms1.flatMap( m=> shifts(List(m), NTIMES(r,n-1)))   )
+        else
+        ( ms1.flatMap( m=> shifts(List(m), NTIMES(r,n-1)))   )
         }
+  //case AND(r1,r2) =>       
+
+}
+
+def simp(r: Rexp): Rexp = r match {
+  case ALT(r1, r2) =>
+    (simp(r1), simp(r2)) match {
+      case (ZERO, r2s)      => r2s
+      case (r1s, ZERO)      => r1s
+      case (x, y) if x == y => x
+      case (r1s, r2s)       => ALT(r1s, r2s)
+    }
+  case SEQ(r1, r2) =>
+    (simp(r1), simp(r2)) match {
+      case (ZERO, _)  => ZERO
+      case (_, ZERO)  => ZERO
+      case (ONE, r2s) => r2s
+      case (r1s, ONE) => r1s
+      case (r1s, r2s) => SEQ(r1s, r2s)
+    }
+  case STAR(r1) =>
+    simp(r1) match {
+      case ZERO        => ONE
+      case ONE         => ONE
+      case STAR(inner) => STAR(inner)     
+      case r1s         => STAR(r1s)      
+    }
+  case r => r
+}
+
 
 extension (ms: List[Mark])
   def reshuffle: List[Mark] = ms.sortBy(m => (m.str.length))
+  def collectEmpty: List[Mark] =
+    ms.filter(m => m.str == Nil)
+  def prune2: List[Mark] = 
+    var seen = Set.empty[List[Char]]
+    ms.filter { m =>
+      val keep = !seen.contains(m.str)
+      if (keep)
+        seen += m.str
+      keep
+  }
   def prune: List[Mark] =
     var seenEmpty = false
     ms.collect {
@@ -94,15 +133,13 @@ extension (ms: List[Mark])
             seenEmpty = true
             m
             }
-  def collectEmpty: List[Mark] =
-    ms.filter(m => m.str == Nil)
 
 def matcher(r: Rexp, s: String) : Boolean =
   val im = Mark(bits = List(), str = s.toList)
   val marks = shifts(List(im), r)
-  /* println(s"-------------End of 1 matcher call-----------\n")
+  println(s"-------------End of 1 matcher call-----------\n")
   marks.foreach(m => println(s"-$m") )
-  println("------------------------")     */
+  println("------------------------")     
   marks.exists(_.str == Nil)
 
 def lex(r: Rexp, s: String): Option[Bits] =
@@ -111,6 +148,7 @@ def lex(r: Rexp, s: String): Option[Bits] =
     else Some(shifts(List(Mark(bits = List(), str = s.toList)), r).collectEmpty.head.bits)
   else None
 
+//return all marks
 def lexM(r: Rexp, s: String): Option[Marks] =
   if matcher(r, s) then
     if s.toList == Nil then None
@@ -130,7 +168,7 @@ def lexerMarks(r: Rexp, s: String) : Option[List[Val]] = {
 @main 
 def test1() = {
   println("=====Test====")
-  val br2= %(%("aa"))
+  val br2= %( "a" | "aa" )
   val s = "aa"
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
@@ -411,14 +449,43 @@ def test22() = {
 @main
 def test23() = {
   println("=====Test====")
-  val br2=  NTIMES(%("a"),14)
-  val s = "a" * 1
+  val br2=  NTIMES(%("a"),3)
+  val s = "a" * 3
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 
   commonTestCode(br2, s)
 }
 
+@main
+def test24() = {
+  println("=====Test====")
+  val br2=  %( %("a") ) //~ "b"
+  val s = "a" * 50 //+ "b" //400
+  println(s"Regex:\n${pp(br2)}\n")
+  println(s"=string=\n$s")
+
+  commonTestCode(br2, s)
+}
+
+
+def time_needed[T](i: Int, code: => T) = {
+  val start = System.nanoTime()
+  for (j <- 1 to i) code
+  val end = System.nanoTime()
+  (end - start) / (i * 1.0e9)
+}
+
+@main
+def evilRegexTest() = {
+  println("=====Test====")
+  val EVIL1 = %( %("a") ) ~ "b"
+  for (i <- 0 to 50 by 5) {
+    val s = "a" * i  + "b"     
+    val matchingTime    = time_needed(100, matcher(EVIL1, s))
+    println(s"i= $i  Matching Time= $matchingTime")
+  }
+}
 
 
 def commonTestCode( br2 : Rexp, s : String ) = {
@@ -441,7 +508,7 @@ def commonTestCode( br2 : Rexp, s : String ) = {
 @main
 def testExamples(): Unit = {
   val tests = List(
-    ("test1", %(%("aa")), "aa"),
+    ("test1", %( "a" | "aa" ), "aa"),
     ("test2", %("a"), "aaa"),
     ("test3", %("aa") ~ %(%("a")), "aaaaaa"),
     ("test4", (%("a") ~ %("a")) ~ "a", "aaa"),
@@ -464,9 +531,7 @@ def testExamples(): Unit = {
     ("test21", ("a" ~ %("b")) ~ (("b" | ONE) ~ "a"), "aba"),
     ("test22", ("c" | ("a" | ONE)) ~ ("ab" | "b"), "ab"),
     ("test23", NTIMES("a", 3), "a" * 3),
-    ("test24", NTIMES(%("a"), 2), "a" * 3),
-    ("test25", NTIMES("a",3)| "a", "a" * 1),
-    ("test26", %( %(  NTIMES("a",2)  ) ) | %("a"), "a" * 3)
+    ("test24", %( "a") ~  %("a"), "a" * 4)
   )
 
   var passed = 0
@@ -480,11 +545,11 @@ def testExamples(): Unit = {
       if (marked != deriv) {
         failed += 1
         
-        println(s"\n\u001b[31mTest ${i + 1} FAILED: $label")
+        println(s"Test ${i + 1} FAILED: $label")
         println(s"Regex:\n${pp(r)}")
         println(s"Input string: $s")
         println(s"Marked bits    : $marked")
-        println(s"Derivative bits: $deriv\u001b[0m")
+        println(s"Derivative bits: $deriv")
         println("--------------------------------------------------")
       } else {
         passed += 1
