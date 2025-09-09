@@ -1,6 +1,22 @@
 \documentclass[12pt]{article}
 \usepackage{amsmath}
 \usepackage{amssymb}
+\newcommand{\der}{\textit{der}}
+\newcommand{\shift}{\textit{shift}}
+
+\newcommand{\fuse}{\textit{fuse}}
+\newcommand{\mkeps}{\textit{mkeps}}
+\newcommand{\intern}{\textit{intern}}
+
+\newcommand{\Seq}{\textit{Seq}}
+\newcommand{\Left}{\textit{Left}}
+\newcommand{\Right}{\textit{Right}}
+\newcommand{\Star}{\textit{Star}}
+\newcommand{\Empty}{\textit{Empty}}
+
+\newcommand{\Marked}[1]{\bullet\,#1}
+
+
 \title{Progress Report - 9 Months}
 \author{Meshal Binnasban}
 \date{\today}
@@ -8,35 +24,52 @@
 \begin{document}
 
 \maketitle
-This is the nine‑month progress report for my PhD at King's College London. It summarises my work over
-the period—motivation, challenges, and the development and refinement of a marked-based regular expression
-matcher for POSIX disambiguation.
-\section*{Project Synopsis}
-This research investigates the use of the marked approach for regular expression matching, aiming to address 
-limitations found in derivative-based methods—particularly the exponential growth of intermediate expressions,
-which makes them difficult to scale in practice. The work explores how the propagation of marks through regular
-expressions can be used to track matching progress and construct parse values.
 
-Bitcoded representations are explored to record the construction of values and guide the selection of the 
-POSIX-preferred parse. Particular focus is placed on handling complex constructs such as nested iteration (STAR) 
-and bounded repetition (NTIMES), with future work aiming to explore additional operators such as intersection and
-negation.
-
-While Brzozowski derivatives can extract POSIX values (as demonstrated by Sulzmann and Lu~\cite{Sulzmann2014}), 
-they suffer from size explosion as noted earlier. Partial derivatives mitigate some of this growth but can still 
-expand cubically and currently lack support for full value extraction. The marked approach aims to leverage the 
-fact that marks propagate without generating new subexpressions, enabling better control over disambiguation while
-maintaining efficiency.
-
-The design is validated through comparisons with a derivative-based reference matcher, using large-scale testing 
-to uncover edge cases and confirm correctness. Although current versions use bitcodes to annotate match structure,
-the underlying method is adaptable to other representations.
-
-The long-term aim is to develop a matching algorithm that consistently yields POSIX-disambiguated values for all 
-regular expressions and to formally verify its correctness, with potential extensions to symbolic or automata-theoretic 
-frameworks.
+\begin{abstract}
+This is the nine-month progress report for my PhD at King’s College London.  
+It summarises the motivation, challenges, and progress made in developing a marked-based regular expression matcher with the goal of POSIX value extraction.  
+The report reviews the derivative-based approach, which appears to have a correspondence with the marked approach—a connection that we aim to investigate.  
+It also reviews the marked algorithms of Fischer et al.\ and Asperti et al., which provide matchers only and do not support value extraction.  
+Our work develops several versions of the marked algorithm in Scala aimed at extracting POSIX values.  
+During this process, challenges in handling certain cases led us to refine the algorithm through successive versions, each improving on the last.  
+Future directions include extending the matcher to additional operators, refining disambiguation for repetitions, and formally proving correctness.  
+\end{abstract}
 
 \newpage
+
+\section*{Synopsis}
+This research investigates the marked approach to regular expression 
+matching, with the goal of extending it to provide POSIX value extraction.
+
+Derivative-based methods, though elegant, suffer from severe size explosion and remain sensitive to syntactic form.  
+Sulzmann and Lu~\cite{Sulzmann2014} extended derivatives with bitcodes to record lexing information, but the size problem persists.  
+The marked approach, described in the works of Fischer et al.~\cite{Fischer2010} and Asperti et al.~\cite{Asperti2010}, offers an alternative by propagating marks directly through the expression.  
+These works provide matchers only, without value extraction.  
+
+Our work explores how the marked approach can be extended to recover POSIX values.  
+We have implemented several versions of the marked algorithm in Scala, making use of bitcoded annotations to track lexing values.  
+Challenges in handling constructs such as sequences and repetitions required refining the algorithm through successive versions, each improving on the last.  
+Large-scale testing against a derivative-based reference matcher has been used to confirm correctness and uncover edge cases.  
+
+The long-term aim of the project is to establish a marked-based matcher that consistently yields the POSIX-preferred value for all regular expressions, and to formally prove its correctness.  
+Future work also includes extending the matcher to additional operators such as intersection and negation.  
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+\section{Introduction}
+
+The notion of derivatives in regular expressions is well established but has gained renewed attention in the last decade~\cite{Owens2009, Might2011}.  
+Their simplicity and compatibility with functional programming have encouraged further study.  
+However, derivatives suffer from growth issues, since each step of taking the derivative can increase the size of subexpressions, as will be reviewed later.  
+The marked approach propagates marks through the regex without creating new subexpressions and offers an attractive potential replacement for derivatives.  
+At present, only matchers based on this method exist, while our work aims to extend it to provide POSIX value extraction.  
+This report first reviews Brzozowski derivatives and the bitcoded variant by Sulzmann and Lu~\cite{Sulzmann2014}, followed by background on the marked approach algorithms described by Fischer et al.~\cite{Fischer2010} and Asperti et al.~\cite{Asperti2010}.  
+We then present our work so far, including several versions of the marked algorithm developed during this period.  
+
 \section{Derivatives}
 
 Brzozowski’s derivatives offer an elegant way for string matching. By successively taking the derivative of a regular
@@ -45,183 +78,278 @@ the empty string, then the original input is accepted.
 
 The notion of derivatives in regular expressions is well established, but have gained attention in the last 
 decade~\cite{Owens2009, Might2011}. Their simplicity and compatibility with functional programming have renewed interest in
-their use~\cite{Fischer2010}.
+their use.
 
-To decide whether a string $w = a_1 a_2 \dots a_n$ matches a regular expression $r$ using derivatives, we iteratively compute:
+To decide whether a string: $a_1 a_2 \dots a_n$ is in the language of a regular expression: $r$, we successively 
+compute its derivatives:
 \[
 \begin{array}{rcl}
-r_0 = r,& r_1 = der_{a_1}({r_0}),& \dots, {r_n}=der_{a_n}(r_{n-1})
+r_0 = r,& r_1 = \der_{a_1}(r_0),& \dots, r_n = \der_{a_n}(r_{n-1}) .
 \end{array}
 \]
-Then test whether $r_n$ can match the empty string.
+The string matches $r$ if and only if the final expression $r_n$ accepts the empty string. Here $\der_{a_n}(r)$ stands 
+for the derivative of $r$ with respect to the character $a_n$, as introduced by Brzozowski~\cite{Brzozowski1964}.
+
 
 To illustrate how derivatives can be used to match a regex against a string, consider the regular expression $( ab + ba )$. 
-The derivative can check the matching of a string like \texttt{ba} by taking the derivative of the regex with respect to \texttt{b},
+The derivative can check the matching of a string \texttt{ba} by taking the derivative of the regex with respect to \texttt{b},
 then \texttt{a}.
 \[
 \begin{array}{rcl}
-der_b\, r           & =           &  der_b\, (ab + ba) \\
-                    & =           & der_b\, (ab) + der_b\, (ba) \\
-                    & =           & (der_b\, a) \cdot b + (der_b\, b) \cdot a  \\
-                    & \rightarrow & 0 \cdot b + 1 \cdot a \\\\
+\der_b\, r           & =           &  \der_b\, (ab + ba) \\
+                     & =           & \der_b\, (ab) + \der_b\, (ba) \\
+                     & =           & (\der_b\, a) \cdot b + (\der_b\, b) \cdot a  \\
+                     & =           & \varnothing \cdot b + \varepsilon \cdot a \\\\
 
-der_a\, (der_b\, r) & =           & der_a\, (0 \cdot b + 1 \cdot a)\\
-                    & =           & der_a\, (0 \cdot b) + der_a\, (1 \cdot a)\\
-                    & =           & der_a\,(0) \cdot b + (der_a\, (1) \cdot a + der_a\, a)\\
-                    & \rightarrow & 0 \cdot b + (0 \cdot a + 1 )
+\der_a\, (\der_b\, r) & =           & \der_a\, (\varnothing \cdot b + \varepsilon \cdot a)\\
+                      & =           & \der_a\, (\varnothing \cdot b) + \der_a\, (\varepsilon \cdot a)\\
+                      & =           & \der_a\,(\varnothing) \cdot b + (\der_a\, (\varepsilon) \cdot a + \der_a\, a)\\
+                      & =           & \varnothing \cdot b + (\varnothing \cdot a + \varepsilon )
 \end{array}
 \]
 
-Since the remaining derivative now matches the empty string and there are no more characters left, 
-the string \texttt{s = ba} matches the regex.
 
-Some subexpressions in the derivatives may be unnecessary. 
-For example, ($0 \cdot b$) can understandably be simplified to \( 0 \), since \( 0 \) denotes the empty language.
-this might be necessary, because the derivative method, while elegant and recursive in structure, suffers in practice 
-from duplicating large portions of the regex tree and sensitivity to syntactic form, requiring simplifications
+Since the final derivative expression contains $\varepsilon$, it matches the empty string. Because no input characters 
+remain, this confirms that the original string \texttt{ba} is in the language of the regular expression.
 
-Applying simplifications under ACI rules (associativity, commutativity, and idempotence) as well as rules concerning 
-the empty string and empty language, e.g. ($0 \cdot r = 0$ ) provides a finite bound on the number of intermediate 
-expressions produced by derivatives~\cite{TanAndUrban2023}. These simplifications help mitigate the explosion in the 
-size of derivatives, a well-known issue as noted by Sulzmann and Lu~\cite{Sulzmann2014} and further discussed in Section 1.2.
+
+Some subexpressions that arise during the computation of derivatives may be redundant.  
+For example, $\varnothing \cdot b$ expresses matching the empty language, then $b$.  
+Since $\varnothing$ is the empty language, no string can satisfy this, so $\varnothing \cdot b$ simplifies to $\varnothing$.  
+Such simplifications are sometimes necessary in the derivative method.  
+Although the construction is elegant and recursively defined, it may duplicate large parts of the expression and is highly 
+sensitive to the syntactic form of the regular expression. Simplification reduces the number of generated expressions, but 
+it does not solve the underlying problem of size explosion.
+
+More simplification rules may be applied after each derivative to provide a finite bound on the number of intermediate 
+expressions~\cite{TanAndUrban2023}. These include associativity $(r+s)+t \equiv r+(s+t)$, commutativity $r+s \equiv s+r$, 
+and idempotence $r+r \equiv r$. Rules for the empty language and the empty string can also be applied, such as the one 
+mentioned earlier; e.g.\ $\varnothing \cdot r \equiv r \cdot \varnothing \equiv \varnothing$, $r+\varnothing \equiv r$, 
+and $r \cdot \varepsilon \equiv \varepsilon \cdot r \equiv r$. 
+These simplifications preserve the language accepted by the regular expression while reducing the number of intermediate expressions. 
+They help to mitigate—though not eliminate—the size explosion in derivatives noted by Sulzmann and Lu~\cite{Sulzmann2014}; see Section~1.2.
 
 \subsection{Derivative Extension}
 
-Sulzmann and Lu extend Brzozowski’s derivatives by offering lexing information in addition to matching by embeding bitcode 
-annotations—representing parse trees—into the regular expressions during derivative construction. This bitcode is extracted 
-after matching and then decoded back into a parse tree, yielding the POSIX-compliant parse value.
+Sulzmann and Lu~\cite{Sulzmann2014} extend Brzozowski’s derivatives to produce lexing values in addition to deciding whether a match exists. 
+These values record how the match occurred: which part of the regular expression corresponded to which part of the string, 
+which alternative branch was taken, and how sequences and Kleene stars were matched.
 
-Bitcodes are lists of 0s and 1s that record the path taken to reach a match. These bits encode choices in \texttt{ALT}, 
-repetitions in \texttt{STAR} during matching.
+They provide two variants: a bitcode-based construction and an injection-based construction~\cite{Sulzmann2014}.
+In the bitcode variant, bit sequences encoding lexing choices are embedded during derivative construction and, after acceptance, decoded to
+the value~\cite{Sulzmann2014}. In the injection variant, an \textit{inj} function "injects back" the consumed characters into the value; it reverts 
+the derivative steps to obtain the POSIX value~\cite{Sulzmann2014}.We focus on the bitcode variant, which more directly inspired our marked approach.
 
-The following is an example of how bitcoding works in regular expressions. \[ 'ab' \rightarrow  (a + ab)(b + \epsilon)\]
+Bitcodes are  sequences over $\{0,1\}$ that encode the choices made in a match.
+These bits encode branch choices in alternatives and repetitions made during matching.
 
-We proceed by constructing bitcoded derivatives step-by-step, and tracking how the bitcode grows:
+The following example illustrates how bitcoding works with regular expression: $(a+ab)(b+\varepsilon)$ and string: $ab$. 
+We proceed by constructing bitcoded derivatives step by step and tracking how the bitcode grows.
+
+Initially, the algorithm internalizes the regular expression. 
+Internalization only adds bit annotations to the alternative constructors found in the expression, 
+where the left branch is annotated with bitcode $0$ and the right branch with bitcode $1$~\cite{Sulzmann2014}. 
+This annotation process is implemented by the function $\fuse$, whose definition is given at the end of this section. 
+After internalization, the algorithm proceeds by taking the derivative with respect to the first character 
+of the input string, which in this case is $a$.
 
 \begin{enumerate}
-  \item Step 1: Intern the regex
+  \item Step 1: Internalizing the regex
   \[
     \begin{array}{rcl}
-    r'=       & intern(r)=  &(_0a + _1ab) \cdot (_0b + _1\epsilon)
+    r' & = & \intern(r) = ({}_0a + {}_1ab) \cdot ({}_0b + {}_1\varepsilon)
     \end{array}
-    \]
-  \item Step 2: input a 
+  \]
+
+  \item Step 2: input $a$
     \[
     \begin{array}{rcl}
-    der_a (r') & =           & der_a ( (_0a + _1ab) \cdot (_0b + _1\epsilon) )\\
-               & =           & der_a ((_0a + _1ab)) \cdot (_0b + _1\epsilon)\\
-               & =           & (der_a (_0a) + der_a (_1ab)) \cdot (_0b + _1\epsilon)\\
-               & =           & (_01 + der_a (_1a) \cdot b ) \cdot (_0b + _1\epsilon)\\
-               & \rightarrow& (_01 + _11\cdot b) \cdot (_0b + _1\epsilon)\\
+    \der_a (r') & =           & \der_a(({}_0a + {}_1ab) \cdot ({}_0b + {}_1\varepsilon))\\
+                & =           & \der_a({}_0a + {}_1ab) \cdot ({}_0b + {}_1\varepsilon)\\
+                & =           & (\der_a({}_0a) + \der_a({}_1ab)) \cdot ({}_0b + {}_1\varepsilon)\\
+                & =           & ({}_0\varepsilon + \der_a({}_1a) \cdot b ) \cdot ({}_0b + {}_1\varepsilon)\\
+                & \rightarrow & ({}_0\varepsilon + {}_1\varepsilon \cdot b) \cdot ({}_0b + {}_1\varepsilon)\\
     \end{array}
     \]
-  \item Step 3: input b
+
+  \item Step 3: input $b$
   \[
     \begin{array}{rcl}
-    der_b (der_a(r')) & =           & der_b ((_01 + _11\cdot b) \cdot (_0b + _1\epsilon))\\
-                      & =           & der_b ((_01 + _11\cdot b)) \cdot (_0b + _1\epsilon) +\, der_b (fuse(mkeps(r1),(_0b + _1\epsilon))) \\
-                      & =           & (der_b (_01) + der_b(_11\cdot b)) \cdot (_0b + _1\epsilon) +\,  (_0(der_b(_0b) + der_b(_1\epsilon))) \\
-                      & =           & ( 0 + der_b(_11\cdot b)) \cdot (_0b + _1\epsilon) +\,  (_0(_01 + 0)) \\
-                      & =           & ((der_b(_11) \cdot b) + der_b(_1b))  \cdot (_0b + _1\epsilon) +\,  (_0(_01 + 0)) \\
-                      & \rightarrow & (( 0 \cdot b) + _11)  \cdot (_0b + _1\epsilon) +\,  (_0(_01 + 0)) \\
+    \der_b(\der_a(r')) & =           & \der_b(({}_0\varepsilon + {}_1\varepsilon \cdot b) \cdot ({}_0b + {}_1\varepsilon))\\
+                       & =           & \der_b({}_0\varepsilon + {}_1\varepsilon \cdot b) \cdot ({}_0b + {}_1\varepsilon) + \der_b(\fuse(\mkeps(r_1),({}_0b + {}_1\varepsilon))) \\
+                       & =           & (\der_b({}_0\varepsilon) + \der_b({}_1\varepsilon \cdot b)) \cdot ({}_0b + {}_1\varepsilon) + {}_0(\der_b({}_0b) + \der_b({}_1\varepsilon)) \\
+                       & =           & (\varnothing + \der_b({}_1\varepsilon \cdot b)) \cdot ({}_0b + {}_1\varepsilon) + {}_0({}_0\varepsilon + \varnothing) \\
+                       & =           & (\der_b({}_1\varepsilon)\cdot b + \der_b({}_1b)) \cdot ({}_0b + {}_1\varepsilon) + {}_0({}_0\varepsilon + \varnothing) \\
+                       & \rightarrow & (\varnothing \cdot b + {}_1\varepsilon) \cdot ({}_0b + {}_1\varepsilon) + {}_0({}_0\varepsilon + \varnothing) \\
     \end{array}
   \]
 
 \end{enumerate}
-Initially, the algorithm will intern the regular expression to prepare it for processing. In this step, the left subexpressions
-are fused with bitcode `0`s, and the right ones with `1`s ~\cite{Sulzmann2014}. Then, it takes the derivative with respect to 
-the first character of the input string, which in this case is `'a'`.
 
+The result of Step~2 shows that the $\varepsilon$ symbols indicate a successful match, 
+while the bitcode records how that match was obtained. 
+One match is obtained by taking the left branch to match the string $a$, reflected in the bitcode $[0]$. 
+The other match arises by taking the right branch, which matches the regular expression: $(ab)$. 
+The function $\mkeps$, as defined by Sulzmann and Lu~\cite{Sulzmann2014}, extracts the bitcode from nullable derivatives; 
+its definition is given at the end of this section.
 
-The result of step 2 is that the ONEs/epsilons indicate a match, and the bitcode encodes how that match was obtained. So far, 
-the first match can be obtained by going left to match \texttt{'a'}, which is also reflected in the bitcode \texttt{0}. 
-The second match is found by going right to match the \texttt{'a'} in the sequence \texttt{'ab'}. The function \texttt{mkeps},
-as defined by Sulzmann and Lu~\cite{Sulzmann2014}, extracts the bitcode from nullable derivatives. Its definition will be given
-at the end of this section.
+In Step~3, the resulting derivative expands into an alternative. 
+This occurs because the concatenation has become nullable, which means the first component, $r_1$, may be skipped while matching. 
+To account for this, the derivative expands into an alternative: the left branch assumes $r_1$ is not skipped, 
+while the right branch assumes it is skipped and instead takes the derivative of $r_1$ directly. 
+This illustrates why derivatives tend to grow in size. 
+Sulzmann and Lu~\cite{Sulzmann2014} use $\fuse(\mkeps(r_1))$ to include the bit annotations needed when $r_1$ is skipped; 
+these bits, extracted by $\mkeps$, indicate how $r_1$ matched the empty string.  
 
+After taking the derivative with respect to the entire input string, the algorithm checks whether the result is nullable. 
+If so, it calls $\mkeps$ to extract the bitcode indicating how the match was obtained. 
+In this example, there are two possible matches, but the algorithm prefers the left one. 
+Consequently, $\mkeps$ returns the bitcode $[1,1]$, which encodes the choice of the right branch in the first alternative of $r_1$ 
+(matching the string: $ab$), followed by the right branch in the second part of the concatenation (matching the empty string).  
 
-The resulting derivative from step 2 expands into an alternative in step 3. This happens because the concatenation has become 
-nullable, which means the first part, $ r_1 $, could be skipped while matching. To account for this, the derivative expands into
-an alternative: the left branch assumes $ r_1 $ wasn’t skipped, and the right branch assumes it was, taking the derivative of 
-$ r_1 $ directly. This is one of the reasons why derivatives tend to grow in size. Sulzmann and Lu use $fuse(mkeps(r_1))$~\cite{Sulzmann2014} 
-to include the bits needed in case \( r_1 \) is skipped. These bits, extracted by \texttt{mkeps}, indicate how \( r_1 \) matched the empty string.
-
-    
-After taking the derivative with respect to the input string, the algorithm checks the nullability of the result. If it is nullable,
-it then calls \texttt{mkeps} to extract the bitcode that indicates how the match was obtained. In this example, there are two possible
-matches, but the algorithm prefers the left one. As a result, \texttt{mkeps} returns the bitcode \texttt{[1,1]}, which indicates that,
-in the first alternative of $r_1$ in the concatenation, it chose the right branch matching \texttt{'ab'}. Then, for the second part of
-the concatenation, it again chose the right branch, indicating a match with the empty string.
-
-Final bitcode after calling \texttt{mkeps} on the resulting derivative: \([1, 1]\). Decoding this with the original expression yields 
-the POSIX parse tree:
+The final bitcode after calling $\mkeps$ is: $[1,1]$. 
+Decoding this against the original expression yields the POSIX value:
 \[
-\texttt{Seq(Right(Seq('a', 'b')), Right(Empty))}
+\Seq(\Right(\Seq(a, b)), \Right(\Empty))
 \]
 
-******add functions definitions; der , mkeps, fuse, intern******
+As mentioned earlier, the formal definitions of the auxiliary functions $\intern$, $\fuse$, and $\mkeps$ are given below, 
+as defined by Sulzmann and Lu~\cite{Sulzmann2014}.
+
+\begin{itemize}
+\item $\fuse : bs, r \to r'$
+  \[
+  \begin{array}{rcl}
+  \fuse\; bs\; (\varnothing)           & \stackrel{\text{def}}{=} & \varnothing \\
+  \fuse\; bs\; (\varepsilon_{bs'})     & \stackrel{\text{def}}{=} & \varepsilon_{(bs @ bs')} \\
+  \fuse\; bs\; (c_{bs'})               & \stackrel{\text{def}}{=} & c_{(bs @ bs')} \\
+  \fuse\; bs\; ((r_1 + r_2)_{bs'} )      & \stackrel{\text{def}}{=} & (r_1 + r_2)_{(bs @ bs')} \\
+  \fuse\; bs\; ((r_1 \cdot r_2)_{{bs'}})   & \stackrel{\text{def}}{=} & (r_1 \cdot r_2)_{(bs @ bs')} \\
+  \fuse\; bs\; (r^*_{bs'})             & \stackrel{\text{def}}{=} & (r^*)_{(bs @ bs')} \\
+  \fuse\; bs\; (r^n_{bs'})             & \stackrel{\text{def}}{=} & (r^n)_{(bs @ bs')} \\
+  \end{array}
+  \]
+
+  \item $\intern : r \to r'$
+    \[
+    \begin{array}{rcl}
+    \intern(\varnothing)     & \stackrel{\text{def}}{=} & \varnothing \\
+    \intern(\varepsilon)     & \stackrel{\text{def}}{=} & \varepsilon \\
+    \intern(c)               & \stackrel{\text{def}}{=} & c \\
+    \intern(r_1 + r_2)       & \stackrel{\text{def}}{=} & \fuse([0], \intern(r_1)) \;+\; \fuse([1], \intern(r_2)) \\
+    \intern(r_1 \cdot r_2)   & \stackrel{\text{def}}{=} & \intern(r_1) \cdot \intern(r_2) \\
+    \intern(r^*)             & \stackrel{\text{def}}{=} & (\intern(r))^* \\
+    \end{array}
+    \]
+
+  \item $\mkeps : r \to bs$
+  \[
+  \begin{array}{rcl}
+  \mkeps(\varepsilon_{bs})            & \stackrel{\text{def}}{=} & bs \\
+  \mkeps((r_1 + r_2)_{bs})            & \stackrel{\text{def}}{=} & 
+       \begin{cases}
+         bs @ \mkeps(r_1) & \text{if $r_1$ is nullable} \\
+         bs @ \mkeps(r_2) & \text{otherwise}
+       \end{cases} \\
+  \mkeps((r_1 \cdot r_2)_{bs})        & \stackrel{\text{def}}{=} & bs @ \mkeps(r_1) @ \mkeps(r_2) \\
+  \mkeps((r^*)_{bs})                  & \stackrel{\text{def}}{=} & bs @ [1] \\
+  \end{array}
+  \]
+
+
+\end{itemize}
+
+
 \subsection{Size Explosion.} %%//needs more, for example, show that attempts to simplification not help that much// 
 
-Even with aggressive simplifications—as shown by Sulzmann and another variant of the algorithm in \emph{POSIX Lexing with Bitcoded Derivatives}~\cite{TanAndUrban2023}— 
-the simplifications keep the number of derivatives finitely bounded, the number can still grow significantly, making practical usage difficult.
-The size of derivatives can arise to seemingly infinite proportions even for some simple expressions. Consider the case \( (a + b)^* \cdot c \)
-with input \texttt{aaac}. The number of expressions can grow significantly because each derivative may introduce new structure. Each step 
-unfolds all possible ways the \texttt{STAR} expression can match the input. Urban and Tan showed that even under simplifications such as 
-removing redundant subterms and collapsing identical alternatives, the size remains only finitely bounded, but still grows quickly.
-Even Antimirov’s partial derivatives~\cite{Antimirov1996}, which do not track POSIX parse values, may produce cubic growth in worst cases.
+Even with aggressive simplifications—as shown by Sulzmann and Lu and another variant of the algorithm in \emph{POSIX Lexing 
+with Bitcoded Derivatives}~\cite{TanAndUrban2023}— the simplifications keep the number of derivatives finitely bounded, the
+number can still grow significantly, making practical usage difficult.The size of derivatives can arise to very large numbers
+even for some simple expressions. Consider the case $ (a + aa)^*$. The number of expressions can grow significantly because each 
+derivative may introduce new structure. Each step  unfolds all possible ways the $\{^*\}$ expression can match the input. Urban
+and Tan showed that even under simplifications such as removing redundant subterms and collapsing identical alternatives, the size
+remains only finitely bounded, but still grows to drastically large numbers even with said simplifications. This is because 
+derivatives reintroduce the same sublanguage in different syntactic forms (e.g.\ $a+aa$ versus $a\cdot(1+a)$), which these rules 
+and duplication removal do not identify as equal~\cite{TanAndUrban2023}.
+
+Even Antimirov’s partial derivatives~\cite{Antimirov1996}, which do not track POSIX values, may produce cubic growth in worst
+cases.~\cite{Antimirov1996}
+
+*** check Chensong example of size explosion even with simplifications ***
 
 \section{Marked Approach}
-The marked approach is a method for regular expression matching that tracks the progress of matching by inserting marks into the regular expression. 
-As noted by Nipkow and Traytel~\cite{NipkowTraytel2014}, the concept of marks dates back to earlier works, but recent work by Fischer~\cite{Fischer2010} 
-and a variation by Asperti~\cite{Asperti2010} developed the idea further in a modern form.
+
+The marked approach is a method for regular expression matching that tracks progress by inserting marks into the expression. 
+As noted by Nipkow and Traytel~\cite{NipkowTraytel2014}, the idea can be traced to earlier work; 
+they point to Fischer et al.~\cite{Fischer2010} and Asperti et al.~\cite{Asperti2010} as reviving and developing it in a modern setting.
 
 This approach allows for more efficient matching, particularly in complex expressions. The regular expression
-itself does not grow in size; instead, marks are inserted into it. With each input character, these marks move (or shift) according to a set of rules.
-At the end of the input, the expression is evaluated to determine whether the marks are in positions that make the expression final, meaning whether 
-the expression accepts the string.
+itself does not grow in size; instead, marks are inserted into it. With each input character, these marks move (or shift) according
+to a set of rules. At the end of the input, the expression is evaluated to determine whether the marks are in positions that make the
+expression final, meaning whether the expression accepts the string.
  
-There is a slight difference in the interpretation of marks in the works of Fischer~\cite{Fischer2010} and Asperti~\cite{Asperti2010}.
-In Fischer's work, marks are inserted after a character has been matched, indicating a matched character or subexpression. 
-In contrast, Asperti interprets the positions of the marks as indicating the ability to match a character. With each character consumed,
-the marks are moved through the regex into new positions that indicate the next character that can be consumed. Similar to Fischer’s work,
-at the end, the regex is evaluated to determine whether it is in a final state; in Asperti’s case, this means that the marks are in positions 
-where the regex can accept the empty string, which reflects that all input characters have been consumed. If the marks were not in those positions,
-it would mean that some characters were not properly matched and the expression should not be accepted.
+There is a slight difference in how marks are interpreted in the works of Fischer et al.~\cite{Fischer2010} 
+and Asperti et al.~\cite{Asperti2010}. 
+In Fischer et al.’s approach, marks are inserted after a character has been matched, thereby recording the matched character or subexpression. 
+In contrast, Asperti et al. interpret the positions of marks as indicating the potential to match a character: as input is consumed, 
+the marks move through the regex to indicate the next character that can be matched. 
+In both cases, acceptance is determined by evaluating the final state of the regex. 
+For Fischer et al., this corresponds to having matched characters, whereas for Asperti et al. it requires that the marks end in positions 
+where the regex can accept the empty string, ensuring that the entire input has been consumed. 
+If the marks do not reach such positions, some characters remain unmatched and the expression is rejected.
 
 \subsection{Motivation for a Marked Approach}
 
-The marked approach offers an alternative to derivatives for regular expression matching. It depends on \emph{moving/shifting} markers
-around the regex instead of creating new subexpressions. Our main motivation is that this method could potentially support fast and 
-high-performance POSIX matching and value extraction, based on how it handles matching and avoids the limitations found in the derivatives approach.
+The marked approach offers an alternative to derivatives for regular expression matching. 
+It depends on propagating markers within the regex rather than constructing new subexpressions. 
+Our main motivation is that this method could support fast and high-performance matching with POSIX value extraction, 
+since it handles matching in a way that avoids some of the limitations of the derivatives approach.  
 
-Inspired by the works of Fischer et al. and Asperti et al.~\cite{Fischer2010, Asperti2010}, we aim to leverage the marked approach and extend it to 
-handle POSIX-compliant disambiguation, as well as complex constructors used in modern regexes, such as bounded repetitions and intersections. The work
-we are doing is mostly inspired by the algorithm described by Fischer~\cite{Fischer2010}. As shown by Nipkow and Traytel~\cite{NipkowTraytel2014}, the
-pre-mark algorithm (from Asperti) is actually a special case of the post-mark algorithm (from Fischer), so Fischer’s version appears to be the most 
-suitable base for extending to POSIX value disambiguation.
+In the derivative method, for example in the SEQ case, the size of the expression typically increases due to the creation of new
+subexpressions, which contributes to the well-known size explosion problem. 
+By contrast, in the marked approach, matching achieves a similar result by propagating marks through the regex, 
+but without generating larger expressions, and we hope that these marks can also be used to extract POSIX values.  
 
+Inspired by the works of Fischer et al. and Asperti et al.~\cite{Fischer2010, Asperti2010}, 
+we aim to extend the marked approach in order to extract POSIX values, as well as to handle complex constructors used in modern regexes, 
+such as bounded repetitions and intersections. 
+Our work is primarily based on the algorithm described by Fischer et al.~\cite{Fischer2010}. 
+As shown by Nipkow and Traytel~\cite{NipkowTraytel2014}, the pre-mark algorithm of Asperti et al. is in fact a special case of the 
+post-mark algorithm of Fischer et al., which makes Fischer et al.’s approach the most suitable foundation for extending the marked 
+algorithm to matching with POSIX value extraction.
 
 \subsection{Versions and Implementation}
 
-We began our work by implementing the marked approach as described by Fischer~\cite{Fischer2010} in the Scala language.  
-the marks are \emph{shifted} through the regular expression with each input character. The process starts with an initial mark inserted 
-at the beginning, which is then moved step-by-step as the input is consumed. This is carried out by a function called \emph{shift}, which performs the 
-core logic of the algorithm. The initial specification of this function is given below, as we have developed several versions throughout our work.
+We began our work by implementing the marked approach described by Fischer et al.~\cite{Fischer2010} in Scala. 
+In this approach, the marks are shifted through the regular expression with each input character. 
+The process starts with an initial mark inserted at the beginning, which is then moved step by step as the input is consumed. 
+This behaviour is implemented by the function \shift, which performs the core logic of the algorithm. 
+The initial specification of this function is given below, as we have developed several versions throughout our work.
 
 \subsubsection*{Scala Implementation of Fischer’s Marked Approach}
-The following describes the shifting behavior as defined by Fischer~\cite{Fischer2010}.
+
+The following describes the shifting behaviour as defined by Fischer et al.~\cite{Fischer2010}. 
+The \shift\ function, which forms the core of the algorithm, takes as input a regular expression to match against, 
+a flag $m$, and a character $c$, and returns a \emph{marked regular expression}. 
+We write a marked regular expression as $\bullet\,r$, where the preceding dot indicates that the expression $r$ 
+has been annotated with marks to record the progress of matching.  
+
 \[
-  shift (m,c,r) \rightarrow Marked\, r
-\]
-The three arguments are: the regular expression to match against, a boolean indicating whether to introduce a new mark or just move existing ones, and 
-the input character. The boolean determines the mode of operation: when set to \texttt{true}, a new mark is introduced; otherwise, the function shifts 
-the existing marks. In our implementation, we added a boolean attribute to the \texttt{CHAR} constructor to represent a marked character. In later versions, 
-we use a wrapper constructor around \texttt{CHAR} to explicitly represent a marked character.
+  \shift : (m, c, r) \mapsto \Marked{r}
+\]  
+
+The flag $m$ indicates the mode of operation: when set to \texttt{true}, a new mark is introduced; 
+otherwise, the function shifts the existing marks. This was realised in our first implementation 
+by adding a boolean attribute to the charachter constructor to represent a marked character. In 
+later versions, we instead introduced a wrapper constructor around charachter constructor to 
+explicitly represent a marked character.
+
+
 
   \[
 \begin{array}{rcl}
-  shift(m,c,\textbf{0})              & \stackrel{\text{def}}{=} & \textbf{0} \\\\
-  shift(m,c,\textbf{1})              & \stackrel{\text{def}}{=} & \textbf{1} \\\\
+  shift(m,c,\varnothing)              & \stackrel{\text{def}}{=} & \varnothing \\\\
+  shift(m,c,\varepsilon)              & \stackrel{\text{def}}{=} & \varepsilon \\\\
   shift(m,c,d)              & \stackrel{\text{def}}{=} &
    \begin{cases}
     \bullet d & \text{if  \( c=d \land m \)}\\
@@ -271,12 +399,12 @@ Helper Functions Definitions:
 \item $fin(regex) \rightarrow Boolean $
   \[
 \begin{array}{rcl}
-  fin(\textbf{0})              & \stackrel{\text{def}}{=} & false \\
-  fin(\textbf{1})              & \stackrel{\text{def}}{=} & false \\
+  fin(\varnothing)              & \stackrel{\text{def}}{=} & false \\
+  fin(\varepsilon)              & \stackrel{\text{def}}{=} & false \\
   fin(c)              & \stackrel{\text{def}}{=} & false \\
-  fin(\bullet c)      & \stackrel{\text{def}}{=} & true \\
-  fin(r_1 + r_1)      & \stackrel{\text{def}}{=} & \text{ $fin(r_1)$ $\lor$ $fin(r_2)$}\\ 
-  fin(r_1 \cdot r_1)  & \stackrel{\text{def}}{=} & \text{ ($fin(r_1)$ $\land$ $nullable(r_2)$) $\lor$ $fin(r_2)$}\\
+  fin(\Marked{c})      & \stackrel{\text{def}}{=} & true \\
+  fin(r_1 + r_2)      & \stackrel{\text{def}}{=} & \text{ $fin(r_1)$ $\lor$ $fin(r_2)$}\\ 
+  fin(r_1 \cdot r_2)  & \stackrel{\text{def}}{=} & \text{ ($fin(r_1)$ $\land$ $nullable(r_2)$) $\lor$ $fin(r_2)$}\\
   fin(r^*)            & \stackrel{\text{def}}{=} & fin(r)  
 \end{array}
 \]
@@ -284,18 +412,18 @@ Helper Functions Definitions:
 \item $nullable(regex) \rightarrow Boolean $
   \[
 \begin{array}{rcl}
-  nullable(\textbf{0})         & \stackrel{\text{def}}{=} & false \\
-  nullable(\textbf{1})              & \stackrel{\text{def}}{=} & true \\
+  nullable(\varnothing)         & \stackrel{\text{def}}{=} & false \\
+  nullable(\varepsilon)              & \stackrel{\text{def}}{=} & true \\
   nullable(c)              & \stackrel{\text{def}}{=} & false \\
-  nullable(r_1 + r_1)      & \stackrel{\text{def}}{=} & \text{ $nullable(r_1)$ $\lor$ $nullable(r_2)$}\\ 
-  nullable(r_1 \cdot r_1)      & \stackrel{\text{def}}{=} & \text{ ($nullable(r_1)$ $\land$ $nullable(r_2)$)}\\
+  nullable(r_1 + r_2)      & \stackrel{\text{def}}{=} & \text{ $nullable(r_1)$ $\lor$ $nullable(r_2)$}\\ 
+  nullable(r_1 \cdot r_2)      & \stackrel{\text{def}}{=} & \text{ ($nullable(r_1)$ $\land$ $nullable(r_2)$)}\\
   nullable(r^*)      & \stackrel{\text{def}}{=} & true 
 \end{array}
 \]
 
 \end{itemize}
 This first implementation of the algorithm, provides only acceptance checking without any value construction, 
-the followingsubsections describe the different versions we have developed so far.
+the following subsections describe the different versions we have developed so far.
 
 \subsubsection{Bit-Annotated POINT, version 1}
 In this version, we extended the marked approach to include bitcodes that annotate the marks that is being 
@@ -313,8 +441,8 @@ We define two additional functions: \texttt{mkfin}, which extracts the bit seque
  empty-string match). The definitions are given below, starting with the $shift$ function.
 \[
 \begin{array}{rcl}
-  shift(m,bs,c,0)              & \stackrel{\text{def}}{=} & 0 \\\\
-  shift(m,bs,c,1)              & \stackrel{\text{def}}{=} & 1 \\\\
+  shift(m,bs,c,\varnothing)              & \stackrel{\text{def}}{=} & \varnothing \\\\
+  shift(m,bs,c,\varepsilon)              & \stackrel{\text{def}}{=} & \varepsilon \\\\
   shift(m,bs,c,d)              & \stackrel{\text{def}}{=} & 
    \begin{cases}
     \bullet_{bs} \, d & \text{if  $ m \land d = c $}\\

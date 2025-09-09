@@ -38,12 +38,12 @@ def mkeps2(r: Rexp) : Bits = r match {
   case SEQ(r1, r2) => mkeps2(r1) ++ mkeps2(r2)
   case STAR(r) => List(En)
   case NTIMES(r, n) => List(EnT)
+  case AND(r1, r2) => mkeps2(r1) ++ mkeps2(r2) //??
 }
 
 type Marks = List[Mark]
-def shifts(mss: Marks, r: Rexp): Marks =
-  val ms=mss.prune2 
-  (simp(r): @unchecked) match {
+def shifts(ms: Marks, r: Rexp): Marks =
+  (r: @unchecked) match {
   case ZERO => Nil
   case ONE => Nil
   case CHAR(d) => for (m <- ms if m.str != Nil && m.str.head == d) yield m.copy(str = m.str.tail)
@@ -57,18 +57,19 @@ def shifts(mss: Marks, r: Rexp): Marks =
         val r1Consume=(ms1 <::+>mkeps2(r2))
         val r1r2Consume= ms1.flatMap( m => shifts(List(m), r2))
         val r2Consume= shifts((ms <::+> mkeps2(r1)) ,r2)
-        val returned= ((r1Consume.prune2 ::: r1r2Consume.prune2).prune2  ::: r2Consume.prune2).prune2
-        returned
+        ((r1Consume.prune2 ::: r1r2Consume.prune2).prune2  ::: r2Consume.prune2).prune2
+        
       case (true, false) => (ms1.flatMap( m => shifts(List(m), r2)).prune2   ::: shifts((ms<::+> mkeps2(r1)),r2)).prune2 
       case (false, true) => ((ms1 <::+>mkeps2(r2)).prune2 ::: ms1.flatMap( m => shifts(List(m), r2))).prune2 
       case (false, false) => ms1.flatMap( m => shifts(List(m), r2)).prune2
       } 
   }
   case STAR(r) =>
-      val ms1 = shifts((ms<:+>Nx), r).prune2
-      if(ms1.isEmpty) Nil else
-        val returned=( (ms1 <:+> En) ::: ms1.flatMap( m=> shifts(List(m), STAR(r)).prune2).prune2   )
-        returned.prune2
+      val ms1 = shifts((ms<:+>Nx), r).prune2.reshuffle
+      if(ms1.isEmpty) Nil 
+      else{
+           ( (ms1 <:+> En) ::: ms1.flatMap( m=> shifts(List(m), STAR(r))).prune2   ).prune2
+          }
   
   case NTIMES(r,n) if n == 0 => (ms <:+> EnT)
   //case NTIMES(r,n) if n < 0 => Nil
@@ -82,36 +83,9 @@ def shifts(mss: Marks, r: Rexp): Marks =
         else
         ( ms1.flatMap( m=> shifts(List(m), NTIMES(r,n-1)))   )
         }
-  //case AND(r1,r2) =>       
+  case AND(r1,r2) => (shifts(ms,r1).intersect(shifts(ms,r2)))    
 
 }
-
-def simp(r: Rexp): Rexp = r match {
-  case ALT(r1, r2) =>
-    (simp(r1), simp(r2)) match {
-      case (ZERO, r2s)      => r2s
-      case (r1s, ZERO)      => r1s
-      case (x, y) if x == y => x
-      case (r1s, r2s)       => ALT(r1s, r2s)
-    }
-  case SEQ(r1, r2) =>
-    (simp(r1), simp(r2)) match {
-      case (ZERO, _)  => ZERO
-      case (_, ZERO)  => ZERO
-      case (ONE, r2s) => r2s
-      case (r1s, ONE) => r1s
-      case (r1s, r2s) => SEQ(r1s, r2s)
-    }
-  case STAR(r1) =>
-    simp(r1) match {
-      case ZERO        => ONE
-      case ONE         => ONE
-      case STAR(inner) => STAR(inner)     
-      case r1s         => STAR(r1s)      
-    }
-  case r => r
-}
-
 
 extension (ms: List[Mark])
   def reshuffle: List[Mark] = ms.sortBy(m => (m.str.length))
@@ -461,12 +435,25 @@ def test23() = {
 def test24() = {
   println("=====Test====")
   val br2=  %( %("a") ) //~ "b"
-  val s = "a" * 50 //+ "b" //400
+  val s = "a" * 20 //+ "b" //400
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 
   commonTestCode(br2, s)
 }
+
+@main
+def test25() = {
+  println("=====Test====")
+  val br2=  AND("a"|"b" , "b") 
+  val s = "b"
+  println(s"Regex:\n${pp(br2)}\n")
+  println(s"=string=\n$s")
+
+  
+  commonTestCode(br2, s)
+}
+
 
 
 def time_needed[T](i: Int, code: => T) = {
@@ -627,6 +614,7 @@ def pp(e: Rexp) : String = (e: @unchecked) match {
   case SEQ(r1, r2) => "SEQ\n" ++ pps(r1, r2)
   case STAR(r) => s"STAR\n" ++ pps(r)
   case NTIMES(r, n) => s"NTIMES($n)\n" ++ pps(r)
+  case AND(r1, r2) => "AND\n" ++ pps(r1, r2)
 }
 
 def pps(es: Rexp*) = indent(es.map(pp))

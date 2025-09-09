@@ -1,5 +1,7 @@
 
 import scala.language.implicitConversions
+import $file.Derivatives
+//import $file.rexp, rexp._
 
 // regular expressions
 abstract class Rexp
@@ -9,6 +11,7 @@ case class CHAR(c: Char) extends Rexp
 case class ALT(r1: Rexp, r2: Rexp) extends Rexp
 case class SEQ(r1: Rexp, r2: Rexp) extends Rexp
 case class STAR(r: Rexp) extends Rexp
+case class AND(r1: Rexp, r2: Rexp) extends Rexp
 
 def charlist2rexp(s : List[Char]): Rexp = s match {
   case Nil => ONE
@@ -33,12 +36,14 @@ def nullable(r: Rexp) : Boolean = r match {
   case ALT(r1, r2) => nullable(r1) || nullable(r2)
   case SEQ(r1, r2) => nullable(r1) && nullable(r2)
   case STAR(_) => true
+  case AND(r1, r2) => nullable(r1) && nullable(r2)
 }
 
 type Marks = List[String]
 
 // shifts function 
-def shifts(ms: Marks, r: Rexp) : Marks = simp(r) match {
+def shifts(ms: Marks, r: Rexp) : Marks = 
+  r match {
       case ZERO => Nil
       case ONE => Nil
       case CHAR(c) => for (m <- ms; if m != "" && m.head == c) yield m.tail
@@ -53,12 +58,14 @@ def shifts(ms: Marks, r: Rexp) : Marks = simp(r) match {
         }
       }
       case STAR(r) => {
-        val ms1 = shifts(ms, r).prune2
-        if(ms1.isEmpty) ms1
-        else
-       ( ms1 ::: shifts(ms1, STAR(r))).prune2 
+        val ms1 = shifts(ms.prune2, r)
+        if(ms1.isEmpty) Nil
+        else{
+        ( ms1 ::: shifts(ms1, STAR(r)) ).prune2 
+        }
       }
-    }
+      case AND(r1,r2) => (shifts(ms,r1).intersect(shifts(ms,r2)))
+}
 
 extension (ms: Marks)
   def reshuffle: Marks = ms.sortBy(m => (m.length))
@@ -71,122 +78,41 @@ extension (ms: Marks)
       keep
   }
 
-def simp(r: Rexp): Rexp = r match {
-  case ALT(r1, r2) =>
-    (simp(r1), simp(r2)) match {
-      case (ZERO, r2s)      => r2s
-      case (r1s, ZERO)      => r1s
-      case (x, y) if x == y => x
-      case (r1s, r2s)       => ALT(r1s, r2s)
-    }
-  case SEQ(r1, r2) =>
-    (simp(r1), simp(r2)) match {
-      case (ZERO, _)  => ZERO
-      case (_, ZERO)  => ZERO
-      case (ONE, r2s) => r2s
-      case (r1s, ONE) => r1s
-      case (r1s, r2s) => SEQ(r1s, r2s)
-    }
-  case STAR(r1) =>
-    simp(r1) match {
-      case ZERO        => ONE
-      case ONE         => ONE
-      case STAR(inner) => STAR(inner)     
-      case r1s         => STAR(r1s)      
-    }
-  case r => r
-}
-
-
-
 // the main matching function 
 def matcher(r: Rexp, s: String) : Boolean = {
   if (s == "") nullable(r)
   else 
-    println(s"List Marks = ${shifts(List(s), r)}") 
+    //println(s"List Marks = ${shifts(List(s), r)}") 
     shifts(List(s), r).exists(_ == "")
 }
 
 @main
 def test1() = {
   println("=====Test====")
-  val r = %("aa") ~ %(%("a"))
-  val s = "aaaaaa"
-  println(r)
-  println(s)
+  val r=  %( %("a") ) //~ "b"
+  val s = "a" * 920 //+ "b"
+  println(s"Regex:\n${(r)}\n")
+  println(s"=string=\n$s")
   println(s"res: ${matcher(r, s)}")
 }
 
 @main
 def test2() = {
   println("=====Test====")
-  val r = (ONE | "c") ~ %(%("c"))
-  val s = "cccc"
-  println(r)
-  println(s)
-  println(s"res: ${matcher(r, s)}")
-}
+  //val r=   AND(%("a") , %("aa"))
+  val r1= %("aa" | "b")
+  val r2= %("a" | "b") ~ "b"
 
+  val r= AND(r1 , r2) 
 
-@main
-def test3() = {
-  println("=====Test====")
-  val r = SEQ(CHAR('a'),ALT(ONE,ONE))
-  val s = "a"
-  println("=string=")
-  println(r)
-  println(s)
-  println(s"res: ${matcher(r, s)}")
-}
-
-@main
-def test4() = {
-  println("=====Test====")
-  val r = (%(%(ONE))) ~ "c"
-  val s = "c"
-  println(r)
-  println(s)
-  println(s"res: ${matcher(r, s)}")
-}
-
-@main
-def test5() = {
-  println("=====Test====")
-  val r = STAR("e" | ("d" | "c"))
-  val s = "cdc"
-  println("=string=")
-  println(r)
-  println(s)
-  println(s"res: ${matcher(r, s)}")
-}
-
-@main
-def test6() = {
-  println("=====Test====")
-  val r = STAR(ONE ~ ONE) ~ "cc"
-  val s = "cc"
-  println("=string=")
-  println(r)
-  println(s)
-  println(s"res: ${matcher(r, s)}")
-}
-
-@main
-def test7() = {
-  println("=====Test====")
-  val r = (%(%(ONE ~ ONE))) ~ "c"
-  val s = "c"
-  println(r)
-  println(s)
-  println(s"res: ${matcher(r, s)}")
-}
-
-@main
-def test8() = {
-  println("=====Test====")
-  val r=  %( %("a") ) //~ "b"
-  val s = "a" * 2263 //+ "b"
+  val s = "aabaab" 
   println(s"Regex:\n${(r)}\n")
   println(s"=string=\n$s")
-  println(s"res: ${matcher(r, s)}")
+  val sResult=matcher(r, s)
+ // val dResult=Derivatives.matcher(r, s)
+  println(s"Shifts: ${sResult}")
+ // println(s"Derivatives: ${dResult}")
+  //if(sResult != dResult) println("Mismatch!") else println("Match!")
+
+  
 }

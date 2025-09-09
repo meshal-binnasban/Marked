@@ -1,0 +1,14 @@
+\contentsline {section}{\numberline {1}Introduction}{4}{}%
+\contentsline {section}{\numberline {2}Background}{4}{}%
+\contentsline {subsection}{\numberline {2.1}Derivatives}{4}{}%
+\contentsline {subsubsection}{\numberline {2.1.1}Derivative Extension}{5}{}%
+\contentsline {subsubsection}{\numberline {2.1.2}Size Explosion.}{8}{}%
+\contentsline {subsection}{\numberline {2.2}Marked Approach}{9}{}%
+\contentsline {subsubsection}{\numberline {2.2.1}Motivation for a Marked Approach}{10}{}%
+\contentsline {subsubsection}{\numberline {2.2.2}Scala Implementation of Fischer’s Marked Approach}{10}{}%
+\contentsline {section}{\numberline {3}Our Apporach}{13}{}%
+\contentsline {subsection}{\numberline {3.1}Bit-Annotated POINT, version 1}{13}{}%
+\contentsline {subsection}{\numberline {3.2}Bit-Annotated POINT, version 2}{17}{}%
+\contentsline {subsection}{\numberline {3.3}Input-Carrying Marks}{17}{}%
+\contentsline {section}{\numberline {4}Future Work}{17}{}%
+\contentsline {section}{References}{19}{}%

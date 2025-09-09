@@ -113,7 +113,8 @@ def der(c: Char, r: Rexp) : Rexp = r match {
     if (nullable(r1)) ALT(SEQ(der(c, r1), r2), der(c, r2))
     else SEQ(der(c, r1), r2)
   case STAR(r) => SEQ(der(c, r), STAR(r))
-  case NTIMES(r, n) => if (n == 0) ZERO else SEQ(der(c, r), NTIMES(r, n-1)) // new to testX1.
+  case NTIMES(r, n) => if (n == 0) ZERO else SEQ(der(c, r), NTIMES(r, n-1))
+  case AND(r1,r2)    => AND( der(c,r1) , der(c,r2) )
 }
 
 // the derivative w.r.t. a string (iterates der and simp)
@@ -142,6 +143,7 @@ def mkeps(r: Rexp) : Val = r match {
   case SEQ(r1, r2) => Sequ(mkeps(r1), mkeps(r2))
   case STAR(r) => Stars(Nil)
   case NTIMES(r, n) => Nt(Nil, 0)
+  case AND(r1,r2) => Sequ(mkeps(r1),mkeps(r2))
 }
 
 def inj(r: Rexp, c: Char, v: Val) : Val = (r, v) match {
@@ -152,6 +154,7 @@ def inj(r: Rexp, c: Char, v: Val) : Val = (r, v) match {
   case (ALT(r1, r2), Left(v1)) => Left(inj(r1, c, v1))
   case (ALT(r1, r2), Right(v2)) => Right(inj(r2, c, v2))
   case (CHAR(d), Empty) => Chr(c)
+  case (AND(r1,r2), Sequ(v1,v2)) => Sequ(inj(r1, c, v1), v2) // copy of SEQ?
 }
 
 // lexing functions without simplification

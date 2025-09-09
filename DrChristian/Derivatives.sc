@@ -11,6 +11,7 @@ def der(c: Char, r: Rexp) : Rexp = r match {
     else SEQ(der(c, r1), r2)
   case STAR(r) => SEQ(der(c, r), STAR(r))
   case NTIMES(r, n) => if (n == 0) ZERO else SEQ(der(c, r), NTIMES(r, n-1)) 
+  case AND(r1,r2)    => AND( der(c,r1) , der(c,r2) )
 }
 
 // the derivative w.r.t. a string (iterates der and simp)
