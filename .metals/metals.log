@@ -12253,3 +12253,605 @@ WARNING: Unmatched cancel notification for request id 14011
 2025.09.07 23:53:41 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/rebit.sc. Using presentation compiler with project's scala-library version: 3.6.3
 Sep 09, 2025 7:57:30 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
 INFO: Unsupported notification method: $/setTrace
+2025.09.09 20:33:58 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/Report/Versions/BitCoded_1.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.09 20:33:58 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/Report/Versions/BitCoded_1.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.09 20:33:59 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/Report/Versions/BitCoded_1.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Sep 09, 2025 8:33:59 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 14053
+2025.09.09 20:33:58 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/Report/Versions/BitCoded_1.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.09 20:34:00 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/Report/Versions/BitCoded_1.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.09 20:34:01 INFO  time: code lens generation in 1.59s
+2025.09.09 20:34:04 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/Report/Versions/BitCoded_1.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:38 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:38 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:38 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:39 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:40 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:41 INFO  time: code lens generation in 1.3s
+2025.09.10 19:20:40 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:44 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:46 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:48 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:50 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:50 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:50 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:52 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:52 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:52 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:52 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:52 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:52 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:52 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:52 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:53 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Sep 10, 2025 7:20:54 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 14103
+2025.09.10 19:20:53 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:53 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:53 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:53 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:55 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:55 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Exception in thread "pool-3960-thread-1" java.lang.InterruptedException
+	at scala.meta.internal.metals.FutureCancelToken.checkCanceled(FutureCancelToken.scala:29)
+	at scala.meta.internal.pc.CompilerAccess.onCompilerJobQueue$$anonfun$1(CompilerAccess.scala:244)
+	at scala.meta.internal.pc.CompilerJobQueue$Job.run(CompilerJobQueue.scala:153)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2025.09.10 19:20:55 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:55 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:55 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:55 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:55 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:55 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:55 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc
+2025.09.10 19:20:56 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:55 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:55 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:55 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:56 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:56 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:56 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:57 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:57 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:57 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Exception in thread "pool-3969-thread-1" java.lang.InterruptedException
+	at scala.meta.internal.metals.FutureCancelToken.checkCanceled(FutureCancelToken.scala:29)
+	at scala.meta.internal.pc.CompilerAccess.onCompilerJobQueue$$anonfun$1(CompilerAccess.scala:244)
+	at scala.meta.internal.pc.CompilerJobQueue$Job.run(CompilerJobQueue.scala:153)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+Sep 10, 2025 7:20:57 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 14136
+2025.09.10 19:20:57 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc
+2025.09.10 19:20:57 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:56 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:57 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:59 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:20:59 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:00 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:00 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:00 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:00 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:00 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:00 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:01 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:01 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:02 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:03 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:03 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:03 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:03 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:03 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:03 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:04 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:04 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:04 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:04 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Sep 10, 2025 7:21:04 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 14169
+2025.09.10 19:21:04 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:05 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:05 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:05 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:05 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:05 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:06 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:05 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:06 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:07 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:07 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:07 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:07 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:07 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:07 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:08 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:08 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:08 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:08 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:08 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:08 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:09 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:09 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:09 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Sep 10, 2025 7:21:09 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 14218
+Sep 10, 2025 7:21:09 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 14220
+2025.09.10 19:21:09 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:09 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:09 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Sep 10, 2025 7:21:10 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 14227
+2025.09.10 19:21:10 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:10 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:10 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Sep 10, 2025 7:21:11 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 14231
+2025.09.10 19:21:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:11 INFO  time: code lens generation in 2.04s
+2025.09.10 19:21:11 INFO  time: code lens generation in 1.78s
+2025.09.10 19:21:10 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:10 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:13 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:13 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:14 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:14 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:14 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:14 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:14 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:14 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:14 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:14 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Sep 10, 2025 7:21:16 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 14281
+2025.09.10 19:21:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:17 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Sep 10, 2025 7:21:17 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 14284
+2025.09.10 19:21:17 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Sep 10, 2025 7:21:17 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 14286
+2025.09.10 19:21:17 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:17 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:17 INFO  time: code lens generation in 2.81s
+2025.09.10 19:21:17 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:17 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc
+2025.09.10 19:21:17 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:17 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:18 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:18 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:18 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:18 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:19 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:21 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc
+2025.09.10 19:21:21 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:37 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:53 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:53 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:53 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:53 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:54 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:54 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc
+2025.09.10 19:21:56 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:56 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:21:56 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:00 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:00 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:00 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:00 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:01 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:01 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:02 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:01 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:01 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:02 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:01 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:01 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:01 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:02 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:03 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:03 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:02 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:04 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:04 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:04 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc
+2025.09.10 19:22:05 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:05 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:05 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:05 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:05 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:05 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Sep 10, 2025 7:22:06 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 14371
+2025.09.10 19:22:06 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:06 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:06 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:06 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc
+2025.09.10 19:22:05 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:07 INFO  time: code lens generation in 2.87s
+2025.09.10 19:22:06 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:06 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:07 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:07 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc
+2025.09.10 19:22:07 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:07 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:22:07 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:26 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:26 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:30 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:30 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:31 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Sep 10, 2025 7:26:31 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 14395
+2025.09.10 19:26:30 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:32 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:38 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:46 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:46 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc
+2025.09.10 19:26:46 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:46 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:47 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:47 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:47 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:47 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:47 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:49 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:49 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:50 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:50 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:51 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:50 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:51 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:50 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:50 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:52 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:52 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:53 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:52 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:53 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:53 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:53 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:53 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:55 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:55 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:55 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:55 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:55 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:56 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:55 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:55 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:56 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:56 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:57 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:56 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:57 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:26:57 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc
+2025.09.10 19:26:57 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:03 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:09 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:10 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:16 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:16 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:19 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:19 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:19 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:19 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:19 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Sep 10, 2025 7:27:20 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 14556
+2025.09.10 19:27:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:21 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:21 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc
+2025.09.10 19:27:22 INFO  time: code lens generation in 1.38s
+2025.09.10 19:27:22 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:23 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:23 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:24 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:23 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:24 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:24 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc
+2025.09.10 19:27:24 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:53 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Sep 10, 2025 7:27:54 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 14578
+2025.09.10 19:27:53 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:54 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc
+2025.09.10 19:27:54 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:56 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:57 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:57 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:57 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:57 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:57 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:57 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:57 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:58 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:58 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:58 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:58 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc
+2025.09.10 19:27:58 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:58 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:58 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:58 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:58 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:58 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:58 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:27:58 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:00 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:00 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:00 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:00 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:00 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:00 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Exception in thread "pool-4067-thread-1" java.lang.InterruptedException
+	at scala.meta.internal.metals.FutureCancelToken.checkCanceled(FutureCancelToken.scala:29)
+	at scala.meta.internal.pc.CompilerAccess.onCompilerJobQueue$$anonfun$1(CompilerAccess.scala:244)
+	at scala.meta.internal.pc.CompilerJobQueue$Job.run(CompilerJobQueue.scala:153)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2025.09.10 19:28:00 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc
+2025.09.10 19:28:00 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:00 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc
+2025.09.10 19:28:00 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:00 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:02 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:02 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:02 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:03 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:03 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:03 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:03 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:03 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:04 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc
+2025.09.10 19:28:04 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:03 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:04 INFO  empty definition using pc, found symbol in pc: `<none>`. (full report at: "/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/.metals/.reports/metals-full/2025-08-10/r_empty-definition_18-20-42-084.md")
+2025.09.10 19:28:05 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:05 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:05 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:05 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:05 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:06 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:06 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:05 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:06 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:06 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:07 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:07 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:07 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:08 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:08 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:08 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:08 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:08 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Exception in thread "pool-4084-thread-1" java.lang.InterruptedException
+	at scala.meta.internal.metals.FutureCancelToken.checkCanceled(FutureCancelToken.scala:29)
+	at scala.meta.internal.pc.CompilerAccess.onCompilerJobQueue$$anonfun$1(CompilerAccess.scala:244)
+	at scala.meta.internal.pc.CompilerJobQueue$Job.run(CompilerJobQueue.scala:153)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+Sep 10, 2025 7:28:09 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 14668
+2025.09.10 19:28:09 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:09 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:08 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc
+2025.09.10 19:28:09 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:09 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Sep 10, 2025 7:28:13 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 14687
+2025.09.10 19:28:13 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:13 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:13 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:13 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Sep 10, 2025 7:28:15 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 14695
+Sep 10, 2025 7:28:15 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 14696
+2025.09.10 19:28:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Sep 10, 2025 7:28:15 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 14700
+2025.09.10 19:28:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Exception in thread "pool-4099-thread-1" 2025.09.10 19:28:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+java.lang.InterruptedException
+2025.09.10 19:28:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+	at scala.meta.internal.metals.FutureCancelToken.checkCanceled(FutureCancelToken.scala:29)
+	at scala.meta.internal.pc.CompilerAccess.onCompilerJobQueue$$anonfun$1(CompilerAccess.scala:244)
+	at scala.meta.internal.pc.CompilerJobQueue$Job.run(CompilerJobQueue.scala:153)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+Sep 10, 2025 7:28:15 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 14701
+2025.09.10 19:28:15 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Sep 10, 2025 7:28:15 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 14699
+2025.09.10 19:28:16 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc
+2025.09.10 19:28:16 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:17 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:17 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:17 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:17 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:17 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:17 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:17 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:18 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:19 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:21 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Sep 10, 2025 7:28:21 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 14739
+2025.09.10 19:28:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:21 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:21 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:21 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:22 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:21 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:21 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:22 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:22 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:23 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:23 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc
+2025.09.10 19:28:24 INFO  time: code lens generation in 1.04s
+2025.09.10 19:28:24 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:24 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:24 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:24 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:24 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:44 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:45 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:46 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:46 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:47 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:46 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:46 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:47 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:47 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:48 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:48 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:48 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:49 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:28:49 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc
+2025.09.10 19:28:50 INFO  time: code lens generation in 1.71s
+2025.09.10 19:28:51 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:00 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:02 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:09 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:10 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:10 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Sep 10, 2025 7:29:11 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 14788
+2025.09.10 19:29:10 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Sep 10, 2025 7:29:11 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 14790
+2025.09.10 19:29:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:12 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc
+2025.09.10 19:29:13 INFO  time: code lens generation in 1.16s
+2025.09.10 19:29:13 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:17 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:17 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc
+2025.09.10 19:29:17 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:17 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:19 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:19 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:19 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:21 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:21 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:22 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:22 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:21 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Sep 10, 2025 7:29:22 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 14836
+Sep 10, 2025 7:29:22 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 14837
+2025.09.10 19:29:22 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:22 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:22 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:22 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:23 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc
+2025.09.10 19:29:23 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:24 INFO  time: code lens generation in 1.43s
+2025.09.10 19:29:25 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:25 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:25 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc
+2025.09.10 19:29:25 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:25 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:25 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:27 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:27 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:27 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:27 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:27 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:27 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:27 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc
+2025.09.10 19:29:29 INFO  time: code lens generation in 1.44s
+2025.09.10 19:29:29 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:29 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:29 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:31 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:56 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:56 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:56 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:57 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:57 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:57 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc
+2025.09.10 19:29:57 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:29:58 INFO  time: code lens generation in 1.29s
+2025.09.10 19:30:21 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:30:21 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:30:21 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:30:21 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:30:22 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:30:22 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:30:22 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc
+2025.09.10 19:30:24 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Derivatives.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:30:36 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc
+2025.09.10 19:30:36 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:30:38 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:30:38 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:30:38 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:30:39 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:30:38 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:30:39 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:30:39 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:30:39 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:30:39 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:30:39 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:30:39 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:30:40 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:30:39 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.09.10 19:30:41 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc
+2025.09.10 19:30:41 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/Test.sc. Using presentation compiler with project's scala-library version: 3.6.3

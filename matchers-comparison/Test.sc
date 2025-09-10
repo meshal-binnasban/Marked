@@ -68,6 +68,32 @@ def test2() = {
 }
 
 @main
+def test3() = {
+  println("=====Test====")
+  val r=  %( "a" | "aa" ) 
+  val s = "a" * 31
+  println("=string=")
+  println(s)
+
+  println(s"Derivatives: ${Derivatives.matcher(r, s)}")
+  println(s"Play: ${Play.matcher(r, s)}")
+  println(s"Shifts: ${Shifts.matcher(r, s)}")
+  
+  val shifts=time_needed(1000,Shifts.matcher(r, s))
+  val derivatives=time_needed(1000,Derivatives.matcher(r, s))
+  val play=time_needed(1000,Play.matcher(r, s))
+
+  val list = List( ("Derivatives", derivatives), ("Play",play),("Shifts",shifts))
+  println(s"=Times=")
+  println(s"Derivatives= $derivatives")
+  println(s"Play= $play")
+  println(s"Shifts= $shifts")
+
+  println(list.sortBy(_._2))
+  
+}
+
+@main
 def testAll() = {
   given rexp_cdata : CDATA[Rexp] = List(
         (0, _ => ONE),

@@ -60,3 +60,14 @@ def test2() = {
   println(s"=string=\n$s")
   println(s"Derivative= ${matcher(br2, s)}")
 }
+
+@main
+def test3() = {
+  println("=====Test====")
+  val br2=  %( "a" | "aa" ) 
+  val s = "a" * 31
+  println("=string=")
+  println(s"Regex:\n${pp(br2)}\n")
+  println(s"=string=\n$s")
+  println(s"Derivative= ${matcher(br2, s)}")
+}
