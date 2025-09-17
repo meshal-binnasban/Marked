@@ -117,9 +117,9 @@ def testAll() = {
     if (i % 100_000 == 0) { print("*") }
     for (s <- (regenerate.generate_up_to(alphabet)(10)(r).take(9)) if s != "")
       { 
-        val shifts=time_needed(1000,Shifts.matcher(r, s))
-        val play=time_needed(1000,Play.matcher(r, s))
-        val derivatives=time_needed(1000,Derivatives.matcher(r, s))
+        val shifts=time_needed(1,Shifts.matcher(r, s))
+        val play=time_needed(1,Play.matcher(r, s))
+        val derivatives=time_needed(1,Derivatives.matcher(r, s))
         
         totalDerivatives += derivatives
         totalPlay += play
@@ -147,7 +147,7 @@ def testAllP() = {
         (0, _ => CHAR('b')),
         (0, _ => CHAR('c')),
         (1, cs => STAR(cs(0))),
-        //(1, cs => NTIMES(cs(0),new scala.util.Random().nextInt(30) + 1 )),
+        (1, cs => NTIMES(cs(0),new scala.util.Random().nextInt(30) + 1 )),
         (2, cs => ALT(cs(0), cs(1))),
         (2, cs => SEQ(cs(0), cs(1)))
       )
@@ -157,7 +157,7 @@ def testAllP() = {
   var totalShifts      = 0.0
   var regexCount       = 0L
 
-  val numRegexes = BigInt(1_000_000L)
+  val numRegexes = BigInt(100_000_000L)
   val batchSize = BigInt(100_000L) 
   
   val batches = (BigInt(0) to numRegexes by batchSize).toVector.par
@@ -222,3 +222,68 @@ def testEvilS() = {
 def allEvil() = { testEvilD(); testEvilP(); testEvilS(); } 
 
 
+@main
+def testAllMatcher() = {
+  given rexp_cdata : CDATA[Rexp] = List(
+    (0, _ => ONE),
+    (0, _ => ZERO),
+    (0, _ => CHAR('a')),
+    (0, _ => CHAR('b')),
+    (0, _ => CHAR('c')),
+    (1, cs => STAR(cs(0))),
+    (1, cs => NTIMES(cs(0), new scala.util.Random().nextInt(30) + 1)),
+    (2, cs => ALT(cs(0), cs(1))),
+    (2, cs => SEQ(cs(0), cs(1)))
+  )
+
+  val alphabet = LazyList('a', 'b')
+
+  var totalDerivatives = 0.0
+  var totalShifts      = 0.0
+  var regexCount       = 0L
+
+  val numRegexes = BigInt(100_000_000L)
+  val batchSize  = BigInt(100_000L)
+
+  val batches = (BigInt(0) to numRegexes by batchSize).toVector.par
+  batches.foreach { start =>
+    val end = (start + batchSize - 1).min(numRegexes)
+    for (i <- start to end) {
+      val r = enumerate.decode(i)
+      if (i % 100_000 == 0) { print("*") }
+
+      for (s <- regenerate.generate_up_to(alphabet)(10)(r).take(9) if s != "") {
+
+        val shiftsTime = time_needed(1, Shifts.matcher(r, s))
+        val derivsTime = time_needed(1, Derivatives.matcher(r, s))
+
+        val resShifts      = Shifts.matcher(r, s)
+        val resDerivatives = Derivatives.matcher(r, s)
+
+        if (resShifts != resDerivatives) {
+          println("[MISMATCH — aborting]")
+          println(s"reached tests : $regexCount")
+          println(s"enum index (i): $i")
+          println(s"regex         : $r")
+          println(s"string        : \"$s\"")
+          println(s"shifts result : $resShifts")
+          println(s"shifts time s : $shiftsTime")
+          println(s"derivs result : $resDerivatives")
+          println(s"derivs time s : $derivsTime")
+          sys.exit(1)
+        }
+
+        totalShifts      += shiftsTime
+        totalDerivatives += derivsTime
+        regexCount       += 1
+      }
+    }
+  }
+
+  if (regexCount > 0) {
+    println("derivative runtime in seconds = " + (totalDerivatives / regexCount))
+    println("shifts runtime in seconds     = " + (totalShifts / regexCount))
+  } else {
+    println("No tests were run (regexCount == 0).")
+  }
+}

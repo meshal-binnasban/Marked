@@ -8,22 +8,39 @@ def shifts(ms: Marks, r: Rexp) : Marks = r match {
       case ZERO => Nil
       case ONE => Nil
       case CHAR(c) => for (m <- ms; if m != "" && m.head == c) yield m.tail
-      case ALT(r1, r2) => (shifts(ms, r1).prune2 ::: shifts(ms, r2).prune2).prune2
+      case ALT(r1, r2) => (shifts(ms, r1) ::: shifts(ms, r2))
       case SEQ(r1, r2) => {
         val ms1 = shifts(ms, r1).prune2
         (nullable(r1), nullable(r2)) match {
-          case (true, true) =>  (shifts((ms1 ::: ms.prune2).prune2, r2) ::: ms1.prune2).prune2
-          case (true, false) => shifts((ms1 ::: ms.prune2).prune2, r2).prune2 
-          case (false, true) => (shifts(ms1, r2) ::: ms1).prune2
-          case (false, false) => shifts(ms1, r2).prune2
+          case (true, true) =>  (shifts((ms1 ::: ms), r2) ::: ms1)
+          case (true, false) => shifts((ms1 ::: ms), r2) 
+          case (false, true) => (shifts(ms1, r2) ::: ms1)
+          case (false, false) => shifts(ms1, r2)
         }
       }
       case STAR(r) => {
-        val ms1 = shifts(ms, r).prune2
+        val ms1 = shifts(ms, r)
         if(ms1.isEmpty) Nil 
         else
-        (ms1 ::: shifts(ms1, STAR(r)).prune2).prune2
+        (ms1 ::: shifts(ms1, STAR(r)))
       }
+      case NTIMES(r,n) if n == 0 =>
+       //println(s"n=0, ms=$ms")
+        ms
+    //case NTIMES(r,n) if n < 0 => Nil
+      case NTIMES(r,n) =>
+            //println(s"n=$n, ms=$ms")
+/*         if((ms.exists(_ == "") && n != 0) && !nullable(r)){ 
+          Nil
+          } else{ */
+            val ms1 = shifts(ms,r)
+            if(ms1.isEmpty) Nil else{
+
+            
+            if(nullable(r)){ ( ms1 ::: shifts(ms1,NTIMES(r,n-1)))}
+            else{ (shifts(ms1,NTIMES(r,n-1))   )}
+            }
+  //}
 
 }
   
@@ -31,8 +48,12 @@ def shifts(ms: Marks, r: Rexp) : Marks = r match {
 // the main matching function 
 def matcher(r: Rexp, s: String) : Boolean = {
   if (s == "") nullable(r)
-  else 
-    shifts(List(s), r).exists(_ == "")
+  else
+    {
+      val ms=  shifts(List(s), r)
+      //println(ms)
+      ms.exists(_ == "")
+    }
 }
 
 extension (ms: Marks)
@@ -47,8 +68,10 @@ extension (ms: Marks)
 @main
 def test1() = {
   println("=====Test====")
-  val r = ("a" | "ab") ~ ("c" | "bc")
-  val s = "abc"
+  val r = (("a") | (ONE)) ~ (("a") | NTIMES("a",3))
+    //aaa
+    
+  val s = "aaa"
   println("=string=")
   println(s)
   println(matcher(r,s))
