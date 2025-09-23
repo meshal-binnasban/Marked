@@ -25,7 +25,7 @@ def mkfin(r: Rexp) : Bits = r match {
 
 def mkeps(r: Rexp) : Bits = r match {
   case ONE => Nil
-  case POINT(bs, CHAR(_)) => bs
+  //case POINT(bs, CHAR(_)) => bs
   case ALT(r1, r2) => if (nullable(r1)) Z :: mkeps(r1) else S :: mkeps(r2)  
   case SEQ(r1, r2) => mkeps(r1) ++ mkeps(r2)
   case STAR(r) =>  List(S)

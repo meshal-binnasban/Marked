@@ -9,6 +9,8 @@ def fin(r: Rexp) : Boolean = (r: @unchecked) match {
   case ALT(r1, r2) => fin(r1) || fin(r2)
   case SEQ(r1, r2) => (fin(r1) && nullable(r2)) || fin(r2)
   case STAR(r) => fin(r)
+  case NTIMES(r, n) => if (n == 0) fin(r) else false
+
 }
 
 def shift(m: Boolean, c: Char, r: Rexp ) : Rexp = (r: @unchecked) match {
@@ -19,6 +21,7 @@ def shift(m: Boolean, c: Char, r: Rexp ) : Rexp = (r: @unchecked) match {
   case ALT(r1, r2) => ALT(shift(m, c, r1), shift(m, c, r2))
   case SEQ(r1, r2) => SEQ(shift(m, c, r1), shift((m && nullable(r1)) || fin(r1), c, r2))
   case STAR(r) => STAR(shift(m || fin(r), c, r))
+
 }
 
 def mat(r: Rexp, s: List[Char]) : Rexp = s match {

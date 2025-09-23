@@ -223,6 +223,24 @@ def allEvil() = { testEvilD(); testEvilP(); testEvilS(); }
 
 
 @main
+def testingMarks() = {
+  val EVIL1 = %( %("a") | %("aa") | %("aaa") | %("aaaa") | %("aaaaa") ) 
+
+  for (i <- 0 to 7_000_000 by 500_000) {
+    val s = "a" * i  //+ "b"         
+    val play    = time_needed(10, Play.matcher(EVIL1, s))
+    println(s"i= $i  Play= $play")
+  }
+  for (i <- 0 to 7_000_000 by 500_000) {
+    val s = "a" * i         + "b"     
+    val der    = time_needed(10, Derivatives.matcher(EVIL1, s))
+    println(s"i= $i  Derivatives= $der")
+  } 
+
+}
+
+
+@main
 def testAllMatcher() = {
   given rexp_cdata : CDATA[Rexp] = List(
     (0, _ => ONE),

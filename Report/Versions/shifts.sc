@@ -56,8 +56,18 @@ def shifts(ms: Marks, r: Rexp) : Marks =
       }
       case STAR(r) => {
         val ms1 = shifts(ms, r)
+        if(ms1.isEmpty) ms1 
+        else
         ms1 ::: shifts(ms1, STAR(r)) 
       }
+      
+      case NTIMES(r,n) if n == 0 => ms
+      case NTIMES(r,n) =>
+            val ms1 = shifts(ms,r)
+            if(ms1.isEmpty) Nil else{
+              if(nullable(r)){ ( ms1 ::: shifts(ms1,NTIMES(r,n-1)))}
+              else{ (shifts(ms1,NTIMES(r,n-1))   )}
+            }
     }
   }
 
@@ -136,8 +146,8 @@ def test6() = {
 @main
 def test7() = {
   println("=====Test====")
-  val r = (%(%(ONE ~ ONE))) ~ "c"
-  val s = "c"
+  val r = "b" | "ba"
+  val s = "ba"
   println(r)
   println(s)
   println(s"res: ${matcher(r, s)}")

@@ -51,24 +51,24 @@ def shifts(ms: Marks, r: Rexp): Marks =
      ((shifts(ms <:+> Lf, r1) ) ::: (shifts(ms <:+> Ri, r2)) ).prune2 
 
   case SEQ(r1,r2) => {
-    val ms1 = shifts(ms, r1).prune2.reshuffle
+    val ms1 = shifts(ms, r1).reshuffle
     (nullable(r1), nullable(r2)) match {
       case (true, true) =>
         val r1Consume=(ms1 <::+>mkeps2(r2))
         val r1r2Consume= ms1.flatMap( m => shifts(List(m), r2))
         val r2Consume= shifts((ms <::+> mkeps2(r1)) ,r2)
-        ((r1Consume.prune2 ::: r1r2Consume.prune2).prune2  ::: r2Consume.prune2).prune2
+        ((r1Consume ::: r1r2Consume)  ::: r2Consume)
         
-      case (true, false) => (ms1.flatMap( m => shifts(List(m), r2)).prune2   ::: shifts((ms<::+> mkeps2(r1)),r2)).prune2 
-      case (false, true) => ((ms1 <::+>mkeps2(r2)).prune2 ::: ms1.flatMap( m => shifts(List(m), r2))).prune2 
-      case (false, false) => ms1.flatMap( m => shifts(List(m), r2)).prune2
+      case (true, false) => (ms1.flatMap( m => shifts(List(m), r2))   ::: shifts((ms<::+> mkeps2(r1)),r2)) 
+      case (false, true) => ((ms1 <::+>mkeps2(r2)) ::: ms1.flatMap( m => shifts(List(m), r2))) 
+      case (false, false) => ms1.flatMap( m => shifts(List(m), r2))
       } 
   }
   case STAR(r) =>
-      val ms1 = shifts((ms<:+>Nx), r).prune2.reshuffle
+      val ms1 = shifts((ms<:+>Nx), r).reshuffle
       if(ms1.isEmpty) Nil 
       else{
-           ( (ms1 <:+> En) ::: ms1.flatMap( m=> shifts(List(m), STAR(r))).prune2   ).prune2
+           ( (ms1 <:+> En) ::: ms1.flatMap( m=> shifts(List(m), STAR(r)))   )
           }
   
   case NTIMES(r,n) if n == 0 => (ms <:+> EnT)
@@ -83,6 +83,8 @@ def shifts(ms: Marks, r: Rexp): Marks =
         else
         ( ms1.flatMap( m=> shifts(List(m), NTIMES(r,n-1)))   )
         }
+
+        
   case AND(r1,r2) => (shifts(ms,r1).intersect(shifts(ms,r2)))    
 
 }
@@ -416,15 +418,16 @@ def test22() = {
   commonTestCode(br2, s)
 }
 
-// 23-NTIMES("a",3)
+// 23-NTIMES("a",3) input aaa
 // 24- NTIMES(%("a"),14) input a 
 // 25- NTIMES("a",3)| "a" - input a 
 // 26- %( %(  NTIMES("a",6)  ) ) | %("a") input a * 7
 @main
 def test23() = {
   println("=====Test====")
-  val br2=  NTIMES(%("a"),3)
-  val s = "a" * 3
+  val br2=NTIMES(%("a"),14)  
+
+  val s = "a" * 15
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 

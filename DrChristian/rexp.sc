@@ -43,7 +43,7 @@ case object En extends Bit {
 
 type Bits = List[Bit]
 
-case class Mark(
+/* case class Mark(
   //mark: Boolean,
   bits: Bits, //List[Bits],
   str: List[Char]
@@ -54,7 +54,24 @@ case class Mark(
     s"(str='${str.mkString}', bits=${bits.mkString(",")})"
     //s"(mark=$mark, bits=$bitsStr, remaining='${str.mkString}', consumed= ${consumed.mkString} , originalLength=$originalLength )"
   }
+} */
+
+case class Mark(
+  bits: Bits,
+  str: List[Char]
+) {
+  override def toString: String =
+    s"(str='${str.mkString}', bits=${bits.mkString(",")})"
+
+  override def equals(obj: Any): Boolean = obj match {
+    case that: Mark => this.str == that.str
+    case _ => false
+  }
+
+  override def hashCode(): Int =
+    str.hashCode
 }
+
 
 // regular expressions
 abstract class Rexp

@@ -58,12 +58,19 @@ def shifts(ms: Marks, r: Rexp) : Marks =
         }
       }
       case STAR(r) => {
-        val ms1 = shifts(ms.prune2, r)
+        val ms1 = shifts(ms, r)
         if(ms1.isEmpty) Nil
         else{
-        ( ms1 ::: shifts(ms1, STAR(r)) ).prune2 
+        ( ms1 ::: shifts(ms1, STAR(r)) ) 
         }
       }
+      case NTIMES(r,n) if n == 0 => ms
+      case NTIMES(r,n) =>
+            val ms1 = shifts(ms,r)
+            if(ms1.isEmpty) Nil else{
+              if(nullable(r)){ ( ms1 ::: shifts(ms1,NTIMES(r,n-1)))}
+              else{ (shifts(ms1,NTIMES(r,n-1))   )}
+            }
       case AND(r1,r2) => (shifts(ms,r1).intersect(shifts(ms,r2)))
 }
 

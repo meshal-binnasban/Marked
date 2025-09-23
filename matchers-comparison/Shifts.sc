@@ -24,23 +24,19 @@ def shifts(ms: Marks, r: Rexp) : Marks = r match {
         else
         (ms1 ::: shifts(ms1, STAR(r)))
       }
-      case NTIMES(r,n) if n == 0 =>
-       //println(s"n=0, ms=$ms")
-        ms
-    //case NTIMES(r,n) if n < 0 => Nil
+      case NTIMES(r,n) if n == 0 => ms
       case NTIMES(r,n) =>
-            //println(s"n=$n, ms=$ms")
-/*         if((ms.exists(_ == "") && n != 0) && !nullable(r)){ 
-          Nil
-          } else{ */
             val ms1 = shifts(ms,r)
             if(ms1.isEmpty) Nil else{
-
-            
-            if(nullable(r)){ ( ms1 ::: shifts(ms1,NTIMES(r,n-1)))}
-            else{ (shifts(ms1,NTIMES(r,n-1))   )}
+              if(nullable(r)){ ( ms1 ::: shifts(ms1,NTIMES(r,n-1)))}
+              else{ (shifts(ms1,NTIMES(r,n-1))   )}
             }
-  //}
+
+     /*????if((ms.exists(_ == "") && n != 0) && !nullable(r)){ 
+          Nil
+          } else{ */      
+     //??case NTIMES(r,n) if n < 0 => Nil
+
 
 }
   
@@ -51,7 +47,7 @@ def matcher(r: Rexp, s: String) : Boolean = {
   else
     {
       val ms=  shifts(List(s), r)
-      //println(ms)
+      println(ms)
       ms.exists(_ == "")
     }
 }
@@ -68,7 +64,8 @@ extension (ms: Marks)
 @main
 def test1() = {
   println("=====Test====")
-  val r = (("a") | (ONE)) ~ (("a") | NTIMES("a",3))
+  val r = NTIMES("a" | ONE,4)
+    //(("a") | (ONE)) ~ (("a") | NTIMES("a",3))
     //aaa
     
   val s = "aaa"
@@ -76,5 +73,16 @@ def test1() = {
   println(s)
   println(matcher(r,s))
 }
+
+@main
+def test3() = {
+  println("=====Test====")
+  val r = %( %( "a" ) | %( "aa" ) | %( "aaa" ) | %( "aaaa" ) | %( "aaaaa" ) )
+  val s = "a" * 25
+  println("=string=")
+  println(s)
+  println(matcher(r,s))
+}
+ 
 
 
