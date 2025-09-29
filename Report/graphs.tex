@@ -1,0 +1,175 @@
+\documentclass{article}
+\usepackage{tikz}
+\usepackage{pgf}
+\usepackage{pgfplots}
+
+\pgfplotsset{compat=1.15}
+
+
+%% DATA for the graphs: first x coordinate, second y coordinate
+\begin{filecontents}{re-python2.data}
+1 0.033
+5 0.036
+10 0.034
+15 0.036
+18 0.059
+19 0.084
+20 0.141
+21 0.248
+22 0.485
+23 0.878
+24 1.71
+25 3.40
+26 7.08
+27 14.12
+28 26.69
+\end{filecontents}
+
+\begin{filecontents}{re-java.data}
+5  0.00298
+10  0.00418
+15  0.00996
+16  0.01710
+17  0.03492
+18  0.03303
+19  0.05084
+20  0.10177
+21  0.19960
+22  0.41159
+23  0.82234
+24  1.70251
+25  3.36112
+26  6.63998
+27  13.35120
+28  29.81185
+\end{filecontents}
+
+\begin{filecontents}{re3a.data}
+1 0.00003
+500001 0.22527
+1000001 0.62752
+1500001 0.88485
+2000001 1.39815
+2500001 1.68619
+3000001 1.94957
+3500001 2.15878
+4000001 2.59918
+4500001 5.90679
+5000001 13.11295
+5500001 19.15376
+6000001 40.16373
+\end{filecontents}
+
+
+
+\begin{document}
+
+\section*{Benchmarks for $(a^*)^* b$ and $a^{?\{n\}} a^{\{n\}}$}
+
+\mbox{}\bigskip
+
+\begin{center}
+$(a^*)^* \cdot b$ and strings $\underbrace{a\ldots a}_{n}$\medskip\\
+\begin{tabular}{@{}cc@{}}
+\raisebox{5mm}{
+\begin{tikzpicture}
+\begin{axis}[
+    xlabel={$n$},
+    x label style={at={(1.05,0.0)}},
+    ylabel={time in secs},
+    enlargelimits=false,
+    xtick={0,5,...,30},
+    xmax=33,
+    ymax=35,
+    ytick={0,5,...,30},
+    scaled ticks=false,
+    axis lines=left,
+    width=5cm,
+    height=5cm, 
+    legend entries={Java, Python},  
+    legend pos=north west,
+    legend cell align=left]
+\addplot[blue,mark=*, mark options={fill=white}] table {re-python2.data};
+\addplot[cyan,mark=*, mark options={fill=white}] table {re-java.data};
+\end{axis}
+\end{tikzpicture}}
+&
+\begin{tikzpicture}
+  \begin{axis}[
+    xlabel={$n$},
+    x label style={at={(1.1,0.0)}},
+    ylabel={time in secs},
+    enlargelimits=false,
+    ymax=35,
+    ytick={0,5,...,30},
+    axis lines=left,
+    width=6.5cm,
+    height=5cm,
+    legend entries={Derivative matcher},  
+    legend pos=north east,
+    legend cell align=left]
+\addplot[black,mark=square*,mark options={fill=white}] table {re3a.data};
+\end{axis}
+\end{tikzpicture}
+\end{tabular}
+\end{center}\bigskip
+
+\begin{center}
+$a^{?\{n\}} \cdot a^{\{n\}}$ and strings $\underbrace{a\ldots a}_{n}$\medskip\\
+\begin{tabular}{@{}cc@{}}
+\begin{tikzpicture}
+\begin{axis}[
+    xlabel={$n$},
+    x label style={at={(1.05,0.0)}},
+    ylabel={\small time in secs},
+    enlargelimits=false,
+    xtick={0,5,...,30},
+    xmax=33,
+    ymax=35,
+    ytick={0,5,...,30},
+    scaled ticks=false,
+    axis lines=left,
+    width=5cm,
+    height=5cm, 
+    legend entries={Python,Ruby},  
+    legend pos=north west,
+    legend cell align=left]
+\addplot[blue,mark=*, mark options={fill=white}] table {re-python.data};
+\addplot[brown,mark=triangle*, mark options={fill=white}] table {re-ruby.data};  
+\end{axis}
+\end{tikzpicture}
+&
+\begin{tikzpicture}
+  \begin{axis}[
+    xlabel={$n$},
+    x label style={at={(1.1,0.05)}},
+    ylabel={\small time in secs},
+    enlargelimits=false,
+    xtick={0,2500,...,11000},
+    xmax=12000,
+    ymax=35,
+    ytick={0,5,...,30},
+    scaled ticks=false,
+    axis lines=left,
+    width=6.5cm,
+    height=5cm,
+    legend entries={Derivative matcher},  
+    legend pos=north east,
+    legend cell align=left]
+\addplot[black,mark=square*,mark options={fill=white}] table {re3.data};
+\end{axis}
+\end{tikzpicture}
+\end{tabular}
+\end{center}
+
+
+
+\end{document}
+
+
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 

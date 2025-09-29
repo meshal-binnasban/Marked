@@ -1,0 +1,250 @@
+
+\documentclass[12pt]{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+
+\newtheorem{definition}{Definition} %might need to adjust/delete this later%
+
+\newcommand{\dn}{\ensuremath{\stackrel{\mbox{\scriptsize def}}{=}}}
+
+\newcommand{\ZERO}{\textbf{0}}   
+\newcommand{\ONE}{\textbf{1}}    
+
+\newcommand{\der}{\textit{der}}
+\newcommand{\shift}{\textit{shift}}
+\newcommand{\shifts}{\textit{shifts}}
+
+\newcommand{\fuse}{\textit{fuse}}
+\newcommand{\mkeps}{\textit{mkeps}}
+\newcommand{\intern}{\textit{intern}}
+
+\newcommand{\Seq}{\textit{Seq}}
+\newcommand{\Left}{\textit{Left}}
+\newcommand{\Right}{\textit{Right}}
+\newcommand{\Star}{\textit{Star}}
+\newcommand{\Empty}{\textit{Empty}}
+
+\newcommand{\Marked}[1]{\bullet\,#1}
+
+\newcommand{\fin}{\textit{fin}}
+\newcommand{\nullable}{\textit{nullable}}
+
+\newcommand{\Bits}{\textit{Bits}}
+\newcommand{\POINT}{\textit{POINT}}
+\newcommand{\mkfin}{\textit{mkfin}}
+
+
+\newcommand{\STARText}{\textit{Star} $(r^*)$}
+\newcommand{\SEQText}{ \textit{Sequence} $(r_1 \cdot r_2)$}
+
+\newcommand{\emptylist}{[\,]}
+
+\newcommand{\At}{$\,@\,$}
+
+\newcommand{\matcher}{\textit{matcher}}
+
+
+
+
+\title{Shifts Proof}
+%\author{Meshal Binnasban}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+We consider two main cases, namely $shifts(ms,r)= []$ and $shifts(ms,r)\neq []$.
+\section{Case 1: $shifts(ms,r) = []$}
+
+
+We want to prove
+\[
+Strips(L(r^n))(set\,ms) = \varnothing.
+\]
+
+From the induction hypothesis 
+\[
+set(shifts(ms,r)) = Strips(L(r))(set\,ms).
+\]
+
+By assumption
+\[
+set(shifts(ms,r)) = \varnothing,
+\]
+
+so
+\[
+Strips(L(r))(set\,ms) = \varnothing.
+\]
+
+\subsection{sub case $nullable(r)$}
+unfolding the shifts definition,
+\[
+set(shifts(ms,r^n)) = set(shifts(ms,r)) \cup set(shifts(shifts(ms,r),r^{n-1})),
+\]
+\[
+= Strips(L(r))(set\,ms) \cup Strips(L(r^{n-1}))(Strips(L(r))(set\,ms)),
+\]
+\[
+= \varnothing \cup Strips(L(r^{n-1}))(\varnothing) = \varnothing.
+\]
+
+\subsection{sub case $\neg nullable(r)$}
+again, unfolding the shifts definition,
+
+\[
+set(shifts(ms,r^n)) = set(shifts(shifts(ms,r),r^{n-1})),
+\]
+\[
+= Strips(L(r^{n-1}))(set(shifts(ms,r))),
+\]
+\[
+= Strips(L(r^{n-1}))(\varnothing) = \varnothing.
+\]
+
+Therefore
+\[
+Strips(L(r^n))(set\,ms) = \varnothing.
+\]
+
+\newpage
+
+\section{Case 2: $shifts(ms,r) \neq []$}
+
+We want to prove
+\[
+set(shifts(ms,r^n)) = Strips(L(r^n))(set\,ms).
+\]
+
+\subsection{sub case $nullable(r)$}
+
+unfolding the shifts definition,
+\[
+set(shifts(ms,r^n)) = a \cup b,
+\]
+\[
+a := set(shifts(ms,r)), \quad b := set(shifts(shifts(ms,r), r^{n-1})).
+\]
+
+by IH on $P(ms,r)$,
+\[
+a = Strips(L(r))(set\,ms).
+\]
+
+since $shifts(ms,r)$ is smaller than $ms$ and $r^{n-1}$ is smaller than $r^{n}$, we can use IH on $P(shifts(ms,r), r^{n-1})$,
+\[
+b = Strips(L(r^{n-1}))(set(shifts(ms,r))) = Strips(L(r^{n-1}))(Strips(L(r))(set\,ms)).
+\]
+
+therefore
+\[
+set(shifts(ms,r^n)) = a \cup b
+= Strips(L(r))(set\,ms) \cup Strips(L(r^{n-1}))(Strips(L(r))(set\,ms)).
+\]
+
+by Strips properties:
+with nullable A, and B
+ \[Strips (A\,@\, B) C= (Strips\, B\, (Strips\, A\, C)) \cup Strips\, A\,C \cup Strips\, B\, C\]
+\[A=L(r) \texttt{ and } B=L(r^{n-1})  \]
+\[L{r^n} = L(r)\, @\, L(r^{n-1})\]
+we have $Strips\, B\, (Strips\, A\, C) = Strips(L(r^{n-1}))(Strips(L(r))(set\,ms))$
+and $Strips\, A\,C =Strips(L(r))(set\,ms)$
+
+but missing the third $Strips\, B\,C =Strips(L(r^{n-1}))(set\,ms)$
+
+
+\subsection{sub case $\neg nullable(r)$}
+
+unfolding the shifts definition,
+\[
+set(shifts(ms,r^n)) = b,
+\]
+\[
+b := set(shifts(shifts(ms,r), r^{n-1})).
+\]
+
+since $shifts(ms,r)$ is smaller than $ms$ and $r^{n-1}$ is smaller than $r^{n}$, we can use IH on $P(shifts(ms,r), r^{n-1})$,
+\[
+b = Strips(L(r^{n-1}))(set(shifts(ms,r))) = Strips(L(r^{n-1}))(Strips(L(r))(set\,ms)).
+\]
+
+by Strips properties:
+with not nullable A, and B
+ \[Strips (A\,@\, B) C= Strips\, B\, (Strips\, A\, C)\]
+\[A=L(r) \texttt{ and } B=L(r^{n-1})  \]
+\[L{r^n} = L(r)\, @\, L(r^{n-1})\]
+therefore
+\[ set(shifts(ms,r^n)) = Strips(L(r^n))(set\, ms)\]
+
+
+\newpage
+\section{notes}
+\subsection{case 1}
+i thought i would start with two cases to consider, namely $shifts(ms, r) = []$ 
+and $shifts(ms, r) \neq []$. similar to the urlues. 
+
+i started with first one. so first, i assumed that $shifts(ms, r) = []$ and need to prove $Strips(r^n)(set ms) = \varnothing$.
+
+since $r$ is smaller, we can use $p(ms,r^n)$ so 
+
+$set(shifts (ms r)) = Strips (L r )(set ms)$. 
+
+by assumption, lhs is $\varnothing$ so now we have $Strips (L r)(set ms) = \varnothing$.
+
+now we need to prove $Strips( L r^n)(set ms) = \varnothing$.
+again two cases to consider, 1- nullable $r$.
+
+unfolding shifts definition. 
+\[set ( shifts r^n ms)= set(shifts r ms) U set (shifts (shifts ms r) r^n-1)\]
+
+that equals to $Strip( L r )(set ms) U Strips( L r^n-1)(Strips L r ) (set ms)$. 
+
+the lhs of union =$\varnothing$ 
+
+and rhs= $Strips( L r^n-1) \varnothing (set ms) = \varnothing$. 
+
+in the second case where $r$ is not nullable: 
+
+unfolding shifts again:
+
+\[set ( shifts r^n ms) = set ( shifts r^{n-1} (shifts r ms) ) = Strip( r^{n-1})(Strip(L r ms))\]
+ 
+and since $Strip(L r ms)=\varnothing$ so it becomes $Strip( r^n-1) \varnothing$ and so = $\varnothing$.
+\subsection{case 2}
+NTIMES:
+for the second case, i assume $shifts(ms, r) \neq []$. i need to prove $set(shifts(ms,r^n)) = Strips(L\,r^n)(set\,ms)$. again two cases to consider, 1- nullable $r$.
+
+unfolding shifts definition,  
+$set(shifts(ms,r^n)) = a \cup b$  
+where  
+$a = set(shifts(ms,r))$  
+$b = set(shifts(shifts(ms,r), r^{n-1}))$
+
+for $a$, use IH $P(ms,r)$ to get  
+$a = Strips(L\,r)(set\,ms)$
+
+for $b$, we can use IH $P(shifts(ms,r), r^{n-1})$ since (i) $shifts(ms,r)$ is smaller than $ms$ and (ii) $r^{n-1}$ is smaller than $r^{n}$. hence  
+$b = Strips(L\,r^{n-1})(set(shifts(ms,r))) = Strips(L\,r^{n-1})(Strips(L\,r)(set\,ms))$
+
+therefore  
+$set(shifts(ms,r^n)) = a \cup b = Strips(L\,r)(set\,ms) \cup Strips(L\,r^{n-1})(Strips(L\,r)(set\,ms))$
+
+in the second case where $r$ is not nullable:
+
+unfolding shifts again,  
+$set(shifts(ms,r^n)) = b$  
+where  
+$b = set(shifts(shifts(ms,r), r^{n-1})) = Strips(L\,r^{n-1})(set(shifts(ms,r))) = Strips(L\,r^{n-1})(Strips(L\,r)(set\,ms))$
+
+and since $L(r^n) = L(r)@L(r^{n-1})$ we have  
+$b = Strips(L\,r @ L\,r^{n-1})(set\,ms) = Strips(L\,r^n)(set\,ms)$
+
+
+\bibliographystyle{abbrv}
+\bibliography{urules}
+\addcontentsline{toc}{section}{References}
+
+
+\end{document}

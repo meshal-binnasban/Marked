@@ -4,12 +4,12 @@
 \contentsline {subsubsection}{\numberline {2.1.1}Size Explosion.}{7}{}%
 \contentsline {subsubsection}{\numberline {2.1.2}Derivative Extension}{8}{}%
 \contentsline {subsection}{\numberline {2.2}Marked Approach}{11}{}%
-\contentsline {subsubsection}{\numberline {2.2.1}Motivation for a Marked Approach}{11}{}%
-\contentsline {subsubsection}{\numberline {2.2.2}Scala Implementation of Fischer’s Marked Approach}{12}{}%
+\contentsline {subsubsection}{\numberline {2.2.1}Motivation for a Marked Approach}{12}{}%
+\contentsline {subsubsection}{\numberline {2.2.2}Scala Implementation of Fischer’s Marked Approach}{13}{}%
 \contentsline {section}{\numberline {3}Our Approach}{15}{}%
 \contentsline {subsection}{\numberline {3.1}Bit-Annotated, version 1}{16}{}%
-\contentsline {subsection}{\numberline {3.2}Bit-Annotated, version 2}{22}{}%
-\contentsline {subsection}{\numberline {3.3}String-Carrying Marks - Matcher}{22}{}%
-\contentsline {subsection}{\numberline {3.4}String-Carrying Marks - Lexer **so far**}{25}{}%
-\contentsline {section}{\numberline {4}Future Work}{25}{}%
+\contentsline {subsection}{\numberline {3.2}Bit-Annotated, version 2}{21}{}%
+\contentsline {subsection}{\numberline {3.3}String-Carrying Marks - Matcher}{21}{}%
+\contentsline {subsection}{\numberline {3.4}String-Carrying Marks - Lexer **so far**}{26}{}%
+\contentsline {section}{\numberline {4}Future Work}{26}{}%
 \contentsline {section}{References}{27}{}%

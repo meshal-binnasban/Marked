@@ -74,7 +74,17 @@ def shifts(ms: Marks, r: Rexp): Marks =
   case NTIMES(r,n) if n == 0 => (ms <:+> EnT)
   //case NTIMES(r,n) if n < 0 => Nil
   case NTIMES(r,n) =>
-    if((ms.collectEmpty.nonEmpty && n != 0) && !nullable(r)){ 
+    val ms1 = shifts(ms<:+>NxT, r).reshuffle
+    if(ms1.isEmpty) Nil else{
+      if(nullable(r)){
+         ( (ms1<:+> EnT) ::: shifts(ms1,NTIMES(r,n-1)))
+         }else{
+           (shifts(ms1,NTIMES(r,n-1))   )
+           }
+    }
+
+
+/*     if((ms.collectEmpty.nonEmpty && n != 0) && !nullable(r)){ 
       Nil
       } else{
         val ms1 = shifts(ms<:+>NxT, r).reshuffle
@@ -82,7 +92,7 @@ def shifts(ms: Marks, r: Rexp): Marks =
         ( (ms1<:+> EnT) ::: ms1.flatMap( m=> shifts(List(m), NTIMES(r,n-1)))   )
         else
         ( ms1.flatMap( m=> shifts(List(m), NTIMES(r,n-1)))   )
-        }
+        } */
 
         
   case AND(r1,r2) => (shifts(ms,r1).intersect(shifts(ms,r2)))    
@@ -113,9 +123,9 @@ extension (ms: List[Mark])
 def matcher(r: Rexp, s: String) : Boolean =
   val im = Mark(bits = List(), str = s.toList)
   val marks = shifts(List(im), r)
-  println(s"-------------End of 1 matcher call-----------\n")
-  marks.foreach(m => println(s"-$m") )
-  println("------------------------")     
+  //println(s"-------------End of 1 matcher call-----------\n")
+  //marks.foreach(m => println(s"-$m") )
+  //println("------------------------")     
   marks.exists(_.str == Nil)
 
 def lex(r: Rexp, s: String): Option[Bits] =

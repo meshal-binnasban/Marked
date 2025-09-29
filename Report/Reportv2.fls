@@ -26,6 +26,8 @@ INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/tex/latex/amsfonts/a
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/tex/latex/amsfonts/amsfonts.sty
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/tex/latex/amscls/amsthm.sty
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/tex/latex/amscls/amsthm.sty
+INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/tex/latex/placeins/placeins.sty
+INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/tex/latex/placeins/placeins.sty
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def
 INPUT ./Reportv2.aux
@@ -96,7 +98,6 @@ INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/tfm/public/cm/
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/tfm/public/cm/cmbx5.tfm
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/tfm/jknappen/ec/tcrm1200.tfm
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc
-INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/tfm/public/cm/cmti7.tfm
 INPUT ./Reportv2.bbl
 INPUT ./Reportv2.bbl
 INPUT Reportv2.bbl

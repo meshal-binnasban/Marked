@@ -6,16 +6,12 @@ import $file.regenerate, regenerate._
 import $file.Derivatives
 import $file.Play
 import $file.Shifts
+import $file.Shifts_Sets
 
 import scala.language.implicitConversions
 
 
-def time_needed[T](i: Int, code: => T) = {
-  val start = System.nanoTime()
-  for (j <- 1 to i) code
-  val end = System.nanoTime()
-  (end - start) / (i * 1.0e9)
-}
+
 
 @main
 def test1() = {
@@ -223,19 +219,28 @@ def allEvil() = { testEvilD(); testEvilP(); testEvilS(); }
 
 
 @main
-def testingMarks() = {
-  val EVIL1 = %( %("a") | %("aa") | %("aaa") | %("aaaa") | %("aaaaa") ) 
+def testingGraph() = {
+  val r = %( %("a") | %("aa") | %("aaa") | %("aaaa") | %("aaaaa") ) 
 
-  for (i <- 0 to 7_000_000 by 500_000) {
+  for (i <- 0 to 10_00 by 100) {
     val s = "a" * i  //+ "b"         
-    val play    = time_needed(10, Play.matcher(EVIL1, s))
-    println(s"i= $i  Play= $play")
+    println(s"i= $i  bsimp= ${time_needed(10, blexer_simp(r,s))}")
   }
-  for (i <- 0 to 7_000_000 by 500_000) {
-    val s = "a" * i         + "b"     
-    val der    = time_needed(10, Derivatives.matcher(EVIL1, s))
-    println(s"i= $i  Derivatives= $der")
-  } 
+  
+  for (i <- 0 to 10_00 by 100) {
+    val s = "a" * i  //+ "b"         
+    println(s"i= $i  Play= ${time_needed(10, Play.matcher(r,s))}")
+  }
+
+  for (i <- 0 to 10_00 by 100) {
+    val s = "a" * i  //+ "b"         
+    println(s"i= $i  Shifts= ${time_needed(10, Shifts.matcher(r,s))}")
+  }
+
+  for (i <- 0 to 10_00 by 100) {
+    val s = "a" * i  //+ "b"         
+    println(s"i= $i  Shifts Sets= ${time_needed(10, Shifts_Sets.matcher(r,s))}")
+  }
 
 }
 

@@ -2,6 +2,8 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsthm}
+\usepackage[section]{placeins}
+
 
 \newtheorem{definition}{Definition} %might need to adjust/delete this later%
 
@@ -12,6 +14,7 @@
 
 \newcommand{\der}{\textit{der}}
 \newcommand{\shift}{\textit{shift}}
+\newcommand{\shifts}{\textit{shifts}}
 
 \newcommand{\fuse}{\textit{fuse}}
 \newcommand{\mkeps}{\textit{mkeps}}
@@ -119,6 +122,9 @@ expression $r$ is associated with a language $L(r)$, which is the set of words
 that match $r$. 
 
 The regular expressions we consider are the basic ones with bounded repetition:
+
+%Regular Expressions
+
 \[
 \begin{array}{rcl}
 r &::=& \ZERO  \\
@@ -130,6 +136,8 @@ r &::=& \ZERO  \\
   &\mid& r^n 
 \end{array}
 \]
+
+
 We will use \ZERO\ for the regular expression of the empty language, \ONE\ for
 the regular expression of the empty string, and $c$ for the regular expression
 of a character from the alphabet. The operator $+$ is for alternation between
@@ -139,19 +147,23 @@ $n$ repetitions of $r$.
 
 
 The meaning of these regular expressions is given by the language function $L$, defined as:
+
+%Language function $L$%
 \begin{definition}[Language function $L$]\mbox{}
-  \[
-\begin{array}{rcl}
-L(\ZERO\,) &\dn& \ZERO \\
-L(\ONE\,) &\dn& \{\emptylist\} \\
-L(c) &\dn& \{[c]\} \\
-L(r_1 + r_2) &\dn& L(r_1) \cup L(r_2) \\
-L(r_1 \cdot r_2) &\dn& L(r_1) \cdot L(r_2) \\
-L(r^\ast) &\dn& (L(r))^\ast \\
-L(r^n) &\dn& (L(r))^n
-\end{array}
-\]
+
+  \renewcommand{\arraystretch}{1.7}
+  \begin{tabular}{lcl}
+    $L(\ZERO\,)$            & \dn & $\ZERO$ \\
+    $L(\ONE\,)$             & \dn & $\{\emptylist\}$ \\
+    $L(c)$                  & \dn & $\{[c]\}$ \\
+    $L(r_1 + r_2)$          & \dn & $L(r_1) \cup L(r_2)$ \\
+    $L(r_1 \cdot r_2)$      & \dn & $L(r_1) \cdot L(r_2)$ \\
+    $L(r^\ast)$             & \dn & $(L(r))^\ast$ \\
+    $L(r^n)$                & \dn & $(L(r))^n$
+  \end{tabular}
+  \renewcommand{\arraystretch}{1.0}
 \end{definition}
+
 
 For example, if $r = a + b$, then
 \[
@@ -177,33 +189,39 @@ r_0 = r,& r_1 = \der_{a_1}(r_0),& \dots, r_n = \der_{a_n}(r_{n-1}) .
 The string matches $r$ if and only if the final expression $r_n$ accepts the empty string. Here $\der_a(r)$ stands for the derivative of $r$ with respect to the character
 $a$, as introduced by Brzozowski~\cite{Brzozowski1964} and defined below.
 
+%Brzozowski’s Derivative
 
-\begin{definition}[Brzozowski’s Derivative]
-\[
-\begin{array}{rcl}
-\der_a(\ZERO\,) &\dn& \ZERO \\
-\der_a(\ONE\,) &\dn& \ZERO \\
-\der_a(c) &\dn&
-  \begin{cases}
-    \ONE & \text{if } a = c \\
-    \ZERO & \text{if } a \neq c
-  \end{cases} \\[6pt]
-\der_a(r_1 + r_2) &\dn& \der_a(r_1) + \der_a(r_2) \\
-\der_a(r_1 \cdot r_2) &\dn& \der_a(r_1) \cdot r_2 \;+\;
-   \begin{cases}
-     \der_a(r_2) & \text{if } \ONE \in L(r_1)  \\
-     \ZERO & \text{otherwise}
-   \end{cases} \\
-\der_a(r^\ast) &\dn& \der_a(r) \cdot r^\ast
-\end{array}
-\]
+\begin{definition}[Brzozowski’s Derivative]\mbox{}
 
+  \renewcommand{\arraystretch}{1.5}
+  \begin{tabular}{lcl}
+    $\der_a(\ZERO\,)$            & \dn & $\ZERO$ \\
+    $\der_a(\ONE\,)$             & \dn & $\ZERO$ \\
+    $\der_a(c)$                  & \dn &
+      $\begin{cases}
+        \ONE  & \text{if } a = c \\
+        \ZERO & \text{if } a \neq c
+      \end{cases}$ \\
+    $\der_a(r_1 + r_2)$          & \dn & $\der_a(r_1) + \der_a(r_2)$ \\
+    $\der_a(r_1 \cdot r_2)$      & \dn &
+      $\der_a(r_1) \cdot r_2 \;+\;
+        \begin{cases}
+          \der_a(r_2) & \text{if } \ONE \in L(r_1) \\
+          \ZERO       & \text{otherwise}
+        \end{cases}$ \\
+    $\der_a(r^\ast)$             & \dn & $\der_a(r) \cdot r^\ast$
+  \end{tabular}
+  \renewcommand{\arraystretch}{1.0}
 \end{definition}
-
 
 To illustrate how derivatives can be used to match a regular expression against a string, consider the regular expression $( ab + ba )$. 
 The derivative can check the matching of the string \texttt{ba} by taking the derivative of the regular expression with respect to b,
-then a.
+then a (see Figure~\ref{derivative}). Since the final derivative expression contains $\ONE$, it accepts the empty string. With no input
+characters remaining, this confirms that the string \texttt{ba} belongs to the language of the
+regular expression.
+
+
+\begin{figure}[ht]
 \[
 \begin{array}{rcl}
 \der_b\, r           & =           &  \der_b\, (ab + ba) \\
@@ -217,17 +235,15 @@ then a.
                       & =           & \ZERO \cdot b + (\ZERO \cdot a + \ONE )
 \end{array}
 \]
-
-Since the final derivative expression contains $\ONE$, it matches the empty
-string. Because no input characters remain, this confirms that the original
-string \texttt{ba} is in the language of the regular expression.
+    \mbox{}
+    \hrule
+\caption{Derivatives of $(ab+ba)$ with respect to string \texttt{ba}}\label{derivative}
+\end{figure}
 
 Some subexpressions that arise during the computation of derivatives may be
 redundant. For example, $\ZERO \cdot b$ expresses matching the empty language
 followed by $b$. Since $\ZERO$ is the empty language, no string can satisfy
-this, so $\ZERO \cdot b$ simplifies to $\ZERO$.  
-
-Other simplification rules may also be applied. These include associativity
+this, so $\ZERO \cdot b$ simplifies to $\ZERO$. Other simplification rules may also be applied. These include associativity
 $(r+s)+t \equiv r+(s+t)$, commutativity $r+s \equiv s+r$, and idempotence
 $r+r \equiv r$. Rules for the empty language and the empty string can also be
 applied, such as those mentioned earlier; e.g.\ $\ZERO \cdot r \equiv r \cdot
@@ -239,6 +255,7 @@ while reducing the number of intermediate expressions. Such simplifications are
 sometimes necessary in the derivative method in order to keep the size
 manageable.
 
+\FloatBarrier
 \subsubsection{Size Explosion.}  
 
 Although the construction of derivatives is elegant, as can be seen, it may
@@ -278,6 +295,7 @@ POSIX values, may still produce cubic growth in the worst case: there can be
 linearly many distinct derivatives, and each one may already be quadratic in
 the size of the original expression, so the total size becomes cubic.
 
+\FloatBarrier
 \subsubsection{Derivative Extension}
 
 Sulzmann and Lu~\cite{Sulzmann2014} extend Brzozowski’s derivatives to produce 
@@ -296,10 +314,11 @@ the value; the injection function essentially reverts the derivative steps to
 obtain a POSIX value. We focus here on the bitcode variant, which more directly
 inspired our marked approach.
 
-Bitcodes are sequences over $\{0,1\}$ that encode the choices made in a match.  
-These bits record branch choices in alternatives and repetitions made during matching. 
-The following example illustrates how bitcoding works with regular expression $(a+ab)(b+\\ONE\,)$ and string $ab$.  
-We proceed by constructing bitcoded derivatives step by step and tracking how the bitcode grows.
+Bitcodes are sequences over $\{0,1\}$ that encode the choices made in a match. These bits record
+branch choices in alternatives and repetitions made during matching. The following example
+illustrates how bitcoding works with $(a+ab)(b+\ONE)$ and the string \texttt{ab} (see
+Figure~\ref{BitcodedDerivative}). We proceed by constructing bitcoded derivatives step by step
+and tracking how the bitcode grows.
 
 Initially, the algorithm internalizes the regular expression.  
 Internalization only adds bit annotations to the alternative constructors found in the expression, 
@@ -308,6 +327,7 @@ This annotation process is implemented by the function $\fuse$, whose definition
 After internalization, the algorithm proceeds by taking the derivative with respect to the first character 
 of the input string, which in this case is $a$.
 
+\begin{figure}[ht]
 \begin{enumerate}
   \item Step 1: Internalizing the regular expression
   \[
@@ -316,32 +336,38 @@ of the input string, which in this case is $a$.
     \end{array}
   \]
 
-  \item Step 2: input $a$
+  \item Step 2: input a
     \[
     \begin{array}{rcl}
     \der_a (r') & =           & \der_a(({}_0a + {}_1ab) \cdot ({}_0b + {}_1\ONE\,))\\
                 & =           & \der_a({}_0a + {}_1ab) \cdot ({}_0b + {}_1\ONE\,)\\
                 & =           & (\der_a({}_0a) + \der_a({}_1ab)) \cdot ({}_0b + {}_1\ONE\,)\\
                 & =           & ({}_0\ONE\, + \der_a({}_1a) \cdot b ) \cdot ({}_0b + {}_1\ONE\,)\\
-                & \rightarrow & ({}_0\ONE\, + {}_1\ONE\, \cdot b) \cdot ({}_0b + {}_1\ONE\,)\\
+                & = & ({}_0\ONE\, + {}_1\ONE\, \cdot b) \cdot ({}_0b + {}_1\ONE\,)\\
     \end{array}
     \]
 
-  \item Step 3: input $b$
+  \item Step 3: input b
   \[
     \begin{array}{rcl}
     \der_b(\der_a(r')) & =           & \der_b(({}_0\ONE\, + {}_1\ONE\, \cdot b) \cdot ({}_0b + {}_1\ONE\,))\\
-                       & =           & \der_b({}_0\ONE\, + {}_1\ONE\, \cdot b) \cdot ({}_0b + {}_1\ONE\,) + \der_b(\fuse(\mkeps(r_1),({}_0b + {}_1\ONE\,))) \\
-                       & =           & (\der_b({}_0\ONE\,) + \der_b({}_1\ONE\, \cdot b)) \cdot ({}_0b + {}_1\ONE\,) + {}_0(\der_b({}_0b) + \der_b({}_1\ONE\,)) \\
+                       & =           & \der_b({}_0\ONE\, + {}_1\ONE\, \cdot b) \cdot ({}_0b + {}_1\ONE\,) \\
+                       &             &+ \der_b(\fuse(\mkeps(r_1),({}_0b + {}_1\ONE\,))) \\
+                       & =           & (\der_b({}_0\ONE\,) + \der_b({}_1\ONE\, \cdot b)) \cdot ({}_0b + {}_1\ONE\,) \\
+                       &&+ {}_0(\der_b({}_0b) + \der_b({}_1\ONE\,)) \\
                        & =           & (\ZERO\, + \der_b({}_1\ONE\, \cdot b)) \cdot ({}_0b + {}_1\ONE\,) + {}_0({}_0\ONE\, + \ZERO\,) \\
                        & =           & (\der_b({}_1\ONE\,)\cdot b + \der_b({}_1b)) \cdot ({}_0b + {}_1\ONE\,) + {}_0({}_0\ONE\, + \ZERO\,) \\
-                       & \rightarrow & (\ZERO\, \cdot b + {}_1\ONE\,) \cdot ({}_0b + {}_1\ONE\,) + {}_0({}_0\ONE\, + \ZERO\,) \\
+                       & = & (\ZERO\, \cdot b + {}_1\ONE\,) \cdot ({}_0b + {}_1\ONE\,) + {}_0({}_0\ONE\, + \ZERO\,) \\
     \end{array}
   \]
 
 \end{enumerate}
+    \mbox{}
+    \hrule
+\caption{Bitcoded derivatives of $(a+ab)\cdot (b+\ONE)$ with respect to string \texttt{ba}} \label{BitcodedDerivative}
+\end{figure}
 
-\noindent The result of Step~2 shows that the $\\ONE\,$ symbols indicate a successful match,  
+The result of Step~2 shows that the $\ONE\,$ symbols indicate a successful match,  
 while the bitcode records how that match was obtained.  
 One match is obtained by taking the left branch to match the string $a$, reflected in the bitcode $[0]$.  
 The other match arises by taking the right branch, which matches the regular expression $(ab)$.  
@@ -357,26 +383,26 @@ This illustrates why derivatives tend to grow in size.
 Sulzmann and Lu~\cite{Sulzmann2014} use $\fuse(\mkeps(r_1))$ to include the bit annotations needed when $r_1$ is skipped; 
 these bits, extracted by $\mkeps$, indicate how $r_1$ matched the empty string.  
 
-After taking the derivative with respect to the entire input string, the algorithm checks whether the result is nullable.  
+After taking the derivatives with respect to the entire input string, the algorithm checks whether the result is nullable.  
 If so, it calls $\mkeps$ to extract the bitcode indicating how the match was obtained.  
 In this example, there are two possible matches, but the algorithm prefers the left one.  
-Consequently, $\mkeps$ returns the bitcode $[1,1]$, which encodes the choice of the right branch in the first alternative of $r_1$ 
-(matching the string $ab$), followed by the right branch in the second part of the concatenation (matching the empty string).  
-
-The final bitcode after calling $\mkeps$ is $[1,1]$.  
+Consequently, $\mkeps$ returns the bitcode $[1,1]$, which encodes the choice of the right branch in the alternative of $r_1$ 
+(matching the string $ab$), followed by the right branch in the alternative of $r_2$  (matching the empty string).
+%The final bitcode after calling $\mkeps$ is $[1,1]$.  
 Decoding this against the original expression yields the POSIX value:
-\[
-\Seq(\Right(\Seq(a, b)), \Right(\Empty))
-\]
+$
+\Seq\,(\,\Right\,(\,\Seq\,(\,a, b\,)), \Right\,(\,\Empty\,))
+$
 
 As mentioned earlier, the formal definitions of the auxiliary functions $\intern$, $\fuse$, and $\mkeps$ are given below, 
 as defined by Sulzmann and Lu~\cite{Sulzmann2014}.
 
+%intern definition%
+
 \begin{definition}[$\intern$ function]\mbox{}
-\begin{center}
-{
-  \renewcommand{\arraystretch}{1.7}
-  \begin{tabular}{rcl}
+
+  \renewcommand{\arraystretch}{1.5}
+  \begin{tabular}{lcl}
     $ \intern(\ZERO\,) $       & \dn & $ \ZERO\, $ \\
     $ \intern(\ONE\,) $        & \dn & $ \ONE\, $ \\
     $ \intern(c) $             & \dn & $ c $ \\
@@ -384,16 +410,12 @@ as defined by Sulzmann and Lu~\cite{Sulzmann2014}.
     $ \intern(r_1 \cdot r_2) $ & \dn & $ \intern(r_1) \cdot \intern(r_2) $ \\
     $ \intern(r^*) $           & \dn & $ (\intern(r))^* $ \\
   \end{tabular}%
-}
-\end{center}
 \end{definition}
-
-
-
+%fuse definition%
 \begin{definition}[$\fuse$ function]\mbox{}
-\begin{center}{
-  \renewcommand{\arraystretch}{1.7}
-  \begin{tabular}{rcl}
+
+  \renewcommand{\arraystretch}{1.5}
+  \begin{tabular}{lcl}
 $ \fuse\; bs\; (c\,_{bs'}) $                & \dn & $ c\,_{(bs \cup bs')} $ \\
 $ \fuse\; bs\; ((r_1 + r_2)\,_{bs'}) $      & \dn & $ (r_1 + r_2)\,_{(bs \cup bs')} $ \\
 $ \fuse\; bs\; ((r_1 \cdot r_2)\,_{bs'}) $  & \dn & $ (r_1 \cdot r_2)\,_{(bs \cup bs')} $ \\
@@ -401,29 +423,26 @@ $ \fuse\; bs\; (r^*\,_{bs'}) $              & \dn & $ (r^*)\,_{(bs \cup bs')} $ 
 $ \fuse\; bs\; (r^n\,_{bs'}) $              & \dn & $ (r^n)\,_{(bs \cup bs')} $ \\
 \end{tabular}
 \renewcommand{\arraystretch}{1.0}
-}
-\end{center}
 \end{definition}
 
+%mkeps 1 definition%
 \begin{definition}[$\mkeps$ function]\mbox{}
-\begin{center}
+
 \begin{tabular}{lcl}
-  \renewcommand{\arraystretch}{1.7}
+  \renewcommand{\arraystretch}{1.5}
 $ \mkeps(\ONE\,_{bs}) $                & \dn & $ bs $ \\
 $ \mkeps((r_1 + r_2)\,_{bs}) $         & \dn &
 $ \begin{cases}
-   bs \cup \mkeps(r_1) & \text{if } \nullable(r_1) \\\\
+   bs \cup \mkeps(r_1) & \text{if } \nullable(r_1) \\
    bs \cup \mkeps(r_2) & \text{otherwise}
   \end{cases} $ \\
 $ \mkeps((r_1 \cdot r_2)\,_{bs}) $     & \dn & $ bs \cup \mkeps(r_1) \cup \mkeps(r_2) $ \\
 $ \mkeps((r^*)\,_{bs}) $               & \dn & $ bs \cup [1] $ \\
 \renewcommand{\arraystretch}{1.0}
 \end{tabular}
-\end{center}
 \end{definition}
 
-
-
+\FloatBarrier
 \subsection{Marked Approach}
 
 The marked approach is a method for regular expression matching that tracks 
@@ -436,8 +455,8 @@ in regular expressions by marking their atoms. Nipkow and Traytel cite Fischer e
 This approach allows for more efficient matching, particularly in complex
 expressions such as $(a^*b^*)^*$, in large alternations like
 $(a+b+c+\dots+z)^*$, or in nested choices such as
-$((a)^* + (aa)^* + (aaa)^* + (aaaa)^* + (aaaaa)^*)^*$. The regular expression itself
- does not grow in size; instead, marks are inserted into it.  
+$((a)^* + (aa)^* + (aaa)^* + (aaaa)^* + (aaaaa)^*)^*$. The regular expression itself does not increase in size;
+ rather, progress is tracked through the placement of marks.
 With each input character, these marks move (or shift) according to a set of rules.  
 At the end of the input, the expression is evaluated to determine whether the marks 
 are in positions that make the expression "final" — that is, whether the expression accepts
@@ -453,6 +472,32 @@ For Fischer et al., this corresponds to having matched characters, whereas for A
 where the expression can accept the empty string, ensuring that the entire input has been consumed.  
 If the marks do not reach such positions, some characters remain unmatched and the matching problem fails.
 
+Nipkow and Traytel, in their work on regular expression equivalence, 
+build a unified framework for decision procedures on regular expressions. 
+They describe McNaughton--Yamada--Glushkov and Fischer’s work as 
+mark-after-atom, meaning that when a character is read, the mark is placed 
+immediately after it. In their framework, this is expressed by two operations 
+on marks, namely $follow$ and $read$. The function $follow$ is, as they 
+describe, similar to an epsilon-closure, in that it moves all marks in a 
+regular expression to the next atom to be read, then $read$ marks all 
+characters corresponding to its input argument. The main transition function 
+is therefore written as 
+
+\[
+shift\ m\ r\ x = read\ x\ (follow\ m\ r).
+\] 
+
+By contrast, they show that the works of Asperti et al., although presented 
+as McNaughton--Yamada, are in fact a dual construction, mark-before-atom. 
+In this version the marks indicate atoms that are about to be read, rather 
+than atoms that have just been consumed. The main transition function is 
+the inversion of the previous transition function:
+
+\[
+move\ c\ r\ m = follow\ m\ (read\ c\ r).
+\]
+
+\FloatBarrier
 \subsubsection{Motivation for a Marked Approach}
 
 The marked approach offers an alternative to derivatives for regular expression matching.  
@@ -473,8 +518,9 @@ As shown by Nipkow and Traytel~\cite{NipkowTraytel2014}, the pre-mark algorithm 
 post-mark algorithm of Fischer et al., which makes Fischer et al.’s approach the most suitable foundation for extending the marked  
 algorithm to matching with POSIX value extraction.
 
+\FloatBarrier
 \subsubsection{Scala Implementation of Fischer’s Marked Approach}
-
+\label{sec:scala-fischer}
 In Fischer et al. approach, the marks are shifted through the regular expression with each input character. 
 The process starts with an initial mark inserted at the beginning, which is then moved step by step as the input is consumed. 
 This behaviour is implemented by the function \shift, which performs the core logic of the algorithm. 
@@ -482,17 +528,17 @@ The initial specification of this function is given below, as we have developed 
 
 The following presents the Scala implementation of the shifting behaviour as originally defined by Fischer et al.~\cite{Fischer2010}.
 The \shift\ function takes as input a regular expression to match against, a flag $m$, and a character $c$, and returns a \emph{marked
-regular expression}—that is, a regular expression annotated with marks. We write a marked regular expression as $\bullet,r$, where the 
+regular expression}—that is, a regular expression annotated with marks. We write a marked regular expression as $\bullet\,r$, where the 
 preceding dot indicates that the expression $r$ has been annotated with marks to record the progress of matching.
 
 %\[ \shift(m, c, r) \to \Marked{r}\]
 
 \[
-\renewcommand{\arraystretch}{1.7}
+\renewcommand{\arraystretch}{1.5}
 \shift(m, c, r) =
 \begin{array}{l}
   \begin{cases}
-    \Marked{r} & \text{if $c$ matches in $r$}, \\\\
+    \Marked{r} & \text{if $c$ matches in $r$}, \\
     \ZERO\, & \text{otherwise.}
   \end{cases}
 \end{array}
@@ -502,15 +548,17 @@ preceding dot indicates that the expression $r$ has been annotated with marks to
 The flag $m$ indicates the mode of operation: when set to true, a new mark is introduced; otherwise, the function shifts the existing marks.  
 This was realised in our first implementation by adding a boolean attribute to the character constructor to represent a marked character.  
 In later versions, we instead introduced a wrapper constructor around the character constructor to explicitly represent a marked character.
+
+%shift-fischer definition%
 \begin{definition}[$\shift$ function]\mbox{}
-\renewcommand{\arraystretch}{1.7}
-\begin{center}
+\renewcommand{\arraystretch}{1.5}
+
 \begin{tabular}{lcl}
 \shift$(m,c,\ZERO)$ & \dn & $\ZERO$ \\
 \shift$(m,c,\ONE)$  & \dn & $\ONE$ \\
 \shift$(m,c,d)$     & \dn &
 $\begin{cases}
-   \bullet d & \text{if } c=d \land m \\\\
+   \bullet d & \text{if } c=d \land m \\
    d         & \text{otherwise}
  \end{cases}$ \\
 
@@ -518,20 +566,20 @@ $\begin{cases}
 \shift$(m,c,r_1 \cdot r_2)$ & \dn & \medskip \\
 \multicolumn{3}{@{\hspace{10mm}}l}{
   $\begin{cases}
-   shift(m,c,r_1) \cdot shift(true,c,r_2)  & \text{if } m \land \nullable(r_1) \\\\
-   shift(m,c,r_1) \cdot shift(true,c,r_2)  & \text{if } \fin(r_1) \\\\
+   shift(m,c,r_1) \cdot shift(true,c,r_2)  & \text{if } m \land \nullable(r_1) \\
+   shift(m,c,r_1) \cdot shift(true,c,r_2)  & \text{if } \fin(r_1) \\
    shift(m,c,r_1) \cdot shift(false,c,r_2) & \text{otherwise}\\
   \end{cases}$} \\
 \shift$(m,c,r^*)$ & \dn &
 $\begin{cases}
-   shift(true,c,r^*) & \text{if } \fin(r) \\\\
+   shift(true,c,r^*) & \text{if } \fin(r) \\
    shift(m,c,r^*)    &  \\
 \end{cases}$ \\
 
 \end{tabular}
 \renewcommand{\arraystretch}{1.0}
-\end{center}
 \end{definition}
+
 \noindent
 Shifting marks for the base cases $\ZERO\,$ and $\ONE\,$ is straightforward:  
 $\ZERO\,$ cannot be marked, and $\ONE\,$---for now---will not carry a mark, 
@@ -568,11 +616,11 @@ since it matches only the empty string. In the initial algorithm, $\ONE\,$ was
 \end{itemize}
 The formal definitions of the auxiliary functions $\fin$ and $\nullable$ are given below, 
 as defined by Fischer et al.~\cite{Fischer2010}.
-
+%fin definition%
 \begin{definition}[$\fin$ function]\mbox{}
-\begin{center}{
-  \renewcommand{\arraystretch}{1.7}
-  \begin{tabular}{rcl}
+
+  \renewcommand{\arraystretch}{1.5}
+  \begin{tabular}{lcl}
     $\fin(\ZERO\,)$            & \dn & $\text{false}$ \\
     $\fin(\ONE\,)$             & \dn & $\text{false}$ \\
     $\fin(c)$                  & \dn & $\text{false}$ \\
@@ -582,14 +630,14 @@ as defined by Fischer et al.~\cite{Fischer2010}.
     $\fin(r^*)$                & \dn & $\fin(r)$  
   \end{tabular}
   \renewcommand{\arraystretch}{1.0}
-}
-\end{center}
+
 \end{definition}
 
+%nullable definition%
 \begin{definition}[$\nullable$ function]\mbox{}
-\begin{center}{
-  \renewcommand{\arraystretch}{1.7}
-  \begin{tabular}{rcl}
+
+  \renewcommand{\arraystretch}{1.5}
+  \begin{tabular}{lcl}
     $\nullable(\ZERO\,)$         & \dn & $\text{false}$ \\
     $\nullable(\ONE\,)$          & \dn & $\text{true}$ \\
     $\nullable(c)$               & \dn & $\text{false}$ \\
@@ -598,11 +646,9 @@ as defined by Fischer et al.~\cite{Fischer2010}.
     $\nullable(r^*)$             & \dn & $\text{true}$
   \end{tabular}
   \renewcommand{\arraystretch}{1.0}
-}
-\end{center}
 \end{definition}
 
-
+\FloatBarrier
 \section{Our Approach}
 We began our work by implementing the marked approach described by Fischer et al.~\cite{Fischer2010} in Scala. 
 This initial implementation of the algorithm provided only acceptance checking without any value construction.  
@@ -623,6 +669,7 @@ string-annotated marks, where marks carry the matched string along as they are s
 to record the choices made during matching.
 The following subsections describe these different versions.
 
+\FloatBarrier
 \subsection{Bit-Annotated, version 1}
 
 In this version, we extended the marked approach to include bitcodes that annotate the marks being 
@@ -655,22 +702,22 @@ We define \shift\ for this version as follows.
  
 
 \[
-\renewcommand{\arraystretch}{1.7}
+\renewcommand{\arraystretch}{1.5}
 \shift(m, c, bs, r) =
 \begin{array}{l}
   \begin{cases}
-    \Marked{r\,_{bs'}} & \text{if $c$ matches in $r$}, \\\\
+    \Marked{r\,_{bs'}} & \text{if $c$ matches in $r$}, \\
     \ZERO\,        & \text{otherwise.}
   \end{cases} 
   \\ \text{where $bs'$ is the updated bit list.}
 \end{array}
 \renewcommand{\arraystretch}{1.0}
 \]
-
+%shift 1 definition%
 \begin{definition}[Bit-Annotated $\shift$: First Version]\mbox{}
-\begin{center}{
-  \renewcommand{\arraystretch}{1.7}
-  \begin{tabular}{rcl}
+
+  \renewcommand{\arraystretch}{1.5}
+  \begin{tabular}{lcl}
     $\shift(m,bs,c,\ZERO\,)$   & \dn & $\ZERO$ \\
     $\shift(m,bs,c,\ONE\,)$    & \dn & $\ONE$ \\
     $\shift(m,bs,c,d)$         & \dn &
@@ -685,23 +732,21 @@ We define \shift\ for this version as follows.
     $\shift(m,bs,c,r_1 \cdot r_2)$ & \dn & \\
     \multicolumn{3}{@{\hspace{15mm}}l}{
       $\begin{cases}
-        \shift(m,bs,c,r_1) \cdot \shift(\text{true},\, bs \At \mkeps(r_1),\, c,\, r_2) & \text{if } m \land \nullable(r_1) \\\\
-        \shift(m,bs,c,r_1) \cdot \shift(\text{true},\, bs \At \mkfin(r_1),\, c,\, r_2) & \text{if } \fin(r_1) \\\\
+        \shift(m,bs,c,r_1) \cdot \shift(\text{true},\, bs \At \mkeps(r_1),\, c,\, r_2) & \text{if } m \land \nullable(r_1) \\
+        \shift(m,bs,c,r_1) \cdot \shift(\text{true},\, bs \At \mkfin(r_1),\, c,\, r_2) & \text{if } \fin(r_1) \\
         \shift(m,bs,c,r_1) \cdot \shift(\text{false}, \emptylist,\, c,\, r_2)          & \text{otherwise}
       \end{cases}$} \\
 
     $\shift(m,bs,c,r^*)$ & \dn & \\
     \multicolumn{3}{@{\hspace{15mm}}l}{
       $\begin{cases}
-        (\shift(m,\, bs \oplus 0,\, c,\, r))^* & \text{if } m \\\\
-        (\shift(\text{true},\, bs \At (\mkfin(r) \oplus 1),\, c,\, r))^* & \text{if } m \land \fin(r) \\\\
-        (\shift(\text{true},\, \mkfin(r) \oplus 0,\, c,\, r))^* & \text{if } \fin(r) \\\\
+        (\shift(m,\, bs \oplus 0,\, c,\, r))^* & \text{if } m \\
+        (\shift(\text{true},\, bs \At (\mkfin(r) \oplus 1),\, c,\, r))^* & \text{if } m \land \fin(r) \\
+        (\shift(\text{true},\, \mkfin(r) \oplus 0,\, c,\, r))^* & \text{if } \fin(r) \\
         (\shift(\text{false}, \emptylist,\, c,\, r))^* & \text{otherwise}
       \end{cases}$}
   \end{tabular}
   \renewcommand{\arraystretch}{1.0}
-}
-\end{center}
 \end{definition}
 
 
@@ -741,84 +786,47 @@ In the \STARText\ case, $0$ represents the beginning of an iteration, while $1$ 
     \item If no new mark is introduced, the existing marks are shifted with an empty bit list.  
 \end{itemize}
 
-The functions \mkfin\ and \mkeps\ are defined below; 
-the definition of \fin\ is the same as in Section~2.2.2.  
+The functions \mkfin\ and \mkeps\ are defined below; the definition of \fin\ is the same as in section~\ref{sec:scala-fischer}.  
 
 \begin{definition}[$\mkfin$ function]\mbox{}
-\begin{center}{
-  \renewcommand{\arraystretch}{1.7}
-  \begin{tabular}{rcl}
+
+  %mkfin definition%
+  \renewcommand{\arraystretch}{1.5}
+  \begin{tabular}{lcl}
     $\mkfin(\Marked{_{bs}\,r})$            & \dn & $bs$ \\[0.2ex]
     $\mkfin(\Marked{_{bs}\,c})$            & \dn & $bs$ \\
     $\mkfin(r_1 + r_2)$                    & \dn &
       $\begin{cases}
-        \mkfin(r_1) & \text{if } \fin(r_1) \\\\
+        \mkfin(r_1) & \text{if } \fin(r_1) \\
         \mkfin(r_2) & \text{otherwise}
       \end{cases}$ \\
     $\mkfin(r_1 \cdot r_2)$                & \dn &
       $\begin{cases}
-        \mkfin(r_1) \At \mkeps(r_2) & \text{if } \fin(r_1) \land \nullable(r_2) \\\\
-        \mkfin(r_2)                 & \text{else}
+        \mkfin(r_1) \At \mkeps(r_2) & \text{if } \fin(r_1) \land \nullable(r_2) \\
+        \mkfin(r_2)                 & \text{otherwise}
       \end{cases}$ \\
     $\mkfin(r^*)$                          & \dn & $\mkfin(r) \At [1]$
   \end{tabular}
   \renewcommand{\arraystretch}{1.0}
-}
-\end{center}
 \end{definition}
-
+%mkeps definition%
 \begin{definition}[$\mkeps$ function]\mbox{}
-\begin{center}{
-  \renewcommand{\arraystretch}{1.7}
-  \begin{tabular}{rcl}
-    $\mkeps(\Marked{_{bs}\,r})$            & \dn & $bs$ \\[0.2ex]
+
+  \renewcommand{\arraystretch}{1.5}
+  \begin{tabular}{lcl}
+    $\mkeps(\Marked{_{bs}\,r})$            & \dn & $bs$ \\
     $\mkeps(\ONE\,)$                       & \dn & $\emptylist$ \\
     $\mkeps(r_1 + r_2)$                    & \dn &
       $\begin{cases}
-        0 \oplus \mkeps(r_1) & \text{if } \nullable(r_1) \\\\
-        1 \oplus \mkeps(r_2) & \text{else}
+        0 \oplus \mkeps(r_1) & \text{if } \nullable(r_1) \\
+        1 \oplus \mkeps(r_2) & \text{otherwise}
       \end{cases}$ \\
     $\mkeps(r_1 \cdot r_2)$                & \dn & $\mkeps(r_1) \At \mkeps(r_2)$ \\
     $\mkeps(r^*)$                          & \dn & $[1]$
   \end{tabular}
   \renewcommand{\arraystretch}{1.0}
-}
-\end{center}
+
 \end{definition}
-
-
-\begin{itemize}
-\item $\mkfin(\Marked{_{bs}\,r}) \to bs$
-\[
-\begin{array}{rcl}
-\mkfin(\Marked{_{bs}\,c}) & \stackrel{\text{def}}{=} & bs \\
-\mkfin(r_1 + r_2)         & \stackrel{\text{def}}{=} & 
-  \begin{cases}
-    \mkfin(r_1) & \text{if } \fin(r_1) \\
-    \mkfin(r_2) & \text{otherwise}
-  \end{cases} \\
-\mkfin(r_1 \cdot r_2)     & \stackrel{\text{def}}{=} & 
-  \begin{cases}
-    \mkfin(r_1) \At \mkeps(r_2) & \text{if } \fin(r_1) \land \nullable(r_2) \\
-    \mkfin(r_2)                 & \text{else}
-  \end{cases} \\
-\mkfin(r^*)               & \stackrel{\text{def}}{=} & \mkfin(r) \At [1]
-\end{array}
-\]
-\item $\mkeps(\Marked{_{bs}\,r}) \to bs$
-\[
-\begin{array}{rcl}
-\mkeps(\\ONE\,) & \stackrel{\text{def}}{=} & \emptylist \\
-\mkeps(r_1 + r_2)           & \stackrel{\text{def}}{=} & 
-  \begin{cases}
-    0 \oplus \mkeps(r_1) & \text{if } \nullable(r_1) \\
-    1 \oplus \mkeps(r_2) & \text{else}
-  \end{cases} \\[2ex]
-\mkeps(r_1 \cdot r_2)       & \stackrel{\text{def}}{=} & \mkeps(r_1) \At \mkeps(r_2) \\
-\mkeps(r^*)                 & \stackrel{\text{def}}{=} & [1]
-\end{array}
-\]
-\end{itemize}
 
 Next, we present two examples of matching a string and extracting a value.  
 The first example shows how the bit list is constructed during matching,  
@@ -828,47 +836,61 @@ bit list is overwritten which can lead to value erasure and, in particular, to t
 as the second example illustrates.  
 
 
-\begin{enumerate}
-  \item String $ba$, regular expression: $(a \cdot b + b \cdot a)$
-  \[
+  \begin{figure}[ht]
+    $\bullet\;$ String \texttt{ba}, regular expression: $(a \cdot b + b \cdot a)$
+    \[
     \begin{array}{rcl}
       \shift\; b & \rightarrow & (a \cdot b) + (\Marked{_{[1]}\, b} \cdot a)\\\\
       \shift\; a & \rightarrow & (a \cdot b) + (b \cdot \Marked{_{[1]}\, a} )\\
     \end{array}
-  \]
-  With no further calls to $\shift$, $\mkfin$ is applied because the regular expression 
-  has reached a final position, indicated by a mark at the end of the right-hand subexpression in 
-  the alternative. $\mkfin$ then retrieves the bit list $[1]$, corresponding to taking the 
-  right branch in the alternative.
+    \]
+    \hrule
 
-  \item String $aaa$, regular expression: $(a + a \cdot a)^*$
-  \[
+    \caption{Bitcoded shifts of: $(a \cdot b + b \cdot a)$ with string \texttt{ba}} \label{BitAnnotatedShiftExample1}
+    \mbox{}
+
+  \end{figure}
+      
+In Example~1 (see Figure~\ref{BitAnnotatedShiftExample1}), the process starts by shifting the
+first character, b, into the regular expression. Since the expression is an alternative, $\shift$ is
+applied to both branches. However, only the right branch matches, because its first subexpression
+begins with b. A mark is therefore set with the bitcode list $[1]$. Shifting the second character, a,
+continues into the concatenation on the right branch. Here the first part is already final, as it
+matched the preceding b, so the shift moves on to the second part, which matches a. With no further
+calls to $\shift$, $\mkfin$ is applied, because the regular expression has reached a final position,
+indicated by a mark at the end of the
+
+  \begin{figure}[ht]
+    $\bullet\;$ String $aaa$, regular expression: $(a + a \cdot a)^*$
+    \[
     \begin{array}{rcl}
       \shift\; a & \rightarrow & ( \Marked{_{[0,0]\,} a} +  \Marked{_{[0,1]}\,a \cdot a} )^*\\\\
       \shift\; a & \rightarrow & ( \Marked{_{[0,0,0,0]\,} a} +  \Marked{_{[0,0,0,1]}\,a \cdot \Marked{_{[0,1]}\,a} } )^*\\\\ 
       \shift\; a & \rightarrow & ( \Marked{_{[0,0,0,0,0,0]\,} a} +  \Marked{_{[0,0,0,0,0,1]}\,a \cdot \Marked{_{[0,0,0,1]}\,a} } )^*\\\\
     \end{array}
-  \]
-  After the first shift on $a$, a mark is placed on the left branch with bits $[0,0]$,  
-  indicating the start of a \STARText\ iteration followed by a left choice.  
-  In the right subexpression, the mark on $r_1$ of the $a \cdot a$ sequence carries bits $[0,1]$,  
-  representing the start of the \STARText\ iteration followed by a right choice.  
+    \]
 
-  After the second shift, however, the right subexpression $r_2$ with bits $[0,1]$ is overwritten during 
-  the third shift, when those bits should instead be preserved.  
-  These bits correspond to the POSIX match, which starts by matching the right-hand side first,  
-  then performing another iteration to match the left-hand side.  
-  The correct bit list in that case would be $[0,1,0,0]$, with the final $1$ marking the end of the \Star\ iteration.  
-  This behaviour arises because \POINT\ stores only a single bit list at a time, with no mechanism for preserving multiple marks.  
+    \mbox{}
+    \hrule
+    
+    \caption{Bitcoded shifts of: $(a + a \cdot a)^*$ with string \texttt{aaa}} \label{BitAnnotatedShiftExample2}
+  \end{figure}
+In Example~2 (see Figure~\ref{BitAnnotatedShiftExample2}), after the first shift on a, a mark is
+placed on the left branch with bits $[0,0]$, indicating the start of a \STARText\ iteration followed by a
+left choice. In the right subexpression, the mark on $r_1$ of the $a \cdot a$ sequence carries bits $[0,1]$,
+representing the start of the \STARText\ iteration followed by a right choice. When the second character is shifted, the right subexpression $r_2$ with bits $[0,1]$ is overwritten during
+the third shift, when those bits should instead be preserved. These bits correspond to the POSIX match,
+which begins by matching the right-hand side first and then performing another iteration to match the
+left-hand side. The correct bit list in that case would be $[0,1,0,0]$, with the final 1 marking the end of
+the \STARText\ iteration. This behaviour arises because \POINT\ stores only a single bit list at a time,
+with no mechanism for preserving multiple marks.
 
-\end{enumerate}
-
-\newpage
-
-
+  
+\FloatBarrier
 \subsection{Bit-Annotated, version 2}
 we are fairly sure/strongly think that this version produces all possible values including the posix value.
 
+\FloatBarrier
 \subsection{String-Carrying Marks - Matcher}
 We initially followed the approach of Fischer et al.~\cite{Fischer2010} and Asperti et al.~\cite{Asperti2010}, in which shifting is performed character by 
 character and marks are propagated at each step. However, as in our previous versions, this method made it difficult to maintain an ordering on marks and to 
@@ -883,9 +905,12 @@ though this point is not yet fully established.
 The trade-off is that more information must be 
 stored, but this also creates opportunities for optimisation. With string-carrying marks, we currently have a better handle on extracting POSIX values.
 
-We start with a list of marks with one initial mark carrying the full input string.
-As \shift\ is called, the marks are shifted through the regular expression,
-and each time a character matches, it is striped from the string carried by the mark.
+
+We start with a list of marks, with one initial mark carrying the full input string.
+We define \shifts\ in place of \shift\ as the function that operates on the full input 
+string, rather than character by character as in the previous versions.
+The marks are shifted through the regular expression, and each time a character matches, 
+it is stripped from the string carried by the mark.
 If a character does not match the prefix of the string in a mark, that mark will be dropped.
 A match occurs when a mark has been reduced to the empty string,
 indicating that all characters have been matched.
@@ -901,46 +926,40 @@ In the worst case this leads to a quadratic bound once duplicate marks are remov
 
 We started with a lexer implementation of this version, and from initial testing it produces the POSIX value, 
 yet this remains to be formally proven. 
-In this version we introduce reshuffling, where marks are ordered based on their remaining strings. 
+In that version we introduce reshuffling, where marks are ordered based on their remaining strings. 
 At present, the reordering is carried out in the \SEQText\ case after shifting through the first part.
 
-We define \shift\ for this version as follows; the behaviour of the individual cases is then described.
+We define \shifts\ for this version as follows; the behaviour of the individual cases is then described.
 
 
-\[
-\begin{array}{rcl}
-  \shift(ms, 0) 
-    & \stackrel{\text{def}}{=} & \emptylist \\
+\begin{definition}[$\shifts$ function]\mbox{}
+\begin{center}{
+  \renewcommand{\arraystretch}{1.7}
+  \begin{tabular}{ccl}
+    $\shifts(ms, 0)$ & \dn & $\emptylist$ \\
+    $\shifts(ms, 1)$ & \dn & $\emptylist$ \\
+    $\shifts(ms, d)$ & \dn & $[\, \Marked{s} \mid \Marked{d::s} \in ms \,]$ \\
+    $\shifts(ms, r_1 + r_2)$ & \dn & $\shifts(ms, r_1) \; @ \; \shifts(ms, r_2)$ \\
+    
+    $\shifts(ms, r_1 \cdot r_2)$ & \dn & $\text{let } ms' = \shifts(ms, r_1) \text{ in}$ \\
+\multicolumn{3}{@{\hspace{10mm}}l}{%
+  $ \begin{cases}
+      \shifts(ms' \,@\, ms, r_2) \; @ \; ms' & \text{if } \nullable(r_1) \land \nullable(r_2), \\
+      \shifts(ms' \,@\, ms, r_2)             & \text{if } \nullable(r_1), \\
+      \shifts(ms', r_2) \; @ \; ms'      & \text{if } \nullable(r_2), \\
+      \shifts(ms', r_2)                  & \text{otherwise}
+    \end{cases} $} \\
+    $\shifts(ms, r^{*})$ & \dn & $\text{let } ms' = \shifts(ms, r) \text{ in}$ \\
+     &&$\text{if } ms' = \emptylist \;\; \text{then } \emptylist \;\; \text{else } \shifts(ms', r^{*}) \; @ \; ms'$ \\
 
-  \shift(ms, 1) 
-    & \stackrel{\text{def}}{=} & \emptylist \\
+  \end{tabular}
+  \renewcommand{\arraystretch}{1.0}
+}
+\end{center}
+\end{definition}
 
-  \shift(ms, d) 
-    & \stackrel{\text{def}}{=} & 
-      [\, \Marked{s} \mid \Marked{d::s} \in ms \,] \\
-
-  \shift(ms, r_1 + r_2) 
-    & \stackrel{\text{def}}{=} & 
-      \shift(ms, r_1) \; @ \; \shift(ms, r_2) \\
-
-  \shift(ms, r_1 \cdot r_2) & \stackrel{\text{def}}{=} & \text{let } ms' = \shift(ms, r_1) \text{ in }\\
-      & &\begin{cases}
-        \shift(ms' @ ms, r_2) \; @ \; ms' & \text{if $\nullable(r_1) \land \nullable(r_2)$}, \\
-        \shift(ms' @ ms, r_2)             & \text{if $\nullable(r_1)$}, \\
-        \shift(ms', r_2) \; @ \; ms'      & \text{if $\nullable(r_2)$}, \\
-        \shift(ms', r_2)                  & \text{otherwise}
-      \end{cases} \\
-
-  \shift(ms, r^{*}) & \stackrel{\text{def}}{=} &\text{let } ms' = \shift(ms, r) \text{ in }\\
-                    &  & \text{if\;\;} ms' = \emptylist \;\; \text{then \emptylist \; else\;\;} \shift(ms', r^{*}) \; @ \; ms' \\
-                   && 
-      
-\end{array}
-\]
-
-As noted earlier, the empty string $\ONE\,$ is not marked. 
-This choice is made to ensure termination of the \shift\ function, in particular in the \STARText\ case: 
-if $\\ONE\,$ were allowed to produce marks, this would lead to infinite unfolding and non-termination. 
+As noted earlier, the empty string $\ONE\,$ is not marked. This choice is made to ensure termination of the \shift\ function, in particular in the \STARText\ case: 
+if $\ONE\,$ were allowed to produce marks, this would lead to infinite unfolding and non-termination. 
 A Mark is represented here as $\Marked{s}$, where $s$ is a string, and $ms$ is a list of such marks. 
 
 \paragraph*{\textbf{Alternative case} $(r_1 + r_2)$:}
@@ -990,62 +1009,93 @@ producing a new list of marks $ms'$. The result then depends on several conditio
 The matcher is defined as follows.
 
 \[
-\matcher(s, r) \; \stackrel{\text{def}}{=}\;
+\matcher(s, r) \; \dn\;
   \begin{cases}
     \nullable(r) & \text{if $s = \emptylist$}, \\
     \Marked{[]} \in \shift([\Marked{s}], r) & \text{otherwise.}
   \end{cases}
 \]
 
-To illustrate the behaviour of this version, we consider two examples.  
-The first uses the regular expression $b + (b \cdot a)$  
-and string \texttt{ba}.  
-We show step by step how the marks are reduced  
-as characters are stripped and non-matching paths are dropped.  
-The second example considers the star case,  
-highlighting how the marks are unfolded.  
+To illustrate the behaviour of this version, we consider three examples. The first uses the
+regular expression $(a + (a \cdot c))$ and string \texttt{ac}. We show step by step how the
+marks are reduced as characters are stripped and non-matching paths are dropped. The second
+example considers the \STARText\ case, highlighting how the marks are unfolded. A third
+example, $(a^* \cdot a^*)$ with string \texttt{aa}, shows that, in this version, all possible
+marks must be generated, since one of them may be the only one required to complete the match
+when the \STARText\ expression is part of a larger expression.
+ 
+In Example~1 (Figure~\ref{StringShiftsExample1}), we consider the regular expression
+$(a + (a \cdot c))$ and the string \texttt{ac}. Matching begins with the initial mark carrying
+the full string, which is then propagated into the two subexpressions: the left subexpression
+$a$ and the right subexpression $(a \cdot c)$. In the left subexpression $a$, the initial
+character matches, so it is stripped from the mark, leaving the string \texttt{c}. In the
+right subexpression $(a \cdot c)$, the sequence matches both characters, so the string in the
+mark is reduced to the empty string. At this point, the list of marks $[\Marked{_{[c]}},
+\Marked{_{\emptylist}}]$ is obtained, and with one mark reduced to the empty string, the
+expression is accepted.
+
+In Example~2 (Figure~\ref{StringShiftsExample2}), we consider the regular expression $(a^*)$ and the
+string \texttt{aaa}. For the \STARText\ case, the process starts by shifting the received marks into
+the inner expression; here, the initial mark is shifted into $a$. When the character $a$ matches,
+the leading $a$ is stripped from the string carried by the mark, and the inner \shifts\ call
+produces a new mark with this shorter string. If the result is empty—meaning that no character was
+consumed—no further iteration takes place. This mechanism has two effects: first, the strings
+carried by the marks either remain unchanged or become shorter; second, it enumerates all the ways
+the \STARText\ expression can match the input, from no consumption to consuming the entire string.
+The algorithm therefore returns a list of marks representing these alternatives, and, as
+Example~3 will show, one of these marks may be the only one required to complete the match when
+the \STARText\ expression is part of a larger expression. This observation also suggests a possible
+optimisation: rather than generating all marks, it may be sufficient to generate only those needed
+in a given case.
 
 
-
-
+\begin{figure}[ht]
+  $\bullet\;$ String \texttt{ac}, regular expression: $(a + (a \cdot c))$
 \begin{enumerate}
-  \item String \texttt{ac}, regular expression: $(a + (a \cdot c))$
-  \begin{enumerate}
-    \item $\bigl|_{[\Marked{ac}]} \;\left( a \;+\; (a \cdot c) \right)$
+  \item $\bigl|_{[\Marked{ac}]} \;( a + (a \cdot c) )$
+  \item $(\bigl|_{[\Marked{ac}]} a + \bigl|_{[\Marked{ac}]} (a \cdot c))$
+  \item $(a \;\bigl|_{[\Marked{c}]} + (a \cdot c)\;\bigl|_{[\Marked_{\emptylist}]})$
+\end{enumerate}
+  \mbox{}
+  \hrule
+  \caption{String-carrying shifts for: $(a + (a \cdot c))$ with string \texttt{ac}}
+  \label{StringShiftsExample1}
+\end{figure}
 
-    \item $ \bigl|_{[\Marked{ac}]} a  \;+\;
-            \bigl|_{[\Marked{ac}]} a \cdot c $
 
-    \item $ a \;\bigl|_{[\Marked{c}]} 
-           \;+\;
-            a \cdot c \;\bigl|_{[\Marked{_{\emptylist}}]} $
-  \end{enumerate}
-Matching begins with the initial mark carrying the full string,  
-which is then propagated into the two subexpressions.  
-In the first subexpression, the initial character matches,  
-so it is stripped from the mark, leaving the string \texttt{c}.  
-In the second subexpression, the sequence $a \cdot c$ matches both characters,  
-so the string in the mark is reduced to the empty string.  
-At this point, the list of marks 
-$[\Marked{_{[c]}}, \Marked{_{\emptylist}}]$ is obtained,  
-and with one mark reduced to the empty string,  
-the expression is accepted.  
-  
-
-\item String \texttt{aaa}, regular expression: $(a)^*$
-\item String \texttt{aaa}, regular expression: $(a+aa)^*$
+\begin{figure}[ht]
+  $\bullet\;$ String \texttt{aaa}, regular expression: $(a^*)$
+\begin{enumerate}
+  \item $\bigl|_{[\Marked{aaa}]} \;(a^*)$
+  \item $(\bigl|_{[\Marked{aa}]} a^*)$
+  \item $( \bigl|_{[\Marked{aa}, \Marked{a}]} a^*)$
+  \item $(a^* \;\bigl|_{[\Marked{aa}, \Marked{a}, \Marked_{\emptylist}]})$
 \end{enumerate}
 
+  \mbox{}
+  \hrule
+  \caption{String-carrying shifts for: $(a^*)$ with string \texttt{aaa}}
+  \label{StringShiftsExample2}
+\end{figure}
 
- 
- 
 
+\begin{figure}[ht]
+  $\bullet\;$ String \texttt{?aa?}, regular expression: $?(a^* \cdot a^*)?$
+  \[
+  \begin{array}{l}
+   
+  \end{array}
+  \]
+  \mbox{}
+  \hrule
+  \caption{String-carrying shifts for: $(a^* \cdot a^*)$ with string \texttt{aa}}
+  \label{StringShiftsExample3}
+\end{figure}
 
+\FloatBarrier
 \subsection{String-Carrying Marks - Lexer **so far**}
-
-% end of shifts 
+To be Added Later.
 \section{Future Work}
-*** from previous report ***
 
 This project focuses on implementing and validating a correct and efficient marked regular expression matcher under POSIX disambiguation. Several directions remain open and are planned for the next stages of the PhD:
 

@@ -9,6 +9,7 @@ case class CHAR(c: Char) extends Rexp
 case class ALT(r1: Rexp, r2: Rexp) extends Rexp
 case class SEQ(r1: Rexp, r2: Rexp) extends Rexp
 case class STAR(r: Rexp) extends Rexp
+case class NTIMES(r:Rexp , n:Int) extends Rexp
 
 def charlist2rexp(s : List[Char]): Rexp = s match {
   case Nil => ONE
@@ -33,6 +34,7 @@ def nullable(r: Rexp) : Boolean = r match {
   case ALT(r1, r2) => nullable(r1) || nullable(r2)
   case SEQ(r1, r2) => nullable(r1) && nullable(r2)
   case STAR(_) => true
+  case NTIMES(r,n) => if (n==0) true else nullable(r)
 }
 
 type Marks = List[String]
@@ -82,8 +84,8 @@ def matcher(r: Rexp, s: String) : Boolean = {
 @main
 def test1() = {
   println("=====Test====")
-  val r = %("aa") ~ %(%("a"))
-  val s = "aaaaaa"
+  val r = %("a") 
+  val s = "aaa"
   println(r)
   println(s)
   println(s"res: ${matcher(r, s)}")

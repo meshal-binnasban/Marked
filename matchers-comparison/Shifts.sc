@@ -32,12 +32,6 @@ def shifts(ms: Marks, r: Rexp) : Marks = r match {
               else{ (shifts(ms1,NTIMES(r,n-1))   )}
             }
 
-     /*????if((ms.exists(_ == "") && n != 0) && !nullable(r)){ 
-          Nil
-          } else{ */      
-     //??case NTIMES(r,n) if n < 0 => Nil
-
-
 }
   
 
