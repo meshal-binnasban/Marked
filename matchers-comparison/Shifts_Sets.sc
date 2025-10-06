@@ -2,12 +2,17 @@ import scala.language.implicitConversions
 import $file.rexp, rexp._
 
 type Marks = Set[String]
+type MarksPosition = Set[Int]
+
+var S: String = "" 
 
 // shifts function
-def shifts(ms: Marks, r: Rexp): Marks = r match {
-  case ZERO => Set()
-  case ONE  => Set()
-  case CHAR(c) => for (m <- ms; if m != "" && m.head == c) yield m.tail
+def shifts(ms: MarksPosition, r: Rexp): MarksPosition = r match {
+  case ZERO => Set.empty[Int]
+  case ONE  => Set.empty[Int]
+  case CHAR(c) =>// for (m <- ms; if m != "" && m.head == c) yield m.tail
+                    val len = S.length
+                    for (p <- ms  if p < len  && S.charAt(p) == c) yield p + 1
   case ALT(r1, r2) => shifts(ms, r1) ++ shifts(ms, r2)
   case SEQ(r1, r2) => {
     val ms1 = shifts(ms, r1)
@@ -35,10 +40,16 @@ def shifts(ms: Marks, r: Rexp): Marks = r match {
 
 // the main matching function 
 def matcher(r: Rexp, s: String): Boolean =
+  S=s
   if (s == "") nullable(r)
-  else shifts(Set(s), r).contains("")
+  else shifts(Set(0), r).contains(S.length)
+  /* if (s == "") nullable(r)
+  else shifts(Set(s), r).contains("") */
 
-def mat(r: Rexp, s: String): Marks = shifts(Set(s), r)
+def mat(r: Rexp, s: String): MarksPosition =  
+  S = s
+  shifts(Set(0), r)
+  //shifts(Set(s), r)
 
 
 @main
@@ -56,10 +67,10 @@ def test1() = {
 }
 
 @main
-def test3() = {
+def test2() = {
   println("=====Test====")
   val r = %( %( "a" ) | %( "aa" ) | %( "aaa" ) | %( "aaaa" ) | %( "aaaaa" ) )
-  val s = "a" * 1000
+  val s = "a" * 700
   println("=string=")
   println(s)
   println(matcher(r,s))

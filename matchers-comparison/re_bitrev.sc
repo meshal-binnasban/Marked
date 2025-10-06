@@ -132,7 +132,10 @@ def blex_simp(r: ARexp, s: List[Char]) : Bits = s match {
 def blexer_simp(r: Rexp, s: String) : Val = 
   decode(r, blex_simp(internalise(r), s.toList).reverse)
 
-
+def matcher(r: Rexp, s: String): Boolean= s.toList match{
+  case Nil => nullable(r)
+  case c::cs => bnullable(bders_simp(internalise(r),s.toList))
+}
 
 @main
 def test1() = {
@@ -152,7 +155,7 @@ def testExample() = {
 
   for (i <- 0 to 10_000 by 100) {
     val s = "a" * i  //+ "b"         
-    println(s"i= $i  bsimp= ${time_needed(10, blexer_simp(r,s)) }")
+    println(s"i= $i  bsimp= ${time_needed(10, matcher(r,s)) }")
   }
 
 }

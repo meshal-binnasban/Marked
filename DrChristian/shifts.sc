@@ -11,6 +11,7 @@ case class CHAR(c: Char) extends Rexp
 case class ALT(r1: Rexp, r2: Rexp) extends Rexp
 case class SEQ(r1: Rexp, r2: Rexp) extends Rexp
 case class STAR(r: Rexp) extends Rexp
+case class NTIMES(r: Rexp, n: Int) extends Rexp
 case class AND(r1: Rexp, r2: Rexp) extends Rexp
 
 def charlist2rexp(s : List[Char]): Rexp = s match {
@@ -36,6 +37,7 @@ def nullable(r: Rexp) : Boolean = r match {
   case ALT(r1, r2) => nullable(r1) || nullable(r2)
   case SEQ(r1, r2) => nullable(r1) && nullable(r2)
   case STAR(_) => true
+  case NTIMES(r,n) => if n == 0 then true else nullable(r)
   case AND(r1, r2) => nullable(r1) && nullable(r2)
 }
 
@@ -59,9 +61,12 @@ def shifts(ms: Marks, r: Rexp) : Marks =
       }
       case STAR(r) => {
         val ms1 = shifts(ms, r)
+        println(s"ms in star=$ms1")
         if(ms1.isEmpty) Nil
         else{
-        ( ms1 ::: shifts(ms1, STAR(r)) ) 
+        val msr= ( ms1 ::: shifts(ms1, STAR(r)) )
+        println(s"ms returned= $msr")
+        msr
         }
       }
       case NTIMES(r,n) if n == 0 => ms
@@ -89,7 +94,7 @@ extension (ms: Marks)
 def matcher(r: Rexp, s: String) : Boolean = {
   if (s == "") nullable(r)
   else 
-    //println(s"List Marks = ${shifts(List(s), r)}") 
+    println(s"List Marks = ${shifts(List(s), r)}") 
     shifts(List(s), r).exists(_ == "")
 }
 
@@ -121,5 +126,17 @@ def test2() = {
  // println(s"Derivatives: ${dResult}")
   //if(sResult != dResult) println("Mismatch!") else println("Match!")
 
+
+}
+
+@main
+def test3() = {
+  println("=====Test====")
+  val r= (%("a") ~ "a") ~ "a"
+  val s = "aaa" 
+  println(s"Regex:\n${(r)}\n")
+  println(s"=string=\n$s")
+  val sResult=matcher(r, s)
+  println(s"Shifts: ${sResult}")
   
 }

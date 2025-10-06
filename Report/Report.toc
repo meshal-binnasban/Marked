@@ -1,11 +1,15 @@
 \contentsline {section}{\numberline {1}Introduction}{4}{}%
-\contentsline {section}{\numberline {2}Derivatives}{4}{}%
-\contentsline {subsection}{\numberline {2.1}Derivative Extension}{5}{}%
-\contentsline {subsection}{\numberline {2.2}Size Explosion.}{8}{}%
-\contentsline {section}{\numberline {3}Marked Approach}{9}{}%
-\contentsline {subsection}{\numberline {3.1}Motivation for a Marked Approach}{10}{}%
-\contentsline {subsection}{\numberline {3.2}Versions and Implementation}{10}{}%
-\contentsline {subsubsection}{\numberline {3.2.1}Bit-Annotated POINT, version 1}{13}{}%
-\contentsline {subsubsection}{\numberline {3.2.2}Bit-Annotated POINT, version 2}{17}{}%
-\contentsline {subsubsection}{\numberline {3.2.3}Input-Carrying Marks}{17}{}%
-\contentsline {section}{\numberline {4}Future Work}{17}{}%
+\contentsline {section}{\numberline {2}Background}{4}{}%
+\contentsline {subsection}{\numberline {2.1}Derivatives}{5}{}%
+\contentsline {subsubsection}{\numberline {2.1.1}Size Explosion.}{8}{}%
+\contentsline {subsubsection}{\numberline {2.1.2}Derivative Extension}{10}{}%
+\contentsline {subsection}{\numberline {2.2}Marked Approach}{14}{}%
+\contentsline {subsubsection}{\numberline {2.2.1}Motivation for a Marked Approach}{15}{}%
+\contentsline {subsubsection}{\numberline {2.2.2}Scala Implementation of Fischer’s Marked Approach}{16}{}%
+\contentsline {section}{\numberline {3}Our Approach}{19}{}%
+\contentsline {subsection}{\numberline {3.1}Bit-Annotated, version 1}{19}{}%
+\contentsline {subsection}{\numberline {3.2}Bit-Annotated, version 2}{24}{}%
+\contentsline {subsection}{\numberline {3.3}String-Carrying Marks - Matcher}{24}{}%
+\contentsline {subsection}{\numberline {3.4}String-Carrying Marks - Lexer **so far**}{30}{}%
+\contentsline {section}{\numberline {4}Future Work}{30}{}%
+\contentsline {section}{References}{32}{}%

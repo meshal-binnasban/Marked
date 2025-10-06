@@ -68,7 +68,11 @@ def shifts(ms: Marks, r: Rexp): Marks =
       val ms1 = shifts((ms<:+>Nx), r).reshuffle
       if(ms1.isEmpty) Nil 
       else{
-           ( (ms1 <:+> En) ::: ms1.flatMap( m=> shifts(List(m), STAR(r)))   )
+        /* val msStar=( (ms1 <:+> En) ::: ms1.flatMap( m=> shifts(List(m), STAR(r)))   )
+        println(s"Star ms= $msStar")
+        List(msStar.head) */
+        
+        ( (ms1 <:+> En) ::: ms1.flatMap( m=> shifts(List(m), STAR(r)))   )
           }
   
   case NTIMES(r,n) if n == 0 => (ms <:+> EnT)
@@ -123,9 +127,9 @@ extension (ms: List[Mark])
 def matcher(r: Rexp, s: String) : Boolean =
   val im = Mark(bits = List(), str = s.toList)
   val marks = shifts(List(im), r)
-  //println(s"-------------End of 1 matcher call-----------\n")
-  //marks.foreach(m => println(s"-$m") )
-  //println("------------------------")     
+  println(s"-------------End of 1 matcher call-----------\n")
+  marks.foreach(m => println(s"-$m") )
+  println("------------------------")     
   marks.exists(_.str == Nil)
 
 def lex(r: Rexp, s: String): Option[Bits] =
@@ -381,7 +385,7 @@ def test18() = {
 def test19() = {
   println("=====Test====")
   val br2= ( %( %("a") | "ab"))
-  val s = "aabaab"
+  val s = "aab"
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 
@@ -447,8 +451,8 @@ def test23() = {
 @main
 def test24() = {
   println("=====Test====")
-  val br2=  %( %("a") ) //~ "b"
-  val s = "a" * 20 //+ "b" //400
+  val br2= %("a") ~ %( "a" ) //~ "b"
+  val s = "a" * 4 //+ "b" //400
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 

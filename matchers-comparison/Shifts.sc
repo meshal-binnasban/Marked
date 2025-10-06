@@ -41,7 +41,7 @@ def matcher(r: Rexp, s: String) : Boolean = {
   else
     {
       val ms=  shifts(List(s), r)
-      println(ms)
+      //println(ms)
       ms.exists(_ == "")
     }
 }

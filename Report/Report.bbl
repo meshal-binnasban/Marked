@@ -1,4 +1,4 @@
-\begin{thebibliography}{1}
+\begin{thebibliography}{10}
 
 \bibitem{Antimirov1996}
 V.~Antimirov.
@@ -29,6 +29,11 @@ M.~Might, D.~Darais, and D.~Spiewak.
 T.~Nipkow and D.~Traytel.
 \newblock Unified decision procedures for regular expression equivalence.
 \newblock In G.~Klein and R.~Gamboa, editors, {\em Interactive Theorem Proving}, pages 450--466, Cham, 2014. Springer International Publishing.
+
+\bibitem{OkuiSuzuki2013}
+S.~Okui and T.~Suzuki.
+\newblock Disambiguation in regular expression matching via position automata with augmented transitions.
+\newblock Technical Report Technical Report 2013-002, The University of Aizu, Language Processing Systems Laboratory, June 2013.
 
 \bibitem{Owens2009}
 S.~Owens, J.~Reppy, and A.~Turon.

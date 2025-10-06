@@ -7,6 +7,7 @@ import $file.Derivatives
 import $file.Play
 import $file.Shifts
 import $file.Shifts_Sets
+import $file.re_bitrev, re_bitrev as DerivSimp
 
 import scala.language.implicitConversions
 
@@ -224,7 +225,7 @@ def testingGraph() = {
 
   for (i <- 0 to 10_00 by 100) {
     val s = "a" * i  //+ "b"         
-    println(s"i= $i  bsimp= ${time_needed(10, blexer_simp(r,s))}")
+    println(s"i= $i  bsimp= ${time_needed(10, DerivSimp.blexer_simp(r,s))}")
   }
   
   for (i <- 0 to 10_00 by 100) {
@@ -243,6 +244,25 @@ def testingGraph() = {
   }
 
 }
+
+@main
+def testingShifts() = {
+  val r = %( %("a") | %("aa") | %("aaa") | %("aaaa") | %("aaaaa") ) 
+
+  /* for (i <- 0 to 10_00 by 100) {
+    val s = "a" * i  //+ "b"         
+    println(s"i= $i  Shifts= ${time_needed(1, Shifts.matcher(r,s))}")
+  } */
+
+  for (i <- 0 to 10_00 by 100) {
+    val s = "a" * i  //+ "b"         
+    println(s"i= $i  Shifts Sets= ${time_needed(1, Shifts_Sets.matcher(r,s))}")
+  }
+
+}
+
+
+
 
 
 @main

@@ -5,71 +5,17 @@
 
 \pgfplotsset{compat=1.15}
 
-
 %% DATA for the graphs: first x coordinate, second y coordinate
-\begin{filecontents}{re-python2.data}
-1 0.033
-5 0.036
-10 0.034
-15 0.036
-18 0.059
-19 0.084
-20 0.141
-21 0.248
-22 0.485
-23 0.878
-24 1.71
-25 3.40
-26 7.08
-27 14.12
-28 26.69
-\end{filecontents}
-
-\begin{filecontents}{re-java.data}
-5  0.00298
-10  0.00418
-15  0.00996
-16  0.01710
-17  0.03492
-18  0.03303
-19  0.05084
-20  0.10177
-21  0.19960
-22  0.41159
-23  0.82234
-24  1.70251
-25  3.36112
-26  6.63998
-27  13.35120
-28  29.81185
-\end{filecontents}
-
-\begin{filecontents}{re3a.data}
-1 0.00003
-500001 0.22527
-1000001 0.62752
-1500001 0.88485
-2000001 1.39815
-2500001 1.68619
-3000001 1.94957
-3500001 2.15878
-4000001 2.59918
-4500001 5.90679
-5000001 13.11295
-5500001 19.15376
-6000001 40.16373
-\end{filecontents}
-
 
 
 \begin{document}
 
-\section*{Benchmarks for $(a^*)^* b$ and $a^{?\{n\}} a^{\{n\}}$}
+\section*{Derivatives vs Marks runtimes}
 
+\begin{figure}[ht]
 \mbox{}\bigskip
-
-\begin{center}
-$(a^*)^* \cdot b$ and strings $\underbrace{a\ldots a}_{n}$\medskip\\
+%\begin{center}
+$((a)^* + (aa)^* + (aaa)^* + (aaaa)^* + (aaaaa)^* )^*$ and strings $\underbrace{a\ldots a}_{n}$\medskip\\
 \begin{tabular}{@{}cc@{}}
 \raisebox{5mm}{
 \begin{tikzpicture}
@@ -77,92 +23,92 @@ $(a^*)^* \cdot b$ and strings $\underbrace{a\ldots a}_{n}$\medskip\\
     xlabel={$n$},
     x label style={at={(1.05,0.0)}},
     ylabel={time in secs},
-    enlargelimits=false,
-    xtick={0,5,...,30},
-    xmax=33,
-    ymax=35,
-    ytick={0,5,...,30},
-    scaled ticks=false,
+    enlargelimits=true,
+    xtick={0,1000,...,10000},
+    %xtick distance=5000,
+    xmax=10000,
+    ymax=26,
+    %ytick distance=1,
+    ytick={0,1,...,26},
+    scaled ticks=true,
     axis lines=left,
-    width=5cm,
-    height=5cm, 
-    legend entries={Java, Python},  
+    width=10cm,
+    height=10cm, 
+    legend entries={Marks,Derivatives},  
     legend pos=north west,
     legend cell align=left]
-\addplot[blue,mark=*, mark options={fill=white}] table {re-python2.data};
-\addplot[cyan,mark=*, mark options={fill=white}] table {re-java.data};
+\addplot[blue,mark=*, mark options={fill=white}] table {play.data};
+\addplot[cyan,mark=*, mark options={fill=white}] table {DerivSimp.data};
 \end{axis}
 \end{tikzpicture}}
-&
-\begin{tikzpicture}
-  \begin{axis}[
-    xlabel={$n$},
-    x label style={at={(1.1,0.0)}},
-    ylabel={time in secs},
-    enlargelimits=false,
-    ymax=35,
-    ytick={0,5,...,30},
-    axis lines=left,
-    width=6.5cm,
-    height=5cm,
-    legend entries={Derivative matcher},  
-    legend pos=north east,
-    legend cell align=left]
-\addplot[black,mark=square*,mark options={fill=white}] table {re3a.data};
-\end{axis}
-\end{tikzpicture}
-\end{tabular}
-\end{center}\bigskip
 
-\begin{center}
-$a^{?\{n\}} \cdot a^{\{n\}}$ and strings $\underbrace{a\ldots a}_{n}$\medskip\\
-\begin{tabular}{@{}cc@{}}
+\end{tabular} 
+\caption{Runtimes of Derivatives vs Marks } \label{BitcodedDerivative}
+\end{figure}
+%\end{center}
+
+
+\begin{figure}[ht]
+\mbox{}\bigskip
+
+\begin{tabular}{lc}
+
 \begin{tikzpicture}
 \begin{axis}[
     xlabel={$n$},
     x label style={at={(1.05,0.0)}},
-    ylabel={\small time in secs},
-    enlargelimits=false,
-    xtick={0,5,...,30},
-    xmax=33,
-    ymax=35,
-    ytick={0,5,...,30},
+    ylabel={time in secs},
+    enlargelimits=true,
+    xtick={0,2500,...,10000},
+    %xtick distance=2000,
+    xmax=10000,
+    ymax=0.0035,
+   % ytick={0,0.0005,...,0.0035},
+    ytick={0,0.001,...,0.0035},
     scaled ticks=false,
     axis lines=left,
-    width=5cm,
-    height=5cm, 
-    legend entries={Python,Ruby},  
+    width=6cm,
+    height=6cm, 
+    legend entries={Marks},  
     legend pos=north west,
     legend cell align=left]
-\addplot[blue,mark=*, mark options={fill=white}] table {re-python.data};
-\addplot[brown,mark=triangle*, mark options={fill=white}] table {re-ruby.data};  
+\addplot[blue,mark=*, mark options={fill=white}] table {play.data};
 \end{axis}
 \end{tikzpicture}
 &
+
 \begin{tikzpicture}
-  \begin{axis}[
+\begin{axis}[
     xlabel={$n$},
-    x label style={at={(1.1,0.05)}},
-    ylabel={\small time in secs},
-    enlargelimits=false,
-    xtick={0,2500,...,11000},
-    xmax=12000,
-    ymax=35,
-    ytick={0,5,...,30},
+    x label style={at={(1.05,0.0)}},
+    ylabel={time in secs},
+    enlargelimits=true,
+    xtick={0,2500,...,10000},
+    %xtick distance=1000,
+    xmax=10000,
+    ymax=22,
+    %ytick distance=1,
+    ytick={0,2,...,22},
     scaled ticks=false,
     axis lines=left,
-    width=6.5cm,
-    height=5cm,
-    legend entries={Derivative matcher},  
-    legend pos=north east,
+    width=6cm,
+    height=6cm, 
+    legend entries={Derivatives},  
+    legend pos=north west,
     legend cell align=left]
-\addplot[black,mark=square*,mark options={fill=white}] table {re3.data};
+\addplot[cyan,mark=*, mark options={fill=white}] table {DerivSimp.data};
 \end{axis}
 \end{tikzpicture}
-\end{tabular}
-\end{center}
+\\
 
+\end{tabular} 
 
+    \mbox{}
+    \hrule
+\caption{Runtime comparison of derivative-based and mark-based regular expression matchers for $((a)^* + (aa)^* + (aaa)^* + (aaaa)^* + \dots )^*$ with input strings of length $n$.}
+
+%\caption{Runtimes of Derivatives vs Marks } \label{RuntimesGraph1}
+\end{figure}
 
 \end{document}
 
