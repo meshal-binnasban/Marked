@@ -1,3 +1,20 @@
+error id: file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/DrChristian/shifts08.sc:`<none>`.
+file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/DrChristian/shifts08.sc
+empty definition using pc, found symbol in pc: `<none>`.
+empty definition using semanticdb
+empty definition using fallback
+non-local guesses:
+	 -scala/collection/parallel/CollectionConverters.enumerate.
+	 -rexp/enumerate.
+	 -$file/enumerate.
+	 -enumerate/enumerate.
+	 -regenerate/enumerate.
+	 -enumerate.
+	 -scala/Predef.enumerate.
+offset: 460
+uri: file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/DrChristian/shifts08.sc
+text:
+```scala
 // simple test using SETS instead of list of marks
 //
 // => 26 mins (for 100_000_000)
@@ -6,11 +23,13 @@
 // 53 mins vs 85 mins for 20 strings and 100_000_000
 
 import scala.language.implicitConversions
+import scala.collection.parallel.CollectionConverters._
+
 /* //> using file rexp.sc 
 //> using file enumerate.sc
 //> using file regenerate.sc */
 import $file.rexp, rexp._
-import $file.enumerate, enumerate._
+import $file.enumerate, enume@@rate._
 import $file.regenerate, regenerate._
 
 type Marks = Set[(Int, Int)]
@@ -23,6 +42,9 @@ def advance(ms: Marks, subs: Set[String], s: String) : Marks = {
                 if s.substring(m, m + ss.length) == ss) yield (n, m + ss.length))
     if (ms1 == Set()) Set() else ms1 ++ advance(ms1, subs, s)            
 }
+
+
+
 
 // shifts function 
 def shifts(ms: Marks, s: String, r: Rexp) : Marks = r match {
@@ -41,11 +63,8 @@ def shifts(ms: Marks, s: String, r: Rexp) : Marks = r match {
   }
   case STAR(r) => {
     val ms1 = shifts(snds(ms), s, r)
-    println(s"ms1=$ms1")
     val subs = ms1.map((n, m) => s.substring(n, m))
-    val v= ms1++advance(ms1, subs, s)
-    println(s"v=$v,advance=${advance(ms1, subs, s)}, subs=$subs")
-    v
+    ms1 ++ advance(ms1, subs, s)
   }
   case NTIMES(r, n) =>
     if (n == 0) Set()               // or return ms?
@@ -59,17 +78,16 @@ def shifts(ms: Marks, s: String, r: Rexp) : Marks = r match {
     }
 }
 
+
+    
+
 // the main matching function 
 def mat(r: Rexp, s: String) : Marks = 
   shifts(Set((0, 0)), s, r)
 
 def matcher(r: Rexp, s: String) : Boolean = {
   if (s == "") nullable(r)
-  else
-    val ms=mat(r,s)
-    println(s"ms=$ms ,\n s.length=${s.length}")
-
-    mat(r, s).exists(_._2 == s.length)
+  else mat(r, s).exists(_._2 == s.length)
 }
 
 
@@ -77,14 +95,14 @@ def matcher(r: Rexp, s: String) : Boolean = {
 @main
 def testall() = {
   given rexp_cdata : CDATA[Rexp] = List(
-        (0, _ => ONE),
-        (0, _ => ZERO),
-        (0, _ => CHAR('a')),
-        (0, _ => CHAR('b')),
-        (0, _ => CHAR('c')),
-        (1, cs => STAR(cs(0))),
-        (2, cs => ALT(cs(0), cs(1))),
-        (2, cs => SEQ(cs(0), cs(1)))
+        (0, _ => ONE, "ONE"),
+        (0, _ => ZERO, "ZERO"),
+        (0, _ => CHAR('a'), "a"),
+        (0, _ => CHAR('b'), "b"),
+        (0, _ => CHAR('c'), "c"),
+        (1, cs => STAR(cs(0)), "STAR"),
+        (2, cs => ALT(cs(0), cs(1)), "ALT"),
+        (2, cs => SEQ(cs(0), cs(1)), "SEQ")
       )
   val alphabet = LazyList('a', 'b')
 
@@ -141,22 +159,9 @@ def test3() = {
     println(s"$n, $s: ${matcher(reg, s)}")
   }
 }
+```
 
-@main
-def test4() = {
-  val reg = (%("a"|"b") )
-    val s = "ab"
-    println(s" $s: ${matcher(reg, s)}")
-    println(s"$s: ${matcher(reg, s)}  ${mat(reg, s)} ")
 
-    println(s"mkalt=${mkalts(3)}")
-    println(s"snd=${snds(Set((0,1), (0,3)))}")
-}
+#### Short summary: 
 
-@main
-def test5() = {
-  val reg = ("a" ~ "b" )
-    val s = "ab"
-    println(s" $s: ${matcher(reg, s)}")
-    println(s"$s: ${matcher(reg, s)}  ${mat(reg, s)} ")
-}
+empty definition using pc, found symbol in pc: `<none>`.

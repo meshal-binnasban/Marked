@@ -140,3 +140,31 @@ def test3() = {
   println(s"Shifts: ${sResult}")
   
 }
+
+
+@main
+def testall() = {
+  given rexp_cdata : CDATA[Rexp] = List(
+        (0, _ => ONE),
+        (0, _ => ZERO),
+        (0, _ => CHAR('a')),
+        (0, _ => CHAR('b')),
+        (0, _ => CHAR('c')),
+        (1, cs => STAR(cs(0))),
+        (2, cs => ALT(cs(0), cs(1))),
+        (2, cs => SEQ(cs(0), cs(1)))
+      )
+  val alphabet = LazyList('a', 'b')
+
+  for (i <- 0L to 100_000_000L) {
+    val r = decode(i)
+    if (i % 100_000 == 0) { print("*") }
+    for (s <- (generate_up_to(alphabet)(20)(r).take(19)) if s != "") {
+      val res = matcher(r, s)
+      if (!res) {
+        println(s"$r and $s")
+        System.exit(1)
+      }
+    }
+  }
+}

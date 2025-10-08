@@ -64,14 +64,11 @@
 \begin{abstract}
 This is the nine-month progress report for my PhD at King’s College London. It summarises the motivation,
 challenges, and progress made in developing a regular expression matcher based on marks with the goal
-of POSIX value extraction. The report first reviews regular expression matching using the derivative-based approach to regular expression
-matching and a possible correspondence between both approaches —a connection we aim to investigate in 
-the future. It also reviews the marked algorithms of Fischer et al.\ and Asperti et al., which provide 
-matchers but do not support value extraction, which we are after. Our work developed several versions 
-of the marked algorithm in Scala aimed at extracting POSIX values. During this process, challenges in
-handling certain cases led us to refine the algorithm through successive versions.  
-Future directions include extending the matcher to additional operators, refining disambiguation for 
-repetitions, and formally proving correctness.  
+of POSIX value extraction. The report first reviews regular expression matching using derivatives, then 
+reviews existing regular expression matchers based on marks, which currently only provide matching 
+functionality but do not support POSIX value extraction, which we are especially interested in. Our work
+developed several versions of the marked algorithm in Scala. we also started formally proving the
+correctness of one of our versions.
 \end{abstract}
 
 
@@ -81,18 +78,23 @@ repetitions, and formally proving correctness.
 This research investigates the marked approach--based method for regular expression 
 matching, with the goal of extending it to provide POSIX value extraction.
 
-Derivative-based methods, though elegant, suffer from severe size explosion and remain sensitive to syntactic form.  
-Sulzmann and Lu~\cite{Sulzmann2014} extended derivatives with bitcodes to record lexing information, but the size problem persists.  
-The marked approach, described in the works of Fischer et al.~\cite{Fischer2010} and Asperti et al.~\cite{Asperti2010}, offers an alternative by propagating marks directly through the expression.  
-These works provide matchers only, without value extraction.  
+Derivative-based methods, though elegant, suffer from severe size explosion and remain 
+sensitive to syntactic form. Sulzmann and Lu~\cite{Sulzmann2014} extended derivatives with 
+bitcodes to record lexing information, but the size problem persists. The marked approach, 
+described in the works of Fischer et al.~\cite{Fischer2010} and Asperti et al.~\cite{Asperti2010}, 
+offers an alternative by propagating marks directly through the expression. These works provide 
+matchers only, without value extraction.  
 
 Our work explores how the marked approach can be extended to recover POSIX values.  
-We have implemented several versions of the marked algorithm in Scala, making use of bitcoded annotations to track lexing values.  
-Challenges in handling constructs such as sequences and repetitions required refining the algorithm through successive versions, each improving on the last.  
-Large-scale testing against a derivative-based reference matcher has been used to confirm correctness and uncover edge cases.  
+We have implemented several versions of the marked algorithm in Scala, making use of bitcoded
+annotations to track lexing values. Challenges in handling constructs such as sequences and repetitions
+required refining the algorithm through successive versions, each improving on the last.  
+Large-scale testing against a derivative-based reference matcher has been used to confirm correctness 
+and uncover edge cases.  
 
-The long-term aim of the project is to establish a marked approach--based matcher that consistently yields the POSIX value for all regular expressions, and to formally prove its correctness.  
-Future work also includes extending the matcher to additional operators such as intersection and negation.  
+The long-term aim of the project is to establish a marked approach--based matcher that consistently
+yields the POSIX value for all regular expressions, and to formally prove its correctness. Future work
+also includes extending the matcher to additional operators such as intersection and negation.  
 
 \newpage
 
@@ -103,16 +105,16 @@ Future work also includes extending the matcher to additional operators such as 
 \section{Introduction}
 
 The notion of derivatives in regular expressions is well established but has gained renewed 
-attention in the last decade, for example in the work of Owens~\cite{Owens2009} and Might~\cite{Might2011}.
-Their simplicity and compatibility with functional programming have encouraged further studies, 
-for example the work of Sulzmann and Lu~\cite{Sulzmann2014}.  
+attention in the last decade, for example in the work of Owens~\cite{Owens2009} and 
+Might~\cite{Might2011}. Their simplicity and compatibility with functional programming have 
+encouraged further studies, for example the work of Sulzmann and Lu~\cite{Sulzmann2014}.  
 However, derivatives suffer from “growth” issues, since each step of taking the derivative 
 can increase the size of subexpressions. This means the algorithm has to traverse larger and 
 larger regular expressions, which results in a slower algorithm.  
 
-In contrast, the approach based on marks leaves regular expressions unchanged during matching but moves 
-annotations through them (the marks). At present, only matcher-based algorithms using this approach exist,
- while our work aims to extend them to provide POSIX value extraction. 
+In contrast, the approach based on marks leaves regular expressions unchanged during matching
+ but moves annotations through them (the marks). At present, only matcher-based algorithms 
+ using this approach exist,while our work aims to extend them to provide POSIX value extraction. 
 
 This report first reviews Brzozowski's derivatives and the bitcoded variant of 
 Sulzmann and Lu~\cite{Sulzmann2014}, followed by background on the regular 
@@ -126,33 +128,20 @@ on marks developed during the first nine months.
 Regular expressions are a way to describe languages of words over an alphabet.
 They provide a declarative way to specify sets of words. Each regular
 expression $r$ is associated with a language $L(r)$, which is the set of words
-that match $r$. The regular expressions we consider are the basic ones with bounded repetition (Figure~\ref{basicRegex}).
-%Regular Expressions
-\begin{figure}[ht]
-  \begin{center}
+that match $r$. The regular expressions we consider are the standard regular 
+expression constructors, including bounded repetitions, namely:
 \[
-\begin{array}{rcl}
-r &::=& \ZERO  \\
-  &\mid& \ONE \\
-  &\mid& c \quad\text{(character $c$ from the alphabet)} \\
-  &\mid& r_1 + r_2 \\
-  &\mid& r_1 \cdot r_2  \\
-  &\mid& r^* \\
-  &\mid& r^n 
-\end{array}
+r ::= \ZERO \;\mid\; \ONE \;\mid\; c \;\mid\; r_1 + r_2 \;\mid\; r_1 \cdot r_2 \;\mid\; 
+r^* \;\mid\; r^{\{n\}}
 \]
-  \rule{\linewidth}{0.4pt}
-  \caption{Basic regular expressions}\label{basicRegex}
-  \end{center}
 
-\end{figure}
-We will use \ZERO\ for the regular expression of the empty language, \ONE\ for
-the regular expression of the empty string, and $c$ for the regular expression
-of a character from the alphabet. The operator $+$ is for alternation between
-$r_1$ and $r_2$, while the dot~$\cdot$ is for concatenation. The Kleene star
+We will use \ZERO\ for the regular expression which cannot match any string, \ONE\ for
+the regular expression which can match the empty string, and $c$ for the regular expression
+which can match a character from the alphabet. The operator $+$ is for alternation between
+$r_1$ and $r_2$, while the dot~$\cdot$ is for concatenation or sequencing. The Kleene star
 $r^\ast$ is for arbitrary repetition of $r$, and the power $r^n$ is for exactly
-$n$ repetitions of $r$.
-The meaning of these regular expressions is given by the language function $L$ (Figure~\ref{lFunction}).
+$n$ repetitions of $r$. The meaning of these regular expressions is given by the language function
+ $L$ (Figure~\ref{lFunction}).
 \begin{figure}[ht]
 \begin{center}
 %Language function $L$%
@@ -169,7 +158,8 @@ The meaning of these regular expressions is given by the language function $L$ (
   \renewcommand{\arraystretch}{1.0}
   \mbox{}
      \rule{\linewidth}{0.4pt}
-  \caption{the language function $L$}\label{lFunction}
+  \caption{the function $L$ which gives the meaning to the regular expression, i.e. associated
+   set of strings to the language of the regular expression}\label{lFunction}
   \end{center}
 \end{figure}
 For example, if $r = a + b$, then
@@ -177,24 +167,27 @@ For example, if $r = a + b$, then
 L(r) = L(a) \cup L(b) = \{a\} \cup \{b\} = \{a, b\}.
 \]
 \noindent Similarly, $L(a \cdot b) = \{ab\}$, and $L(a^*)$ is the set of all strings 
-consisting of zero or more $a$'s, including the empty string.
+consisting of zero or more $a$'s.
 
 \FloatBarrier
 \subsection{Derivatives}
 
-Brzozowski’s derivatives offer an elegant way for string matching. By successively taking the derivative of a regular
-expression with respect to each input character, one obtains a sequence of derivatives. If the final expression can match 
-the empty string, then the original input is accepted.
-To decide whether a string $a_1 a_2 \dots a_n$ is in the language of a regular expression $r$, we successively 
-compute derivatives:
+Brzozowski’s derivatives offer an elegant way for string matching 
+(Figure \ref{BrzozowskiDerivative}). What is beautiful about derivatives is that 
+they can be easily implemented in a functional programming language and are easy to 
+reason about in theorem provers. By successively taking the derivative of a regular 
+expression with respect to each input character, one obtains a sequence of derivatives. 
+If the final derivative can match the empty string, then the original input is accepted.
+For example, To decide whether a string $a_1 a_2 \dots a_n$ is matched by a regular 
+expression $r$, we successively compute derivatives:
 \[
 \begin{array}{rcl}
-r_0 = r,& r_1 = \der_{a_1}(r_0),& \dots, r_n = \der_{a_n}(r_{n-1}) .
+r_0 = r,& r_1 = \der_{a_1}(r_0),& r_2=\der_{a_2}(r_1) \dots, r_n = \der_{a_n}(r_{n-1}) .
 \end{array}
 \]
-The string matches $r$ if and only if the final expression $r_n$ accepts the empty string. Here $\der_a(r)$ stands for the derivative of $r$ with respect to the character
-$a$, as introduced by Brzozowski~\cite{Brzozowski1964} (Figure~\ref{BrzozowskiDerivative}).
-
+The string matches $r$ if and only if the final expression $r_n$ accepts the empty string,
+which can be easily checked by a separate function.
+ Here $\der_a(r)$ stands for the derivative of $r$ with respect to the character $a$.
 %Brzozowski’s Derivative
 \begin{figure}[ht]
   \begin{center}
@@ -212,7 +205,7 @@ $a$, as introduced by Brzozowski~\cite{Brzozowski1964} (Figure~\ref{BrzozowskiDe
     $\der_a(r_1 \cdot r_2)$      & \dn &
       $\der_a(r_1) \cdot r_2 \;+\;
         \begin{cases}
-          \der_a(r_2) & \text{if } \ONE \in L(r_1) \\
+          \der_a(r_2) & \text{if } \varepsilon \in L(r_1) \\
           \ZERO       & \text{otherwise}
         \end{cases}$ \\
     $\der_a(r^\ast)$             & \dn & $\der_a(r) \cdot r^\ast$
@@ -226,10 +219,12 @@ $a$, as introduced by Brzozowski~\cite{Brzozowski1964} (Figure~\ref{BrzozowskiDe
 \end{figure}
 
 
-To illustrate how derivatives can be used to match a regular expression against a string, consider the regular expression $( ab + ba )$. 
-The derivative can check the matching of the string \texttt{ba} by taking the derivative of the regular expression with respect to b,
-then a (see Figure~\ref{derivative}). Since the final derivative expression contains $\ONE$, it accepts the empty string. With no input
-characters remaining, this confirms that the string \texttt{ba} belongs to the language of the
+To illustrate how derivatives can be used to match a regular expression against a string, 
+consider the regular expression $( ab + ba )$.  The derivative can check the matching of the 
+string \texttt{ba} by taking the derivative of the regular expression with respect to b,
+then with respect to a (see Figure~\ref{derivative}). Since the final derivative expression 
+can match the empty string with no input characters remaining, this confirms that the string
+\texttt{ba} belongs to the language of the
 regular expression.
 
 
@@ -256,37 +251,39 @@ regular expression.
   \end{center}
 \end{figure}
 
-Some subexpressions that arise during the computation of derivatives may be
-redundant. For example, $\ZERO \cdot b$ expresses matching the empty language
-followed by $b$. Since $\ZERO$ is the empty language, no string can satisfy
-this, so $\ZERO \cdot b$ simplifies to $\ZERO$. Other simplification rules may also be applied. These include associativity
-$(r+s)+t \equiv r+(s+t)$, commutativity $r+s \equiv s+r$, and idempotence
-$r+r \equiv r$. Rules for the empty language and the empty string can also be
-applied, such as those mentioned earlier; e.g.\ $\ZERO \cdot r \equiv r \cdot
+Note however,some subexpressions that arise during the computation of derivatives
+may be redundant. For example, $\ZERO \cdot b$  cannot match any string, so 
+we colud simplify it to $\ZERO$ which can match the same strings, namely none.
+Other simplification rules may also be applied. These include associativity 
+$(r+s)+t \equiv r+(s+t)$, commutativity$r+s \equiv s+r$, and idempotence 
+$r+r \equiv r$. Rules for the \ZERO\ and \ONE\ can also be applied; e.g.\
+ $\ZERO \cdot r \equiv r \cdot
 \ZERO \equiv \ZERO$, $r+\ZERO \equiv r$, and $r \cdot \ONE \equiv \ONE \cdot r
 \equiv r$.  
 
 These simplifications preserve the language accepted by the regular expression
-while reducing the number of intermediate expressions. Such simplifications are
+while reducing overall size of the regular expression. Such simplifications are
 sometimes necessary in the derivative method in order to keep the size
-manageable.
+manageable but eventhough best effort still means that the size can explode.
 
 \FloatBarrier
 \subsubsection{Size Explosion.}  
 
-Although the construction of derivatives is elegant, as can be seen, it may
+Although the construction of derivatives is elegant, it may
 duplicate large parts of the expression as well as the sizes of the regular
-expressions in the intermediate steps, and it is highly sensitive to the
-syntactic form of the expression and to nesting. Sulzmann and
-Lu~\cite{Sulzmann2014} also note this problem, referring to it as size
-explosion.
+expressions in the intermediate steps (see Figure~\ref{BrzozowskiDerivative}; 
+the sequence case can create additional subexpressions, as can the star case).
+Sulzmann and Lu \cite{Sulzmann2014} also note this problem, describing it as the 
+well-known issue that the size and number of derivatives may explode.
 The size of derivatives can become very large even for simple expressions. 
 This happens because each derivative is usually more complicated than the
-original expression, and even when basic simplifications are applied,
-derivatives may reintroduce the same sublanguage in different syntactic forms
-(e.g.\ $a+aa$ versus $a \cdot (1+a)$), which simple rules and duplication
-removal do not recognise as equal. Consider the case of the regular expression
-$(a+aa)^*$. Each derivative step may introduce new structure, unfolding all
+original expression, and even when standard simplifications are applied,
+they may not simplify all duplications. Consider the case of the regular expression
+$(a+aa)^*$.
+%slight calculation of the example
+\[ \text{a+aa} \]
+
+Each derivative step may introduce new structure, unfolding all
 possible ways in which the $r^*$ expression can match the input. Even with
 basic simplifications, many of the resulting subexpressions still describe the
 same language but in different syntactic forms, and so the size continues to
@@ -297,37 +294,38 @@ expressions and helps to provide a finite bound on the number of intermediate
 expressions~\cite{Sulzmann2014,TanAndUrban2023}, but it does not completely
 solve the underlying problem. Even with aggressive simplifications---as in
 Sulzmann and Lu’s bitcoded approach and in the variant described by Tan and
-Urban---the resulting derivatives can still be structurally large even if
+Urban---the resulting derivatives can still be large even if
 finitely bounded. For example, expressions of the form
 \[
 ((a)^* + (aa)^* + (aaa)^* + \dots )^*
 \]
-cannot be collapsed by simplification, since the duplicates occur in different
-syntactic forms. Thus, even under aggressive simplification the size of
+cannot be simplified completely, since the duplicates occur in different
+levels of the dertivatives and different levels of sequences and alternatives.
+Thus, even under aggressive simplification the size of
 derivatives remains large and continues to grow across derivative steps.
 If we consider the expression
 \[
 ((a)^* + (aa)^* + (aaa)^* + (aaaa)^* + (aaaaa)^*)^*
 \]
-with a small input string of the form \texttt{a}$^n$, each derivative step
-introduces subexpressions that are copies of the original, as shown in Figure~\ref{derivativeStarsExample}.
+with a small input string of the form $ \underbrace{a \dots a}_n$, each derivative step
+introduces subexpressions that are copies of the original, as shown in 
+Figure~\ref{derivativeStarsExample}.
 \begin{figure}[ht]
   \begin{center}
     \[
     \begin{array}{rcl}
-      \der_a\, r          & =           &  \der_a\,( ((a)^* + (aa)^* + (aaa)^* + (aaaa)^* + (aaaaa)^* )^*) \\
-                          & =           & \der_a\, ((a)^* + (aa)^* + (aaa)^* + (aaaa)^* + (aaaaa)^* ) \cdot \, r \\  
-                          & =           & ((\der_a\, (a)^*) + (\der_a\, (aa)^*)+ \dots ) \cdot  r \\
-                          & =           & ((\der_a\, a \cdot (a)^*) + (\der_a\,aa \cdot (aa)^*)+ \dots ) \cdot  r \\
-                          & =           & ((\ONE \cdot (a)^*) + ((\ONE \cdot a) \cdot (aa)^*)+ \dots ) \cdot  r\\
-                          & =           & ((a)^* + (a \cdot (aa)^*)+ \dots ) \cdot  r \\\\
+      \der_a\, r          & = &  \der_a\,( ((a)^* + (aa)^* + (aaa)^* + (aaaa)^* + (aaaaa)^* )^*) \\
+                          & = & \der_a\, ((a)^* + (aa)^* + (aaa)^* + (aaaa)^* + (aaaaa)^* ) \cdot \, r \\  
+                          & = & ((\der_a\, (a)^*) + (\der_a\, (aa)^*)+ \dots ) \cdot  r \\
+                          & = & ((\der_a\, a \cdot (a)^*) + (\der_a\,aa \cdot (aa)^*)+ \dots ) \cdot  r \\
+                          & = & ((\ONE \cdot (a)^*) + ((\ONE \cdot a) \cdot (aa)^*)+ \dots ) \cdot  r\\
+                          & = & ((a)^* + (a \cdot (aa)^*)+ \dots ) \cdot  r \\\\
 
-      \der_a\, (\der_a\, r) & =           & \der_a\, ((a)^* + (a \cdot (aa)^*)+ \dots ) \cdot r + \der_a\,r \\
-                            & =           & (\ONE\ \cdot (a)^* + (\ONE\ \cdot (aa)^*)+ \dots ) \cdot r \,+ \\
-                            &             &  ((a)^* + (a \cdot (aa)^*)+ \dots ) \cdot  r \\
-                             
-                            & =           & ((a)^* + ((aa)^*)+ \dots ) \cdot r \,+ \\
-                            &             &  ((a)^* + (a \cdot (aa)^*)+ \dots ) \cdot  r \\\\ 
+      \der_a\, (\der_a\, r) & = & \der_a\, ((a)^* + (a \cdot (aa)^*)+ \dots ) \cdot r + \der_a\,r \\
+                            & = & (\ONE\ \cdot (a)^* + (\ONE\ \cdot (aa)^*)+ \dots ) \cdot r \,+ \\
+                            &   &  ((a)^* + (a \cdot (aa)^*)+ \dots ) \cdot  r \\ 
+                            & = & ((a)^* + ((aa)^*)+ \dots ) \cdot r \,+ \\
+                            &   &  ((a)^* + (a \cdot (aa)^*)+ \dots ) \cdot  r \\\\ 
                             
                         
      \der_a\,( \der_a\, (\der_a\, r)) & =           & \der_a\, (((a)^* + ((aa)^*)+ \dots ) \cdot r \,)+ \\
@@ -773,30 +771,38 @@ in Figures~\ref{finFunction} and \ref{nullableFunction}, as defined by Fischer e
 
 \FloatBarrier
 \section{Our Approach}
-We began our work by implementing the marked approach described by Fischer et al.~\cite{Fischer2010} in Scala. 
-This initial implementation of the algorithm provided only acceptance checking without any value construction.  
+We began our work by implementing the marked approach described by Fischer 
+et al.~\cite{Fischer2010} in Scala. This initial implementation of the algorithm
+included only acceptance checking without any value construction. Over the course
+of this work, we developed several versions of the algorithm, each addressing 
+specific challenges. The first version extended the marked approach with bit 
+annotations, producing values but not always the POSIX values. This happens in 
+cases where the marks are overwritten when a character is matched more than once.
 
-Over the course of this work, we developed several versions of the algorithm, each addressing specific challenges.  
-The first version extended the marked approach with bit annotations, producing values but not always the POSIX values. 
-This happens in cases where the marks gets overwritten when a character is matched more than once.
-
-The second version was developed to address two main issues we faced: the overwriting of marks and the absence of a mechanism to order them 
-so as to preserve the POSIX value. Initially, we modified the previous version to accumulate all possible paths to a match, retaining 
-every bit sequence that could lead to acceptance. Through reasoning and testing, we kept refining it to the point where we are fairly confident 
-that it can produce all possible values for a given string and regular expression, including the POSIX value.  
-One resulting difficulty was the proliferation of matches in the \STARText\ case, where every possible way of matching was generated.  
-Another difficulty, which also existed in the first version, was the absence of an ordering for marks during the shifting process.  
-We implemented an ordering after shifting to evaluate the results of the algorithm, following the work of Okui and Suzuki~\cite{OkuiSuzuki2013}, 
-though not inherently in the shifting process itself. This line of thought eventually led us to the final version of the algorithm, which uses 
-string-annotated marks, where marks carry the matched string along as they are shifted through the regular expression and then added bit annotation to the marks
-to record the choices made during matching.
+The second version was developed to address two main issues we faced: 
+the overwriting of marks and the absence of a mechanism to order them so as to 
+always produce the POSIX value. Initially, we modified the previous version to 
+accumulate all possible paths to a match, retaining every bitsequence that 
+could lead to acceptance. Through reasoning and testing, we kept refining it 
+to the point where we are fairly confident that it can produce all possible 
+values for a given string and regular expression, including the POSIX value.  
+One resulting difficulty was the proliferation of matches in the \Star\ case, 
+where every possible way of matching was generated. Another difficulty, which 
+also existed in the first version, was the absence of an ordering for marks 
+during the shifting process. We implemented an ordering after shifting to 
+evaluate the results of the algorithm, following the work of Okui and 
+Suzuki~\cite{OkuiSuzuki2013}, though not inherently in the shifting process 
+itself. This line of thought eventually led us to the final version of the 
+algorithm, which uses string-annotated marks, where marks carry the matched 
+string along as they are shifted through the regular expression and then added 
+bit annotation to the marks to record the choices made during matching.
 The following subsections describe these different versions.
 
 \FloatBarrier
 \subsection{Bit-Annotated, version 1}
 
-In this version, we extended the marked approach to include bitcodes that annotate the marks being 
-shifted through the regular expression. Inspired by Sulzmann and Lu~\cite{Sulzmann2014}, we introduced bitcodes in the form 
+In this version, we extended the marked approach to include bitcodes 
+that annotate the marks being shifted through the regular expression. Inspired by Sulzmann and Lu~\cite{Sulzmann2014}, we introduced bitcodes in the form 
 of lists attached to each mark, which are incrementally built as the marks are shifted.  
 This version produces a value, though not necessarily the POSIX value, because when a character is matched 
 more than once at the same point, the associated bit list may be overwritten.  
