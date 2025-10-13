@@ -7,12 +7,13 @@ type MarksPosition = Set[Int]
 var S: String = "" 
 
 // shifts function
-def shifts(ms: MarksPosition, r: Rexp): MarksPosition = r match {
-  case ZERO => Set.empty[Int]
-  case ONE  => Set.empty[Int]
-  case CHAR(c) =>// for (m <- ms; if m != "" && m.head == c) yield m.tail
-                    val len = S.length
-                    for (p <- ms  if p < len  && S.charAt(p) == c) yield p + 1
+def shifts(ms: Marks, r: Rexp): Marks = 
+  
+  r match {
+  case ZERO => Set.empty
+  case ONE  => Set.empty
+  case CHAR(c) =>for (m <- ms; if m != "" && m.head == c) yield m.tail
+
   case ALT(r1, r2) => shifts(ms, r1) ++ shifts(ms, r2)
   case SEQ(r1, r2) => {
     val ms1 = shifts(ms, r1)
@@ -25,7 +26,12 @@ def shifts(ms: MarksPosition, r: Rexp): MarksPosition = r match {
   }
   case STAR(r) => {
     val ms1 = shifts(ms, r)
-    if (ms1 == Set()) ms1 else ms1 ++ shifts(ms1, STAR(r))
+    println(s"ms1= ${ms1.size}")
+    if (ms1 == Set()) ms1 else
+      val re=ms1 ++ shifts(ms1, STAR(r))
+      println(s"size of returned set=${re.size}")
+      re
+      //ms1 ++ shifts(ms1, STAR(r))
   }
   case NTIMES(r, n) =>
     if (n == 0) ms
@@ -40,41 +46,49 @@ def shifts(ms: MarksPosition, r: Rexp): MarksPosition = r match {
 
 // the main matching function 
 def matcher(r: Rexp, s: String): Boolean =
-  S=s
   if (s == "") nullable(r)
-  else shifts(Set(0), r).contains(S.length)
-  /* if (s == "") nullable(r)
-  else shifts(Set(s), r).contains("") */
+  else shifts(Set(s), r).contains("")
 
-def mat(r: Rexp, s: String): MarksPosition =  
-  S = s
-  shifts(Set(0), r)
-  //shifts(Set(s), r)
+def mat(r: Rexp, s: String): Marks =  
+  shifts(Set(s), r)
+
 
 
 @main
 def test1() = {
   println("=====Test====")
-  val r = NTIMES("a",2)
-    //(("a") | (ONE)) ~ (("a") | NTIMES("a",3))
-    //aaa
-    
-  val s = "aa"
+  val r = %( %( "a" ) | %( "aa" ) | %( "aaa" ) | %( "aaaa" ) | %( "aaaaa" ) )
+  val s = "a" * 2
   println("=string=")
   println(s)
-  //println(matcher(r,s))
-  println(mat(r,s))
+  println(matcher(r,s))
 }
 
 @main
 def test2() = {
   println("=====Test====")
-  val r = %( %( "a" ) | %( "aa" ) | %( "aaa" ) | %( "aaaa" ) | %( "aaaaa" ) )
-  val s = "a" * 700
+  val reg = STAR(mkalts(5))
+  println(s"reg=$reg") 
+   for (n <- (0 to 100 by 100)) {
+      println(s"$n ${ matcher(reg, "a" * n)}")
+      println("-" * n)
+   }
+}
+
+@main
+def test3() = {
+  println("=====Test====")
+  val r = %(  "a" | "a" )
+  val s = "a" * 3
   println("=string=")
   println(s)
   println(matcher(r,s))
 }
  
+ def mkstar(n: Int) = STAR("a" * n)
+def mkalts(n: Int) = {
+  (for (i <- (1 to n).toList) yield mkstar(i)).reduceLeft(ALT.apply)
+}
+
 
 

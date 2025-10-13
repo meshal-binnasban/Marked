@@ -688,7 +688,8 @@ In later versions, we instead introduced a wrapper constructor around the charac
 
     \mbox{}
     \rule{\linewidth}{0.4pt}
-    \caption{$\shift$ function}\label{shiftFunction}
+   \caption{$\shift$ function in the Scala implementation of 
+   Fischer’s Marked Approach.}\label{shiftFunction}
   \end{center}
 \end{figure}
 \noindent
@@ -791,9 +792,11 @@ where every possible way of matching was generated. Another difficulty, which
 also existed in the first version, was the absence of an ordering for marks 
 during the shifting process. We implemented an ordering after shifting to 
 evaluate the results of the algorithm, following the work of Okui and 
-Suzuki~\cite{OkuiSuzuki2013}, though not inherently in the shifting process 
-itself. This line of thought eventually led us to the final version of the 
-algorithm, which uses string-annotated marks, where marks carry the matched 
+Suzuki~\cite{OkuiSuzuki2013}, although this ordering is not embedded within 
+the shifting process itself. Instead, all possible values are generated first,
+and then the ordering function is applied to select the POSIX value.
+This line of thought eventually led us to the version of the 
+algorithm, which uses string-annotated marks where marks carry the matched 
 string along as they are shifted through the regular expression and then added 
 bit annotation to the marks to record the choices made during matching.
 The following subsections describe these different versions.
@@ -801,33 +804,38 @@ The following subsections describe these different versions.
 \FloatBarrier
 \subsection{Bit-Annotated, version 1}
 
-In this version, we extended the marked approach to include bitcodes 
-that annotate the marks being shifted through the regular expression. Inspired by Sulzmann and Lu~\cite{Sulzmann2014}, we introduced bitcodes in the form 
-of lists attached to each mark, which are incrementally built as the marks are shifted.  
-This version produces a value, though not necessarily the POSIX value, because when a character is matched 
-more than once at the same point, the associated bit list may be overwritten.  
-This can cause value erasure and, in some cases, the loss of the POSIX value, as illustrated later in Example~2.  
-We use the bit annotations $0$ and $1$, similar to the bitcoded derivatives described by Sulzmann and Lu~\cite{Sulzmann2014}.  
+In this version, we extended the marked approach with bit sequencing. 
+Inspired by Sulzmann and Lu~\cite{Sulzmann2014}, we introduced bitcodes in 
+the form of lists attached to each mark, which are incrementally built as 
+the marks are shifted. This version produces a value, though not necessarily 
+the POSIX value, because when a character is matched more than once at the 
+same point, the associated bitsequence may be overwritten. This can cause value 
+erasure and, in some cases, the loss of the POSIX value, as illustrated below 
+in Example~2. We use the bit annotations $0$ and $1$, similar to the bitcoded 
+derivatives described by Sulzmann and Lu~\cite{Sulzmann2014}.  
 
-The function \shift\ takes an additional argument, \Bits, which is a list of bit elements ($0$ or $1$).  
-As \shift\ is applied, bits are appended to the list.  
-For example, when shifting through an alternative, $0$ is added to the list passed to the left subexpression 
-and $1$ to the list passed to the right subexpression.  
-If the input character matches a leaf character node, it is wrapped by the newly defined \POINT\ constructor, 
-which represents the mark.  
-The associated bit list is stored inside this constructor together with the character.  
+In contrast to the origianl work by Fischer et al, our function \shift\ takes
+an additional argument, \Bits.
+%, which is a list of bit elements ($0$ or $1$).
+As \shift\ is applied, bits are appended to the bitsequence. For example, when 
+shifting through an alternative, $0$ is appended to the bitsequence and 
+passed to the left subexpression and $1$ to the right subexpression. If the input character 
+matches a leaf character node, it is wrapped by the newly defined \POINT\ 
+constructor, which represents the mark. The associated bitsequence is stored
+inside this constructor together with the character.  
 
-We define the auxiliary function \mkfin\ to extract the bit sequence of a final constructor -- 
-that is, the path in bits describing how the expression matched.  
-We adapt \mkeps\ from Sulzmann and Lu~\cite{Sulzmann2014} and from Tan and Urban~\cite{TanAndUrban2023}, 
-who define it to construct a value tree and a bit sequence, respectively, 
-for how a nullable expression matches the empty string.  
-Our version also returns a bit sequence: 0 for the left branch and 1 for the right branch in choices, 
-and for \STARText, 0 indicates the start of an iteration and 1 its end, 
-with the single bit 1 used for the empty-star case. 
-The auxiliary functions \mkfin\ and \mkeps\ are defined
- in Figures~\ref{mkfinFunction} and \ref{mkepsBit1Function}, while the definition of \fin\ is the same as in
-  Section~\ref{sec:scala-fischer}. We define \shift\ for this version as follows:
+We define the auxiliary function \mkfin\ to extract the bitsequence representing
+the path in bits describing how the expression matched. We adapt \mkeps\ 
+from Sulzmann and Lu~\cite{Sulzmann2014} and from Tan and 
+Urban~\cite{TanAndUrban2023}, who define it to construct a value tree 
+and a bitsequence, respectively, for how a nullable expression matches the 
+empty string. Our version also returns a bitsequence: 0 for the left branch 
+and 1 for the right branch in choices, and for \Star\ case, 0 indicates the 
+start of an iteration and 1 its end, with the single bit 1 used for the 
+empty-star case. The auxiliary functions \mkfin\ and \mkeps\ are defined
+in Figures~\ref{mkfinFunction} and \ref{mkepsBit1Function}, while the 
+definition of \fin\ is the same as in Section~\ref{sec:scala-fischer}. 
+We define \shift\ for this version as follows:
 \[
 \renewcommand{\arraystretch}{1.5}
 \shift(m, c, bs, r) =
@@ -840,10 +848,9 @@ The auxiliary functions \mkfin\ and \mkeps\ are defined
 \end{array}
 \renewcommand{\arraystretch}{1.0}
 \]
-where $bs'$ is the updated bit list. The complete definition appears in Figure~\ref{bitAnnotatedShiftfunction}, where $\oplus$
- stands for appending a bit to a list, while \At\ concatenates two lists.  
-The symbols $0$ and $1$ are used to represent left and right choices in alternatives.  
-In the \STARText\ case, $0$ represents the beginning of an iteration, while $1$ represents the end of an iteration. 
+where $bs'$ is the updated bitsequence. The complete definition appears in Figure~\ref{bitAnnotatedShiftfunction}.
+%The symbols $0$ and $1$ are used to represent left and right choices in alternatives.
+ %In the \Star\ case, $0$ represents the beginning of an iteration, while $1$ represents the end of an iteration. 
 The behaviour of each case of the \shift\ function is discussed in detail below.
 %shift 1 definition%
 \begin{figure}[ht]
@@ -879,19 +886,21 @@ The behaviour of each case of the \shift\ function is discussed in detail below.
 
     \mbox{}
     \rule{\linewidth}{0.4pt}
-    \caption{Bit-Annotated $\shift$: First Version}\label{bitAnnotatedShiftfunction}
+\caption{Bit-Annotated $\shift$ (Version~1). Here, $\oplus$ stands for appending 
+a bit to a bitsequence, while \At\ stands for concatenation of two 
+bitsequences.}\label{bitAnnotatedShiftfunction}
   \end{center}
 \end{figure}
 \paragraph*{\textbf{Character case} $(d)$:}
 \begin{itemize}
   \item If the input character $c$ matches $d$ and the flag $m$ is true, then a \POINT\ wraps the constructor $c$, 
-        with the updated bit list $bs$ stored inside the \POINT. Otherwise, the character remains unmarked.
+        with the updated bitsequence $bs$ stored inside the \POINT. Otherwise, the character remains unmarked.
 \end{itemize}
 \paragraph*{\textbf{Alternative case} $(r_1 + r_2)$:}
 \begin{itemize}
   \item Marks are shifted as before, and the direction of the match is annotated:  
-  $0$ is added to the bit list passed to the left subexpression,  
-  and $1$ is added to the bit list passed to the right subexpression.
+  $0$ is added to the bitsequence passed to the left subexpression,  
+  and $1$ is added to the bitsequence passed to the right subexpression.
 \end{itemize}
 \paragraph*{\textbf{Sequence case} $(r_1 \cdot r_2)$:}
 \begin{itemize}
@@ -900,7 +909,7 @@ The behaviour of each case of the \shift\ function is discussed in detail below.
     and $bs \cup \mkeps(r_1)$ is passed to $r_2$, where $\mkeps$ returns the bits for an empty-string match.  
     This corresponds to the case where the first part of the sequence is skipped.  
     \item If $r_1$ is in a final position (that is, it has finished matching),  
-    a mark is shifted to $r_2$ with the bit list describing how $r_1$ was matched,  
+    a mark is shifted to $r_2$ with the bitsequence describing how $r_1$ was matched,  
     extracted using the $\mkfin$ function.  
     \item Otherwise, marks are shifted only into $r_1$, with $bs$ representing the current path to $r_1$.  
 \end{itemize}
@@ -913,7 +922,7 @@ The behaviour of each case of the \shift\ function is discussed in detail below.
     with the bits showing how $r$ reached a final position.  
     \item If $r$ is in a final position, $\mkfin(r)$ is passed with $0$ appended,  
     representing the start of a new iteration.  
-    \item If no new mark is introduced, the existing marks are shifted with an empty bit list.  
+    \item If no new mark is introduced, the existing marks are shifted with an empty bitsequence.  
 \end{itemize}
 %The functions \mkfin\ and \mkeps\ are defined below; the definition of \fin\ is the same as in section~\ref{sec:scala-fischer}.  
 %mkfin definition%
@@ -966,10 +975,10 @@ The behaviour of each case of the \shift\ function is discussed in detail below.
 \end{figure}
 \FloatBarrier
 Next, we present two examples of matching a string and extracting a value.  
-The first example shows how the bit list is constructed during matching,  
+The first example shows how the bitsequence is constructed during matching,  
 while the second demonstrates a case where the algorithm fails to produce the POSIX value.
 When shifting to a point (an already marked character) and the character matches again, the associated 
-bit list is overwritten which can lead to value erasure and, in particular, to the loss of the POSIX value,  
+bitsequence is overwritten which can lead to value erasure and, in particular, to the loss of the POSIX value,  
 as the second example illustrates.  
 
 
@@ -1010,67 +1019,86 @@ indicated by a mark at the end of the
     \mbox{}
     \hrule
     
-    \caption{Bit-Annotated shift of: $(a + a \cdot a)^*$ with string \texttt{aaa}} \label{BitAnnotatedShiftExample2}
+    \caption{Bit-Annotated shift of: $(a + a \cdot a)^*$ with string
+     \texttt{aaa}} \label{BitAnnotatedShiftExample2}
   \end{figure}
-In Example~2 (see Figure~\ref{BitAnnotatedShiftExample2}), after the first shift on a, a mark is
-placed on the left branch with bits $[0,0]$, indicating the start of a \STARText\ iteration followed by a
-left choice. In the right subexpression, the mark on $r_1$ of the $a \cdot a$ sequence carries bits $[0,1]$,
-representing the start of the \STARText\ iteration followed by a right choice. When the second character is shifted, the right subexpression $r_2$ with bits $[0,1]$ is overwritten during
-the third shift, when those bits should instead be preserved. These bits correspond to the POSIX match,
-which begins by matching the right-hand side first and then performing another iteration to match the
-left-hand side. The correct bit list in that case would be $[0,1,0,0]$, with the final 1 marking the end of
-the \STARText\ iteration. This behaviour arises because \POINT\ stores only a single bit list at a time,
-with no mechanism for preserving multiple marks.
+In Example~2 (see Figure~\ref{BitAnnotatedShiftExample2}), after the first shift
+on a, a mark is placed on the left branch with bits $[0,0]$, indicating the start
+of a \Star\ iteration followed by a left choice. In the right subexpression,
+the mark on $r_1$ of the $a \cdot a$ sequence carries bits $[0,1]$,
+representing the start of the \Star\ iteration followed by a right choice.
+When the second character is shifted, the right subexpression $r_2$ with bits
+$[0,1]$ is overwritten during the third shift, when those bits should instead be
+preserved. These bits correspond to the POSIX match, which begins by matching
+the right-hand side first and then performing another iteration to match the 
+left-hand side. The correct bitsequence in that case would be $[0,1,0,0]$, with
+the final 1 indicating the end of the \Star\ iteration. This behaviour
+arises because \POINT\ stores only a single bitsequence at a time, with no 
+mechanism for preserving multiple marks.
 
   
 \FloatBarrier
 \subsection{Bit-Annotated, version 2}
-we are fairly sure/strongly think that this version produces all possible values including the posix value.
+We are fairly sure/strongly think that this version produces all possible 
+values including the posix value.
 
 \FloatBarrier
 \subsection{String-Carrying Marks - Matcher}
-We initially followed the approach of Fischer et al.~\cite{Fischer2010} and Asperti et al.~\cite{Asperti2010}, in which shifting is performed character by 
-character and marks are propagated at each step. However, as in our previous versions, this method made it difficult to maintain an ordering on marks and to 
-extract the POSIX value.  
+We initially followed the approach of Fischer et al.~\cite{Fischer2010} and 
+Asperti et al.~\cite{Asperti2010}, in which shifting is performed character by 
+character and marks are propagated at each step. However, as in our previous 
+versions, this method made it difficult to maintain an ordering on marks and
+then to extract the POSIX value.  
 
-To address this, we instead let each mark carry the suffix of the input string that is still to be matched, starting with an initial mark carrying the full 
-input string. It gives a clear way of ordering the marks,  
-based on the remaining suffixes.  
-It also appears to offer a closer correspondence with derivatives,  
-in that each mark could be associated with subexpressions created by the derivative,  
-though this point is not yet fully established. 
-The trade-off is that more information must be 
-stored, but this also creates opportunities for optimisation. With string-carrying marks, we currently have a better handle on extracting POSIX values.
+To address this, we instead let each mark carry the suffix of the input string 
+that is still to be matched, starting with an initial mark carrying the full 
+input string. It gives a more straightforward way of ordering the marks, based 
+on the remaining suffixes. It also appears to offer a closer correspondence 
+with derivatives, in that each mark could be associated with subexpressions 
+created by the derivative, though this point is not yet fully established. 
+The trade-off is that more information must be stored. 
+%However, this also creates opportunities for optimisation.
+However, with string-carrying marks, we currently have a better handle on 
+extracting POSIX values.
 
+We define \shifts\ in place of \shift\ as the function now operates on the 
+full input string, rather than character by character as in the previous versions.
+The full definition of \shifts\ is given in Figure~\ref{shiftsFunction}.
+As noted earlier, the empty string $\ONE$ is not marked. This choice ensures 
+termination of the \shifts\ function, particularly in the \Star\ case: if 
+$\ONE$ were allowed to produce marks, it would lead to infinite unfolding 
+and non-termination.
 
-We start with a list of marks, with one initial mark carrying the full input string.
-We define \shifts\ in place of \shift\ as the function that operates on the full input 
-string, rather than character by character as in the previous versions.
-The marks are shifted through the regular expression, and each time a character matches, 
-it is stripped from the string carried by the mark.
-If a character does not match the prefix of the string in a mark, that mark will be dropped.
-A match occurs when a mark has been reduced to the empty string,
-indicating that all characters have been matched.
-When the input string itself is empty, \shift\ is not applied,
-and instead the \nullable\ function is used to check whether the 
-regular expression accepts the empty string.
+The shifting process starts with a list of marks containing one initial mark 
+carrying the full input string. As the mark is shifted through the expression,
+new marks may be produced depending on its structure, 
+such as in sequences, stars, or alternatives. For example, in the case of an 
+alternative, the mark is passed to each branch, and the resulting lists of 
+marks are combined. Each time a character matches, it is stripped from the 
+corresponding string carried by the mark. If a character does not match the 
+prefix of the string carried by a mark, that mark will be deleted. 
+A match occurs at the end of shifting when an empty mark has been produced, 
+indicating that all characters have been matched. When the input string itself 
+is empty, \shifts\ is not applied; instead, the \nullable\ function 
+(with the same definition as in Section~\ref{sec:scala-fischer}, shown in 
+Figure~\ref{nullableFunction}) is used to check whether the regular expression 
+accepts the empty string.
 
 The number of marks in this version can grow quadratically in the worst case. 
 For a regular expression of size $n$, we can have up to $n$ marks at any given time in most cases. 
-The exception is the \STARText\ case, where each unfolding of the star may generate as many as $n$ marks, 
-so that with $n$ unfoldings the total number of marks can reach $n^2$. 
-In the worst case this leads to a quadratic bound once duplicate marks are removed.
+The exception is the \Star\ case, where each unfolding of the star may generate 
+as many as $n$ marks, so that with $n$ unfoldings the total number of marks 
+can reach $n^2$. In the worst case, this leads to a quadratic bound once 
+duplicate marks are removed.
 
-We started with a lexer implementation of this version, and from initial testing it produces the POSIX value, 
-yet this remains to be formally proven. 
-In that version we introduce reshuffling, where marks are ordered based on their remaining strings. 
-At present, the reordering is carried out in the \SEQText\ case after shifting through the first part.
 
-We define \shifts\ for this version in Figure~\ref{shiftsFunction}. As noted earlier, the empty string $\ONE,$ is not marked.
- This choice ensures termination of the \shift\ function, particularly in the \STARText\ case: if $\ONE,$ were allowed
-  to produce marks, it would lead to infinite unfolding and non-termination. A mark is represented as $\Marked{s}$, where $s$ 
-  is a string, and $ms$ is a list of such marks. The behaviour of the individual cases is described below.
+We started with a lexer implementation of this version, and from initial 
+testing it produces the POSIX value, yet this remains to be formally proven. 
+In that version we introduce reshuffling, where marks are ordered based on 
+their remaining strings. At present, the reordering is carried out in the
+ \SEQText\ case after shifting through the first part.
 
+ The behaviour of each case of the $\shifts$ function is discussed in detail below.
 \begin{figure}[ht]
   \begin{center}
   \renewcommand{\arraystretch}{1.7}
@@ -1095,7 +1123,9 @@ We define \shifts\ for this version in Figure~\ref{shiftsFunction}. As noted ear
 
   \mbox{}
   \rule{\linewidth}{0.4pt}
-  \caption{$\shifts$ function}\label{shiftsFunction}
+ \caption{$\shifts$ function. A mark is represented 
+ as $\Marked{s}$, where $s$ is a string, and $ms$ is a list of 
+ such marks.}\label{shiftsFunction}
   \end{center}
 \end{figure}
 %\FloatBarrier
@@ -1142,9 +1172,9 @@ producing a new list of marks $ms'$. The result then depends on several conditio
 \paragraph*{\textbf{Star case} $(r^*)$:}
 \begin{itemize}
   \item The list of marks $ms$ is first shifted into $r$, producing a new list $ms'$.  
-        If $ms'$ is empty, this corresponds to the end of the iterations of the \STARText, 
+        If $ms'$ is empty, this corresponds to the end of the iterations of the \Star, 
         and the result is the empty list.  
-        Otherwise, $ms'$ records one completed iteration and is appended to the result of shifting $ms'$ into the \STARText, 
+        Otherwise, $ms'$ records one completed iteration and is appended to the result of shifting $ms'$ into the \Star, 
         corresponding to adding a new iteration.
 \end{itemize}
 
@@ -1154,17 +1184,17 @@ The matcher is defined as follows.
 \matcher(s, r) \; \dn\;
   \begin{cases}
     \nullable(r) & \text{if $s = \emptylist$}, \\
-    \Marked{[]} \in \shift([\Marked{s}], r) & \text{otherwise.}
+    \Marked{[]} \in \shifts([\Marked{s}], r) & \text{otherwise.}
   \end{cases}
 \]
 
 To illustrate the behaviour of this version, we consider three examples. The first uses the
 regular expression $(a + (a \cdot c))$ and string \texttt{ac}. We show step by step how the
 marks are reduced as characters are stripped and non-matching paths are dropped. The second
-example considers the \STARText\ case, highlighting how the marks are unfolded. A third
+example considers the \Star\ case, highlighting how the marks are unfolded. A third
 example, $(a^* \cdot a^*)$ with string \texttt{aa}, shows that, in this version, all possible
 marks must be generated, since one of them may be the only one required to complete the match
-when the \STARText\ expression is part of a larger expression.
+when the \Star\ expression is part of a larger expression.
  
 In Example~1 (Figure~\ref{StringShiftsExample1}), we consider the regular expression
 $(a + (a \cdot c))$ and the string \texttt{ac}. Matching begins with the initial mark carrying
@@ -1177,16 +1207,16 @@ mark is reduced to the empty string. At this point, the list of marks $[\Marked{
 expression is accepted.
 
 In Example~2 (Figure~\ref{StringShiftsExample2}), we consider the regular expression $(a^*)$ and the
-string \texttt{aaa}. For the \STARText\ case, the process starts by shifting the received marks into
+string \texttt{aaa}. For the \Star\ case, the process starts by shifting the received marks into
 the inner expression; here, the initial mark is shifted into $a$. When the character $a$ matches,
 the leading $a$ is stripped from the string carried by the mark, and the inner \shifts\ call
 produces a new mark with this shorter string. If the result is empty—meaning that no character was
 consumed—no further iteration takes place. This mechanism has two effects: first, the strings
 carried by the marks either remain unchanged or become shorter;in the sense that their length decreases.
-Second, it enumerates all the ways the \STARText\ expression can match the input, from no consumption 
+Second, it enumerates all the ways the \Star\ expression can match the input, from no consumption 
 to consuming the entire string. The algorithm therefore returns a list of marks representing these 
 alternatives, and, as Example~3 will show, one of these marks may be the only one required to complete
- the match when the \STARText\ expression is part of a larger expression. This observation also 
+ the match when the \Star\ expression is part of a larger expression. This observation also 
  suggests a possible optimisation: rather than generating all marks, it may be sufficient to 
  generate only those needed in a given case.
 
@@ -1196,7 +1226,7 @@ initial mark as before. Then the mark will be passed to the first part of the ou
 sequence, which is itself a sequence. In step~2, the mark will then enter the inner 
 sequence's first part, $r_1$, which is $a^*$, and will produce the list of marks 
 $[\Marked{aa}, \Marked{a}, \Marked_{\emptylist}]$, as shown in Example~2. However, 
-since $r_1$ is a \STARText\ and thus nullable, the original mark $[\Marked{aaa}]$ 
+since $r_1$ is a \Star\ and thus nullable, the original mark $[\Marked{aaa}]$ 
 is appended to the result list of the first part, to account for the possibility 
 of skipping $r_1$. Then this list of marks will be passed on, in step~3, to the 
 second part of the inner sequence, resulting in the consumption of a character 
@@ -1204,10 +1234,10 @@ from each of the marks (and also dropping the empty-list mark from $r_1$, since
 it cannot match the character in $r_2$). In step~4, the resulting list will be passed to the second part of the outer sequence, 
 consuming another character from the remaining marks (and also dropping the empty-list 
 mark), resulting in the final list of marks $[\Marked_{\emptylist}, \Marked{a}]$. 
-In this example, we see that the \STARText\ part of the expression produces multiple 
+In this example, we see that the \Star\ part of the expression produces multiple 
 marks, and one of them is necessary to complete the match for the entire expression, in 
 particular the mark $\Marked{aa}$, which represents consuming only one character by the 
-\STARText\ constructor.
+\Star\ constructor.
 
 
 \begin{figure}[ht]

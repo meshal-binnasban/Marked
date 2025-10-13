@@ -19,6 +19,7 @@ def shifts(ms: Marks, r: Rexp) : Marks = r match {
         }
       }
       case STAR(r) => {
+        println(s"ms=${ms.length}")
         val ms1 = shifts(ms, r)
         if(ms1.isEmpty) Nil 
         else
@@ -58,21 +59,18 @@ extension (ms: Marks)
 @main
 def test1() = {
   println("=====Test====")
-  val r = NTIMES("a" | ONE,4)
-    //(("a") | (ONE)) ~ (("a") | NTIMES("a",3))
-    //aaa
-    
-  val s = "aaa"
+  val r = %( "a" | ("a" )   )
+  val s = "a" * 10
   println("=string=")
   println(s)
   println(matcher(r,s))
 }
 
 @main
-def test3() = {
+def test2() = {
   println("=====Test====")
   val r = %( %( "a" ) | %( "aa" ) | %( "aaa" ) | %( "aaaa" ) | %( "aaaaa" ) )
-  val s = "a" * 25
+  val s = "a" * 5
   println("=string=")
   println(s)
   println(matcher(r,s))

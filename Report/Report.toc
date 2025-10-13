@@ -10,6 +10,6 @@
 \contentsline {subsection}{\numberline {3.1}Bit-Annotated, version 1}{20}{}%
 \contentsline {subsection}{\numberline {3.2}Bit-Annotated, version 2}{25}{}%
 \contentsline {subsection}{\numberline {3.3}String-Carrying Marks - Matcher}{25}{}%
-\contentsline {subsection}{\numberline {3.4}String-Carrying Marks - Lexer **so far**}{30}{}%
-\contentsline {section}{\numberline {4}Future Work}{30}{}%
+\contentsline {subsection}{\numberline {3.4}String-Carrying Marks - Lexer **so far**}{31}{}%
+\contentsline {section}{\numberline {4}Future Work}{31}{}%
 \contentsline {section}{References}{32}{}%
