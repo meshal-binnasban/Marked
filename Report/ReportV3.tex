@@ -220,7 +220,6 @@ which can be easily checked by a separate function.
   \end{center}
 \end{figure}
 
-
 To illustrate how derivatives can be used to match a regular expression against a string, 
 consider the regular expression $( ab + ba )$.  The derivative can check the matching of the 
 string \texttt{ba} by taking the derivative of the regular expression with respect to b,
@@ -228,8 +227,6 @@ then with respect to a (see Figure~\ref{derivative}). Since the final derivative
 can match the empty string with no input characters remaining, this confirms that the string
 \texttt{ba} belongs to the language of the
 regular expression.
-
-
 \begin{figure}[ht]
   \begin{center}
     
@@ -269,7 +266,7 @@ sometimes necessary in the derivative method in order to keep the size
 manageable but eventhough best effort still means that the size can explode.
 
 \FloatBarrier
-\subsubsection{Size Explosion.}  
+\subsubsection{Size Explosion}  
 
 Although the construction of derivatives is elegant, it may
 duplicate large parts of the expression as well as the sizes of the regular
@@ -387,7 +384,6 @@ $0.0035$ seconds.
 %\caption{Runtimes of Derivatives vs Marks } \label{RuntimesGraph1}
 \end{figure}
 
-
 Even Antimirov’s partial derivatives~\cite{Antimirov1996}, which do not track
 POSIX values, may still produce cubic growth in the worst case: there can be
 linearly many distinct derivatives, and each one may already be quadratic in
@@ -411,19 +407,11 @@ the value; the injection function essentially reverts the derivative steps to
 obtain a POSIX value. We focus here on the bitcode variant, which more directly
 inspired our marked approach.
 
-Bitcodes are sequences over $\{0,1\}$ that encode the choices made in a match. These bits record
-branch choices in alternatives and repetitions made during matching. The following example
-illustrates how bitcoding works with $(a+ab)(b+\ONE)$ and the string \texttt{ab} (see
-Figure~\ref{BitcodedDerivative}). We proceed by constructing bitcoded derivatives step by step
-and tracking how the bitcode grows.
-
-Initially, the algorithm internalizes the regular expression.  
-Internalization only adds bit annotations to the alternative constructors found in the expression, 
-where the left branch is annotated with bitcode $0$ and the right branch with bitcode $1$~\cite{Sulzmann2014}.  
-This annotation process is implemented by the function $\fuse$, whose definition is given at the end of this section.  
-After internalization, the algorithm proceeds by taking the derivative with respect to the first character 
-of the input string, which in this case is $a$.
-
+Bitcodes are sequences over ${0,1}$ that encode the choices made in a match. 
+These bits record branch choices in alternatives and repetitions during matching. 
+Figure~\ref{BitcodedDerivative} illustrates how bitcoding works with 
+$(a+ab)(b+\ONE)$ on the string \texttt{ab}, proceeding step by step by constructing
+ bitcoded derivatives and tracking how the bitcode grows.
 \begin{figure}[ht]
   \begin{center}
     \begin{enumerate}
@@ -459,40 +447,54 @@ of the input string, which in this case is $a$.
     \end{enumerate}
   \mbox{}
   \rule{\linewidth}{0.4pt}
-  \caption{Bitcoded derivatives of $(a+ab)\cdot (b+\ONE)$ with respect to string \texttt{ba}} \label{BitcodedDerivative}
+  \caption{Step-by-step construction of bitcoded derivatives for 
+  $a \cdot (a+b)$ with input \texttt{ab}. 
+  Step 1 shows the result of internalization using \fuse, 
+  where alternatives are annotated with bits. 
+  Step 2 takes the derivative with respect to $a$; the result is nullable 
+  through two branches, yielding bitcodes $[0]$ and $[1]$. 
+  Step 3 takes the derivative with respect to $b$, expanding the expression 
+  due to the nullable concatenation. Finally, $\mkeps$ extracts the bitcode 
+  $[1,1]$.} \label{BitcodedDerivative}
+  % Bitcoded derivatives of $(a+ab)\cdot (b+\ONE)$ with respect to string \texttt{ba}
   \end{center}
 \end{figure}
 
-The result of Step~2 shows that the $\ONE\,$ symbols indicate a successful match,  
-while the bitcode records how that match was obtained.  
-One match is obtained by taking the left branch to match the string $a$, reflected in the bitcode $[0]$.  
-The other match arises by taking the right branch, which matches the regular expression $(ab)$.  
-The function $\mkeps$, as defined by Sulzmann and Lu~\cite{Sulzmann2014}, extracts the bitcode from nullable derivatives.  
-A subexpression is \emph{nullable} if it can match the empty string.  
-Its definition is given at the end of this section.  
+Initially, the algorithm internalizes the regular expression by applying the function
+\intern\ (Figure~\ref{internFunction}), adding bit annotations
+to the alternative constructors in the expression: $0$ for left branches and $1$ 
+for right branches~\cite{Sulzmann2014}. This annotation process is implemented by
+the function \fuse (Figure~\ref{fuseFunction}). 
+The bitcode is updated while taking the derivatives to reflect the choices 
+made during matching.  
+The function \mkeps (Figure~\ref{mkepsFunction}), as defined 
+by Sulzmann and Lu~\cite{Sulzmann2014}, extracts the bitcode from nullable 
+derivatives. A regular expression is \emph{nullable} if it can match the empty string.  
 
-In Step~3, the resulting derivative expands into an alternative.  
-This occurs because the concatenation has become nullable, which means the first component, $r_1$, may be skipped while matching.  
-To account for this, the derivative expands into an alternative: the left branch assumes $r_1$ is not skipped, 
-while the right branch assumes it is skipped and instead takes the derivative of $r_1$ directly.  
-This illustrates why derivatives tend to grow in size.  
-Sulzmann and Lu~\cite{Sulzmann2014} use $\fuse(\mkeps(r_1))$ to include the bit annotations needed when $r_1$ is skipped; 
-these bits, extracted by $\mkeps$, indicate how $r_1$ matched the empty string.  
+Derivatives can cause the the regular expression to expand. In particular, 
+the sequence case expands into an alternative when the first part is nullable (see 
+Figure~\ref{BitcodedDerivative}, Step~3, where the concatenation becomes nullable).
+This accounts for the situation in which the first part, $r_1$, may be skipped 
+during matching: the left branch assumes $r_1$ is not skipped, while the right 
+branch assumes it is skipped and instead takes the derivative of $r_1$ directly. 
+This behaviour also illustrates why derivatives tend to grow in size. Sulzmann and
+Lu~\cite{Sulzmann2014} use $\fuse(\mkeps(r_1))$ to include the bit annotations
+needed when $r_1$ is skipped; these bits, extracted by \mkeps, indicate how $r_1$ 
+matched the empty string.
 
-After taking the derivatives with respect to the entire input string, the algorithm checks whether the result is nullable.  
-If so, it calls $\mkeps$ to extract the bitcode indicating how the match was obtained.  
-In this example, there are two possible matches, but the algorithm prefers the left one.  
-Consequently, $\mkeps$ returns the bitcode $[1,1]$, which encodes the choice of the right branch in the alternative of $r_1$ 
-(matching the string $ab$), followed by the right branch in the alternative of $r_2$  (matching the empty string).
-%The final bitcode after calling $\mkeps$ is $[1,1]$.  
-Decoding this against the original expression yields the POSIX value:
-$
-\Seq\,(\,\Right\,(\,\Seq\,(\,a, b\,)), \Right\,(\,\Empty\,))
-$
+After taking the derivatives with respect to the entire input string, 
+the algorithm checks whether the result is nullable. 
+If so, it calls $\mkeps$ to extract the bitcode indicating 
+how the match was obtained. In Figure~\ref{BitcodedDerivative}, there are 
+two possible matches, but the algorithm prefers the left one, $[1,1]$, which encodes
+ the choice of the right branch in the alternative of $r_1$, matching the string 
+ $ab$, followed by the right branch in the alternative of $r_2$, 
+which matches the empty string. Decoding this against the original expression 
+yields the POSIX value
+\[
+\Seq\,(\,\Right\,(\,\Seq\,(\,a, b\,)), \Right\,(\,\Empty\,))\, .
+\]
 
-The formal definitions of the auxiliary functions $\intern$, $\fuse$, and $\mkeps$ 
-appear in Figures~\ref{internFunction}, \ref{fuseFunction}, and \ref{mkepsFunction}, 
-as defined by Sulzmann and Lu~\cite{Sulzmann2014}.
 %\FloatBarrier
 %intern definition%
 \begin{figure}[ht]
@@ -510,7 +512,9 @@ as defined by Sulzmann and Lu~\cite{Sulzmann2014}.
   
     \mbox{}
     \rule{\linewidth}{0.4pt}
-    \caption{$\intern$ function}\label{internFunction}
+    \caption{The $\intern$ function, which internalizes regular expressions by 
+    adding bit annotations to alternatives, as defined by 
+    Sulzmann and Lu~\cite{Sulzmann2014}.}\label{internFunction}
   \end{center}
 \end{figure}
 %fuse definition%
@@ -528,7 +532,8 @@ as defined by Sulzmann and Lu~\cite{Sulzmann2014}.
 
     \mbox{}
     \rule{\linewidth}{0.4pt}
-    \caption{$\fuse$ function}\label{fuseFunction}
+        \caption{The $\fuse$ function, which adds bit annotations to expressions, 
+        as defined by Sulzmann and Lu~\cite{Sulzmann2014}.}\label{fuseFunction}
   \end{center}
 \end{figure}
 %mkeps 1 definition%
@@ -549,7 +554,9 @@ as defined by Sulzmann and Lu~\cite{Sulzmann2014}.
 
     \mbox{}
     \rule{\linewidth}{0.4pt}
-    \caption{$\mkeps$ function}\label{mkepsFunction}
+    \caption{The $\mkeps$ function, which extracts bit annotations from nullable 
+    expressions, as defined by Sulzmann and Lu~\cite{Sulzmann2014}.}
+\label{mkepsFunction}
   \end{center}
 \end{figure}
 
@@ -1112,6 +1119,18 @@ can grow exponentially (or more) . The number of distinct marks therefore
 remains linear in the input string length. In the same example we obtain only
 \(\{\Marked{aa}\} \rightarrow \{\Marked{a}\} \rightarrow \{\Marked{\emptylist}\}\).
 
+Using sets, on the other hand, removes duplicates, which are the reason lists 
+can grow exponentially (or more). The number of distinct marks therefore 
+remains linear in the input string length. In the same example we obtain only 
+\(\{\Marked{aa}\} \rightarrow \{\Marked{a}\} \rightarrow \{\Marked{\emptylist}\}\).
+When marks are represented only by their remaining suffixes, there can be at most 
+\(n\) distinct marks for an input string of length \(n\), since each mark corresponds 
+to a unique suffix and there are at most \(n\) such suffixes. Even in the presence 
+of nested stars, the outer unfolding reuses the same set of suffix marks generated 
+by the inner star, so although the number of recursive calls can increase, the number 
+of distinct marks at each stage remains bounded by \(n\).
+
+
 We started with a lexer implementation of this version, and from initial 
 testing it produces the POSIX value, yet this remains to be formally proven. 
 In that version we introduce reshuffling, where marks are ordered based on 
@@ -1327,6 +1346,9 @@ A formal verification is planned to prove that the marked matcher always produce
 
 
 \end{itemize}
+
+\appendix
+\section{Appendix}
 
 
 \bibliographystyle{abbrv}

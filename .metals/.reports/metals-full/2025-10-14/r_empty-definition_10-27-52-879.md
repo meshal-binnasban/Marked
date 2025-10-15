@@ -1,14 +1,20 @@
+error id: file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/matchers-comparison/Shifts.sc:`<none>`.
+file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/matchers-comparison/Shifts.sc
+empty definition using pc, found symbol in pc: `<none>`.
+empty definition using semanticdb
+
+found definition using fallback; symbol println
+offset: 766
+uri: file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/matchers-comparison/Shifts.sc
+text:
+```scala
 import scala.language.implicitConversions
 import $file.rexp, rexp._
 
 type Marks = List[String]
 
 // shifts function 
-def shifts(ms: Marks, r: Rexp) : Marks = 
-  if(ms.length >= 20){
-    println(s"ms=${ms.length}")
-  }
-  r match {
+def shifts(ms: Marks, r: Rexp) : Marks = r match {
       case ZERO => Nil
       case ONE => Nil
       case CHAR(c) => for (m <- ms; if m != "" && m.head == c) yield m.tail
@@ -23,7 +29,7 @@ def shifts(ms: Marks, r: Rexp) : Marks =
         }
       }
       case STAR(r) => {
-        //println(s"ms=${ms.length}")
+        @@println(s"ms=${ms.length}")
         val ms1 = shifts(ms, r)
         if(ms1.isEmpty) Nil 
         else
@@ -63,8 +69,8 @@ extension (ms: Marks)
 @main
 def test1() = {
   println("=====Test====")
-  val r = %( "a" | "a" )
-  val s = "a" * 4
+  val r = %( "a" | "ac"   )
+  val s = "ac" 
   println("=string=")
   println(s)
   println(matcher(r,s))
@@ -74,14 +80,18 @@ def test1() = {
 def test2() = {
   println("=====Test====")
   val r = %( %( "a" ) | %( "aa" ) | %( "aaa" ) | %( "aaaa" ) | %( "aaaaa" ) )
-  val s = "a" * 20
+  val s = "a" * 5
   println("=string=")
   println(s)
   println(matcher(r,s))
 }
  
-def mkstar(n: Int) = STAR("a" * n)
-def mkalts(n: Int) = {
-  (for (i <- (1 to n).toList) yield mkstar(i)).reduceLeft(ALT.apply)
-}
 
+
+
+```
+
+
+#### Short summary: 
+
+empty definition using pc, found symbol in pc: `<none>`.

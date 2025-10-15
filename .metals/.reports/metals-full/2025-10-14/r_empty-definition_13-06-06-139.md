@@ -1,3 +1,22 @@
+error id: file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/matchers-comparison/Shifts_Sets.sc:size.
+file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/matchers-comparison/Shifts_Sets.sc
+empty definition using pc, found symbol in pc: size.
+empty definition using semanticdb
+empty definition using fallback
+non-local guesses:
+	 -rexp/ms/size.
+	 -rexp/ms/size#
+	 -rexp/ms/size().
+	 -ms/size.
+	 -ms/size#
+	 -ms/size().
+	 -scala/Predef.ms.size.
+	 -scala/Predef.ms.size#
+	 -scala/Predef.ms.size().
+offset: 216
+uri: file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/matchers-comparison/Shifts_Sets.sc
+text:
+```scala
 import scala.language.implicitConversions
 import $file.rexp, rexp._
 
@@ -8,9 +27,9 @@ var S: String = ""
 
 // shifts function
 def shifts(ms: Marks, r: Rexp): Marks = 
-
-  print(s"ms=${ms.size} , ")
-
+  if(ms.si@@ze >=100){
+      println(s"ms=${ms.size}")
+  }
   r match {
   case ZERO => Set.empty
   case ONE  => Set.empty
@@ -27,8 +46,10 @@ def shifts(ms: Marks, r: Rexp): Marks =
     }
   }
   case STAR(r) => {
+
+
     val ms1 = shifts(ms, r)
-    //println(s"ms=${ms.size}")
+    
     if (ms1 == Set()) ms1 else
       ms1 ++ shifts(ms1, STAR(r))
   }
@@ -36,6 +57,7 @@ def shifts(ms: Marks, r: Rexp): Marks =
     if (n == 0) ms
     else {
       val ms1 = shifts(ms, r)
+      println(s"ms1= $ms1")
       if (ms1 == Set()) ms1
       else if (nullable(r)) ms1 ++ shifts(ms1, NTIMES(r, n - 1))
       else shifts(ms1, NTIMES(r, n - 1))
@@ -56,7 +78,7 @@ def mat(r: Rexp, s: String): Marks =
 def test1() = {
   println("=====Test====")
   val r = %( %( "a" ) | %( "aa" ) | %( "aaa" ) | %( "aaaa" ) | %( "aaaaa" ) )
-  val s = "a" * 20
+  val s = "a" * 100
   println("=string=")
   println(s)
   println(matcher(r,s))
@@ -65,9 +87,9 @@ def test1() = {
 @main
 def test2() = {
   println("=====Test====")
-  val reg = STAR(mkalts(10))
+  val reg = STAR(mkalts(100))
   println(s"reg=$reg") 
-   for (n <- (0 to 5 by 5)) {
+   for (n <- (0 to 100 by 100)) {
       println(s"$n ${ matcher(reg, "a" * n)}")
       println("-" * n)
    }
@@ -100,3 +122,10 @@ def mkalts(n: Int) = {
 
 
 
+
+```
+
+
+#### Short summary: 
+
+empty definition using pc, found symbol in pc: size.
