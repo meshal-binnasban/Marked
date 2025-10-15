@@ -1332,19 +1332,27 @@ particular the mark $\Marked{aa}$, which represents consuming only one character
 To be Added Later.
 \section{Future Work}
 
-This project focuses on implementing and validating a correct and efficient marked regular expression matcher under POSIX disambiguation. Several directions remain open and are planned for the next stages of the PhD:
+The development of the marked matcher is still ongoing, and several directions for 
+future work have been identified:
 
 \begin{itemize}
-\item \textbf{POSIX Disambiguation for \texttt{STAR}.}
-While the current matcher correctly computes POSIX values for many expressions, disambiguation for nested or ambiguous \texttt{STAR} patterns is not yet complete. Ensuring that the correct POSIX value is selected in all cases involving repetition remains a primary target. The current implementation explores candidate paths, but the disambiguation logic for selecting among them requires refinement and formal confirmation.
-
-\item \textbf{Support for Additional Operators.}
-Beyond the basic constructs (ALT, SEQ, STAR, NTIMES), future work includes extending the matcher to handle additional regex operators such as intersection, negation, and lookahead. These additions require careful definition of how marks behave and how disambiguation should be handled, but could significantly increase the expressiveness of the engine.
-
-\item \textbf{Formal Proof of POSIX Value Correctness.}
-A formal verification is planned to prove that the marked matcher always produces the correct POSIX-disambiguated value. This would involve defining the decoding function rigorously and proving its output corresponds to the POSIX parse. This direction is part of the original PhD proposal, where value extraction and correctness proofs were identified as key goals.
-
-
+  \item \textbf{Continue the latest version to produce POSIX values.}  
+    Work has started on POSIX value extraction for the latest version of the matcher. 
+    Initial results indicate that it is producing POSIX values. 
+    Further work is needed to fix the handling of exact repetition $r^n$.
+  \item \textbf{Extending support for additional operators.}  
+    Future work will focus on extending the matcher to handle intersection, 
+    negation, and lookahead operators. This will require extending both the 
+    shifting function and the bitcoding scheme so that these operators are 
+    handled correctly during matching.
+  \item \textbf{Formal verification in Isabelle/HOL.} 
+  Work has started on formally proving the correctness of the latest version 
+  of the algorithm in Isabelle/HOL. The next step is to prove that it always 
+  produces the POSIX value.
+  \item \textbf{Performance and optimisation.}  
+  We are exploring ways to make the algorithm more efficient. We plan to 
+  investigate strategies to control or reduce mark proliferation in complex 
+  expressions and to handle bitcode annotations more efficiently.
 \end{itemize}
 
 \appendix
