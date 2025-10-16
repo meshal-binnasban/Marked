@@ -46,6 +46,7 @@
 \newcommand{\emptylist}{[\,]}
 
 \newcommand{\At}{\text{$\,@\,$}}
+\newcommand{\listconcat}{\boldsymbol{@}}
 
 \newcommand{\matcher}{\textit{matcher}}
 
@@ -456,8 +457,10 @@ $(a+ab)(b+\ONE)$ on the string \texttt{ab}, proceeding step by step by construct
   $a \cdot (a+b)$ with input \texttt{ab}. 
   Step 1 shows the result of internalization using \fuse, 
   where alternatives are annotated with bits. 
-  Step 2 takes the derivative with respect to $a$; the result is nullable 
-  through two branches, yielding bitcodes $[0]$ and $[1]$. 
+  Step~2 takes the derivative with respect to $a$; the two branches of the 
+  result are nullable at this stage: the left branch of $r_1$ and the right branch 
+  of $r_2$ can both match the empty string after consuming the first character, 
+  corresponding to the bitcodes $[0]$ and $[1]$ respectively.
   Step 3 takes the derivative with respect to $b$, expanding the expression 
   due to the nullable concatenation. Finally, $\mkeps$ extracts the bitcode 
   $[1,1]$.} \label{BitcodedDerivative}
@@ -653,174 +656,18 @@ suitable foundation for extending the marked
 algorithm to matching with POSIX value extraction.
 
 \FloatBarrier
-\subsubsection{Scala Implementation of Fischer’s Marked Approach}
-\label{sec:scala-fischer}
-In Fischer et al. approach, the marks are shifted through the regular expression with 
-each input character. The process starts with an initial mark inserted at the beginning,
-which is then moved step by step as the input is consumed. 
-This behaviour is implemented by the function \shift, which performs the core logic 
-of the algorithm. The initial specification of this function is given below, as we 
-have developed several versions throughout our work.
-
-The following presents the Scala implementation of the shifting behaviour as originally 
-defined by Fischer et al.~\cite{Fischer2010}.
-The \shift\ function takes as input a regular expression to match against, a flag $m$, 
-and a character $c$, and returns a \emph{marked
-regular expression}—that is, a regular expression annotated with marks. We write a 
-marked regular expression as $\bullet\,r$, where the 
-preceding dot indicates that the expression $r$ has been annotated with marks to 
-record the progress of matching.
-
-%\[ \shift(m, c, r) \to \Marked{r}\]
-
-\[
-\renewcommand{\arraystretch}{1.5}
-\shift(m, c, r) =
-\begin{array}{l}
-  \begin{cases}
-    \Marked{r} & \text{if $c$ matches in $r$}, \\
-    \ZERO\, & \text{otherwise.}
-  \end{cases}
-\end{array}
-\renewcommand{\arraystretch}{1.0}
-\]
-
-The flag $m$ indicates the mode of operation: when set to true, a new mark is 
-introduced; otherwise, the function shifts the existing marks.  
-This was realised in our first implementation by adding a boolean attribute to the 
-character constructor to represent a marked character.  
-In later versions, we instead introduced a wrapper constructor around the character 
-constructor to explicitly represent a marked character.
-%shift-fischer definition%
-\begin{figure}[ht]
-  \begin{center}
-    \renewcommand{\arraystretch}{1.5}
-    \begin{tabular}{lcl}
-      \shift$(m,c,\ZERO)$ & \dn & $\ZERO$ \\
-      \shift$(m,c,\ONE)$  & \dn & $\ONE$ \\
-      \shift$(m,c,d)$     & \dn &
-                                  $\begin{cases}
-                                  \bullet d & \text{if } c=d \land m \\
-                                  d         & \text{otherwise}
-                                  \end{cases}$ \\
-
-      \shift$(m,c,r_1 + r_2)$ & \dn & $shift(m,c,r_1) + shift(m,c,r_2)$ \\
-      \shift$(m,c,r_1 \cdot r_2)$ & \dn & \medskip \\
-                                    \multicolumn{3}{@{\hspace{10mm}}l}{
-                                    $\begin{cases}
-                                    shift(m,c,r_1) \cdot shift(true,c,r_2)  & \text{if } m \land \nullable(r_1) \\
-                                    shift(m,c,r_1) \cdot shift(true,c,r_2)  & \text{if } \fin(r_1) \\
-                                    shift(m,c,r_1) \cdot shift(false,c,r_2) & \text{otherwise}\\
-                                    \end{cases}$} \\
-      \shift$(m,c,r^*)$ & \dn &
-                          $\begin{cases}
-                          shift(true,c,r^*) & \text{if } \fin(r) \\
-                          shift(m,c,r^*)    &  \\
-                          \end{cases}$ \\
-    \end{tabular}
-    \renewcommand{\arraystretch}{1.0}
-
-    \mbox{}
-    \rule{\linewidth}{0.4pt}
-   \caption{The \shift\ function in the Scala implementation of 
-   Fischer’s Marked Approach.}\label{shiftFunction}
-  \end{center}
-\end{figure}
-\noindent
-Shifting marks for the base cases $\ZERO\,$ and $\ONE\,$ is straightforward:  
-$\ZERO\,$ cannot be marked, and $\ONE\,$---for now---will not carry a mark, 
-since it matches only the empty string. In the initial algorithm, $\ONE\,$ was
- not marked, and this choice is carried over into later versions. The reason is 
- to avoid complications and ensure termination of the \shift\ function, some made 
- apparent in the latter versions as we will discuss further in subsequent 
- sections.\footnote{Our choice follows Fischer et al.~\cite{Fischer2010}, 
- where $\ONE$ is left unmarked (`shift EPS = EPS`). Asperti et al.~\cite{Asperti2010},
- on the other hand, use pointed regular expressions (pREs) where acceptance of the 
- empty string is represented by the trailing point being set to true.} 
- The behaviour of the remaining cases is described next.
-\begin{itemize}
-  \item \textbf{Character case} $(d)$:  
-  In this case, if the input character $c$ matches $d$ and the flag $m$ is true, 
-  a mark is added and stored in the character constructor. Otherwise, the character 
-  remains unmarked.  
-
-  \item \textbf{Alternative case} $(r_1 + r_2)$:  
-  Marks are shifted into both subexpressions, since either branch may match the input 
-  character.  
-
-  \item \textbf{Sequence case} $(r_1 \cdot r_2)$:  
-  \begin{itemize}
-    \item If $r_1$ is neither nullable nor in a final position, marks are shifted only 
-    into $r_1$,  indicating that matching proceeds with the first component. 
-
-    \item If $r_1$ is nullable and may be skipped, marks are shifted into both $r_1$ 
-    and $r_2$, so that either component can begin matching. 
-
-    \item If $\fin(r_1)$ holds, meaning $r_1$ has finished matching, marks are shifted 
-    into $r_2$ to continue matching with its component.  
-  \end{itemize}
-
-  \item \textbf{Star case} $(r^*)$:  
-  Marks are shifted into the subexpression if $m$ is true or if $\fin(r)$ holds.  
-\end{itemize}
-The formal definitions of the auxiliary functions $\fin$ and $\nullable$ appear 
-in Figures~\ref{finFunction} and \ref{nullableFunction}, as defined by Fischer 
-et al.~\cite{Fischer2010}.
-
-%fin definition%
-\begin{figure}[ht]
-  \begin{center}
-    \renewcommand{\arraystretch}{1.5}
-    \begin{tabular}{lcl}
-      $\fin(\ZERO\,)$            & \dn & $\text{false}$ \\
-      $\fin(\ONE\,)$             & \dn & $\text{false}$ \\
-      $\fin(c)$                  & \dn & $\text{false}$ \\
-      $\fin(\Marked{c})$         & \dn & $\text{true}$ \\
-      $\fin(r_1 + r_2)$          & \dn & $\fin(r_1) \lor \fin(r_2)$ \\ 
-      $\fin(r_1 \cdot r_2)$      & \dn & $(\fin(r_1) \land \nullable(r_2)) \lor \fin(r_2)$ \\
-      $\fin(r^*)$                & \dn & $\fin(r)$  
-    \end{tabular}
-    \renewcommand{\arraystretch}{1.0}
-
-    \mbox{}
-    \rule{\linewidth}{0.4pt}
-    \caption{The \fin\ function, which checks whether a marked expression is in a 
-    final state}\label{finFunction}
-  \end{center}
-\end{figure}
-
-%nullable definition%
-\begin{figure}[ht]
-  \begin{center}
-    \renewcommand{\arraystretch}{1.5}
-    \begin{tabular}{lcl}
-      $\nullable(\ZERO\,)$         & \dn & $\text{false}$ \\
-      $\nullable(\ONE\,)$          & \dn & $\text{true}$ \\
-      $\nullable(c)$               & \dn & $\text{false}$ \\
-      $\nullable(r_1 + r_2)$       & \dn & $\nullable(r_1) \lor \nullable(r_2)$ \\ 
-      $\nullable(r_1 \cdot r_2)$   & \dn & $\nullable(r_1) \land \nullable(r_2)$ \\
-      $\nullable(r^*)$             & \dn & $\text{true}$
-    \end{tabular}
-    \renewcommand{\arraystretch}{1.0}
-    
-    \mbox{}
-    \rule{\linewidth}{0.4pt}
-    \caption{The \nullable\ function, which checks whether an expression can match 
-    the empty string.}\label{nullableFunction}
-  \end{center}
-\end{figure}
-
-\FloatBarrier
 \section{Our Approach}
 We began our work by implementing the marked approach described by Fischer
-et al.~\cite{Fischer2010} in Scala. This initial implementation of the algorithm
+et al.~\cite{Fischer2010} in Scala; details are provided in 
+Appendix~\ref{sec:scala-fischer}. This initial implementation of the algorithm
 included only acceptance checking, without any value construction. Over the course
 of this work, we developed several versions of the algorithm, each addressing
 specific challenges.
 
 The first version extended the marked approach with bit annotations, producing
 values but not always the POSIX value. This occurs when marks are overwritten
-after a character is matched more than once.
+after a character is matched more than once; further details are provided in
+Appendix~\ref{sec:Bit-Annotated1}.
 
 The second version was developed to address two main issues: the overwriting of
 marks and the absence of a mechanism to order them so as to always produce the
@@ -836,262 +683,17 @@ an ordering after shifting to evaluate the results of the algorithm, following t
 work of Okui and Suzuki~\cite{OkuiSuzuki2013}, although this ordering is not
 embedded within the shifting process itself. Instead, all possible values are
 generated first, and then the ordering function is applied to select the POSIX
-value.
+value; further details are provided in
+Appendix~\ref{sec:Bit-Annotated2}.%???? maybe remove
 
 This line of thought eventually led us to the third version of the algorithm,
 which uses string-annotated marks. In this version, each mark carries the suffix
 of the input string that is still to be matched. This allows us to compare marks
 based on their remaining suffixes. We also began annotating these marks with bit
 sequences to record the choices made during matching. Although this version is
-not yet finished, the initial results are promising. The following subsections
-describe these different versions in more detail.
-
-
-\FloatBarrier
-\subsection{Bit-Annotated, version 1}
-
-In this version, we extended the marked approach with bit sequencing. 
-Inspired by Sulzmann and Lu~\cite{Sulzmann2014}, we introduced bitcodes in 
-the form of lists attached to each mark, which are incrementally built as 
-the marks are shifted. This version produces a value, though not necessarily 
-the POSIX value, because when a character is matched more than once at the 
-same point, the associated bitsequence may be overwritten. This can cause value 
-erasure and, in some cases, the loss of the POSIX value, as illustrated below 
-in Example~2. We use the bit annotations $0$ and $1$, similar to the bitcoded 
-derivatives described by Sulzmann and Lu~\cite{Sulzmann2014}.  
-
-In contrast to the origianl work by Fischer et al, our function \shift\ takes
-an additional argument, \Bits.
-%, which is a list of bit elements ($0$ or $1$).
-As \shift\ is applied, bits are appended to the bitsequence. For example, when 
-shifting through an alternative, $0$ is appended to the bitsequence and 
-passed to the left subexpression and $1$ to the right subexpression. If the 
-input character matches a leaf character node, it is wrapped by the newly 
-defined \POINT\ constructor, which represents the mark. The associated bitsequence 
-is stored inside this constructor together with the character.  
-
-We define the auxiliary function \mkfin\ to extract the bitsequence representing
-the path in bits describing how the expression matched. We adapt \mkeps\ 
-from Sulzmann and Lu~\cite{Sulzmann2014} and from Tan and 
-Urban~\cite{TanAndUrban2023}, who define it to construct a value tree 
-and a bitsequence, respectively, for how a nullable expression matches the 
-empty string. Our version also returns a bitsequence: 0 for the left branch 
-and 1 for the right branch in choices, and for \Star\ case, 0 indicates the 
-start of an iteration and 1 its end, with the single bit 1 used for the 
-empty-star case. The auxiliary functions \mkfin\ and \mkeps\ are defined
-in Figures~\ref{mkfinFunction} and \ref{mkepsBit1Function}, while the 
-definition of \fin\ is the same as in Section~\ref{sec:scala-fischer}. 
-We define \shift\ for this version as follows:
-\[
-\renewcommand{\arraystretch}{1.5}
-\shift(m, c, bs, r) =
-\begin{array}{l}
-  \begin{cases}
-    \Marked{r\,_{bs'}} & \text{if $c$ matches in $r$}, \\
-    \ZERO\,        & \text{otherwise.}
-  \end{cases} 
-
-\end{array}
-\renewcommand{\arraystretch}{1.0}
-\]
-where $bs'$ is the updated bitsequence. The complete definition appears 
-in Figure~\ref{bitAnnotatedShiftfunction}.
-%The symbols $0$ and $1$ are used to represent left and right choices in alternatives.
- %In the \Star\ case, $0$ represents the beginning of an iteration, while $1$ represents the end of an iteration. 
-The behaviour of each case of the \shift\ function is discussed in detail below.
-%shift 1 definition%
-\begin{figure}[ht]
-  \begin{center}
-    \renewcommand{\arraystretch}{1.5}
-    \begin{tabular}{lcl}
-      $\shift(m,bs,c,\ZERO\,)$   & \dn & $\ZERO$ \\
-      $\shift(m,bs,c,\ONE\,)$    & \dn & $\ONE$ \\
-      $\shift(m,bs,c,d)$         & \dn &
-                                  $\begin{cases}
-                                  \Marked{d_{bs}} & \text{if } m \land d = c \\
-                                  d               & \text{otherwise}
-                                  \end{cases}$ \\
-      $\shift(m,bs,c,r_1 + r_2)$ & \dn &
-      $\shift(m,\, bs \oplus 0,\, c,\, r_1) \;+\; \shift(m,\, bs \oplus 1,\, c,\, r_2)$ \\
-      $\shift(m,bs,c,r_1 \cdot r_2)$ & \dn & \\
-                                      \multicolumn{3}{@{\hspace{15mm}}l}{
-                                      $\begin{cases}
-                                      \shift(m,bs,c,r_1) \cdot \shift(\text{true},\, bs \At \mkeps(r_1),\, c,\, r_2) & \text{if } m \land \nullable(r_1) \\
-                                      \shift(m,bs,c,r_1) \cdot \shift(\text{true},\, bs \At \mkfin(r_1),\, c,\, r_2) & \text{if } \fin(r_1) \\
-                                      \shift(m,bs,c,r_1) \cdot \shift(\text{false}, \emptylist,\, c,\, r_2)          & \text{otherwise}
-                                      \end{cases}$} \\
-      $\shift(m,bs,c,r^*)$ & \dn & \\
-                            \multicolumn{3}{@{\hspace{15mm}}l}{
-                            $\begin{cases}
-                            (\shift(m,\, bs \oplus 0,\, c,\, r))^* & \text{if } m \\
-                            (\shift(\text{true},\, bs \At (\mkfin(r) \oplus 1),\, c,\, r))^* & \text{if } m \land \fin(r) \\
-                            (\shift(\text{true},\, \mkfin(r) \oplus 0,\, c,\, r))^* & \text{if } \fin(r) \\
-                            (\shift(\text{false}, \emptylist,\, c,\, r))^* & \text{otherwise}
-                            \end{cases}$}
-    \end{tabular}
-    \renewcommand{\arraystretch}{1.0}
-
-    \mbox{}
-    \rule{\linewidth}{0.4pt}
-\caption{Bit-Annotated $\shift$ (Version~1). Here, $\oplus$ stands for appending 
-a bit to a bitsequence, while $\At\ $ stands for concatenation of two 
-bitsequences.}\label{bitAnnotatedShiftfunction}
-  \end{center}
-\end{figure}
-\paragraph*{\textbf{Character case} $(d)$:}
-\begin{itemize}
-  \item If the input character $c$ matches $d$ and the flag $m$ is true, then 
-  a \POINT\ wraps the constructor $c$, with the updated bitsequence $bs$ stored 
-  inside the \POINT. Otherwise, the character remains unmarked.
-\end{itemize}
-\paragraph*{\textbf{Alternative case} $(r_1 + r_2)$:}
-\begin{itemize}
-  \item Marks are shifted as before, and the direction of the match is annotated:  
-  $0$ is added to the bitsequence passed to the left subexpression,  
-  and $1$ is added to the bitsequence passed to the right subexpression.
-\end{itemize}
-\paragraph*{\textbf{Sequence case} $(r_1 \cdot r_2)$:}
-\begin{itemize}
-    \item If $r_1$ is nullable, a mark is shifted to both $r_1$ and $r_2$:  
-    $bs$ is passed to $r_1$ (representing the path to this expression),  
-    and $bs \cup \mkeps(r_1)$ is passed to $r_2$, where $\mkeps$ returns the bits 
-    for an empty-string match. This corresponds to the case where the first part 
-    of the sequence is skipped.  
-    \item If $r_1$ is in a final position (that is, it has finished matching),  
-    a mark is shifted to $r_2$ with the bitsequence describing how $r_1$ was matched,  
-    extracted using the $\mkfin$ function.  
-    \item Otherwise, marks are shifted only into $r_1$, with $bs$ representing 
-    the current path to $r_1$.  
-\end{itemize}
-\paragraph*{\textbf{Star case} $(r^*)$:}
-\begin{itemize}
-    \item If a new mark is introduced, $bs$ is passed with $0$ appended,  
-    representing the beginning of a new iteration of the star.  
-    \item If a new mark is introduced and $r$ is in a final position,  
-    $bs \cup \mkfin(r)$ is passed with $1$ appended, combining the bits describing the path to $r^*$  
-    with the bits showing how $r$ reached a final position.  
-    \item If $r$ is in a final position, $\mkfin(r)$ is passed with $0$ appended,  
-    representing the start of a new iteration.  
-    \item If no new mark is introduced, the existing marks are shifted with an empty bitsequence.  
-\end{itemize}
-%The functions \mkfin\ and \mkeps\ are defined below; the definition of \fin\ is the same as in section~\ref{sec:scala-fischer}.  
-%mkfin definition%
-\begin{figure}[ht]
-  \begin{center}
-    \renewcommand{\arraystretch}{1.5}
-    \begin{tabular}{lcl}
-      $\mkfin(\Marked{_{bs}\,r})$            & \dn & $bs$ \\[0.2ex]
-      $\mkfin(\Marked{_{bs}\,c})$            & \dn & $bs$ \\
-      $\mkfin(r_1 + r_2)$                    & \dn &
-        $\begin{cases}
-          \mkfin(r_1) & \text{if } \fin(r_1) \\
-          \mkfin(r_2) & \text{otherwise}
-        \end{cases}$ \\
-      $\mkfin(r_1 \cdot r_2)$                & \dn &
-        $\begin{cases}
-          \mkfin(r_1) \At \mkeps(r_2) & \text{if } \fin(r_1) \land \nullable(r_2) \\
-          \mkfin(r_2)                 & \text{otherwise}
-        \end{cases}$ \\
-      $\mkfin(r^*)$                          & \dn & $\mkfin(r) \At [1]$
-    \end{tabular}
-    \renewcommand{\arraystretch}{1.0}
-
-    \mbox{}
-    \rule{\linewidth}{0.4pt}
-    \caption{$\mkfin$ function}\label{mkfinFunction}
-  \end{center}
-\end{figure}
-%mkeps definition%
-\begin{figure}[ht]
-  \begin{center}
-    \renewcommand{\arraystretch}{1.5}
-    \begin{tabular}{lcl}
-      $\mkeps(\Marked{_{bs}\,r})$            & \dn & $bs$ \\
-      $\mkeps(\ONE\,)$                       & \dn & $\emptylist$ \\
-      $\mkeps(r_1 + r_2)$                    & \dn &
-        $\begin{cases}
-          0 \oplus \mkeps(r_1) & \text{if } \nullable(r_1) \\
-          1 \oplus \mkeps(r_2) & \text{otherwise}
-        \end{cases}$ \\
-      $\mkeps(r_1 \cdot r_2)$                & \dn & $\mkeps(r_1) \At \mkeps(r_2)$ \\
-      $\mkeps(r^*)$                          & \dn & $[1]$
-    \end{tabular}
-    \renewcommand{\arraystretch}{1.0}
-
-    \mbox{}
-    \rule{\linewidth}{0.4pt}
-    \caption{$\mkeps$ function}\label{mkepsBit1Function}
-  \end{center}
-\end{figure}
-\FloatBarrier
-Next, we present two examples of matching a string and extracting a value.  
-The first example shows how the bitsequence is constructed during matching,  
-while the second demonstrates a case where the algorithm fails to produce the 
-POSIX value. When shifting to a point (an already marked character) and the 
-character matches again, the associated bitsequence is overwritten which can 
-lead to value erasure and, in particular, to the loss of the POSIX value,  
-as the second example illustrates.  
-  \begin{figure}[ht]
-    $\bullet\;$ String \texttt{ba}, regular expression: $(a \cdot b + b \cdot a)$
-    \[
-    \begin{array}{rcl}
-      \shift\; b & \rightarrow & (a \cdot b) + (\Marked{_{[1]}\, b} \cdot a)\\\\
-      \shift\; a & \rightarrow & (a \cdot b) + (b \cdot \Marked{_{[1]}\, a} )\\
-    \end{array}
-    \]
-    \hrule
-
-    \caption{Bit-Annotated shift of: $(a \cdot b + b \cdot a)$ with string \texttt{ba}} \label{BitAnnotatedShiftExample1}
-    \mbox{}
-
-  \end{figure}   
-In Example~1 (see Figure~\ref{BitAnnotatedShiftExample1}), the process starts 
-by shifting the first character, b, into the regular expression. Since the 
-expression is an alternative, $\shift$ is applied to both branches. However, 
-only the right branch matches, because its first subexpression
-begins with b. A mark is therefore set with the bitcode list $[1]$. Shifting 
-the second character, a, continues into the concatenation on the right branch. 
-Here the first part is already final, as it matched the preceding b, so the 
-shift moves on to the second part, which matches a. With no further
-calls to $\shift$, $\mkfin$ is applied, because the regular expression has 
-reached a final position,
-indicated by a mark at the end of the
-
-  \begin{figure}[ht]
-    $\bullet\;$ String \texttt{aaa}, regular expression: $(a + a \cdot a)^*$
-    \[
-    \begin{array}{rcl}
-      \shift\; a & \rightarrow & ( \Marked{_{[0,0]\,} a} +  \Marked{_{[0,1]}\,a \cdot a} )^*\\\\
-      \shift\; a & \rightarrow & ( \Marked{_{[0,0,0,0]\,} a} +  \Marked{_{[0,0,0,1]}\,a \cdot \Marked{_{[0,1]}\,a} } )^*\\\\ 
-      \shift\; a & \rightarrow & ( \Marked{_{[0,0,0,0,0,0]\,} a} +  \Marked{_{[0,0,0,0,0,1]}\,a \cdot \Marked{_{[0,0,0,1]}\,a} } )^*\\\\
-    \end{array}
-    \]
-
-    \mbox{}
-    \hrule
-  
-    \caption{Bit-Annotated shift of: $(a + a \cdot a)^*$ with string
-     \texttt{aaa}} \label{BitAnnotatedShiftExample2}
-  \end{figure}
-In Example~2 (see Figure~\ref{BitAnnotatedShiftExample2}), after the first shift
-on a, a mark is placed on the left branch with bits $[0,0]$, indicating the start
-of a \Star\ iteration followed by a left choice. In the right subexpression,
-the mark on $r_1$ of the $a \cdot a$ sequence carries bits $[0,1]$,
-representing the start of the \Star\ iteration followed by a right choice.
-When the second character is shifted, the right subexpression $r_2$ with bits
-$[0,1]$ is overwritten during the third shift, when those bits should instead be
-preserved. These bits correspond to the POSIX match, which begins by matching
-the right-hand side first and then performing another iteration to match the 
-left-hand side. The correct bitsequence in that case would be $[0,1,0,0]$, with
-the final 1 indicating the end of the \Star\ iteration. This behaviour
-arises because \POINT\ stores only a single bitsequence at a time, with no 
-mechanism for preserving multiple marks.
-
-  
-\FloatBarrier
-\subsection{Bit-Annotated, version 2}
-We are fairly sure/strongly think that this version produces all possible 
-values including the posix value.
+not yet finished, the initial results are promising. The remainder of this 
+section describes the third (latest) version; the earlier versions are 
+presented in the Appendix.
 
 \FloatBarrier
 \subsection{String-Carrying Marks - Matcher}
@@ -1382,8 +984,6 @@ particular the mark $\Marked{aa}$, which represents consuming only one character
 \end{figure}
 
 \FloatBarrier
-\subsection{String-Carrying Marks - Lexer **so far**}
-To be Added Later.
 \section{Future Work}
 
 The development of the marked matcher is still ongoing, and several directions for 
@@ -1409,13 +1009,545 @@ future work have been identified:
   expressions and to handle bitcode annotations more efficiently.
 \end{itemize}
 
-\appendix
-\section{Appendix}
-
-
 \bibliographystyle{abbrv}
 \bibliography{urules}
 \addcontentsline{toc}{section}{References}
+
+
+\appendix
+\section{Appendix}
+
+\subsection{Scala Implementation of Fischer et al.’s Marked Approach}
+\label{sec:scala-fischer}
+In Fischer et al. approach, the marks are shifted through the regular expression with 
+each input character. The process starts with an initial mark inserted at the beginning,
+which is then moved step by step as the input is consumed. 
+This behaviour is implemented by the function \shift, which performs the core logic 
+of the algorithm. The initial specification of this function is given below, as we 
+have developed several versions throughout our work.
+
+The following presents the Scala implementation of the shifting behaviour as originally 
+defined by Fischer et al.~\cite{Fischer2010}.
+The \shift\ function takes as input a regular expression to match against, a flag $m$, 
+and a character $c$, and returns a \emph{marked
+regular expression}—that is, a regular expression annotated with marks. We write a 
+marked regular expression as $\bullet\,r$, where the 
+preceding dot indicates that the expression $r$ has been annotated with marks to 
+record the progress of matching.
+
+%\[ \shift(m, c, r) \to \Marked{r}\]
+
+\[
+\renewcommand{\arraystretch}{1.5}
+\shift(m, c, r) =
+\begin{array}{l}
+  \begin{cases}
+    \Marked{r} & \text{if $c$ matches in $r$}, \\
+    \ZERO\, & \text{otherwise.}
+  \end{cases}
+\end{array}
+\renewcommand{\arraystretch}{1.0}
+\]
+
+The flag $m$ indicates the mode of operation: when set to true, a new mark is 
+introduced; otherwise, the function shifts the existing marks.  
+This was realised in our first implementation by adding a boolean attribute to the 
+character constructor to represent a marked character.  
+In later versions, we instead introduced a wrapper constructor around the character 
+constructor to explicitly represent a marked character.
+%shift-fischer definition%
+\begin{figure}[ht]
+  \begin{center}
+    \renewcommand{\arraystretch}{1.5}
+    \begin{tabular}{lcl}
+      \shift$(m,c,\ZERO)$ & \dn & $\ZERO$ \\
+      \shift$(m,c,\ONE)$  & \dn & $\ONE$ \\
+      \shift$(m,c,d)$     & \dn &
+                                  $\begin{cases}
+                                  \bullet d & \text{if } c=d \land m \\
+                                  d         & \text{otherwise}
+                                  \end{cases}$ \\
+
+      \shift$(m,c,r_1 + r_2)$ & \dn & $shift(m,c,r_1) + shift(m,c,r_2)$ \\
+      \shift$(m,c,r_1 \cdot r_2)$ & \dn & \medskip \\
+                                    \multicolumn{3}{@{\hspace{10mm}}l}{
+                                    $\begin{cases}
+                                    shift(m,c,r_1) \cdot shift(true,c,r_2)  & \text{if } m \land \nullable(r_1) \\
+                                    shift(m,c,r_1) \cdot shift(true,c,r_2)  & \text{if } \fin(r_1) \\
+                                    shift(m,c,r_1) \cdot shift(false,c,r_2) & \text{otherwise}\\
+                                    \end{cases}$} \\
+      \shift$(m,c,r^*)$ & \dn &
+                          $\begin{cases}
+                          shift(true,c,r^*) & \text{if } \fin(r) \\
+                          shift(m,c,r^*)    &  \\
+                          \end{cases}$ \\
+    \end{tabular}
+    \renewcommand{\arraystretch}{1.0}
+
+    \mbox{}
+    \rule{\linewidth}{0.4pt}
+   \caption{The \shift\ function in the Scala implementation of 
+   Fischer’s Marked Approach.}\label{shiftFunction}
+  \end{center}
+\end{figure}
+\noindent
+Shifting marks for the base cases $\ZERO\,$ and $\ONE\,$ is straightforward:  
+$\ZERO\,$ cannot be marked, and $\ONE\,$---for now---will not carry a mark, 
+since it matches only the empty string. In the initial algorithm, $\ONE\,$ was
+ not marked, and this choice is carried over into later versions. The reason is 
+ to avoid complications and ensure termination of the \shift\ function, some made 
+ apparent in the latter versions as we will discuss further in subsequent 
+ sections.\footnote{Our choice follows Fischer et al.~\cite{Fischer2010}, 
+ where $\ONE$ is left unmarked (`shift EPS = EPS`). Asperti et al.~\cite{Asperti2010},
+ on the other hand, use pointed regular expressions (pREs) where acceptance of the 
+ empty string is represented by the trailing point being set to true.} 
+ The behaviour of the remaining cases is described next.
+\begin{itemize}
+  \item \textbf{Character case} $(d)$:  
+  In this case, if the input character $c$ matches $d$ and the flag $m$ is true, 
+  a mark is added and stored in the character constructor. Otherwise, the character 
+  remains unmarked.  
+
+  \item \textbf{Alternative case} $(r_1 + r_2)$:  
+  Marks are shifted into both subexpressions, since either branch may match the input 
+  character.  
+
+  \item \textbf{Sequence case} $(r_1 \cdot r_2)$:  
+  \begin{itemize}
+    \item If $r_1$ is neither nullable nor in a final position, marks are shifted only 
+    into $r_1$,  indicating that matching proceeds with the first component. 
+
+    \item If $r_1$ is nullable and may be skipped, marks are shifted into both $r_1$ 
+    and $r_2$, so that either component can begin matching. 
+
+    \item If $\fin(r_1)$ holds, meaning $r_1$ has finished matching, marks are shifted 
+    into $r_2$ to continue matching with its component.  
+  \end{itemize}
+
+  \item \textbf{Star case} $(r^*)$:  
+  Marks are shifted into the subexpression if $m$ is true or if $\fin(r)$ holds.  
+\end{itemize}
+The formal definitions of the auxiliary functions $\fin$ and $\nullable$ appear 
+in Figures~\ref{finFunction} and \ref{nullableFunction}, as defined by Fischer 
+et al.~\cite{Fischer2010}.
+
+%fin definition%
+\begin{figure}[ht]
+  \begin{center}
+    \renewcommand{\arraystretch}{1.5}
+    \begin{tabular}{lcl}
+      $\fin(\ZERO\,)$            & \dn & $\text{false}$ \\
+      $\fin(\ONE\,)$             & \dn & $\text{false}$ \\
+      $\fin(c)$                  & \dn & $\text{false}$ \\
+      $\fin(\Marked{c})$         & \dn & $\text{true}$ \\
+      $\fin(r_1 + r_2)$          & \dn & $\fin(r_1) \lor \fin(r_2)$ \\ 
+      $\fin(r_1 \cdot r_2)$      & \dn & $(\fin(r_1) \land \nullable(r_2)) \lor \fin(r_2)$ \\
+      $\fin(r^*)$                & \dn & $\fin(r)$  
+    \end{tabular}
+    \renewcommand{\arraystretch}{1.0}
+
+    \mbox{}
+    \rule{\linewidth}{0.4pt}
+    \caption{The \fin\ function, which checks whether a marked expression is in a 
+    final state}\label{finFunction}
+  \end{center}
+\end{figure}
+
+%nullable definition%
+\begin{figure}[ht]
+  \begin{center}
+    \renewcommand{\arraystretch}{1.5}
+    \begin{tabular}{lcl}
+      $\nullable(\ZERO\,)$         & \dn & $\text{false}$ \\
+      $\nullable(\ONE\,)$          & \dn & $\text{true}$ \\
+      $\nullable(c)$               & \dn & $\text{false}$ \\
+      $\nullable(r_1 + r_2)$       & \dn & $\nullable(r_1) \lor \nullable(r_2)$ \\ 
+      $\nullable(r_1 \cdot r_2)$   & \dn & $\nullable(r_1) \land \nullable(r_2)$ \\
+      $\nullable(r^*)$             & \dn & $\text{true}$
+    \end{tabular}
+    \renewcommand{\arraystretch}{1.0}
+    
+    \mbox{}
+    \rule{\linewidth}{0.4pt}
+    \caption{The \nullable\ function, which checks whether an expression can match 
+    the empty string.}\label{nullableFunction}
+  \end{center}
+\end{figure}
+
+\FloatBarrier
+\subsection{Bit-Annotated, version 1}
+\label{sec:Bit-Annotated1}
+In this version, we extended the marked approach with bit sequencing. 
+Inspired by Sulzmann and Lu~\cite{Sulzmann2014}, we introduced bitcodes in 
+the form of lists attached to each mark, which are incrementally built as 
+the marks are shifted. This version produces a value, though not necessarily 
+the POSIX value, because when a character is matched more than once at the 
+same point, the associated bitsequence may be overwritten. This can cause value 
+erasure and, in some cases, the loss of the POSIX value, as illustrated below 
+in Example~2. We use the bit annotations $0$ and $1$, similar to the bitcoded 
+derivatives described by Sulzmann and Lu~\cite{Sulzmann2014}.  
+
+In contrast to the origianl work by Fischer et al, our function \shift\ takes
+an additional argument, \Bits.
+%, which is a list of bit elements ($0$ or $1$).
+As \shift\ is applied, bits are appended to the bitsequence. For example, when 
+shifting through an alternative, $0$ is appended to the bitsequence and 
+passed to the left subexpression and $1$ to the right subexpression. If the 
+input character matches a leaf character node, it is wrapped by the newly 
+defined \POINT\ constructor, which represents the mark. The associated bitsequence 
+is stored inside this constructor together with the character.  
+
+We define the auxiliary function \mkfin\ to extract the bitsequence representing
+the path in bits describing how the expression matched. We adapt \mkeps\ 
+from Sulzmann and Lu~\cite{Sulzmann2014} and from Tan and 
+Urban~\cite{TanAndUrban2023}, who define it to construct a value tree 
+and a bitsequence, respectively, for how a nullable expression matches the 
+empty string. Our version also returns a bitsequence: 0 for the left branch 
+and 1 for the right branch in choices, and for \Star\ case, 0 indicates the 
+start of an iteration and 1 its end, with the single bit 1 used for the 
+empty-star case. The auxiliary functions \mkfin\ and \mkeps\ are defined
+in Figures~\ref{mkfinFunction} and \ref{mkepsBit1Function}, while the 
+definition of \fin\ is the same as in Section~\ref{sec:scala-fischer}. 
+We define \shift\ for this version as follows:
+\[
+\renewcommand{\arraystretch}{1.5}
+\shift(m, c, bs, r) =
+\begin{array}{l}
+  \begin{cases}
+    \Marked{r\,_{bs'}} & \text{if $c$ matches in $r$}, \\
+    \ZERO\,        & \text{otherwise.}
+  \end{cases} 
+
+\end{array}
+\renewcommand{\arraystretch}{1.0}
+\]
+where $bs'$ is the updated bitsequence. The complete definition appears 
+in Figure~\ref{bitAnnotatedShiftfunction}.
+%The symbols $0$ and $1$ are used to represent left and right choices in alternatives.
+ %In the \Star\ case, $0$ represents the beginning of an iteration, while $1$ represents the end of an iteration. 
+The behaviour of each case of the \shift\ function is discussed in detail below.
+%shift 1 definition%
+\begin{figure}[ht]
+  \begin{center}
+    \renewcommand{\arraystretch}{1.5}
+    \begin{tabular}{lcl}
+      $\shift(m,bs,c,\ZERO\,)$   & \dn & $\ZERO$ \\
+      $\shift(m,bs,c,\ONE\,)$    & \dn & $\ONE$ \\
+      $\shift(m,bs,c,d)$         & \dn &
+                                  $\begin{cases}
+                                  \Marked{d_{bs}} & \text{if } m \land d = c \\
+                                  d               & \text{otherwise}
+                                  \end{cases}$ \\
+      $\shift(m,bs,c,r_1 + r_2)$ & \dn &
+      $\shift(m,\, bs \oplus 0,\, c,\, r_1) \;+\; \shift(m,\, bs \oplus 1,\, c,\, r_2)$ \\
+      $\shift(m,bs,c,r_1 \cdot r_2)$ & \dn & \\
+                                      \multicolumn{3}{@{\hspace{15mm}}l}{
+                                      $\begin{cases}
+                                      \shift(m,bs,c,r_1) \cdot \shift(\text{true},\, bs \At \mkeps(r_1),\, c,\, r_2) & \text{if } m \land \nullable(r_1) \\
+                                      \shift(m,bs,c,r_1) \cdot \shift(\text{true},\, bs \At \mkfin(r_1),\, c,\, r_2) & \text{if } \fin(r_1) \\
+                                      \shift(m,bs,c,r_1) \cdot \shift(\text{false}, \emptylist,\, c,\, r_2)          & \text{otherwise}
+                                      \end{cases}$} \\
+      $\shift(m,bs,c,r^*)$ & \dn & \\
+                            \multicolumn{3}{@{\hspace{15mm}}l}{
+                            $\begin{cases}
+                            (\shift(m,\, bs \oplus 0,\, c,\, r))^* & \text{if } m \\
+                            (\shift(\text{true},\, bs \At (\mkfin(r) \oplus 1),\, c,\, r))^* & \text{if } m \land \fin(r) \\
+                            (\shift(\text{true},\, \mkfin(r) \oplus 0,\, c,\, r))^* & \text{if } \fin(r) \\
+                            (\shift(\text{false}, \emptylist,\, c,\, r))^* & \text{otherwise}
+                            \end{cases}$}
+    \end{tabular}
+    \renewcommand{\arraystretch}{1.0}
+
+    \mbox{}
+    \rule{\linewidth}{0.4pt}
+\caption{Bit-Annotated $\shift$ (Version~1). Here, $\oplus$ stands for appending 
+a bit to a bitsequence, while\,$\At$ stands for concatenation of two 
+bitsequences.}\label{bitAnnotatedShiftfunction}
+  \end{center}
+\end{figure}
+\paragraph*{\textbf{Character case} $(d)$:}
+\begin{itemize}
+  \item If the input character $c$ matches $d$ and the flag $m$ is true, then 
+  a \POINT\ wraps the constructor $c$, with the updated bitsequence $bs$ stored 
+  inside the \POINT. Otherwise, the character remains unmarked.
+\end{itemize}
+\paragraph*{\textbf{Alternative case} $(r_1 + r_2)$:}
+\begin{itemize}
+  \item Marks are shifted as before, and the direction of the match is annotated:  
+  $0$ is added to the bitsequence passed to the left subexpression,  
+  and $1$ is added to the bitsequence passed to the right subexpression.
+\end{itemize}
+\paragraph*{\textbf{Sequence case} $(r_1 \cdot r_2)$:}
+\begin{itemize}
+    \item If $r_1$ is nullable, a mark is shifted to both $r_1$ and $r_2$:  
+    $bs$ is passed to $r_1$ (representing the path to this expression),  
+    and $bs \cup \mkeps(r_1)$ is passed to $r_2$, where $\mkeps$ returns the bits 
+    for an empty-string match. This corresponds to the case where the first part 
+    of the sequence is skipped.  
+    \item If $r_1$ is in a final position (that is, it has finished matching),  
+    a mark is shifted to $r_2$ with the bitsequence describing how $r_1$ was matched,  
+    extracted using the $\mkfin$ function.  
+    \item Otherwise, marks are shifted only into $r_1$, with $bs$ representing 
+    the current path to $r_1$.  
+\end{itemize}
+\paragraph*{\textbf{Star case} $(r^*)$:}
+\begin{itemize}
+    \item If a new mark is introduced, $bs$ is passed with $0$ appended,  
+    representing the beginning of a new iteration of the star.  
+    \item If a new mark is introduced and $r$ is in a final position,  
+    $bs \cup \mkfin(r)$ is passed with $1$ appended, combining the bits describing the path to $r^*$  
+    with the bits showing how $r$ reached a final position.  
+    \item If $r$ is in a final position, $\mkfin(r)$ is passed with $0$ appended,  
+    representing the start of a new iteration.  
+    \item If no new mark is introduced, the existing marks are shifted with an empty bitsequence.  
+\end{itemize}
+%The functions \mkfin\ and \mkeps\ are defined below; the definition of \fin\ is the same as in section~\ref{sec:scala-fischer}.  
+%mkfin definition%
+\begin{figure}[ht]
+  \begin{center}
+    \renewcommand{\arraystretch}{1.5}
+    \begin{tabular}{lcl}
+      $\mkfin(\Marked{_{bs}\,r})$            & \dn & $bs$ \\[0.2ex]
+      $\mkfin(\Marked{_{bs}\,c})$            & \dn & $bs$ \\
+      $\mkfin(r_1 + r_2)$                    & \dn &
+        $\begin{cases}
+          \mkfin(r_1) & \text{if } \fin(r_1) \\
+          \mkfin(r_2) & \text{otherwise}
+        \end{cases}$ \\
+      $\mkfin(r_1 \cdot r_2)$                & \dn &
+        $\begin{cases}
+          \mkfin(r_1) \At \mkeps(r_2) & \text{if } \fin(r_1) \land \nullable(r_2) \\
+          \mkfin(r_2)                 & \text{otherwise}
+        \end{cases}$ \\
+      $\mkfin(r^*)$                          & \dn & $\mkfin(r) \oplus [1]$
+    \end{tabular}
+    \renewcommand{\arraystretch}{1.0}
+
+    \mbox{}
+    \rule{\linewidth}{0.4pt}
+    \caption{$\mkfin$ function}\label{mkfinFunction}
+  \end{center}
+\end{figure}
+%mkeps definition%
+\begin{figure}[ht]
+  \begin{center}
+    \renewcommand{\arraystretch}{1.5}
+    \begin{tabular}{lcl}
+      $\mkeps(\ONE)$                       & \dn & $\emptylist$ \\
+      $\mkeps(r_1 + r_2)$                    & \dn &
+        $\begin{cases}
+          0 \oplus \mkeps(r_1) & \text{if } \nullable(r_1) \\
+          1 \oplus \mkeps(r_2) & \text{otherwise}
+        \end{cases}$ \\
+      $\mkeps(r_1 \cdot r_2)$                & \dn & $\mkeps(r_1) \At \mkeps(r_2)$ \\
+      $\mkeps(r^*)$                          & \dn & $[1]$
+    \end{tabular}
+    \renewcommand{\arraystretch}{1.0}
+
+    \mbox{}
+    \rule{\linewidth}{0.4pt}
+    \caption{$\mkeps$ function}\label{mkepsBit1Function}
+  \end{center}
+\end{figure}
+\FloatBarrier
+Next, we present two examples of matching a string and extracting a value.  
+The first example shows how the bitsequence is constructed during matching,  
+while the second demonstrates a case where the algorithm fails to produce the 
+POSIX value. When shifting to a point (an already marked character) and the 
+character matches again, the associated bitsequence is overwritten which can 
+lead to value erasure and, in particular, to the loss of the POSIX value,  
+as the second example illustrates.  
+  \begin{figure}[ht]
+    $\bullet\;$ String \texttt{ba}, regular expression: $(a \cdot b + b \cdot a)$
+    \[
+    \begin{array}{rcl}
+      \shift\; b & \rightarrow & (a \cdot b) + (\Marked{_{[1]}\, b} \cdot a)\\\\
+      \shift\; a & \rightarrow & (a \cdot b) + (b \cdot \Marked{_{[1]}\, a} )\\
+    \end{array}
+    \]
+    \hrule
+
+    \caption{Bit-Annotated shift of: $(a \cdot b + b \cdot a)$ with string \texttt{ba}} \label{BitAnnotatedShiftExample1}
+    \mbox{}
+
+  \end{figure}   
+In Example~1 (see Figure~\ref{BitAnnotatedShiftExample1}), the process starts 
+by shifting the first character, b, into the regular expression. Since the 
+expression is an alternative, $\shift$ is applied to both branches. However, 
+only the right branch matches, because its first subexpression
+begins with b. A mark is therefore set with the bitcode list $[1]$. Shifting 
+the second character, a, continues into the concatenation on the right branch. 
+Here the first part is already final, as it matched the preceding b, so the 
+shift moves on to the second part, which matches a. With no further
+calls to $\shift$, $\mkfin$ is applied, because the regular expression has 
+reached a final position,
+indicated by a mark at the end of the
+
+  \begin{figure}[ht]
+    $\bullet\;$ String \texttt{aaa}, regular expression: $(a + a \cdot a)^*$
+    \[
+    \begin{array}{rcl}
+      \shift\; a & \rightarrow & ( \Marked{_{[0,0]\,} a} +  \Marked{_{[0,1]}\,a \cdot a} )^*\\\\
+      \shift\; a & \rightarrow & ( \Marked{_{[0,0,0,0]\,} a} +  \Marked{_{[0,0,0,1]}\,a \cdot \Marked{_{[0,1]}\,a} } )^*\\\\ 
+      \shift\; a & \rightarrow & ( \Marked{_{[0,0,0,0,0,0]\,} a} +  \Marked{_{[0,0,0,0,0,1]}\,a \cdot \Marked{_{[0,0,0,1]}\,a} } )^*\\\\
+    \end{array}
+    \]
+
+    \mbox{}
+    \hrule
+  
+    \caption{Bit-Annotated shift of: $(a + a \cdot a)^*$ with string
+     \texttt{aaa}} \label{BitAnnotatedShiftExample2}
+  \end{figure}
+In Example~2 (see Figure~\ref{BitAnnotatedShiftExample2}), after the first shift
+on a, a mark is placed on the left branch with bits $[0,0]$, indicating the start
+of a \Star\ iteration followed by a left choice. In the right subexpression,
+the mark on $r_1$ of the $a \cdot a$ sequence carries bits $[0,1]$,
+representing the start of the \Star\ iteration followed by a right choice.
+When the second character is shifted, the right subexpression $r_2$ with bits
+$[0,1]$ is overwritten during the third shift, when those bits should instead be
+preserved. These bits correspond to the POSIX match, which begins by matching
+the right-hand side first and then performing another iteration to match the 
+left-hand side. The correct bitsequence in that case would be $[0,1,0,0]$, with
+the final 1 indicating the end of the \Star\ iteration. This behaviour
+arises because \POINT\ stores only a single bitsequence at a time, with no 
+mechanism for preserving multiple marks.
+
+  
+\FloatBarrier
+\subsection{Bit-Annotated, version 2}
+\label{sec:Bit-Annotated2}
+In this version, we updated the previous bit-annotated Version~1 to accumulate
+all possible bitsequences leading to a match, rather than storing only a
+single bitsequence at each marked position. This change was motivated by two
+issues observed in Version~1: the overwriting of marks when a character is
+matched more than once at the same position, which can cause the POSIX value
+to be lost, and the absence of a mechanism to order marks during shifting so
+as to always produce the POSIX value.
+
+To address the first issue, each marked position now carries a list of
+bitsequences. Whenever a character is matched, instead of overwriting the
+existing bitsequence, the new bitsequence is appended to the list already
+stored at that position.
+
+To address the second issue, ordering is applied after the shifting process,
+using a function inspired by the work of Okui and Suzuki~\cite{OkuiSuzuki2013}.
+This ordering is not embedded within shifting itself: all possible values are
+generated first and then ordered externally.
+
+The definition of $\shift$ for this version is shown in
+Figure~\ref{bitAnnotated2Shiftfunction}. The key difference in this version,
+compared to Version~1, is that all possible paths are considered. For example,
+in the sequence case, the bitsequences that arise when $r_1$ is nullable and can
+be skipped are passed along together with the bitsequences that arise when $r_1$
+is in a final position. This means that the right-hand side of a sequence ($r_2$)
+receives both lists of bitsequences — those corresponding to $r_1$ being skipped
+and those where $r_1$ is final — ensuring that all possible paths are accounted
+for. Similarly, the function \mkfin\ is updated to return all possible
+bitsequences.
+
+The auxiliary function \mkfin\ is updated to return lists of bits, while
+\mkeps\ remains unchanged from the previous version. The updated definition
+of \mkfin\ is given in Figure~\ref{mkfin2Definition}.
+
+By accumulating lists of bitsequences at each position, no potential path is
+lost due to overwriting. Although a formal proof is not yet complete,
+substantial testing and reasoning give us confidence that this version
+generates all possible values for matching a string against a regular
+expression, including the POSIX value. However, this comes at the cost of an
+increase in the number of values returned, especially in the \Star\ case,
+where every possible way of matching is generated.
+
+\begin{figure}[ht]
+  \begin{center}
+    \renewcommand{\arraystretch}{1.5}
+    \begin{tabular}{lcl}
+      $\shift(m,bs,c,\ZERO\,)$   & \dn & $\ZERO$ \\
+      $\shift(m,bs,c,\ONE\,)$    & \dn & $\ONE$ \\
+      $\shift(m,bs,c,d)$         & \dn &
+                                  $\begin{cases}
+                                  \Marked{d_{bs}} & \text{if } m \land d = c \\
+                                  d               & \text{otherwise}
+                                  \end{cases}$ \\
+      $\shift(m,bs,c,r_1 + r_2)$ & \dn &
+      $\shift(m,\, bs \bigoplus 0,\, c,\, r_1) \;+\; \shift(m,\, bs \bigoplus 1,\, c,\, r_2)$ \\
+      $\shift(m,bs,c,r_1 \cdot r_2)$ & \dn &  $ \shift(m,bs,c,r_1)\, \cdot$\\
+      \multicolumn{3}{@{\hspace{15mm}}l}{
+      $\begin{cases}
+      \shift(m,\, (bs \lessdot \mkeps(r_1)\, \listconcat\ \mkfin(r_1)),\, c,\, r_2)
+        & \text{if } m \land \nullable(r_1) \land \fin(r_1) \\
+      \shift(m,\, bs \lessdot \mkeps(r_1),\, c,\, r_2)
+        & \text{if } m \land \nullable(r_1) \\
+      \shift(\text{true},\, \mkfin(r_1),\, c,\, r_2)
+        & \text{if } \fin(r_1) \\
+      \shift(\text{false},\, \emptylist,\, c,\, r_2)
+        & \text{otherwise}
+      \end{cases}$} \\
+      $\shift(m,bs,c,r^*)$ & \dn & \\
+      \multicolumn{3}{@{\hspace{15mm}}l}{
+      $\begin{cases}
+      \big(\shift(m,\, (bs\, \listconcat\ \mkfin(r)) \bigoplus 0,\, c,\, r)\big)^{*}
+        & \text{if } m \land \fin(r) \\
+      \big(\shift(\text{true},\, \mkfin(r) \bigoplus 0,\, c,\, r)\big)^{*}
+        & \text{if } \fin(r) \\
+      \big(\shift(m,\, bs \bigoplus 0,\, c,\, r)\big)^{*}
+        & \text{if } m \\
+      \big(\shift(\text{false},\, \emptylist,\, c,\, r)\big)^{*}
+        & \text{otherwise}
+      \end{cases}$}
+    \end{tabular}
+    \renewcommand{\arraystretch}{1.0}
+
+    \mbox{}
+    \rule{\linewidth}{0.4pt}
+    \caption{Bit-Annotated $\shift$ (Version~2). Here,
+    $\bigoplus$ stands for appending a single element to each member of a list,
+    $\lessdot$ stands for appending a list to each member of a list,
+    and $\listconcat$ stands for list concatenation.} 
+    \label{bitAnnotated2Shiftfunction}
+  \end{center}
+\end{figure}
+%mkfin2
+\begin{figure}[ht]
+  \begin{center}
+    \renewcommand{\arraystretch}{1.5}
+    \begin{tabular}{lcl}
+      $\mkfin(\Marked{_{bs}\,c})$            & \dn & $bs$ \\
+      $\mkfin(r_1 + r_2)$                    & \dn &
+        $\begin{cases}
+          \mkfin(r_1) \;\listconcat\; \mkfin(r_2) & \text{if } \fin(r_1) \land \fin(r_2),\\
+          \mkfin(r_1)                      & \text{if } \fin(r_1),\\
+          \mkfin(r_2)                      & \text{if } \fin(r_2).
+        \end{cases}$ \\[1.2ex]
+        $\mkfin(r_1 \cdot r_2)$ & \dn & \\
+          \multicolumn{3}{@{\hspace{15mm}}l}{$
+            \begin{cases}
+              \mkfin(r_2) \;\listconcat\; \bigl(\mkfin(r_1) \lessdot \mkeps(r_2)\bigr)
+                & \text{if } \fin(r_1) \land \nullable(r_2) \land \fin(r_2),\\
+              \mkfin(r_1) \lessdot \mkeps(r_2)
+                & \text{if } \fin(r_1) \land \nullable(r_2),\\
+              \mkfin(r_2)
+                & \text{otherwise.}
+            \end{cases}$} \\
+    
+
+      $\mkfin(r^*)$                          & \dn & $\mkfin(r) \bigoplus\, [1]$
+    \end{tabular}
+    \renewcommand{\arraystretch}{1.0}
+
+    \mbox{}
+    \rule{\linewidth}{0.4pt}
+    \caption{\mkfin\ (Version~2). Returns a list of all bitsequences in a point, 
+    representing all possible match paths.}
+    \label{mkfin2Definition}
+  \end{center}
+\end{figure}
+%mkeps2
+
+\FloatBarrier
+\subsection{String-Carrying Marks - Lexer **so far**}
+To be Added Later.
+
 
 
 \end{document}
