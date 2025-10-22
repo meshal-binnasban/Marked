@@ -1,3 +1,31 @@
+error id: file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/DrChristian/play_NMarks_Exp3.sc:isEmpty.
+file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/DrChristian/play_NMarks_Exp3.sc
+empty definition using pc, found symbol in pc: isEmpty.
+empty definition using semanticdb
+empty definition using fallback
+non-local guesses:
+	 -rexp/ms1/isEmpty.
+	 -rexp/ms1/isEmpty#
+	 -rexp/ms1/isEmpty().
+	 -enumerate/ms1/isEmpty.
+	 -enumerate/ms1/isEmpty#
+	 -enumerate/ms1/isEmpty().
+	 -regenerate/ms1/isEmpty.
+	 -regenerate/ms1/isEmpty#
+	 -regenerate/ms1/isEmpty().
+	 -scala/collection/parallel/CollectionConverters.ms1.isEmpty.
+	 -scala/collection/parallel/CollectionConverters.ms1.isEmpty#
+	 -scala/collection/parallel/CollectionConverters.ms1.isEmpty().
+	 -ms1/isEmpty.
+	 -ms1/isEmpty#
+	 -ms1/isEmpty().
+	 -scala/Predef.ms1.isEmpty.
+	 -scala/Predef.ms1.isEmpty#
+	 -scala/Predef.ms1.isEmpty().
+offset: 2517
+uri: file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/DrChristian/play_NMarks_Exp3.sc
+text:
+```scala
 
 import scala.language.implicitConversions
 import $file.rexp, rexp._
@@ -78,19 +106,17 @@ def shifts(ms: Marks, r: Rexp): Marks =
 
   //case NTIMES(r,n) if n < 0 => Nil
   case NTIMES(r,n) =>
-    if (n == 0) then Nil
-    else
-      if (n == 1) shifts(ms<:+>NxT, r).reshuffle
-      else{
-          val ms1 = shifts(ms<:+>NxT, r).reshuffle
-          if(ms1.isEmpty) Nil else{
-            if(nullable(r)){
-              ( (ms1<:+> EnT) ::: shifts(ms1,NTIMES(r,n-1)))
-              }else{
-                (shifts(ms1,NTIMES(r,n-1))   )
-                }
-          }
-      }
+    if (n == 0) Nil
+    else{
+        val ms1 = shifts(ms<:+>NxT, r).reshuffle
+        if(ms1.@@isEmpty) Nil else{
+          if(nullable(r)){
+            ( (ms1<:+> EnT) ::: shifts(ms1,NTIMES(r,n-1)))
+            }else{
+              (shifts(ms1,NTIMES(r,n-1))   )
+              }
+        }
+    }
 
 
 /*     if((ms.collectEmpty.nonEmpty && n != 0) && !nullable(r)){ 
@@ -711,3 +737,10 @@ def testAll() = {
         }
 
 */
+
+```
+
+
+#### Short summary: 
+
+empty definition using pc, found symbol in pc: isEmpty.

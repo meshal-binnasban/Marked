@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025/Homebrew) (preloaded format=pdflatex 2025.3.15)  25 SEP 2025 11:19
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025/Homebrew) (preloaded format=pdflatex 2025.3.15)  16 OCT 2025 13:58
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -142,67 +142,63 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 LaTeX Warning: No \author given.
 
 
-Overfull \hbox (8.12535pt too wide) in paragraph at lines 58--59
-[]\OT1/cmr/m/n/12 We con-sider two main cases, namely $\OML/cmm/m/it/12 shifts\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 ms; r\OT1/cmr/m/n/12 ) = []$ and $\OML/cmm/m/it/12 shifts\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 ms; r\OT1/cmr/m/n/12 ) \OMS/cmsy/m/n/12 6\OT1/cmr/m/n/12 =
- []
-
-
 
 [1
 
 {/usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/map/pdftex/updmap/pdftex.map}]
-
-[2]
-Overfull \hbox (32.0855pt too wide) detected at line 139
+Overfull \hbox (32.0855pt too wide) detected at line 118
 \OML/cmm/m/it/12 b \OT1/cmr/m/n/12 = \OML/cmm/m/it/12 Strips\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 L\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 r[]\OT1/cmr/m/n/12 ))(\OML/cmm/m/it/12 set\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 shifts\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 ms; r\OT1/cmr/m/n/12 ))) = \OML/cmm/m/it/12 Strips\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 L\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 r[]\OT1/cmr/m/n/12 ))(\OML/cmm/m/it/12 Strips\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 L\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 r\OT1/cmr/m/n/12 ))(\OML/cmm/m/it/12 set ms\OT1/cmr/m/n/12 ))\OML/cmm/m/it/12 :
  []
 
 
-Overfull \hbox (76.42804pt too wide) detected at line 145
+Overfull \hbox (76.42804pt too wide) detected at line 124
 \OML/cmm/m/it/12 set\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 shifts\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 ms; r[]\OT1/cmr/m/n/12 )) = \OML/cmm/m/it/12 a \OMS/cmsy/m/n/12 [ \OML/cmm/m/it/12 b \OT1/cmr/m/n/12 = \OML/cmm/m/it/12 Strips\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 L\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 r\OT1/cmr/m/n/12 ))(\OML/cmm/m/it/12 set ms\OT1/cmr/m/n/12 ) \OMS/cmsy/m/n/12 [ \OML/cmm/m/it/12 Strips\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 L\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 r[]\OT1/cmr/m/n/12 ))(\OML/cmm/m/it/12 Strips\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 L\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 r\OT1/cmr/m/n/12 ))(\OML/cmm/m/it/12 set ms\OT1/cmr/m/n/12 ))\OML/cmm/m/it/12 :
  []
 
 
-Overfull \hbox (32.0855pt too wide) detected at line 171
+Overfull \hbox (32.0855pt too wide) detected at line 150
 \OML/cmm/m/it/12 b \OT1/cmr/m/n/12 = \OML/cmm/m/it/12 Strips\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 L\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 r[]\OT1/cmr/m/n/12 ))(\OML/cmm/m/it/12 set\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 shifts\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 ms; r\OT1/cmr/m/n/12 ))) = \OML/cmm/m/it/12 Strips\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 L\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 r[]\OT1/cmr/m/n/12 ))(\OML/cmm/m/it/12 Strips\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 L\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 r\OT1/cmr/m/n/12 ))(\OML/cmm/m/it/12 set ms\OT1/cmr/m/n/12 ))\OML/cmm/m/it/12 :
  []
 
 
 
-[3]
+[2]
 
-[4]
-Overfull \hbox (3.98657pt too wide) detected at line 212
+[3]
+Overfull \hbox (3.98657pt too wide) detected at line 191
 \OML/cmm/m/it/12 set\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 shiftsr[]ms\OT1/cmr/m/n/12 ) = \OML/cmm/m/it/12 set\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 shiftsr[]\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 shiftsrms\OT1/cmr/m/n/12 )) = \OML/cmm/m/it/12 Strip\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 r[]\OT1/cmr/m/n/12 )(\OML/cmm/m/it/12 Strip\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 Lrms\OT1/cmr/m/n/12 ))
  []
 
 
-Overfull \hbox (47.04924pt too wide) in paragraph at lines 219--224
+Overfull \hbox (47.04924pt too wide) in paragraph at lines 198--203
 []\OT1/cmr/m/n/12 unfolding shifts def-i-ni-tion, $\OML/cmm/m/it/12 set\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 shifts\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 ms; r[]\OT1/cmr/m/n/12 )) = \OML/cmm/m/it/12 a \OMS/cmsy/m/n/12 [ \OML/cmm/m/it/12 b$ \OT1/cmr/m/n/12 where $\OML/cmm/m/it/12 a \OT1/cmr/m/n/12 = \OML/cmm/m/it/12 set\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 shifts\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 ms; r\OT1/cmr/m/n/12 ))$
  []
 
 
-Overfull \hbox (95.12212pt too wide) in paragraph at lines 228--230
+Overfull \hbox (95.12212pt too wide) in paragraph at lines 207--209
 \OT1/cmr/m/n/12 smaller than $\OML/cmm/m/it/12 ms$ \OT1/cmr/m/n/12 and (ii) $\OML/cmm/m/it/12 r[]$ \OT1/cmr/m/n/12 is smaller than $\OML/cmm/m/it/12 r[]$\OT1/cmr/m/n/12 . hence $\OML/cmm/m/it/12 b \OT1/cmr/m/n/12 = \OML/cmm/m/it/12 Strips\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 L r[]\OT1/cmr/m/n/12 )(\OML/cmm/m/it/12 set\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 shifts\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 ms; r\OT1/cmr/m/n/12 ))) =
  []
 
 
-Overfull \hbox (117.3512pt too wide) in paragraph at lines 231--233
+Overfull \hbox (117.3512pt too wide) in paragraph at lines 210--212
 []\OT1/cmr/m/n/12 therefore $\OML/cmm/m/it/12 set\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 shifts\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 ms; r[]\OT1/cmr/m/n/12 )) = \OML/cmm/m/it/12 a \OMS/cmsy/m/n/12 [ \OML/cmm/m/it/12 b \OT1/cmr/m/n/12 = \OML/cmm/m/it/12 Strips\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 L r\OT1/cmr/m/n/12 )(\OML/cmm/m/it/12 set ms\OT1/cmr/m/n/12 ) \OMS/cmsy/m/n/12 [ \OML/cmm/m/it/12 Strips\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 L r[]\OT1/cmr/m/n/12 )(\OML/cmm/m/it/12 Strips\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 L r\OT1/cmr/m/n/12 )(\OML/cmm/m/it/12 set ms\OT1/cmr/m/n/12 ))$ 
  []
 
 
-Overfull \hbox (92.99272pt too wide) in paragraph at lines 236--240
+Overfull \hbox (92.99272pt too wide) in paragraph at lines 215--219
 []\OT1/cmr/m/n/12 unfolding shifts again, $\OML/cmm/m/it/12 set\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 shifts\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 ms; r[]\OT1/cmr/m/n/12 )) = \OML/cmm/m/it/12 b$ \OT1/cmr/m/n/12 where $\OML/cmm/m/it/12 b \OT1/cmr/m/n/12 = \OML/cmm/m/it/12 set\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 shifts\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 shifts\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 ms; r\OT1/cmr/m/n/12 )\OML/cmm/m/it/12 ; r[]\OT1/cmr/m/n/12 )) =
  []
 
 
 
-[5]
-Overfull \hbox (11.12604pt too wide) in paragraph at lines 241--243
+[4]
+Overfull \hbox (11.12604pt too wide) in paragraph at lines 220--222
 []\OT1/cmr/m/n/12 and since $\OML/cmm/m/it/12 L\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 r[]\OT1/cmr/m/n/12 ) = \OML/cmm/m/it/12 L\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 r\OT1/cmr/m/n/12 )@\OML/cmm/m/it/12 L\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 r[]\OT1/cmr/m/n/12 )$ we have $\OML/cmm/m/it/12 b \OT1/cmr/m/n/12 = \OML/cmm/m/it/12 Strips\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 L r\OT1/cmr/m/n/12 @\OML/cmm/m/it/12 L r[]\OT1/cmr/m/n/12 )(\OML/cmm/m/it/12 set ms\OT1/cmr/m/n/12 ) =
  []
 
+
+
+[5]
 No file proof.bbl.
 
 
@@ -221,7 +217,7 @@ Here is how much of TeX's memory you used:
  1141 hyphenation exceptions out of 8191
  56i,6n,65p,299b,211s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb></usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt12.pfb></usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on proof.pdf (6 pages, 98458 bytes).
+Output written on proof.pdf (6 pages, 98670 bytes).
 PDF statistics:
  73 PDF objects out of 1000 (max. 8388607)
  44 compressed objects within 1 object stream

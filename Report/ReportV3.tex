@@ -53,7 +53,7 @@
 \newcommand{\bigO}[1]{\ensuremath{\mathop{}\mathopen{}\mathcal{O}\mathopen{}\left(#1\right)}}
 
 
-
+\newcommand{\reshuffle}{\textit{reshuffle}}
 
 \title{Progress Report - 9 Months}
 \author{Meshal Binnasban}
@@ -611,39 +611,59 @@ immediately after it. In their framework, this is expressed by two operations
 on marks, namely $follow$ and $read$. The function $follow$ is, as they 
 describe, similar to an epsilon-closure, in that it moves all marks in a 
 regular expression to the next atom to be read, then $read$ marks all 
-characters corresponding to its input argument. The main transition function 
+atoms matching the current input symbol. The main transition function 
 is therefore written as 
 
 \[
 shift\ m\ r\ x = read\ x\ (follow\ m\ r).
 \] 
 
-By contrast, they show that the works of Asperti et al., although presented 
-as McNaughton--Yamada, are in fact a dual construction, mark-before-atom. 
-In this version the marks indicate atoms that are about to be read, rather 
-than atoms that have just been consumed. The main transition function is 
-the inversion of the previous transition function:
-
+By contrast, they show that the work of Asperti et al., although presented 
+as McNaughton--Yamada, is in fact a dual construction: mark-before-atom.  
+While Asperti et al.\ described their approach as following the 
+McNaughton--Yamada--Glushkov framework, their work actually corresponds 
+to the opposite variant, where marks are placed before reading the next 
+atom.  
+In this version, the marks indicate atoms that are about to be read rather 
+than atoms that have just been consumed.  
+The main transition function is therefore the inverse of the previous one:
 \[
 move\ c\ r\ m = follow\ m\ (read\ c\ r).
 \]
 
 \FloatBarrier
 \subsubsection{Motivation for a Marked Approach}
+The marked approach offers a potentially promising alternative to
+derivatives for regular expression matching by addressing some of the
+limitations found in the derivative method.
+The derivative method itself provides a better way of matching than
+constructing an NFA and then a DFA, which can suffer from state explosion
+exponentially, up to $2^n$.
+Engines that construct DFAs, such as those used in rust, attempt
+to mitigate this problem by building the automaton dynamically: they
+start from the initial state and construct additional DFA states only
+as required by the input string.
+This avoids generating the full automaton up front, but even so, it can
+still lead to large memory usage for expressions such as $r^n$, which
+require $n$ copies of the subexpression.
+Other engines, such as those in Python, use NFAs instead of DFAs.
+This design allows for additional features, such as backreferences and
+lookarounds, but may result in catastrophic backtracking when the engine
+needs to explore a large portion of the automaton—or even the entire
+automaton—before finding a match or rejecting an input.
+The derivative approach, albeit elegant in design and supported by formal
+proofs—unlike many existing engines that lack such guarantees—can still
+grow quickly in size, as each derivative may add new subexpressions at
+each step.
+Even with aggressive simplifications, these subexpressions
+cannot always be simplified when they occur at different levels of the
+expression tree.
 
-The marked approach offers an alternative to derivatives for regular expression 
-matching. It relies on propagating marks within the regular expression rather than 
+
+The marked approach relies on propagating marks within the regular expression rather than 
 constructing new subexpressions. Our main motivation is that this method could support 
-fast and high-performance matching with POSIX value extraction, since it handles 
-matching in a way that avoids some of the limitations of the derivative-based approach.  
-
-In the derivative method—for example, in the sequence case—the size of the expression 
-typically increases due to the creation of new subexpressions, which contributes to 
-the size explosion problem. By contrast, in the marked approach, matching achieves 
-a similar result by propagating marks through the regular expression without 
-generating larger expressions. We also hope that these marks can be used to extract 
-POSIX values in an efficient manner.  
-
+efficient and high-performance matching with POSIX value extraction, since it handles 
+matching in a way that avoids some of the limitations of the derivative-based approach. 
 Inspired by the works of Fischer et al.\ and Asperti et 
 al.~\cite{Fischer2010, Asperti2010}, we aim to extend the marked approach to extract 
 POSIX values, as well as to handle extended constructors, such as bounded 
@@ -697,6 +717,7 @@ presented in the Appendix.
 
 \FloatBarrier
 \subsection{String-Carrying Marks - Matcher}
+\label{shiftsMatcher}
 We initially followed the approach of Fischer et al.~\cite{Fischer2010} and 
 Asperti et al.~\cite{Asperti2010}, in which shifting is performed character by 
 character and marks are propagated at each step. However, as in our previous 
@@ -717,7 +738,8 @@ extracting POSIX values.
 We define \shifts\ in place of \shift\ as the function now operates on the 
 full input string, rather than character by character as in the previous versions.
 The full definition of \shifts\ is given in Figure~\ref{shiftsFunction}.
-As noted earlier, the empty string $\ONE$ is not marked. This choice ensures 
+As discussed in Appendix~\ref{sec:scala-fischer}, the empty string expression 
+$\ONE$ is not marked. This choice ensures 
 termination of the \shifts\ function, particularly in the \Star\ case: if 
 $\ONE$ were allowed to produce marks, it would lead to infinite unfolding 
 and non-termination.
@@ -737,7 +759,6 @@ is empty, \shifts\ is not applied; instead, the \nullable\ function
 Figure~\ref{nullableFunction}) is used to check whether the regular expression 
 accepts the empty string.
 
-
 The number of marks when using lists is, in most cases, linear in the input
 length. The exception is the \Star\ case, where the total number of marks can
 grow exponentially or more. This proliferation arises when the inner $r$
@@ -748,25 +769,20 @@ number still grows in this way. In such cases, if the regular expression has
 $m$ branch choices, then on an input of length $n$ the number of marks can reach
 $\bigO{m^{n}}$. For example, for the regular expression $(a + a)^{*}$ and
 input of the form $\underbrace{a \cdots a}_{n}$, we have $m = 2$. For $n = 3$,
-the first three unfoldings are as follows: 
+The first three unfoldings are as follows, where \At\ stands for list concatenation. 
 \[
 \begin{aligned}
-\text{step 1}:&\quad \Marked{aa}\; \At\; \Marked{aa} \quad (2) \\[4pt]
+\text{step 1}:&\quad [\Marked{aa}]\; \At\; [\Marked{aa}] \quad (2) \\
 \text{step 2}:&\quad
-  \Marked{a}\; \At\; \Marked{a}\; \At\; \Marked{a}\; \At\; \Marked{a} \quad (4) \\[4pt]
+  [\Marked{a}\; ,\; \Marked{a}]\; \At\; [\Marked{a}\; ,\; \Marked{a}] \quad (4) \\
 \text{step 3}:&\quad
-  \underbrace{\Marked{\emptylist}\; \At\; \cdots\; \At\; \Marked{\emptylist}}_{8\ \text{marks}}
+  \underbrace{[\Marked{\emptylist}\; ,\; \cdots\;] \At\;[\Marked{\emptylist}\;, \cdots\;]}_{8\ \text{marks}}
 \end{aligned}
 \]
-Using sets, on the other hand, removes duplicates, which are the reason lists
-can grow exponentially (or more) . The number of distinct marks therefore
-remains linear in the input string length. In the same example we obtain only
-\(\{\Marked{aa}\} \rightarrow \{\Marked{a}\} \rightarrow \{\Marked{\emptylist}\}\).
-
 Using sets, on the other hand, removes duplicates, which are the reason lists 
 can grow exponentially (or more). The number of distinct marks therefore 
 remains linear in the input string length. In the same example we obtain only 
-\(\{\Marked{aa}\} \rightarrow \{\Marked{a}\} \rightarrow \{\Marked{\emptylist}\}\).
+$\{\Marked{aa}\ \rightarrow \Marked{a}\ \rightarrow \Marked{\emptylist}\}$.
 When marks are represented only by their remaining suffixes, there can be at most 
 \(n\) distinct marks for an input string of length \(n\), since each mark corresponds 
 to a unique suffix and there are at most \(n\) such suffixes. Even in the presence 
@@ -774,14 +790,14 @@ of nested stars, the outer unfolding reuses the same set of suffix marks generat
 by the inner star, so although the number of recursive calls can increase, the number 
 of distinct marks at each stage remains bounded by \(n\).
 
-
 We started with a lexer implementation of this version, and from initial 
 testing it produces the POSIX value, yet this remains to be formally proven. 
 In that version we introduce reshuffling, where marks are ordered based on 
 their remaining strings. At present, the reordering is carried out in the
- \SEQText\ case after shifting through the first part.
+sequence case after shifting through the first part and in the \Star\ and $r^n$
+after shifting to the inner regex inside.
 
- The behaviour of each case of the $\shifts$ function is discussed in detail below.
+The behaviour of each case of the $\shifts$ function is discussed in detail below.
 \begin{figure}[ht]
   \begin{center}
   \renewcommand{\arraystretch}{1.7}
@@ -806,8 +822,8 @@ their remaining strings. At present, the reordering is carried out in the
 
   \mbox{}
   \rule{\linewidth}{0.4pt}
- \caption{$\shifts$ function. A mark is represented 
- as $\Marked{s}$, where $s$ is a string, and $ms$ is a list of 
+ \caption{$\shifts$ function. Marks are annotated with strings. A mark is represented 
+  as $\Marked{s}$, where $s$ is a string, and $ms$ is a list of 
  such marks.}\label{shiftsFunction}
   \end{center}
 \end{figure}
@@ -946,7 +962,7 @@ particular the mark $\Marked{aa}$, which represents consuming only one character
   \end{center}
   \mbox{}
   \hrule
-  \caption{String-carrying shifts for: $(a + (a \cdot c))$ with string \texttt{ac}}
+  \caption{Example 1: String-carrying shifts for: $(a + (a \cdot c))$ with string \texttt{ac}}
   \label{StringShiftsExample1}
 \end{figure}
 
@@ -963,7 +979,7 @@ particular the mark $\Marked{aa}$, which represents consuming only one character
 
   \mbox{}
   \hrule
-  \caption{String-carrying shifts for: $(a^*)$ with string \texttt{aaa}}
+  \caption{Example 2: String-carrying shifts for: $(a^*)$ with string \texttt{aaa}}
   \label{StringShiftsExample2}
 \end{figure}
 
@@ -979,7 +995,7 @@ particular the mark $\Marked{aa}$, which represents consuming only one character
   \end{center}
   \mbox{}
   \hrule
-  \caption{String-carrying shifts for: $((a^* \cdot a) \cdot a)$ with string \texttt{aaa}}
+  \caption{Example 3: String-carrying shifts for: $((a^* \cdot a) \cdot a)$ with string \texttt{aaa}}
   \label{StringShiftsExample3}
 \end{figure}
 
@@ -995,8 +1011,8 @@ future work have been identified:
     Initial results indicate that it is producing POSIX values. 
     Further work is needed to fix the handling of exact repetition $r^n$.
   \item \textbf{Extending support for additional operators.}  
-    Future work will focus on extending the matcher to handle intersection, 
-    negation, and lookahead operators. This will require extending both the 
+    Future work will focus on extending the matcher to handle intersection and 
+    negation operators. This will require extending both the 
     shifting function and the bitcoding scheme so that these operators are 
     handled correctly during matching.
   \item \textbf{Formal verification in Isabelle/HOL.} 
@@ -1474,9 +1490,9 @@ where every possible way of matching is generated.
       $\shift(m,bs,c,r_1 \cdot r_2)$ & \dn &  $ \shift(m,bs,c,r_1)\, \cdot$\\
       \multicolumn{3}{@{\hspace{15mm}}l}{
       $\begin{cases}
-      \shift(m,\, (bs \lessdot \mkeps(r_1)\, \listconcat\ \mkfin(r_1)),\, c,\, r_2)
+      \shift(m,\, (bs \At \mkeps(r_1)\, \At\ \mkfin(r_1)),\, c,\, r_2)
         & \text{if } m \land \nullable(r_1) \land \fin(r_1) \\
-      \shift(m,\, bs \lessdot \mkeps(r_1),\, c,\, r_2)
+      \shift(m,\, bs \At \mkeps(r_1),\, c,\, r_2)
         & \text{if } m \land \nullable(r_1) \\
       \shift(\text{true},\, \mkfin(r_1),\, c,\, r_2)
         & \text{if } \fin(r_1) \\
@@ -1486,7 +1502,7 @@ where every possible way of matching is generated.
       $\shift(m,bs,c,r^*)$ & \dn & \\
       \multicolumn{3}{@{\hspace{15mm}}l}{
       $\begin{cases}
-      \big(\shift(m,\, (bs\, \listconcat\ \mkfin(r)) \bigoplus 0,\, c,\, r)\big)^{*}
+      \big(\shift(m,\, (bs\, \At\ \mkfin(r)) \bigoplus 0,\, c,\, r)\big)^{*}
         & \text{if } m \land \fin(r) \\
       \big(\shift(\text{true},\, \mkfin(r) \bigoplus 0,\, c,\, r)\big)^{*}
         & \text{if } \fin(r) \\
@@ -1503,7 +1519,7 @@ where every possible way of matching is generated.
     \caption{Bit-Annotated $\shift$ (Version~2). Here,
     $\bigoplus$ stands for appending a single element to each member of a list,
     $\lessdot$ stands for appending a list to each member of a list,
-    and $\listconcat$ stands for list concatenation.} 
+    and $\At$ stands for list concatenation.} 
     \label{bitAnnotated2Shiftfunction}
   \end{center}
 \end{figure}
@@ -1515,14 +1531,14 @@ where every possible way of matching is generated.
       $\mkfin(\Marked{_{bs}\,c})$            & \dn & $bs$ \\
       $\mkfin(r_1 + r_2)$                    & \dn &
         $\begin{cases}
-          \mkfin(r_1) \;\listconcat\; \mkfin(r_2) & \text{if } \fin(r_1) \land \fin(r_2),\\
+          \mkfin(r_1) \;\At\; \mkfin(r_2) & \text{if } \fin(r_1) \land \fin(r_2),\\
           \mkfin(r_1)                      & \text{if } \fin(r_1),\\
           \mkfin(r_2)                      & \text{if } \fin(r_2).
         \end{cases}$ \\[1.2ex]
         $\mkfin(r_1 \cdot r_2)$ & \dn & \\
           \multicolumn{3}{@{\hspace{15mm}}l}{$
             \begin{cases}
-              \mkfin(r_2) \;\listconcat\; \bigl(\mkfin(r_1) \lessdot \mkeps(r_2)\bigr)
+              \mkfin(r_2) \;\At\; \bigl(\mkfin(r_1) \lessdot \mkeps(r_2)\bigr)
                 & \text{if } \fin(r_1) \land \nullable(r_2) \land \fin(r_2),\\
               \mkfin(r_1) \lessdot \mkeps(r_2)
                 & \text{if } \fin(r_1) \land \nullable(r_2),\\
@@ -1546,8 +1562,193 @@ where every possible way of matching is generated.
 
 \FloatBarrier
 \subsection{String-Carrying Marks - Lexer **so far**}
-To be Added Later.
+in this version, we extend the string carrying marks version by adding bitsequences
+attached to each mark, so marks consist of suffixes and bitsequences.
+similar to the bit-annotated version 1 and 2, the bitsequences are built incrementally
+as the marks are shifted through the regular expression. the exeption now is that 
+the order of marks are based on the remaining suffixes where shorter suffixes are prioritized
+over longer suffixes, and for marks with the same suffix length, the original order
+is preserved. this reordering , we call reshuffle, is done after shifting through the 
+first part of a sequence, after shifting into the inner regex inside a star , and inside r to 
+the power of n. then when the shifting is done, we extract the bitsequcnes of the first
+mark that consumed its string.
 
+We define \shifts\ in this version in Figure~\ref{shiftsFunctionLexer}, The behaviour 
+of each case of the \shift\ function is discussed in detail below.
+
+\begin{figure}[ht]
+  \begin{center}
+  \renewcommand{\arraystretch}{1.7}
+  \begin{tabular}{ccl}
+    $\shifts(ms, 0)$ & \dn & $\emptylist$ \\
+    $\shifts(ms, 1)$ & \dn & $\emptylist$ \\
+    $\shifts(ms, d)$ & \dn & $[\, \Marked{s} \mid \Marked{d::s} \in ms \,]$ \\
+
+    $\shifts(ms, r_1 + r_2)$ & \dn &
+      $\shifts(ms \bigoplus 0, r_1) \; @ \; \shifts(ms \bigoplus 1, r_2)$ \\
+
+    $\shifts(ms, r_1 \cdot r_2)$ & \dn &
+      $\text{let } ms' = \shifts(ms, r_1).\reshuffle \text{ in}$ \\
+      \multicolumn{3}{@{\hspace{10mm}}l}{%
+      $ \begin{cases}
+        (\, ms' \lessdot \mkeps(r_2) \,) 
+        \; @ \;
+        \big[\, \shifts([\Marked{s}], r_2) \mid \Marked{s} \in ms' \,\big]^{@}
+        \; @ \;
+        \shifts(ms \lessdot \mkeps(r_1), r_2)
+        & \text{if } \nullable(r_1) \land \nullable(r_2),\\
+        \big[\, \shifts([\Marked{s}], r_2) \mid \Marked{s} \in ms' \,\big]^{@}
+        \; @ \;
+        \shifts(ms \lessdot \mkeps(r_1), r_2)
+        & \text{if } \nullable(r_1) \land \neg\nullable(r_2),\\
+        (\, ms' \lessdot \mkeps(r_2) \,)
+        \; @ \;
+        \big[\, \shifts([\Marked{s}], r_2) \mid \Marked{s} \in ms' \,\big]^{@}
+        & \text{if } \neg\nullable(r_1) \land \nullable(r_2),\\
+        \big[\, \shifts([\Marked{s}], r_2) \mid \Marked{s} \in ms' \,\big]^{@}
+        & \text{otherwise.}
+      \end{cases}$} \\
+
+    $\shifts(ms, r^{*})$ & \dn &
+      $\text{let } ms' = \shifts(ms \oplus 0, r).\reshuffle \text{ in}$ \\
+      &&$\text{if } ms' = \emptylist \;\; \text{then } \emptylist 
+      \;\; \text{else } (\, ms' \oplus 1 \,) \; @ \; \shifts(ms', r^{*})$ \\
+
+    $\shifts(ms, r^{n})$ & \dn &
+      $\text{if } n=0 \text{ then } \emptylist
+      \;\; \text{else if } n=1 \text{ then}$ \\ 
+      &&$\shifts(ms \oplus 0, r).\reshuffle$ \\ 
+      &&$\text{else let } ms' = \shifts(ms \oplus 0, r).\reshuffle \text{ in}$ \\[2pt]
+      &&$\text{if } ms' = \emptylist \text{ then } \emptylist 
+      \text{ else } 
+      \begin{cases}
+        (\, ms' \oplus 1 \,) \; @ \; \shifts(ms', r^{n-1})
+        & \text{if } \nullable(r),\\
+        \shifts(ms', r^{n-1})
+        & \text{otherwise.}
+      \end{cases}$ 
+
+  \end{tabular}
+  \renewcommand{\arraystretch}{1.0}
+
+  \mbox{}
+  \rule{\linewidth}{0.4pt}
+  \caption{\shifts\ function for string-carrying version - Lexer. Here,
+    $\bigoplus$ stands for appending a single element to each member of a list,
+    $\lessdot$ stands for appending a list to each member of a list,
+    and $\At$ stands for list concatenation.}
+  \label{shiftsFunctionLexer}
+  \end{center}
+\end{figure}
+
+\paragraph*{\textbf{Character case} $(c)$:}
+\begin{itemize}
+  \item Similar to the previous version described in Section~\ref{shiftsMatcher}.
+\end{itemize}
+
+
+\paragraph*{\textbf{Alternative case} $(r_1 + r_2)$:}
+\begin{itemize}
+  \item The list of marks $ms$ is shifted into both subexpressions $r_1$ and $r_2$, with $0$
+appended to each mark’s bitsequence in the left-hand side $r_1$, and $1$ appended in $r_2$. 
+\end{itemize}
+
+\paragraph*{\textbf{Sequence case} $(r_1 \cdot r_2)$:}
+\begin{itemize}
+  \item As in previous versions, this is the most elaborate case, especially with the ordering,
+  which determines how marks are shifted and combined to preserve the remaining suffixes order. 
+  It begins by shifting the marks into the first part of the sequence, $r_1$, similar to 
+  the previous version, producing a new list of marks $ms'$. 
+  We then apply $\reshuffle$, which reorders the list of marks based on the remaining suffixes,
+  giving lower priority to those with longer remaining strings. 
+  The result then depends on several conditions, namely:
+  \begin{enumerate}
+    \item $\nullable(r_1 \land r_2)$: when both $r_1$ and $r_2$ can be skipped,
+    the returned list of marks must preserve the remaining suffixes order.
+    There are three ordered parts in the result:
+      \begin{enumerate}
+        \item $r_1$ consumes and $r_2$ is skipped: $ms'$ is appended with $\mkeps(r_2)$
+        to account for the case where $r_1$ consumes part of the string while $r_2$ is skipped.
+        \item $r_1$ and $r_2$ both consume: each mark in $ms'$ is shifted into $r_2$,
+        accounting for both parts consuming characters.
+        (The reason why each mark is shifted individually is explained in the final case below.)
+        \item $r_1$ is skipped and $r_2$ consumes: the original marks $ms$ are appended with
+        $\mkeps(r_1)$ and shifted into $r_2$, accounting for the case where $r_1$ is entirely skipped.
+      \end{enumerate}
+
+    \item $\nullable(r_1)$: if $r_1$ can be skipped, each mark of $ms'$ is first shifted into $r_2$,
+    and then the original mark list $ms$, appended with $\mkeps(r_1)$, is also shifted into $r_2$
+    to account for skipping $r_1$.  
+    This preserves the remaining suffixes order by prioritizing marks where $r_1$ consumes input
+    over those where it is skipped, similar to case~(3) above.
+
+    \item $\nullable(r_2)$: if $r_2$ can be skipped, $ms'$ is first appended with $\mkeps(r_2)$
+    (accounting for skipping $r_2$ entirely), and then each mark of $ms'$ is shifted into $r_2$.  
+    This preserves the remaining suffixes order by prioritizing marks where $r_1$ consumes while
+    $r_2$ is skipped over those where both consume.
+
+    \item $\neg\nullable(r_1) \land \neg\nullable(r_2)$:
+    if neither $r_1$ nor $r_2$ can be skipped, we shift each mark in $ms'$ individually into $r_2$.
+    If we move both marks at the same time to the second part, we will lose the remaining suffixes order
+    in cases where we have a list of marks from the first part that does not match all subexpressions
+    in the second part, which would disrupt the correct ordering.
+
+    Consider the example $((a + b) + ab) \cdot (bc + (c + b))$ with the string \texttt{abc}:
+    \begin{center}
+      \begin{enumerate}
+        \item $\bigl|_{[\Marked{abc}]}\;((a+b)+ab) \cdot (bc+(c+b))$
+        \item $\;((a+b)+ab)\;\bigl|_{[\Marked{c},\,\Marked{bc}]}\;\cdot\;(bc+(c+b))$
+      \end{enumerate}
+    \end{center}
+
+    Here, $\Marked{c}$ has consumed the leftmost match via $ab$, while $\Marked{bc}$ consumed only $a$.
+    If both marks were moved simultaneously, $\Marked{c}$ would be dropped by the left subexpression 
+    since it does not match $bc$, and $\Marked{bc}$—which matches successfully—would produce 
+    $\Marked{\emptylist}$ and take priority in the result of the alternative $r_2$,
+    since the left and right mark lists are concatenated in order.
+    To avoid this issue, we shift each mark individually into $r_2$:
+    first, $\Marked{c}$ is shifted, producing an empty list for the left subexpression
+    and $\Marked{\emptylist}$ for the right;
+    then $\Marked{bc}$ is shifted, producing $\Marked{c}$ for the left
+    and $\Marked{\emptylist}$ for the right.
+    Combining both results keeps the remaining suffixes order and correctly prioritizes
+    the POSIX-preferred value.
+  \end{enumerate}
+\end{itemize}
+
+\paragraph*{\textbf{Star case} $(r^*)$:}
+\begin{itemize}
+  \item Similar to the previous version, but with annotating $0$ to indicate the beginning of 
+  a star iteration, and applying $\reshuffle$ to reorder the resulting list and preserve 
+  the remaining suffixes order. The end of an iteration is indicated by appending $1$ 
+  when returning the marks representing that iteration.
+\end{itemize}
+
+\paragraph*{\textbf{$n$ Repetitions case} $(r^{n})$:}
+The shifting depends on several cases depending on $n$.
+\begin{itemize}
+  \item If $n = 0$, then no marks are shifted and an empty list is returned, keeping to the choice
+  made in the previous versions for the empty string expression $\ONE$, (see~\ref{sec:scala-fischer}),
+  since $n = 0$ represents the same language as $\ONE$.
+  \item If $n = 1$, then we only shift the marks into the inner $r$, representing one iteration.
+  The $0$ is appended to indicate the beginning of the iteration, and we then apply $\reshuffle$
+  to preserve the remaining suffixes order.
+  \item If $n > 1$, we first shift the marks into the inner $r$ with $0$ appended to indicate
+  the beginning of the iteration, and then apply $\reshuffle$ to preserve the remaining suffixes order.
+  If the result is empty, we return an empty list. Otherwise, we have two cases:
+    \begin{itemize}
+      \item If $r$ is nullable, we append $1$ to indicate the end of the iteration without completing
+      the full $n$ times due to skipping $r$, and shift the result of shifting into $r$ into $r^{n-1}$
+      to represent the remaining iterations. This accounts for the possibility of skipping $r$,
+      similar to the behaviour in the star case.
+      \item If $r$ is not nullable, we simply shift the result into $r^{n-1}$ without appending $1$.
+    \end{itemize}
+\end{itemize}
+
+
+
+\subsection{String-Carrying Marks - Matcher - Proofs **so far**}
+To be Added Later.
 
 
 \end{document}

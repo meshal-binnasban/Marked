@@ -55,7 +55,10 @@
 
 \maketitle
 
-We consider two main cases, namely $shifts(ms,r)= []$ and $shifts(ms,r)\neq []$.
+We consider two main cases, namely $shifts(ms,r)= []$
+
+and $shifts(ms,r)\neq []$.
+
 \section{Case 1: $shifts(ms,r) = []$}
 
 
@@ -79,32 +82,8 @@ so
 Strips(L(r))(set\,ms) = \varnothing.
 \]
 
-\subsection{sub case $nullable(r)$}
-unfolding the shifts definition,
-\[
-set(shifts(ms,r^n)) = set(shifts(ms,r)) \cup set(shifts(shifts(ms,r),r^{n-1})),
-\]
-\[
-= Strips(L(r))(set\,ms) \cup Strips(L(r^{n-1}))(Strips(L(r))(set\,ms)),
-\]
-\[
-= \varnothing \cup Strips(L(r^{n-1}))(\varnothing) = \varnothing.
-\]
+therefore
 
-\subsection{sub case $\neg nullable(r)$}
-again, unfolding the shifts definition,
-
-\[
-set(shifts(ms,r^n)) = set(shifts(shifts(ms,r),r^{n-1})),
-\]
-\[
-= Strips(L(r^{n-1}))(set(shifts(ms,r))),
-\]
-\[
-= Strips(L(r^{n-1}))(\varnothing) = \varnothing.
-\]
-
-Therefore
 \[
 Strips(L(r^n))(set\,ms) = \varnothing.
 \]
@@ -241,6 +220,38 @@ $b = set(shifts(shifts(ms,r), r^{n-1})) = Strips(L\,r^{n-1})(set(shifts(ms,r))) 
 and since $L(r^n) = L(r)@L(r^{n-1})$ we have  
 $b = Strips(L\,r @ L\,r^{n-1})(set\,ms) = Strips(L\,r^n)(set\,ms)$
 
+
+\newpage
+
+\subsection{sub case $nullable(r)$}
+unfolding the shifts definition,
+\[
+set(shifts(ms,r^n)) = set(shifts(ms,r)) \cup set(shifts(shifts(ms,r),r^{n-1})),
+\]
+\[
+= Strips(L(r))(set\,ms) \cup Strips(L(r^{n-1}))(Strips(L(r))(set\,ms)),
+\]
+\[
+= \varnothing \cup Strips(L(r^{n-1}))(\varnothing) = \varnothing.
+\]
+
+\subsection{sub case $\neg nullable(r)$}
+again, unfolding the shifts definition,
+
+\[
+set(shifts(ms,r^n)) = set(shifts(shifts(ms,r),r^{n-1})),
+\]
+\[
+= Strips(L(r^{n-1}))(set(shifts(ms,r))),
+\]
+\[
+= Strips(L(r^{n-1}))(\varnothing) = \varnothing.
+\]
+
+Therefore
+\[
+Strips(L(r^n))(set\,ms) = \varnothing.
+\]
 
 \bibliographystyle{abbrv}
 \bibliography{urules}

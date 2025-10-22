@@ -1,3 +1,22 @@
+error id: file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/matchers-comparison/Shifts.sc:isEmpty.
+file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/matchers-comparison/Shifts.sc
+empty definition using pc, found symbol in pc: isEmpty.
+empty definition using semanticdb
+empty definition using fallback
+non-local guesses:
+	 -rexp/ms1/isEmpty.
+	 -rexp/ms1/isEmpty#
+	 -rexp/ms1/isEmpty().
+	 -ms1/isEmpty.
+	 -ms1/isEmpty#
+	 -ms1/isEmpty().
+	 -scala/Predef.ms1.isEmpty.
+	 -scala/Predef.ms1.isEmpty#
+	 -scala/Predef.ms1.isEmpty().
+offset: 1137
+uri: file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/matchers-comparison/Shifts.sc
+text:
+```scala
 import scala.language.implicitConversions
 import $file.rexp, rexp._
 
@@ -34,7 +53,7 @@ def shifts(ms: Marks, r: Rexp) : Marks =
         else if(n==1) shifts(ms,r)
         else{
           val ms1 = shifts(ms,r)
-          if(ms1.isEmpty) ms1
+          if(m@@s1.isEmpty) ms1
           else
               if(nullable(r)) ms1 ::: shifts(ms1,NTIMES(r,n-1))
               else shifts(ms1,NTIMES(r,n-1))
@@ -67,7 +86,7 @@ extension (ms: Marks)
 def test1() = {
   println("=====Test====")
   val r = %( "a" | "a" )
-  val s = "a" * 100
+  val s = "a" * 4
   println("=string=")
   println(s)
   println(matcher(r,s))
@@ -88,3 +107,10 @@ def mkalts(n: Int) = {
   (for (i <- (1 to n).toList) yield mkstar(i)).reduceLeft(ALT.apply)
 }
 
+
+```
+
+
+#### Short summary: 
+
+empty definition using pc, found symbol in pc: isEmpty.

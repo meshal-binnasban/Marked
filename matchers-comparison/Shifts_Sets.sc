@@ -9,11 +9,11 @@ var S: String = ""
 // shifts function
 def shifts(ms: Marks, r: Rexp): Marks = 
 
-  print(s"ms=${ms.size} , ")
+  print(s"${ms.size},")
 
   r match {
-  case ZERO => Set.empty
-  case ONE  => Set.empty
+  case ZERO => Set()
+  case ONE  => Set()
   case CHAR(c) =>for (m <- ms; if m != "" && m.head == c) yield m.tail
 
   case ALT(r1, r2) => shifts(ms, r1) ++ shifts(ms, r2)
@@ -32,20 +32,26 @@ def shifts(ms: Marks, r: Rexp): Marks =
     if (ms1 == Set()) ms1 else
       ms1 ++ shifts(ms1, STAR(r))
   }
-  case NTIMES(r, n) =>
-    if (n == 0) ms
-    else {
-      val ms1 = shifts(ms, r)
-      if (ms1 == Set()) ms1
-      else if (nullable(r)) ms1 ++ shifts(ms1, NTIMES(r, n - 1))
-      else shifts(ms1, NTIMES(r, n - 1))
+  case NTIMES(r,n) =>
+    if(n==0) Set()
+    else if(n==1) shifts(ms,r)
+    else{
+      val ms1 = shifts(ms,r)
+      if(ms1== Set()) ms1
+      else
+          if(nullable(r)) ms1 ++ shifts(ms1,NTIMES(r,n-1))
+          else shifts(ms1,NTIMES(r,n-1))
     }
 }
 
 // the main matching function 
 def matcher(r: Rexp, s: String): Boolean =
   if (s == "") nullable(r)
-  else shifts(Set(s), r).contains("")
+  else {
+    val ms=shifts(Set(s), r)
+    println(s"\n=Final Marks= Size=${ms.size}= ms= $ms")
+    ms.contains("")
+  }
 
 def mat(r: Rexp, s: String): Marks =  
   shifts(Set(s), r)
@@ -56,7 +62,7 @@ def mat(r: Rexp, s: String): Marks =
 def test1() = {
   println("=====Test====")
   val r = %( %( "a" ) | %( "aa" ) | %( "aaa" ) | %( "aaaa" ) | %( "aaaaa" ) )
-  val s = "a" * 20
+  val s = "a" * 1000
   println("=string=")
   println(s)
   println(matcher(r,s))
@@ -76,8 +82,8 @@ def test2() = {
 @main
 def test3() = {
   println("=====Test====")
-  val r = %(  "a" | "a" )
-  val s = "a" * 3
+  val r = %( "a" | "a" )
+  val s = "a" * 100
   println("=string=")
   println(s)
   println(matcher(r,s))
@@ -86,8 +92,8 @@ def test3() = {
 @main
 def test4() = {
   println("=====Test====")
-  val r = %( "a" | "ac"   )
-  val s = "ac" 
+  val r = NTIMES("a"| ONE, 3)
+  val s = "a" * 1
   println("=string=")
   println(s)
   println(matcher(r,s))
