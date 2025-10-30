@@ -209,6 +209,9 @@ INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/tex/latex/l3backend/
 INPUT ./ReportV3.aux
 INPUT ./ReportV3.aux
 INPUT ReportV3.aux
+INPUT ./macros.aux
+INPUT ./macros.aux
+INPUT macros.aux
 OUTPUT ReportV3.aux
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
@@ -218,6 +221,12 @@ INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/tex/latex/epstopdf-p
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
+INPUT ./macros.tex
+INPUT ./macros.tex
+OUTPUT macros.aux
+INPUT ./macros.tex
+INPUT ./macros.tex
+INPUT macros.tex
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/tfm/public/cm/cmr17.tfm
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/tfm/public/cm/cmr12.tfm
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/tfm/public/cm/cmmi12.tfm
@@ -285,6 +294,9 @@ INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/tfm/public/cm/
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/tfm/public/cm/cmbx7.tfm
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/tfm/public/cm/cmbx5.tfm
 INPUT ReportV3.aux
+INPUT ./macros.aux
+INPUT ./macros.aux
+INPUT macros.aux
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb

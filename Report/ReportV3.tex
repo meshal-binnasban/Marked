@@ -9,68 +9,25 @@
 \pgfplotsset{compat=1.15}
 
 
-\newtheorem{definition}{Definition} %might need to adjust/delete this later%
-
-\newcommand{\dn}{\ensuremath{\stackrel{\mbox{\scriptsize def}}{=}}}
-
-\newcommand{\ZERO}{\textbf{0}}   
-\newcommand{\ONE}{\textbf{1}}    
-
-\newcommand{\der}{\textit{der}}
-\newcommand{\shift}{\textit{shift}}
-\newcommand{\shifts}{\textit{shifts}}
-
-\newcommand{\fuse}{\textit{fuse}}
-\newcommand{\mkeps}{\textit{mkeps}}
-\newcommand{\intern}{\textit{intern}}
-
-\newcommand{\Seq}{\textit{Seq}}
-\newcommand{\Left}{\textit{Left}}
-\newcommand{\Right}{\textit{Right}}
-\newcommand{\Star}{\textit{Star}}
-\newcommand{\Empty}{\textit{Empty}}
-
-\newcommand{\Marked}[1]{\bullet\,#1}
-
-\newcommand{\fin}{\textit{fin}}
-\newcommand{\nullable}{\textit{nullable}}
-
-\newcommand{\Bits}{\textit{Bits}}
-\newcommand{\POINT}{\textit{POINT}}
-\newcommand{\mkfin}{\textit{mkfin}}
-
-
-\newcommand{\STARText}{\textit{Star} $(r^*)$}
-\newcommand{\SEQText}{ \textit{Sequence} $(r_1 \cdot r_2)$}
-
-\newcommand{\emptylist}{[\,]}
-
-\newcommand{\At}{\text{$\,@\,$}}
-\newcommand{\listconcat}{\boldsymbol{@}}
-
-\newcommand{\matcher}{\textit{matcher}}
-
-\newcommand{\bigO}[1]{\ensuremath{\mathop{}\mathopen{}\mathcal{O}\mathopen{}\left(#1\right)}}
-
-
-\newcommand{\reshuffle}{\textit{reshuffle}}
 
 \title{Progress Report - 9 Months}
 \author{Meshal Binnasban}
 \date{\today}
 
 \begin{document}
+\include{macros}
 
 \maketitle
 
-
 \begin{abstract}
-This is the nine-month progress report for my PhD at King’s College London. It summarises the motivation,
-challenges, and progress made in developing a regular expression matcher based on marks with the goal
-of POSIX value extraction. The report first reviews regular expression matching using derivatives, then 
-reviews existing regular expression matchers based on marks, which currently only provide matching 
-functionality but do not support POSIX value extraction, which we are especially interested in. Our work
-developed several versions of the marked algorithm in Scala. we also started formally proving the
+This is the nine-month progress report for my PhD at King’s College London. 
+It summarises the motivation, challenges, and progress made in developing a 
+regular expression matcher based on marks with the goal of POSIX value extraction.
+The report first reviews regular expression matching using derivatives, then 
+reviews existing regular expression matchers based on marks, which currently 
+only provide matching functionality but do not support POSIX value extraction, 
+which we are especially interested in. Our work developed several versions of 
+the marked algorithm in Scala. We also started formally proving the
 correctness of one of our versions.
 \end{abstract}
 
@@ -78,26 +35,30 @@ correctness of one of our versions.
 \newpage
 
 \section*{Synopsis}
-This research investigates the marked approach--based method for regular expression 
-matching, with the goal of extending it to provide POSIX value extraction.
+This research investigates the marked approach--based method for regular 
+expression matching, with the goal of extending it to provide POSIX value 
+extraction.
 
-Derivative-based methods, though elegant, suffer from severe size explosion and remain 
-sensitive to syntactic form. Sulzmann and Lu~\cite{Sulzmann2014} extended derivatives with 
-bitcodes to record lexing information, but the size problem persists. The marked approach, 
-described in the works of Fischer et al.~\cite{Fischer2010} and Asperti et al.~\cite{Asperti2010}, 
-offers an alternative by propagating marks directly through the expression. These works provide 
-matchers only, without value extraction.  
+Derivative-based methods, though elegant, suffer from \sizeExplosion. Sulzmann 
+and Lu~\cite{Sulzmann2014} extended derivatives with bitcodes to record 
+lexing information, but the \sizeExplosion\ persists. The marked approach, 
+described in the works of Fischer et al.~\cite{Fischer2010} and Asperti et 
+al.~\cite{Asperti2010}, offers an alternative by propagating marks directly 
+through the expression. These works provide matchers only, without value 
+extraction.  
 
 Our work explores how the marked approach can be extended to recover POSIX values.  
-We have implemented several versions of the marked algorithm in Scala, making use of bitcoded
-annotations to track lexing values. Challenges in handling constructs such as sequences and repetitions
-required refining the algorithm through successive versions, each improving on the last.  
-Large-scale testing against a derivative-based reference matcher has been used to confirm correctness 
-and uncover edge cases.  
+We have implemented several versions of the marked algorithm in Scala, making 
+use of bitcoded annotations to track lexing values. Challenges in handling 
+constructs such as sequences and repetitions required refining the algorithm 
+through successive versions, each improving on the last.  
+Large-scale testing against a derivative-based reference matcher has been used 
+to confirm correctness and uncover edge cases.  
 
-The long-term aim of the project is to establish a marked approach--based matcher that consistently
-yields the POSIX value for all regular expressions, and to formally prove its correctness. Future work
-also includes extending the matcher to additional operators such as intersection and negation.  
+The long-term aim of the project is to establish a marked approach--based matcher 
+that consistently yields the POSIX value for all regular expressions, and to 
+formally prove its correctness. Future work also includes extending the matcher 
+to additional operators such as intersection and negation.  
 
 \newpage
 
@@ -106,18 +67,28 @@ also includes extending the matcher to additional operators such as intersection
 \newpage
 
 \section{Introduction}
+The notion of derivatives in regular expressions was introduced by
+Brzozowski in 1964~\cite{Brzozowski1964}, but only in the last decade
+has it been rediscovered and gained renewed attention—for example in
+the work of Owens~\cite{Owens2009} and Might~\cite{Might2011}.
+This renewed interest is largely due to the method’s conceptual simplicity 
+and the ease with which it can be implemented in functional programming 
+languages.
+%The notion of derivatives in regular expressions is well established 
+%but has gained renewed attention in the last decade, for example in 
+%the work of Owens~\cite{Owens2009} and Might~\cite{Might2011}. Their 
+%simplicity and compatibility with functional programming have 
+%encouraged further studies, for example the work of Sulzmann and 
+%Lu~\cite{Sulzmann2014}.  
+However, derivatives suffer from \sizeExplosion, since each step of taking 
+the derivative can increase the size of subexpressions. This means the algorithm 
+has to traverse larger and larger regular expressions, which results in a slower 
+algorithm.  
 
-The notion of derivatives in regular expressions is well established but has gained renewed 
-attention in the last decade, for example in the work of Owens~\cite{Owens2009} and 
-Might~\cite{Might2011}. Their simplicity and compatibility with functional programming have 
-encouraged further studies, for example the work of Sulzmann and Lu~\cite{Sulzmann2014}.  
-However, derivatives suffer from “growth” issues, since each step of taking the derivative 
-can increase the size of subexpressions. This means the algorithm has to traverse larger and 
-larger regular expressions, which results in a slower algorithm.  
-
-In contrast, the approach based on marks leaves regular expressions unchanged during matching
- but moves annotations through them (the marks). At present, only matcher-based algorithms 
- using this approach exist,while our work aims to extend them to provide POSIX value extraction. 
+In contrast, the approach based on marks leaves regular expressions unchanged 
+during matching but moves annotations through them. At present, only 
+matcher-based algorithms using this approach exist, while our work aims to 
+extend them to provide POSIX value extraction. 
 
 This report first reviews Brzozowski's derivatives and the bitcoded variant of 
 Sulzmann and Lu~\cite{Sulzmann2014}, followed by background on the regular 
@@ -127,7 +98,6 @@ We then present our own work, including several versions of the matcher based
 on marks developed during the first nine months.
 
 \section{Background}
-
 Regular expressions are a way to describe languages of words over an alphabet.
 They provide a declarative way to specify sets of words. Each regular
 expression $r$ is associated with a language $L(r)$, which is the set of words
@@ -135,16 +105,17 @@ that match $r$. The regular expressions we consider are the standard regular
 expression constructors, including bounded repetitions, namely:
 \[
 r ::= \ZERO \;\mid\; \ONE \;\mid\; c \;\mid\; r_1 + r_2 \;\mid\; r_1 \cdot r_2 \;\mid\; 
-r^* \;\mid\; r^{\{n\}}
+r^* \;\mid\; r^{n}
 \]
 
-We will use \ZERO\ for the regular expression which cannot match any string, \ONE\ for
-the regular expression which can match the empty string, and $c$ for the regular expression
-which can match a character from the alphabet. The operator $+$ is for alternation between
-$r_1$ and $r_2$, while the dot~$\cdot$ is for concatenation or sequencing. The Kleene star
-$r^\ast$ is for arbitrary repetition of $r$, and the power $r^n$ is for exactly
-$n$ repetitions of $r$. The meaning of these regular expressions is given by the language function
- $L$ (Figure~\ref{lFunction}).
+We will use \ZERO\ for the regular expression which cannot match any string,
+\ONE\ for the regular expression which can match the empty string, and $c$ 
+for the regular expression which can match a character from the alphabet.
+The operator $+$ is for alternation between $r_1$ and $r_2$, while the 
+dot~$\cdot$ is for concatenation or sequencing. The Kleene star $r^\ast$ 
+is for arbitrary repetition of $r$, and the power $r^n$ is for exactly
+$n$ repetitions of $r$. The meaning of these regular expressions is 
+given by the language function $L$ (Figure~\ref{lFunction}).
 \begin{figure}[ht]
 \begin{center}
 %Language function $L$%
@@ -155,14 +126,14 @@ $n$ repetitions of $r$. The meaning of these regular expressions is given by the
     $L(c)$                  & \dn & $\{[c]\}$ \\
     $L(r_1 + r_2)$          & \dn & $L(r_1) \cup L(r_2)$ \\
     $L(r_1 \cdot r_2)$      & \dn & $L(r_1) \cdot L(r_2)$ \\
-    $L(r^\ast)$             & \dn & $(L(r))^\ast$ \\
+    $L(r^*)$             & \dn & $(L(r))^\ast$ \\
     $L(r^n)$                & \dn & $(L(r))^n$
   \end{tabular}
   \renewcommand{\arraystretch}{1.0}
   \mbox{}
      \rule{\linewidth}{0.4pt}
   \caption{the function $L$ which gives the meaning to the regular expression, i.e. associated
-   set of strings to the language of the regular expression}\label{lFunction}
+   set of strings to the language of the regular expression.}\label{lFunction}
   \end{center}
 \end{figure}
 For example, if $r = a + b$, then
@@ -171,30 +142,28 @@ L(r) = L(a) \cup L(b) = \{a\} \cup \{b\} = \{a, b\}.
 \]
 \noindent Similarly, $L(a \cdot b) = \{ab\}$, and $L(a^*)$ is the set of all strings 
 consisting of zero or more $a$'s.
-
-\FloatBarrier
 \subsection{Derivatives}
-
 Brzozowski’s derivatives offer an elegant way for string matching 
 (Figure \ref{BrzozowskiDerivative}). What is beautiful about derivatives is that 
-they can be easily implemented in a functional programming language and are easy to 
-reason about in theorem provers. By successively taking the derivative of a regular 
-expression with respect to each input character, one obtains a sequence of derivatives. 
-If the final derivative can match the empty string, then the original input is accepted.
-For example, To decide whether a string $a_1 a_2 \dots a_n$ is matched by a regular 
-expression $r$, we successively compute derivatives:
+they can be easily implemented in a functional programming language and are 
+easy to reason about in theorem provers. By successively taking the derivative 
+of a regular expression with respect to each input character, one obtains a 
+sequence of derivatives. If the final derivative can match the empty string, 
+then the original input is accepted. For example, to decide whether a string 
+$a_1 a_2 \dots a_n$ is matched by a regular expression $r$, we successively 
+compute derivatives:
 \[
 \begin{array}{rcl}
-r_0 = r,& r_1 = \der_{a_1}(r_0),& r_2=\der_{a_2}(r_1) \dots, r_n = \der_{a_n}(r_{n-1}) .
+r_0 = r,& r_1 = \der_{a_1}(r_0),& r_2=\der_{a_2}(r_1) \dots, r_n = \der_{a_n}(r_{n-1}).
 \end{array}
 \]
 The string matches $r$ if and only if the final expression $r_n$ accepts the 
 empty string, which can be easily checked by a separate function.
-Here $\der_a(r)$ stands for the derivative of $r$ with respect to the character $a$.
+Here $\der_a(r)$ stands for the derivative of $r$ with respect to the 
+character $a$.
 %Brzozowski’s Derivative
 \begin{figure}[ht]
   \begin{center}
-
   \renewcommand{\arraystretch}{1.5}
   \begin{tabular}{lcl}
     $\der_a(\ZERO\,)$            & \dn & $\ZERO$ \\
@@ -214,10 +183,10 @@ Here $\der_a(r)$ stands for the derivative of $r$ with respect to the character 
     $\der_a(r^\ast)$             & \dn & $\der_a(r) \cdot r^\ast$
   \end{tabular}
   \renewcommand{\arraystretch}{1.0}
-    
+
     \mbox{}
     \rule{\linewidth}{0.4pt}
-  \caption{Brzozowski’s Derivative}\label{BrzozowskiDerivative}
+  \caption{Brzozowski’s Derivative.}\label{BrzozowskiDerivative}
   \end{center}
 \end{figure}
 
@@ -230,8 +199,6 @@ can match the empty string with no input characters remaining, this confirms tha
 the string \texttt{ba} belongs to the language of the regular expression.
 \begin{figure}[ht]
   \begin{center}
-    
-
 \[
 \begin{array}{rcl}
 \der_b\, r           & =           &  \der_b\, (ab + ba) \\
@@ -247,29 +214,28 @@ the string \texttt{ba} belongs to the language of the regular expression.
 \]
     \mbox{}
     \rule{\linewidth}{0.4pt}
-\caption{Derivatives of $(ab+ba)$ with respect to string \texttt{ba}}\label{derivative}
+\caption{Derivatives of $(ab+ba)$ with respect to string 
+\texttt{ba}.}\label{derivative}
   \end{center}
 \end{figure}
 
 Note, however, some subexpressions that arise during the computation of derivatives
 may be redundant. For example, $\ZERO \cdot b$  cannot match any string, so 
-we colud simplify it to $\ZERO$ which can match the same strings, namely none
+we could simplify it to $\ZERO$ which can match the same strings, namely none
 (see Figure \ref{derivative}).
 Other simplification rules may also be applied. These include associativity 
-$(r+s)+t \equiv r+(s+t)$, commutativity$r+s \equiv s+r$, and idempotence 
+$(r+s)+t \equiv r+(s+t)$, commutativity $r+s \equiv s+r$, and idempotence 
 $r+r \equiv r$. Rules for the \ZERO\ and \ONE\ can also be applied; e.g.\
  $\ZERO \cdot r \equiv r \cdot
 \ZERO \equiv \ZERO$, $r+\ZERO \equiv r$, and $r \cdot \ONE \equiv \ONE \cdot r
 \equiv r$.  
 
 These simplifications preserve the language accepted by the regular expression
-while reducing the overall size of the regular expression. Such simplifications are
-sometimes necessary in the derivative method in order to keep the size
-manageable but eventhough best effort still means that the size can explode.
+while reducing the overall size of the regular expression. Such simplifications 
+are sometimes necessary in the derivative method in order to keep the size
+manageable but even though best effort still means that the size can explode.
 
-\FloatBarrier
 \subsubsection{Size Explosion}  
-
 Although the construction of derivatives is elegant, it may
 duplicate large parts of the expression and increase the size of the regular
 expressions in the intermediate steps (see Figure~\ref{BrzozowskiDerivative}; 
@@ -305,56 +271,62 @@ $
 ((a)^* + (aa)^* + (aaa)^* + \dots )^*
 $
 cannot be simplified completely, since the duplicates occur in different
-levels of the dertivatives and different levels of sequences and alternatives.
+levels of the derivatives and different levels of sequences and alternatives.
 Thus, even under aggressive simplification the size of
 derivatives remains large and continues to grow across derivative steps.
 If we consider the expression
 \[
 ((a)^* + (aa)^* + (aaa)^* + (aaaa)^* + (aaaaa)^*)^*
 \]
-with a small input string of the form $ \underbrace{a \dots a}_n$, each derivative step
-introduces subexpressions that are copies of the original, as shown in 
-Figure~\ref{derivativeStarsExample}.
+with a small input string of the form $ \underbrace{a \dots a}_n$, each 
+derivative step introduces subexpressions that are copies of the original, 
+as shown in Figure~\ref{derivativeStarsExample}.
 \begin{figure}[ht]
   \begin{center}
     \[
     \begin{array}{rcl}
       \der_a\, r          & = &  \der_a\,( ((a)^* + (aa)^* + (aaa)^* + (aaaa)^* + (aaaaa)^* )^*) \\
-                          & = & \der_a\, ((a)^* + (aa)^* + (aaa)^* + (aaaa)^* + (aaaaa)^* ) \cdot \, r \\  
-                          & = & ((\der_a\, (a)^*) + (\der_a\, (aa)^*)+ \dots ) \cdot  r \\
-                          & = & ((\der_a\, a \cdot (a)^*) + (\der_a\,aa \cdot (aa)^*)+ \dots ) \cdot  r \\
-                          & = & ((\ONE \cdot (a)^*) + ((\ONE \cdot a) \cdot (aa)^*)+ \dots ) \cdot  r\\
-                          & = & ((a)^* + (a \cdot (aa)^*)+ \dots ) \cdot  r \\\\
+                          & = & \der_a\, ((a)^* + (aa)^* + (aaa)^* + (aaaa)^* + (aaaaa)^* ) \cdot \, r^* \\  
+                          & = & ((\der_a\, (a)^*) + (\der_a\, (aa)^*)+ (\der_a\,(aaa)^*) + \dots ) \cdot  r^* \\
+                          & = & ((\der_a\, a \cdot (a)^*) + (\der_a\,aa \cdot (aa)^*) + (\der_a\,aaa\cdot (aaa)^*)+ \dots ) \cdot  r^* \\
+                          & = & ((\ONE \cdot (a)^*) + ((\ONE \cdot a) \cdot (aa)^*)+ ( (\ONE \cdot aa) \cdot (aaa)^*) + \dots ) \cdot  r^*\\
+                          & = & ((a)^* + (a \cdot (aa)^*)+ ( aa \cdot (aaa)^*) + \dots ) \cdot  r^* \\\\
 
-      \der_a\, (\der_a\, r) & = & \der_a\, ((a)^* + (a \cdot (aa)^*)+ \dots ) \cdot r + \der_a\,r \\
-                            & = & (\ONE\ \cdot (a)^* + (\ONE\ \cdot (aa)^*)+ \dots ) \cdot r \,+ \\
-                            &   &  ((a)^* + (a \cdot (aa)^*)+ \dots ) \cdot  r \\ 
-                            & = & ((a)^* + ((aa)^*)+ \dots ) \cdot r \,+ \\
-                            &   &  ((a)^* + (a \cdot (aa)^*)+ \dots ) \cdot  r \\\\ 
+      \der_a\, (\der_a\, r) & = & \der_a\, ((a)^* + (a \cdot (aa)^*)+( aa \cdot (aaa)^*) + \dots ) \cdot r^* + \der_a\,r^* \\
+                            & = & (\ONE \cdot (a)^* + (\ONE \cdot (aa)^*)+ ( (\ONE \cdot a) \cdot (aaa)^*) +  \dots ) \cdot r^* \,+ \\
+                            &   & \quad ((a)^* + (a \cdot (aa)^*)+ ( aa \cdot (aaa)^*) + \dots ) \cdot  r^* \\ 
+                            & = & ((a)^* + (aa)^* + ( a \cdot (aaa)^*) + \dots ) \cdot r^* \,+ \\
+                            &   & \quad ((a)^* + (a \cdot (aa)^*)+ ( aa \cdot (aaa)^*) + \dots ) \cdot  r^* \\\\ 
                             
                         
-     \der_a\,( \der_a\, (\der_a\, r)) & =           & \der_a\, (((a)^* + ((aa)^*)+ \dots ) \cdot r \,)+ \\
-                            &             &  \der_a\,(((a)^* + (a \cdot (aa)^*)+ \dots ) \cdot  r )  \\
-                            & =           & (\der_a\, (((a)^* + ((aa)^*)+ \dots ) \cdot r) \, + \der_a\, r )+\\
-                            &             & ( \der_a\,(((a)^* + (a \cdot (aa)^*)+ \dots ) \cdot  r) + der_a\, r)                     
+     \der_a\,( \der_a\, (\der_a\, r)) & =           & \der_a\, (((a)^* + (aa)^*+ ( a \cdot (aaa)^*) +  \dots ) \cdot r^* \,)+ \\
+                            &             & \quad  \der_a\,(((a)^* + (a \cdot (aa)^*)+ ( aa \cdot (aaa)^*) +  \dots ) \cdot  r^* )  \\
+                            & =           & (\der_a\, (((a)^* + ((aa)^*)+ ( a \cdot (aaa)^*) + \dots ) \cdot r^*) \, + \der_a\, r^* )+\\
+                            &             & \quad ( \der_a\,(((a)^* + (a \cdot (aa)^*)+( aa \cdot (aaa)^*) +\dots ) \cdot  r^*) + \der_a\, r^*)                     
             \end{array}
     \]
     \mbox{}
     \rule{\linewidth}{0.4pt}
-\caption{Derivatives of $((a)^* + (aa)^* + (aaa)^* + (aaaa)^* + (aaaaa)^* )^*$ with respect to string \texttt{aaa}}\label{derivativeStarsExample}
+\caption{Derivatives of $((a)^*+(aa)^*+(aaa)^*+(aaaa)^*+(aaaaa)^*)^*$ 
+with respect to the string \texttt{aaa}. 
+Each step introduces additional copies of the original regular expression 
+at different derivative levels, where simplifications cannot be applied. 
+For example, after the second step, $(a)^*$ appears in both alternatives, 
+but—being under different products with $r$—the two occurrences cannot be merged.}
+\label{derivativeStarsExample}
   \end{center}
 \end{figure}
 
-Figure~\ref{dervsmarGraph} illustrates the size explosion issue of derivatives by showing the 
-runtime difference between derivatives with aggressive simplifications and Fischer’s mark-based 
-algorithm. We conducted a naive test using an example of the form of regular expressions mentioned 
-just above to demonstrate the impact of the growth of derivatives, even under aggressive 
-simplifications. Although the test is naive, it clearly shows a considerable difference in behaviour. 
-The test was designed for inputs of up to $100{,}000$ characters; however, the derivatives 
-implementation ran out of memory after $10{,}000$, with the last successful case taking almost 
-$22$ seconds, while the mark-based algorithm finished executing all inputs with each case under 
-$0.0035$ seconds.
-
+Figure~\ref{dervsmarGraph} illustrates the \sizeExplosion\ of derivatives by 
+showing the runtime difference between derivatives with aggressive simplifications 
+and Fischer’s mark-based algorithm. We conducted a naive test using an example 
+of the form of regular expressions mentioned above to demonstrate the impact 
+of the \sizeExplosion\ of derivatives, even under aggressive simplifications. 
+Although the test is naive, it clearly shows a considerable difference in 
+behaviour. The test was designed for inputs of up to $100{,}000$ characters; 
+however, the derivatives implementation ran out of memory after $10{,}000$, 
+with the last successful case taking almost $22$ seconds, while the mark-based 
+algorithm finished executing all inputs with each case under $0.0035$ seconds.
 \begin{figure}[ht]
 \mbox{}\bigskip
 \begin{center}
@@ -372,8 +344,8 @@ $0.0035$ seconds.
     ytick={0,2,...,30},
     scaled ticks=true,
     axis lines=left,
-    width=10cm,
-    height=10cm, 
+    width=8cm,
+    height=8cm, 
     legend entries={Marks,Derivatives},  
     legend pos=north west,
     legend cell align=left]
@@ -385,19 +357,18 @@ $0.0035$ seconds.
     \mbox{}
     \rule{\linewidth}{0.4pt}
     %\hrule
-\caption{Runtime comparison of derivative-based and mark-based regular expression matchers for $((a)^* + (aa)^* + (aaa)^* + (aaaa)^* + \dots )^*$ with input strings of length $n$.}\label{dervsmarGraph}
+\caption{Runtime comparison of derivative-based and mark-based regular 
+expression matchers for $((a)^* + (aa)^* + (aaa)^* + (aaaa)^* + \dots )^*$ 
+with input strings of length $n$.}\label{dervsmarGraph}
 \end{center}
 %\caption{Runtimes of Derivatives vs Marks } \label{RuntimesGraph1}
 \end{figure}
-
 Even Antimirov’s partial derivatives~\cite{Antimirov1996}, which do not track
 POSIX values, may still produce cubic growth in the worst case: there can be
 linearly many distinct derivatives, and each one may already be quadratic in
 the size of the original expression, so the total size becomes cubic.
 
-\FloatBarrier
 \subsubsection{Derivative Extension}
-
 Sulzmann and Lu~\cite{Sulzmann2014} extend Brzozowski’s derivatives to produce 
 lexing values in addition to deciding whether a match exists. 
 These values record how the match occurred, for example by showing which part
@@ -413,7 +384,7 @@ the value; the injection function essentially reverts the derivative steps to
 obtain a POSIX value. We focus here on the bitcode variant, which more directly
 inspired our marked approach.
 
-Bitcodes are sequences over ${0,1}$ that encode the choices made in a match. 
+Bitcodes are sequences over $\{0,1\}$ that encode the choices made in a match. 
 These bits record branch choices in alternatives and repetitions during matching. 
 Figure~\ref{BitcodedDerivative} illustrates how bitcoding works with 
 $(a+ab)(b+\ONE)$ on the string \texttt{ab}, proceeding step by step by constructing
@@ -454,7 +425,7 @@ $(a+ab)(b+\ONE)$ on the string \texttt{ab}, proceeding step by step by construct
   \mbox{}
   \rule{\linewidth}{0.4pt}
   \caption{Step-by-step construction of bitcoded derivatives for 
-  $a \cdot (a+b)$ with input \texttt{ab}. 
+  $(a + ab) \cdot (b + \ONE\,)$ with input \texttt{ab}. 
   Step 1 shows the result of internalization using \fuse, 
   where alternatives are annotated with bits. 
   Step~2 takes the derivative with respect to $a$; the two branches of the 
@@ -467,9 +438,8 @@ $(a+ab)(b+\ONE)$ on the string \texttt{ab}, proceeding step by step by construct
   % Bitcoded derivatives of $(a+ab)\cdot (b+\ONE)$ with respect to string \texttt{ba}
   \end{center}
 \end{figure}
-
-Initially, the algorithm internalizes the regular expression by applying the function
-\intern\ (Figure~\ref{internFunction}), adding bit annotations
+Initially, the algorithm internalizes the regular expression by applying the 
+function \intern\ (Figure~\ref{internFunction}), adding bit annotations
 to the alternative constructors in the expression: $0$ for left branches and $1$ 
 for right branches~\cite{Sulzmann2014}. This annotation process is implemented by
 the function \fuse\ (Figure~\ref{fuseFunction}). 
@@ -477,33 +447,33 @@ The bitcode is updated while taking the derivatives to reflect the choices
 made during matching.  
 The function \mkeps (Figure~\ref{mkepsFunction}), as defined 
 by Sulzmann and Lu~\cite{Sulzmann2014}, extracts the bitcode from nullable 
-derivatives. A regular expression is \emph{nullable} if it can match the empty string.  
+derivatives. A regular expression is nullable if it can match the empty 
+string.  
 
-Derivatives can cause the the regular expression to expand. In particular, 
-the sequence case expands into an alternative when the first part is nullable (see 
-Figure~\ref{BitcodedDerivative}, Step~3, where the concatenation becomes nullable).
-This accounts for the situation in which the first part, $r_1$, may be skipped 
-during matching: the left branch assumes $r_1$ is not skipped, while the right 
-branch assumes it is skipped and instead takes the derivative of $r_2$ directly. 
-This behaviour also illustrates why derivatives tend to grow in size. Sulzmann and
-Lu~\cite{Sulzmann2014} use $\fuse(\mkeps(r_1))$ to include the bit annotations
-needed when $r_1$ is skipped; these bits, extracted by \mkeps, indicate how $r_1$ 
-matched the empty string.
+Derivatives can cause the regular expression to expand. In particular, 
+the sequence case expands into an alternative when the first part is nullable 
+(see Figure~\ref{BitcodedDerivative}, Step~3, where the concatenation becomes 
+nullable). This accounts for the situation in which the first part, $r_1$, may 
+be skipped during matching: the left branch assumes $r_1$ is not skipped, while 
+the right branch assumes it is skipped and instead takes the derivative of 
+$r_2$ directly. This behaviour also illustrates why derivatives tend to grow 
+in size. Sulzmann and Lu~\cite{Sulzmann2014} use $\fuse(\mkeps(r_1))$ to 
+include the bit annotations needed when $r_1$ is skipped; these bits, extracted 
+by \mkeps, indicate how $r_1$ matched the empty string.
 
 After taking the derivatives with respect to the entire input string, 
 the algorithm checks whether the result is nullable. 
 If so, it calls $\mkeps$ to extract the bitcode indicating 
 how the match was obtained. In Figure~\ref{BitcodedDerivative}, there are 
-two possible matches, but the algorithm prefers the left one, $[1,1]$, which encodes
- the choice of the right branch in the alternative of $r_1$, matching the string 
- $ab$, followed by the right branch in the alternative of $r_2$, 
+two possible matches, but the algorithm prefers the left one, $[1,1]$, which 
+encodes the choice of the right branch in the alternative of $r_1$, matching 
+the string $ab$, followed by the right branch in the alternative of $r_2$, 
 which matches the empty string. Decoding this against the original expression 
 yields the POSIX value
 \[
 \Seq\,(\,\Right\,(\,\Seq\,(\,a, b\,)), \Right\,(\,\Empty\,))\, .
 \]
 
-%\FloatBarrier
 %intern definition%
 \begin{figure}[ht]
   \begin{center}
@@ -530,11 +500,11 @@ yields the POSIX value
   \begin{center}
     \renewcommand{\arraystretch}{1.5}
     \begin{tabular}{lcl}
-      $ \fuse\; bs\; (c\,_{bs'}) $                & \dn & $ c\,_{(bs \cup bs')} $ \\
-      $ \fuse\; bs\; ((r_1 + r_2)\,_{bs'}) $      & \dn & $ (r_1 + r_2)\,_{(bs \cup bs')} $ \\
-      $ \fuse\; bs\; ((r_1 \cdot r_2)\,_{bs'}) $  & \dn & $ (r_1 \cdot r_2)\,_{(bs \cup bs')} $ \\
-      $ \fuse\; bs\; (r^*\,_{bs'}) $              & \dn & $ (r^*)\,_{(bs \cup bs')} $ \\
-      $ \fuse\; bs\; (r^n\,_{bs'}) $              & \dn & $ (r^n)\,_{(bs \cup bs')} $ \\
+      $ \fuse\; bs\; (c\,_{bs'}) $                & \dn & $ c\,_{(bs\, \At\, bs')} $ \\
+      $ \fuse\; bs\; ((r_1 + r_2)\,_{bs'}) $      & \dn & $ (r_1 + r_2)\,_{(bs\, \At\, bs')} $ \\
+      $ \fuse\; bs\; ((r_1 \cdot r_2)\,_{bs'}) $  & \dn & $ (r_1 \cdot r_2)\,_{(bs\, \At\, bs')} $ \\
+      $ \fuse\; bs\; (r^*\,_{bs'}) $              & \dn & $ (r^*)\,_{(bs\, \At\, bs')} $ \\
+      $ \fuse\; bs\; (r^n\,_{bs'}) $              & \dn & $ (r^n)\,_{(bs\, \At\, bs')} $ \\
     \end{tabular}
     \renewcommand{\arraystretch}{1.0}
 
@@ -552,11 +522,11 @@ yields the POSIX value
       $ \mkeps(\ONE\,_{bs}) $                & \dn & $ bs $ \\
       $ \mkeps((r_1 + r_2)\,_{bs}) $         & \dn &
       $ \begin{cases}
-      bs \cup \mkeps(r_1) & \text{if } \nullable(r_1) \\
-      bs \cup \mkeps(r_2) & \text{otherwise}
+      bs\, \At\, \mkeps(r_1) & \text{if } \nullable(r_1) \\
+      bs\, \At\, \mkeps(r_2) & \text{otherwise}
       \end{cases} $ \\
-      $ \mkeps((r_1 \cdot r_2)\,_{bs}) $     & \dn & $ bs \cup \mkeps(r_1) \cup \mkeps(r_2) $ \\
-      $ \mkeps((r^*)\,_{bs}) $               & \dn & $ bs \cup [1] $ \\
+      $ \mkeps((r_1 \cdot r_2)\,_{bs}) $     & \dn & $ bs\, \At\, \mkeps(r_1)\, \At\, \mkeps(r_2) $ \\
+      $ \mkeps((r^*)\,_{bs}) $               & \dn & $ bs \, \At\,  [1] $ \\
     \end{tabular}
     \renewcommand{\arraystretch}{1.0}
 
@@ -568,9 +538,7 @@ yields the POSIX value
   \end{center}
 \end{figure}
 
-\FloatBarrier
 \subsection{Marked Approach}
-
 The marked approach is a method for regular expression matching that tracks 
 matching progress by inserting and moving marks into the expression.  
 As noted by Nipkow and Traytel~\cite{NipkowTraytel2014}, the idea can be traced
@@ -582,45 +550,45 @@ work and developing it in a modern setting.
 This approach allows for more efficient matching, particularly in complex
 expressions such as $(a^*b^*)^*$, in large alternations like
 $(a+b+c+\dots+z)^*$, or in nested choices such as
-$((a)^* + (aa)^* + (aaa)^* + (aaaa)^* + (aaaaa)^*)^*$. The regular expression itself
-does not increase in size; rather, progress is tracked through the placement of marks.
-With each input character, these marks traverse the regular expression according to a 
-set of rules. At the end of the input, the expression is evaluated to determine whether 
-the marks are in positions that make the expression "final" — that is, whether the 
-expression accepts the string.
+$((a)^* + (aa)^* + (aaa)^* + (aaaa)^* + (aaaaa)^*)^*$. The regular expression 
+itself does not increase in size; rather, progress is tracked through the 
+placement of marks. With each input character, these marks traverse the regular 
+expression according to a set of rules. At the end of the input, the expression 
+is evaluated to determine whether the marks are in positions that make the 
+expression "final" — that is, whether the expression accepts the string.
 
-There is a slight difference in how marks are interpreted in the works of Fischer et 
-al.~\cite{Fischer2010} and Asperti et al.~\cite{Asperti2010}.  
-In Fischer et al.’s approach, marks are inserted after a character has been matched, 
-thereby recording the matched character or subexpression.  
-In contrast, Asperti et al. interpret the positions of marks as indicating the potential
-to match a character: as input is consumed, the marks move through the regular 
-expression to indicate the next character that can be matched.  
+There is a slight difference in how marks are interpreted in the works of 
+Fischer et al.~\cite{Fischer2010} and Asperti et al.~\cite{Asperti2010}.  
+In Fischer et al.’s approach, marks are inserted after a character has been 
+matched, thereby recording the matched character or subexpression.  
+In contrast, Asperti et al. interpret the positions of marks as indicating the 
+potential to match a character: as input is consumed, the marks move through 
+the regular expression to indicate the next character that can be matched.  
 In both approaches, acceptance is determined by evaluating the final state of the 
-regular expression. For Fischer et al., this corresponds to having matched characters, 
-whereas for Asperti et al. it requires that the marks end in positions  
-where the expression can accept the empty string, ensuring that the entire input has 
-been consumed. If the marks do not reach such positions, some characters remain 
-unmatched and the matching problem fails.
+regular expression. For Fischer et al., this corresponds to having matched 
+characters, whereas for Asperti et al. it requires that the marks end in positions  
+where the expression can accept the empty string, ensuring that the entire 
+input has been consumed. If the marks do not reach such positions, some 
+characters remain unmatched and the matching problem fails.
 
 Nipkow and Traytel, in their work on regular expression equivalence, 
 build a unified framework for decision procedures on regular expressions. 
 They describe McNaughton--Yamada--Glushkov and Fischer’s work as 
 mark-after-atom, meaning that when a character is read, the mark is placed 
 immediately after it. In their framework, this is expressed by two operations 
-on marks, namely $follow$ and $read$. The function $follow$ is, as they 
+on marks, namely \follow\ and \readF\ . The function \follow\ is, as they 
 describe, similar to an epsilon-closure, in that it moves all marks in a 
-regular expression to the next atom to be read, then $read$ marks all 
+regular expression to the next atom to be read, then \readF\ marks all 
 atoms matching the current input symbol. The main transition function 
 is therefore written as 
 
 \[
-shift\ m\ r\ x = read\ x\ (follow\ m\ r).
+\shift\ m\ r\ x = \readF\ x\ (\follow\ m\ r).
 \] 
 
-By contrast, they show that the work of Asperti et al., although presented 
-as McNaughton--Yamada, is in fact a dual construction: mark-before-atom.  
-While Asperti et al.\ described their approach as following the 
+By contrast, Nipkow and Traytel show that the work of Asperti et al., 
+although presented as McNaughton--Yamada, is in fact a dual construction: 
+mark-before-atom. While Asperti et al.\ described their approach as following the 
 McNaughton--Yamada--Glushkov framework, their work actually corresponds 
 to the opposite variant, where marks are placed before reading the next 
 atom.  
@@ -628,24 +596,23 @@ In this version, the marks indicate atoms that are about to be read rather
 than atoms that have just been consumed.  
 The main transition function is therefore the inverse of the previous one:
 \[
-move\ c\ r\ m = follow\ m\ (read\ c\ r).
+\move\ c\ r\ m = \follow\ m\ (\readF\ c\ r).
 \]
 
-\FloatBarrier
 \subsubsection{Motivation for a Marked Approach}
-The marked approach offers a potentially promising alternative to
+The marked approach offers a promising alternative to
 derivatives for regular expression matching by addressing some of the
 limitations found in the derivative method.
-The derivative method itself provides a better way of matching than
-constructing an NFA and then a DFA, which can suffer from state explosion
-exponentially, up to $2^n$.
-Engines that construct DFAs, such as those used in rust, attempt
+The derivative method provides a more direct way of matching compared to 
+constructing an NFA and then a DFA, which can suffer from exponential 
+state explosion, up to $2^n$.
+Engines that construct DFAs, such as those used in Rust, attempt
 to mitigate this problem by building the automaton dynamically: they
 start from the initial state and construct additional DFA states only
 as required by the input string.
 This avoids generating the full automaton up front, but even so, it can
 still lead to large memory usage for expressions such as $r^n$, which
-require $n$ copies of the subexpression.
+can effectively require $n$ copies of the automaton in the worst case.
 Other engines, such as those in Python, use NFAs instead of DFAs.
 This design allows for additional features, such as backreferences and
 lookarounds, but may result in catastrophic backtracking when the engine
@@ -659,23 +626,23 @@ Even with aggressive simplifications, these subexpressions
 cannot always be simplified when they occur at different levels of the
 expression tree.
 
+The marked approach relies on propagating marks within the regular expression 
+rather than constructing new subexpressions. Our main motivation is that this 
+method could support efficient and high-performance matching with POSIX value 
+extraction, since it handles matching in a way that avoids some of the 
+limitations of the derivative-based approach. Inspired by the works of 
+Fischer et al.\ and Asperti et al.~\cite{Fischer2010, Asperti2010}, we aim to 
+extend the marked approach to extract POSIX values, as well as to handle 
+extended constructors, such as bounded repetitions and intersections. 
+Our work is primarily based on the algorithm described by 
+Fischer et al.~\cite{Fischer2010}.  As shown by 
+Nipkow and Traytel~\cite{NipkowTraytel2014}, the pre-mark algorithm of 
+Asperti et al.\ is dual construction to the post-mark algorithm of Fischer et al.; 
+moreover, the former is a homomorphic image of the latter and thus never larger 
+in number of states. Consequently, we use Fischer et al.’s 
+approach as the foundation for extending the marked approach 
+to matching with POSIX value extraction.
 
-The marked approach relies on propagating marks within the regular expression rather than 
-constructing new subexpressions. Our main motivation is that this method could support 
-efficient and high-performance matching with POSIX value extraction, since it handles 
-matching in a way that avoids some of the limitations of the derivative-based approach. 
-Inspired by the works of Fischer et al.\ and Asperti et 
-al.~\cite{Fischer2010, Asperti2010}, we aim to extend the marked approach to extract 
-POSIX values, as well as to handle extended constructors, such as bounded 
-repetitions and intersections. Our work is primarily based on the algorithm described 
-by Fischer et al.~\cite{Fischer2010}.  
-As shown by Nipkow and Traytel~\cite{NipkowTraytel2014}, the pre-mark algorithm of 
-Asperti et al.\ is in fact a special case of the  
-post-mark algorithm of Fischer et al., which makes Fischer et al.’s approach the most 
-suitable foundation for extending the marked  
-algorithm to matching with POSIX value extraction.
-
-\FloatBarrier
 \section{Our Approach}
 We began our work by implementing the marked approach described by Fischer
 et al.~\cite{Fischer2010} in Scala; details are provided in 
@@ -715,7 +682,6 @@ not yet finished, the initial results are promising. The remainder of this
 section describes the third (latest) version; the earlier versions are 
 presented in the Appendix.
 
-\FloatBarrier
 \subsection{String-Carrying Marks - Matcher}
 \label{shiftsMatcher}
 We initially followed the approach of Fischer et al.~\cite{Fischer2010} and 
@@ -784,11 +750,11 @@ can grow exponentially (or more). The number of distinct marks therefore
 remains linear in the input string length. In the same example we obtain only 
 $\{\Marked{aa}\ \rightarrow \Marked{a}\ \rightarrow \Marked{\emptylist}\}$.
 When marks are represented only by their remaining suffixes, there can be at most 
-\(n\) distinct marks for an input string of length \(n\), since each mark corresponds 
-to a unique suffix and there are at most \(n\) such suffixes. Even in the presence 
+$n$ distinct marks for an input string of length $n$, since each mark corresponds 
+to a unique suffix of the input and there are at most $n$ such suffixes. Even in the presence 
 of nested stars, the outer unfolding reuses the same set of suffix marks generated 
 by the inner star, so although the number of recursive calls can increase, the number 
-of distinct marks at each stage remains bounded by \(n\).
+of distinct marks at each stage remains bounded by $n$. 
 
 We started with a lexer implementation of this version, and from initial 
 testing it produces the POSIX value, yet this remains to be formally proven. 
@@ -797,7 +763,7 @@ their remaining strings. At present, the reordering is carried out in the
 sequence case after shifting through the first part and in the \Star\ and $r^n$
 after shifting to the inner regex inside.
 
-The behaviour of each case of the $\shifts$ function is discussed in detail below.
+The behaviour of each case of the \shifts\ function is discussed in detail below.
 \begin{figure}[ht]
   \begin{center}
   \renewcommand{\arraystretch}{1.7}
@@ -822,12 +788,12 @@ The behaviour of each case of the $\shifts$ function is discussed in detail belo
 
   \mbox{}
   \rule{\linewidth}{0.4pt}
- \caption{$\shifts$ function. Marks are annotated with strings. A mark is represented 
+ \caption{\shifts\ function. Marks are annotated with strings. A mark is represented 
   as $\Marked{s}$, where $s$ is a string, and $ms$ is a list of 
  such marks.}\label{shiftsFunction}
   \end{center}
 \end{figure}
-%\FloatBarrier
+%
 \paragraph*{\textbf{Character case} $(c)$:}
 \begin{itemize}
   \item If the head of the string in a mark matches $c$, it is stripped and 
@@ -845,9 +811,9 @@ The behaviour of each case of the $\shifts$ function is discussed in detail belo
 \begin{itemize}
 \item This is the most elaborate case. It begins by shifting the marks into 
 the first part of the sequence, $r_1$, producing a new list of marks $ms'$. 
-The result then depends on several conditions:, namely:
+The result then depends on several conditions, namely:
     \begin{enumerate}
-      \item $\nullable(r_1 \land r_2)$: both $r_1$ and $r_2$ are nullable, 
+      \item $\nullable(r_1) \land \nullable(r_2)$: both $r_1$ and $r_2$ are nullable, 
             so both can be skipped and the shifting must account for this by 
             combining the results appropriately. To account for $r_1$ being 
             skipped, the original marks $ms$ are appended to $ms'$ and then 
@@ -910,7 +876,7 @@ character matches, so it is stripped from the mark, leaving the string
 \texttt{c}. In the right subexpression $(a \cdot c)$, the sequence matches 
 both characters, so the string in the mark is reduced to the empty string. 
 At this point, the list of marks $[\Marked{_{[c]}}, \Marked{_{\emptylist}}]$ 
-is obtained, and with no more \shifts\, calls, and one mark reduced to the 
+is obtained, and with no further calls to \shifts\, and one mark reduced to the 
 empty string, the expression is accepted.
 
 In Example~2 (Figure~\ref{StringShiftsExample2}), we consider the regular 
@@ -921,7 +887,7 @@ the leading $a$ is stripped from the string carried by the mark, and the inner
 \shifts\ call produces a new mark with this shorter string. If the result is 
 empty—meaning that no character was consumed—no further iteration takes place. 
 This mechanism has two effects: first, the strings carried by the marks either 
-remain unchanged or become shorter;in the sense that their length decreases.
+remain unchanged or become shorter; in the sense that their length decreases.
 Second, it enumerates all the ways the \Star\ expression can match the input, 
 from no consumption to consuming the entire string. The algorithm therefore 
 returns a list of marks representing these alternatives, and, as Example~3 
@@ -962,7 +928,7 @@ particular the mark $\Marked{aa}$, which represents consuming only one character
   \end{center}
   \mbox{}
   \hrule
-  \caption{Example 1: String-carrying shifts for: $(a + (a \cdot c))$ with string \texttt{ac}}
+  \caption{Example 1: String-carrying shifts for: $(a + (a \cdot c))$ with the string \texttt{ac}.}
   \label{StringShiftsExample1}
 \end{figure}
 
@@ -979,7 +945,7 @@ particular the mark $\Marked{aa}$, which represents consuming only one character
 
   \mbox{}
   \hrule
-  \caption{Example 2: String-carrying shifts for: $(a^*)$ with string \texttt{aaa}}
+  \caption{Example 2: String-carrying shifts for: $(a^*)$ with the string \texttt{aaa}.}
   \label{StringShiftsExample2}
 \end{figure}
 
@@ -999,7 +965,6 @@ particular the mark $\Marked{aa}$, which represents consuming only one character
   \label{StringShiftsExample3}
 \end{figure}
 
-\FloatBarrier
 \section{Future Work}
 
 The development of the marked matcher is still ongoing, and several directions for 
@@ -1029,13 +994,13 @@ future work have been identified:
 \bibliography{urules}
 \addcontentsline{toc}{section}{References}
 
-
+\FloatBarrier
 \appendix
 \section{Appendix}
 
 \subsection{Scala Implementation of Fischer et al.’s Marked Approach}
 \label{sec:scala-fischer}
-In Fischer et al. approach, the marks are shifted through the regular expression with 
+In Fischer et al.'s approach, the marks are shifted through the regular expression with 
 each input character. The process starts with an initial mark inserted at the beginning,
 which is then moved step by step as the input is consumed. 
 This behaviour is implemented by the function \shift, which performs the core logic 
@@ -1190,8 +1155,8 @@ et al.~\cite{Fischer2010}.
   \end{center}
 \end{figure}
 
-\FloatBarrier
-\subsection{Bit-Annotated, version 1}
+
+\subsection{Bit-Annotated Version~1}
 \label{sec:Bit-Annotated1}
 In this version, we extended the marked approach with bit sequencing. 
 Inspired by Sulzmann and Lu~\cite{Sulzmann2014}, we introduced bitcodes in 
@@ -1203,7 +1168,7 @@ erasure and, in some cases, the loss of the POSIX value, as illustrated below
 in Example~2. We use the bit annotations $0$ and $1$, similar to the bitcoded 
 derivatives described by Sulzmann and Lu~\cite{Sulzmann2014}.  
 
-In contrast to the origianl work by Fischer et al, our function \shift\ takes
+In contrast to the original work by Fischer et al, our function \shift\ takes
 an additional argument, \Bits.
 %, which is a list of bit elements ($0$ or $1$).
 As \shift\ is applied, bits are appended to the bitsequence. For example, when 
@@ -1276,7 +1241,7 @@ The behaviour of each case of the \shift\ function is discussed in detail below.
 
     \mbox{}
     \rule{\linewidth}{0.4pt}
-\caption{Bit-Annotated $\shift$ (Version~1). Here, $\oplus$ stands for appending 
+\caption{Bit-Annotated Version~1 $\shift$. Here, $\oplus$ stands for appending 
 a bit to a bitsequence, while\,$\At$ stands for concatenation of two 
 bitsequences.}\label{bitAnnotatedShiftfunction}
   \end{center}
@@ -1302,7 +1267,7 @@ bitsequences.}\label{bitAnnotatedShiftfunction}
     of the sequence is skipped.  
     \item If $r_1$ is in a final position (that is, it has finished matching),  
     a mark is shifted to $r_2$ with the bitsequence describing how $r_1$ was matched,  
-    extracted using the $\mkfin$ function.  
+    extracted using the \mkfin\ function.  
     \item Otherwise, marks are shifted only into $r_1$, with $bs$ representing 
     the current path to $r_1$.  
 \end{itemize}
@@ -1335,7 +1300,7 @@ bitsequences.}\label{bitAnnotatedShiftfunction}
           \mkfin(r_1) \At \mkeps(r_2) & \text{if } \fin(r_1) \land \nullable(r_2) \\
           \mkfin(r_2)                 & \text{otherwise}
         \end{cases}$ \\
-      $\mkfin(r^*)$                          & \dn & $\mkfin(r) \oplus [1]$
+      $\mkfin(r^*)$                          & \dn & $\mkfin(r) \oplus 1$
     \end{tabular}
     \renewcommand{\arraystretch}{1.0}
 
@@ -1365,7 +1330,7 @@ bitsequences.}\label{bitAnnotatedShiftfunction}
     \caption{$\mkeps$ function}\label{mkepsBit1Function}
   \end{center}
 \end{figure}
-\FloatBarrier
+
 Next, we present two examples of matching a string and extracting a value.  
 The first example shows how the bitsequence is constructed during matching,  
 while the second demonstrates a case where the algorithm fails to produce the 
@@ -1383,21 +1348,23 @@ as the second example illustrates.
     \]
     \hrule
 
-    \caption{Bit-Annotated shift of: $(a \cdot b + b \cdot a)$ with string \texttt{ba}} \label{BitAnnotatedShiftExample1}
+    \caption{Example~2: Bit-Annotated Version~1 shift of: $(a \cdot b + b \cdot a)$ with the string \texttt{ba}} \label{BitAnnotatedShiftExample1}
     \mbox{}
 
   \end{figure}   
+
 In Example~1 (see Figure~\ref{BitAnnotatedShiftExample1}), the process starts 
 by shifting the first character, b, into the regular expression. Since the 
-expression is an alternative, $\shift$ is applied to both branches. However, 
+expression is an alternative, \shift\ is applied to both branches. However, 
 only the right branch matches, because its first subexpression
 begins with b. A mark is therefore set with the bitcode list $[1]$. Shifting 
 the second character, a, continues into the concatenation on the right branch. 
 Here the first part is already final, as it matched the preceding b, so the 
 shift moves on to the second part, which matches a. With no further
-calls to $\shift$, $\mkfin$ is applied, because the regular expression has 
-reached a final position,
-indicated by a mark at the end of the
+calls to \shift\ , \mkfin\ is applied, because the regular expression has 
+reached a final position, indicated by a mark at the end of the expression.
+The resulting bitsequence is $[1]$, recording that the match followed the 
+right branch of the alternative.
 
   \begin{figure}[ht]
     $\bullet\;$ String \texttt{aaa}, regular expression: $(a + a \cdot a)^*$
@@ -1412,8 +1379,8 @@ indicated by a mark at the end of the
     \mbox{}
     \hrule
   
-    \caption{Bit-Annotated shift of: $(a + a \cdot a)^*$ with string
-     \texttt{aaa}} \label{BitAnnotatedShiftExample2}
+    \caption{Example~2: Bit-Annotated Version~1 shift of: $(a + a \cdot a)^*$ with the 
+    string \texttt{aaa}} \label{BitAnnotatedShiftExample2}
   \end{figure}
 In Example~2 (see Figure~\ref{BitAnnotatedShiftExample2}), after the first shift
 on a, a mark is placed on the left branch with bits $[0,0]$, indicating the start
@@ -1429,11 +1396,9 @@ the final 1 indicating the end of the \Star\ iteration. This behaviour
 arises because \POINT\ stores only a single bitsequence at a time, with no 
 mechanism for preserving multiple marks.
 
-  
-\FloatBarrier
-\subsection{Bit-Annotated, version 2}
+\subsection{Bit-Annotated Version~2}
 \label{sec:Bit-Annotated2}
-In this version, we updated the previous bit-annotated Version~1 to accumulate
+In this version, we updated the previous Bit-Annotated Version~1 to accumulate
 all possible bitsequences leading to a match, rather than storing only a
 single bitsequence at each marked position. This change was motivated by two
 issues observed in Version~1: the overwriting of marks when a character is
@@ -1451,7 +1416,7 @@ using a function inspired by the work of Okui and Suzuki~\cite{OkuiSuzuki2013}.
 This ordering is not embedded within shifting itself: all possible values are
 generated first and then ordered externally.
 
-The definition of $\shift$ for this version is shown in
+The definition of \shift\ for this version is shown in
 Figure~\ref{bitAnnotated2Shiftfunction}. The key difference in this version,
 compared to Version~1, is that all possible paths are considered. For example,
 in the sequence case, the bitsequences that arise when $r_1$ is nullable and can
@@ -1516,7 +1481,7 @@ where every possible way of matching is generated.
 
     \mbox{}
     \rule{\linewidth}{0.4pt}
-    \caption{Bit-Annotated $\shift$ (Version~2). Here,
+    \caption{Bit-Annotated Version~2 \shift\ . Here,
     $\bigoplus$ stands for appending a single element to each member of a list,
     $\lessdot$ stands for appending a list to each member of a list,
     and $\At$ stands for list concatenation.} 
@@ -1545,36 +1510,35 @@ where every possible way of matching is generated.
               \mkfin(r_2)
                 & \text{otherwise.}
             \end{cases}$} \\
-    
-
-      $\mkfin(r^*)$                          & \dn & $\mkfin(r) \bigoplus\, [1]$
+      $\mkfin(r^*)$                          & \dn & $\mkfin(r) \bigoplus\, 1$
     \end{tabular}
     \renewcommand{\arraystretch}{1.0}
 
     \mbox{}
     \rule{\linewidth}{0.4pt}
-    \caption{\mkfin\ (Version~2). Returns a list of all bitsequences in a point, 
+    \caption{Bit-Annotated Version~2 \mkfin\ . Returns a list of all bitsequences in a point, 
     representing all possible match paths.}
     \label{mkfin2Definition}
   \end{center}
 \end{figure}
 %mkeps2
 
-\FloatBarrier
-\subsection{String-Carrying Marks - Lexer **so far**}
-in this version, we extend the string carrying marks version by adding bitsequences
-attached to each mark, so marks consist of suffixes and bitsequences.
-similar to the bit-annotated version 1 and 2, the bitsequences are built incrementally
-as the marks are shifted through the regular expression. the exeption now is that 
-the order of marks are based on the remaining suffixes where shorter suffixes are prioritized
-over longer suffixes, and for marks with the same suffix length, the original order
-is preserved. this reordering , we call reshuffle, is done after shifting through the 
-first part of a sequence, after shifting into the inner regex inside a star , and inside r to 
-the power of n. then when the shifting is done, we extract the bitsequcnes of the first
-mark that consumed its string.
 
-We define \shifts\ in this version in Figure~\ref{shiftsFunctionLexer}, The behaviour 
-of each case of the \shift\ function is discussed in detail below.
+\subsection{String-Carrying Marks - Lexer (so far)}
+In this version, we extend the string-carrying-marks design by attaching a bit
+sequence to each mark, so that each mark consists of its remaining suffix and the
+corresponding bit sequence. Similar to the Bit-Annotated Version~1 and~2, the bit
+sequences are built incrementally as the marks are shifted through the regular
+expression. The exception now is that the order of marks is based on their remaining
+suffixes: shorter suffixes are prioritised over longer ones, and marks with the same
+suffix length preserve their original order. This reordering, which we call
+\reshuffle, is applied after shifting through the first part of a sequence, after
+shifting into the inner regular expression inside a Star, and in the handling of
+$r^n$. When shifting is complete, we extract the bit sequences of the first mark
+whose carried suffix is empty (i.e., fully consumed).
+
+We define \shifts\ in this version in Figure~\ref{shiftsFunctionLexer}. The behaviour 
+of each case of the \shifts\ function is discussed in detail below.
 
 \begin{figure}[ht]
   \begin{center}
@@ -1596,17 +1560,19 @@ of each case of the \shift\ function is discussed in detail below.
         \big[\, \shifts([\Marked{s}], r_2) \mid \Marked{s} \in ms' \,\big]^{@}
         \; @ \;
         \shifts(ms \lessdot \mkeps(r_1), r_2)
-        & \text{if } \nullable(r_1) \land \nullable(r_2),\\
+        & \\ \text{if } \nullable(r_1) \land \nullable(r_2),\\
+        
         \big[\, \shifts([\Marked{s}], r_2) \mid \Marked{s} \in ms' \,\big]^{@}
         \; @ \;
         \shifts(ms \lessdot \mkeps(r_1), r_2)
-        & \text{if } \nullable(r_1) \land \neg\nullable(r_2),\\
-        (\, ms' \lessdot \mkeps(r_2) \,)
-        \; @ \;
+        & \\ \text{if } \nullable(r_1) \land \neg\nullable(r_2),\\
+
+        (\, ms' \lessdot \mkeps(r_2) \,) \; @ \;
         \big[\, \shifts([\Marked{s}], r_2) \mid \Marked{s} \in ms' \,\big]^{@}
-        & \text{if } \neg\nullable(r_1) \land \nullable(r_2),\\
+        & \\ \text{if } \neg\nullable(r_1) \land \nullable(r_2),\\
+
         \big[\, \shifts([\Marked{s}], r_2) \mid \Marked{s} \in ms' \,\big]^{@}
-        & \text{otherwise.}
+        &\\ \text{otherwise.}
       \end{cases}$} \\
 
     $\shifts(ms, r^{*})$ & \dn &
@@ -1615,25 +1581,24 @@ of each case of the \shift\ function is discussed in detail below.
       \;\; \text{else } (\, ms' \oplus 1 \,) \; @ \; \shifts(ms', r^{*})$ \\
 
     $\shifts(ms, r^{n})$ & \dn &
-      $\text{if } n=0 \text{ then } \emptylist
-      \;\; \text{else if } n=1 \text{ then}$ \\ 
-      &&$\shifts(ms \oplus 0, r).\reshuffle$ \\ 
+      $\text{if } n=0 \text{ then } \emptylist$ \\
+      && $\text{else if } n=1 \text{ then} \; \shifts(ms \oplus 0, r).\reshuffle$ \\ 
       &&$\text{else let } ms' = \shifts(ms \oplus 0, r).\reshuffle \text{ in}$ \\[2pt]
-      &&$\text{if } ms' = \emptylist \text{ then } \emptylist 
-      \text{ else } 
+      &&$\text{if } ms' = \emptylist \text{ then } \emptylist$ \\
+      && $\text{ else } 
       \begin{cases}
         (\, ms' \oplus 1 \,) \; @ \; \shifts(ms', r^{n-1})
         & \text{if } \nullable(r),\\
         \shifts(ms', r^{n-1})
         & \text{otherwise.}
-      \end{cases}$ 
+      \end{cases}$
 
   \end{tabular}
   \renewcommand{\arraystretch}{1.0}
 
   \mbox{}
   \rule{\linewidth}{0.4pt}
-  \caption{\shifts\ function for string-carrying version - Lexer. Here,
+  \caption{String-Carrying Marks - Lexer \shifts\ function. Here,
     $\bigoplus$ stands for appending a single element to each member of a list,
     $\lessdot$ stands for appending a list to each member of a list,
     and $\At$ stands for list concatenation.}
@@ -1663,7 +1628,7 @@ appended to each mark’s bitsequence in the left-hand side $r_1$, and $1$ appen
   giving lower priority to those with longer remaining strings. 
   The result then depends on several conditions, namely:
   \begin{enumerate}
-    \item $\nullable(r_1 \land r_2)$: when both $r_1$ and $r_2$ can be skipped,
+    \item $\nullable(r_1) \land \nullable(r_2)$: when both $r_1$ and $r_2$ can be skipped,
     the returned list of marks must preserve the remaining suffixes order.
     There are three ordered parts in the result:
       \begin{enumerate}
@@ -1724,7 +1689,7 @@ appended to each mark’s bitsequence in the left-hand side $r_1$, and $1$ appen
   when returning the marks representing that iteration.
 \end{itemize}
 
-\paragraph*{\textbf{$n$ Repetitions case} $(r^{n})$:}
+\paragraph*{\textbf{n-Repetitions case} $(r^{n})$:}
 The shifting depends on several cases depending on $n$.
 \begin{itemize}
   \item If $n = 0$, then no marks are shifted and an empty list is returned, keeping to the choice
@@ -1747,8 +1712,7 @@ The shifting depends on several cases depending on $n$.
 
 
 
-\subsection{String-Carrying Marks - Matcher - Proofs **so far**}
-To be Added Later.
+%\subsection{String-Carrying Marks - Matcher - Proofs **so far**}
 
 
 \end{document}

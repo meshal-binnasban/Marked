@@ -98,25 +98,50 @@ set(shifts(ms,r^n)) = Strips(L(r^n))(set\,ms).
 \]
 
 \subsection{sub case $nullable(r)$}
-
-unfolding the shifts definition,
+\textbf{Unfolding the shifts definition,}
 \[
-set(shifts(ms,r^n)) = a \cup b,
+set(shifts(ms,r^n)) = set(shifts(ms,r)) \cup set(shifts(shifts(ms,r), r^{n-1}))
 \]
-\[
-a := set(shifts(ms,r)), \quad b := set(shifts(shifts(ms,r), r^{n-1})).
-\]
+\textbf{By IH on $P(ms,r)= set(shifts(ms,r)) = Strips(L(r))(set\,ms).\\$}
 
-by IH on $P(ms,r)$,
+\noindent \textbf{We can use IH on $P(shifts(ms,r), r^{n-1})=set(shifts(shifts(ms,r), r^{n-1})) $ 
+since $shifts(ms,r)$ is smaller than $ms$ and $r^{n-1}$ is smaller than $r^{n}$}
 \[
-a = Strips(L(r))(set\,ms).
+=Strips(L(r^{n-1}))(Strips(L(r))(set\,ms)).
 \]
 
-since $shifts(ms,r)$ is smaller than $ms$ and $r^{n-1}$ is smaller than $r^{n}$, we can use IH on $P(shifts(ms,r), r^{n-1})$,
+\noindent \textbf{so the unfloding of the definition becomes: }
 \[
-b = Strips(L(r^{n-1}))(set(shifts(ms,r))) = Strips(L(r^{n-1}))(Strips(L(r))(set\,ms)).
+  Strips(L(r))(set\,ms) \cup Strips(L(r^{n-1}))(Strips(L(r))(set\,ms)) \quad (1)
 \]
 
+
+\subsubsection{Using infolding of union}
+
+\noindent \textbf{Unfolding the right hand side of $(1)$  on union:}
+\[ 
+\begin{array}{llc}
+    Strips(L(r^{n-1}))(Strips(L(r))(set\,ms)) = & & \\
+    Strips(L(r))( Strips(L(r))(set ms) ) & \cup  & \quad \\
+    Strips(L(r))( Strips(L(r))( Strips(L(r))(set ms) ) ) & \cup  & \quad \\
+    Strips(L(r))( Strips(L(r))( Strips(L(r))( Strips(L(r)))(set ms) ) ) & \cup  & \quad \\
+    \cdots &&\\
+\end{array}
+\]
+
+\noindent \textbf{Then plug back into  $(1)$}
+\[ 
+\begin{array}{lll}
+    Strips(L(r))(set\,ms) & \cup & \\
+    Strips(L(r))( Strips(L(r))(set ms) ) & \cup  & \quad \\
+    Strips(L(r))( Strips(L(r))( Strips(L(r))(set ms) ) ) & \cup  & \quad \\
+    Strips(L(r))( Strips(L(r))( Strips(L(r))( Strips(L(r)))(set ms) ) ) & \cup  & \quad \\
+    \cdots &&\\
+\end{array}
+\]
+\textbf{Which is the definition of $Strips(L(r^n))(set\,ms)$ after unfolding on the union}
+
+\subsubsection{two}
 therefore
 \[
 set(shifts(ms,r^n)) = a \cup b

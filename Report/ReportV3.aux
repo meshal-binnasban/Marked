@@ -1,128 +1,129 @@
 \relax 
+\@input{macros.aux}
 \citation{Sulzmann2014}
 \citation{Fischer2010}
 \citation{Asperti2010}
+\citation{Brzozowski1964}
 \citation{Owens2009}
 \citation{Might2011}
-\citation{Sulzmann2014}
 \citation{Sulzmann2014}
 \citation{Fischer2010}
 \citation{Asperti2010}
 \@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{4}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {2}Background}{4}{}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces the function $L$ which gives the meaning to the regular expression, i.e. associated set of strings to the language of the regular expression}}{5}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces the function $L$ which gives the meaning to the regular expression, i.e. associated set of strings to the language of the regular expression.}}{5}{}\protected@file@percent }
 \newlabel{lFunction}{{1}{5}{}{figure.1}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Derivatives}{5}{}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Brzozowski’s Derivative}}{6}{}\protected@file@percent }
+\citation{Sulzmann2014}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Brzozowski’s Derivative.}}{6}{}\protected@file@percent }
 \newlabel{BrzozowskiDerivative}{{2}{6}{}{figure.2}{}}
 \citation{Sulzmann2014}
-\citation{Sulzmann2014}
 \citation{TanAndUrban2023}
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Derivatives of $(ab+ba)$ with respect to string \texttt  {ba}}}{7}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Derivatives of $(ab+ba)$ with respect to string \texttt  {ba}.}}{7}{}\protected@file@percent }
 \newlabel{derivative}{{3}{7}{}{figure.3}{}}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.1}Size Explosion}{7}{}\protected@file@percent }
 \citation{Antimirov1996}
-\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Derivatives of $((a)^* + (aa)^* + (aaa)^* + (aaaa)^* + (aaaaa)^* )^*$ with respect to string \texttt  {aaa}}}{9}{}\protected@file@percent }
-\newlabel{derivativeStarsExample}{{4}{9}{}{figure.4}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Runtime comparison of derivative-based and mark-based regular expression matchers for $((a)^* + (aa)^* + (aaa)^* + (aaaa)^* + \dots  )^*$ with input strings of length $n$.}}{10}{}\protected@file@percent }
-\newlabel{dervsmarGraph}{{5}{10}{}{figure.5}{}}
 \citation{Sulzmann2014}
 \citation{Sulzmann2014}
-\citation{Sulzmann2014}
-\citation{Sulzmann2014}
-\citation{Sulzmann2014}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.2}Derivative Extension}{11}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.2}Derivative Extension}{8}{}\protected@file@percent }
 \citation{Sulzmann2014}
 \citation{Sulzmann2014}
 \citation{Sulzmann2014}
 \citation{Sulzmann2014}
 \citation{Sulzmann2014}
 \citation{Sulzmann2014}
-\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Step-by-step construction of bitcoded derivatives for $a \cdot (a+b)$ with input \texttt  {ab}. Step 1 shows the result of internalization using \textit  {fuse}, where alternatives are annotated with bits. Step~2 takes the derivative with respect to $a$; the two branches of the result are nullable at this stage: the left branch of $r_1$ and the right branch of $r_2$ can both match the empty string after consuming the first character, corresponding to the bitcodes $[0]$ and $[1]$ respectively. Step 3 takes the derivative with respect to $b$, expanding the expression due to the nullable concatenation. Finally, $\textit  {mkeps}$ extracts the bitcode $[1,1]$.}}{13}{}\protected@file@percent }
-\newlabel{BitcodedDerivative}{{6}{13}{}{figure.6}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces The \textit  {intern}\ function, which internalizes regular expressions by adding bit annotations to alternatives, as defined by Sulzmann and Lu~\cite  {Sulzmann2014}.}}{14}{}\protected@file@percent }
-\newlabel{internFunction}{{7}{14}{}{figure.7}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces The \textit  {fuse}\ function, which adds bit annotations to expressions, as defined by Sulzmann and Lu~\cite  {Sulzmann2014}.}}{14}{}\protected@file@percent }
-\newlabel{fuseFunction}{{8}{14}{}{figure.8}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces The \textit  {mkeps}\ function, which extracts bit annotations from nullable expressions, as defined by Sulzmann and Lu~\cite  {Sulzmann2014}.}}{15}{}\protected@file@percent }
-\newlabel{mkepsFunction}{{9}{15}{}{figure.9}{}}
+\citation{Sulzmann2014}
+\citation{Sulzmann2014}
+\citation{Sulzmann2014}
 \citation{NipkowTraytel2014}
 \citation{Fischer2010}
 \citation{Asperti2010}
 \citation{Fischer2010}
 \citation{Asperti2010}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Marked Approach}{16}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Marked Approach}{10}{}\protected@file@percent }
 \citation{Fischer2010}
 \citation{Asperti2010}
 \citation{Fischer2010}
 \citation{NipkowTraytel2014}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.2.1}Motivation for a Marked Approach}{17}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.2.1}Motivation for a Marked Approach}{11}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Derivatives of $((a)^*+(aa)^*+(aaa)^*+(aaaa)^*+(aaaaa)^*)^*$ with respect to the string \texttt  {aaa}. Each step introduces additional copies of the original regular expression at different derivative levels, where simplifications cannot be applied. For example, after the second step, $(a)^*$ appears in both alternatives, but—being under different products with $r$—the two occurrences cannot be merged.}}{13}{}\protected@file@percent }
+\newlabel{derivativeStarsExample}{{4}{13}{}{figure.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Runtime comparison of derivative-based and mark-based regular expression matchers for $((a)^* + (aa)^* + (aaa)^* + (aaaa)^* + \dots  )^*$ with input strings of length $n$.}}{14}{}\protected@file@percent }
+\newlabel{dervsmarGraph}{{5}{14}{}{figure.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Step-by-step construction of bitcoded derivatives for $(a + ab) \cdot (b + \textbf  {1}\,)$ with input \texttt  {ab}. Step 1 shows the result of internalization using \textit  {fuse}, where alternatives are annotated with bits. Step~2 takes the derivative with respect to $a$; the two branches of the result are nullable at this stage: the left branch of $r_1$ and the right branch of $r_2$ can both match the empty string after consuming the first character, corresponding to the bitcodes $[0]$ and $[1]$ respectively. Step 3 takes the derivative with respect to $b$, expanding the expression due to the nullable concatenation. Finally, $\textit  {mkeps}$ extracts the bitcode $[1,1]$.}}{15}{}\protected@file@percent }
+\newlabel{BitcodedDerivative}{{6}{15}{}{figure.6}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces The \textit  {intern}\ function, which internalizes regular expressions by adding bit annotations to alternatives, as defined by Sulzmann and Lu~\cite  {Sulzmann2014}.}}{16}{}\protected@file@percent }
+\newlabel{internFunction}{{7}{16}{}{figure.7}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces The \textit  {fuse}\ function, which adds bit annotations to expressions, as defined by Sulzmann and Lu~\cite  {Sulzmann2014}.}}{16}{}\protected@file@percent }
+\newlabel{fuseFunction}{{8}{16}{}{figure.8}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces The \textit  {mkeps}\ function, which extracts bit annotations from nullable expressions, as defined by Sulzmann and Lu~\cite  {Sulzmann2014}.}}{17}{}\protected@file@percent }
+\newlabel{mkepsFunction}{{9}{17}{}{figure.9}{}}
 \citation{Fischer2010}
 \citation{OkuiSuzuki2013}
-\@writefile{toc}{\contentsline {section}{\numberline {3}Our Approach}{18}{}\protected@file@percent }
 \citation{Fischer2010}
 \citation{Asperti2010}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Our Approach}{18}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.1}String-Carrying Marks - Matcher}{19}{}\protected@file@percent }
 \newlabel{shiftsMatcher}{{3.1}{19}{}{subsection.3.1}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces $\textit  {shifts}$ function. Marks are annotated with strings. A mark is represented as $\bullet \,s$, where $s$ is a string, and $ms$ is a list of such marks.}}{21}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces \textit  {shifts}\ function. Marks are annotated with strings. A mark is represented as $\bullet \,s$, where $s$ is a string, and $ms$ is a list of such marks.}}{21}{}\protected@file@percent }
 \newlabel{shiftsFunction}{{10}{21}{}{figure.10}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces Example 1: String-carrying shifts for: $(a + (a \cdot c))$ with string \texttt  {ac}}}{24}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces Example 1: String-carrying shifts for: $(a + (a \cdot c))$ with the string \texttt  {ac}.}}{24}{}\protected@file@percent }
 \newlabel{StringShiftsExample1}{{11}{24}{}{figure.11}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces Example 2: String-carrying shifts for: $(a^*)$ with string \texttt  {aaa}}}{25}{}\protected@file@percent }
-\newlabel{StringShiftsExample2}{{12}{25}{}{figure.12}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {13}{\ignorespaces Example 3: String-carrying shifts for: $((a^* \cdot a) \cdot a)$ with string \texttt  {aaa}}}{25}{}\protected@file@percent }
-\newlabel{StringShiftsExample3}{{13}{25}{}{figure.13}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {4}Future Work}{25}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces Example 2: String-carrying shifts for: $(a^*)$ with the string \texttt  {aaa}.}}{24}{}\protected@file@percent }
+\newlabel{StringShiftsExample2}{{12}{24}{}{figure.12}{}}
 \bibstyle{abbrv}
 \bibdata{urules}
 \bibcite{Antimirov1996}{1}
+\@writefile{lof}{\contentsline {figure}{\numberline {13}{\ignorespaces Example 3: String-carrying shifts for: $((a^* \cdot a) \cdot a)$ with string \texttt  {aaa}}}{25}{}\protected@file@percent }
+\newlabel{StringShiftsExample3}{{13}{25}{}{figure.13}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Future Work}{25}{}\protected@file@percent }
 \bibcite{Asperti2010}{2}
-\bibcite{Fischer2010}{3}
-\bibcite{Might2011}{4}
-\bibcite{NipkowTraytel2014}{5}
-\bibcite{OkuiSuzuki2013}{6}
-\bibcite{Owens2009}{7}
-\bibcite{Sulzmann2014}{8}
-\bibcite{TanAndUrban2023}{9}
+\bibcite{Brzozowski1964}{3}
+\bibcite{Fischer2010}{4}
+\bibcite{Might2011}{5}
+\bibcite{NipkowTraytel2014}{6}
+\bibcite{OkuiSuzuki2013}{7}
+\bibcite{Owens2009}{8}
+\bibcite{Sulzmann2014}{9}
+\bibcite{TanAndUrban2023}{10}
+\@writefile{toc}{\contentsline {section}{References}{26}{}\protected@file@percent }
 \citation{Fischer2010}
 \citation{Fischer2010}
 \citation{Asperti2010}
-\@writefile{toc}{\contentsline {section}{References}{27}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {A}Appendix}{27}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {A.1}Scala Implementation of Fischer et al.’s Marked Approach}{27}{}\protected@file@percent }
 \newlabel{sec:scala-fischer}{{A.1}{27}{}{subsection.1.1}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {14}{\ignorespaces The \textit  {shift}\ function in the Scala implementation of Fischer’s Marked Approach.}}{28}{}\protected@file@percent }
 \newlabel{shiftFunction}{{14}{28}{}{figure.14}{}}
 \citation{Fischer2010}
+\citation{Sulzmann2014}
+\citation{Sulzmann2014}
 \@writefile{lof}{\contentsline {figure}{\numberline {15}{\ignorespaces The \textit  {fin}\ function, which checks whether a marked expression is in a final state}}{29}{}\protected@file@percent }
 \newlabel{finFunction}{{15}{29}{}{figure.15}{}}
-\citation{Sulzmann2014}
-\citation{Sulzmann2014}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.2}Bit-Annotated Version~1}{29}{}\protected@file@percent }
+\newlabel{sec:Bit-Annotated1}{{A.2}{29}{}{subsection.1.2}{}}
 \citation{Sulzmann2014}
 \citation{TanAndUrban2023}
 \@writefile{lof}{\contentsline {figure}{\numberline {16}{\ignorespaces The \textit  {nullable}\ function, which checks whether an expression can match the empty string.}}{30}{}\protected@file@percent }
 \newlabel{nullableFunction}{{16}{30}{}{figure.16}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {A.2}Bit-Annotated, version 1}{30}{}\protected@file@percent }
-\newlabel{sec:Bit-Annotated1}{{A.2}{30}{}{subsection.1.2}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {17}{\ignorespaces Bit-Annotated $\textit  {shift}$ (Version~1). Here, $\oplus $ stands for appending a bit to a bitsequence, while\,$\text  {$\,@\,$}$ stands for concatenation of two bitsequences.}}{32}{}\protected@file@percent }
-\newlabel{bitAnnotatedShiftfunction}{{17}{32}{}{figure.17}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {17}{\ignorespaces Bit-Annotated Version~1 $\textit  {shift}$. Here, $\oplus $ stands for appending a bit to a bitsequence, while\,$\text  {$\,@\,$}$ stands for concatenation of two bitsequences.}}{31}{}\protected@file@percent }
+\newlabel{bitAnnotatedShiftfunction}{{17}{31}{}{figure.17}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {18}{\ignorespaces $\textit  {mkfin}$ function}}{33}{}\protected@file@percent }
 \newlabel{mkfinFunction}{{18}{33}{}{figure.18}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {19}{\ignorespaces $\textit  {mkeps}$ function}}{33}{}\protected@file@percent }
 \newlabel{mkepsBit1Function}{{19}{33}{}{figure.19}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {20}{\ignorespaces Bit-Annotated shift of: $(a \cdot b + b \cdot a)$ with string \texttt  {ba}}}{34}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {20}{\ignorespaces Example~2: Bit-Annotated Version~1 shift of: $(a \cdot b + b \cdot a)$ with the string \texttt  {ba}}}{34}{}\protected@file@percent }
 \newlabel{BitAnnotatedShiftExample1}{{20}{34}{}{figure.20}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {21}{\ignorespaces Bit-Annotated shift of: $(a + a \cdot a)^*$ with string \texttt  {aaa}}}{34}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {21}{\ignorespaces Example~2: Bit-Annotated Version~1 shift of: $(a + a \cdot a)^*$ with the string \texttt  {aaa}}}{34}{}\protected@file@percent }
 \newlabel{BitAnnotatedShiftExample2}{{21}{34}{}{figure.21}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.3}Bit-Annotated Version~2}{34}{}\protected@file@percent }
+\newlabel{sec:Bit-Annotated2}{{A.3}{34}{}{subsection.1.3}{}}
 \citation{OkuiSuzuki2013}
-\@writefile{toc}{\contentsline {subsection}{\numberline {A.3}Bit-Annotated, version 2}{35}{}\protected@file@percent }
-\newlabel{sec:Bit-Annotated2}{{A.3}{35}{}{subsection.1.3}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {22}{\ignorespaces Bit-Annotated $\textit  {shift}$ (Version~2). Here, $\DOTSB \bigoplus@ \slimits@ $ stands for appending a single element to each member of a list, $\lessdot $ stands for appending a list to each member of a list, and $\text  {$\,@\,$}$ stands for list concatenation.}}{36}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.4}String-Carrying Marks - Lexer (so far)}{35}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {22}{\ignorespaces Bit-Annotated Version~2 \textit  {shift}\ . Here, $\DOTSB \bigoplus@ \slimits@ $ stands for appending a single element to each member of a list, $\lessdot $ stands for appending a list to each member of a list, and $\text  {$\,@\,$}$ stands for list concatenation.}}{36}{}\protected@file@percent }
 \newlabel{bitAnnotated2Shiftfunction}{{22}{36}{}{figure.22}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {23}{\ignorespaces \textit  {mkfin}\ (Version~2). Returns a list of all bitsequences in a point, representing all possible match paths.}}{37}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {23}{\ignorespaces Bit-Annotated Version~2 \textit  {mkfin}\ . Returns a list of all bitsequences in a point, representing all possible match paths.}}{37}{}\protected@file@percent }
 \newlabel{mkfin2Definition}{{23}{37}{}{figure.23}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {A.4}String-Carrying Marks - Lexer **so far**}{38}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {A.5}String-Carrying Marks - Matcher - Proofs **so far**}{41}{}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {24}{\ignorespaces \textit  {shifts}\ function for string-carrying version - Lexer. Here, $\DOTSB \bigoplus@ \slimits@ $ stands for appending a single element to each member of a list, $\lessdot $ stands for appending a list to each member of a list, and $\text  {$\,@\,$}$ stands for list concatenation.}}{42}{}\protected@file@percent }
-\newlabel{shiftsFunctionLexer}{{24}{42}{}{figure.24}{}}
-\gdef \@abspage@last{42}
+\@writefile{lof}{\contentsline {figure}{\numberline {24}{\ignorespaces String-Carrying Marks - Lexer \textit  {shifts}\ function. Here, $\DOTSB \bigoplus@ \slimits@ $ stands for appending a single element to each member of a list, $\lessdot $ stands for appending a list to each member of a list, and $\text  {$\,@\,$}$ stands for list concatenation.}}{41}{}\protected@file@percent }
+\newlabel{shiftsFunctionLexer}{{24}{41}{}{figure.24}{}}
+\gdef \@abspage@last{41}

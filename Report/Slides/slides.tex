@@ -1,0 +1,316 @@
+\documentclass[aspectratio=169,11pt]{beamer}
+%how about we work on section and titles names. suggest a good way to organize the slides
+% ====== Packages ======
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs,array,bm,graphicx}
+\usepackage{tikz}
+\usepackage{forest}
+\input{macros}
+
+% ====== Title ======
+\title{9-Month Progress Report}
+\author{Meshal Binnasban}
+\institute{King’s College London — Department of Informatics}
+\date{\today}
+
+
+\begin{document}
+
+% ------------------ Title ------------------
+\begin{frame}
+  \titlepage
+  \note{Introduce yourself, supervisor(s), and the one-line goal: POSIX-correct value extraction via a marked approach.}
+\end{frame}
+
+ \begin{frame}
+    \frametitle{Overview}
+    \tableofcontents
+\end{frame}
+
+\section{Introduction}
+\subsection{Brzozowski’s Derivatives}
+% ------------------ Intro: Derivatives (Brzozowski) ------------------
+\begin{frame}{Brzozowski’s Derivatives}
+\small
+\begin{itemize}
+  \item The notion of derivatives for regular expression matching was introduced by 
+  Brzozowski (1964).
+  \item Regained interest in the last decade.\footnote{See Owens~\cite{Owens2009} 
+  and Might~\cite{Might2011}.}
+  \item Compute derivatives successively with respect to each input character.
+  \item Acceptance for a word $w = a_1\cdots a_n$ is tested by: 
+  $\varepsilon \in L(\der_{a_n}(\cdots (\der_{a_1}(r))))$.
+  \item Elegant in design; can be easily implemented in functional programming 
+  languages and reasoned about in theorem provers.
+  \item \textbf{Challenge — Size Explosion:} successive derivatives can rapidly 
+  increase the expression size, especially in sequences and Kleene stars.
+
+\end{itemize}
+
+\note{Emphasise the sequence rule as a source of growth.}
+\end{frame}
+
+% ------------------ Derivative rules ------------------
+\begin{frame}{Brzozowski’s Derivative}
+\small
+%explosion example right after.
+\centering
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{lcl}
+  $\der_a(\ZERO)$ & $\Rightarrow$ & $\ZERO$ \\[2pt]
+  $\der_a(\ONE)$  & $\Rightarrow$ & $\ZERO$ \\[2pt]
+  $\der_a(c)$ & $\Rightarrow$ &
+  $\begin{cases}
+    \ONE  & \text{if } a = c,\\
+    \ZERO & \text{otherwise.}
+  \end{cases}$ \\[6pt]
+  $\der_a(r_1 + r_2)$ & $\Rightarrow$ & $\der_a(r_1) + \der_a(r_2)$ \\[4pt]
+  $\der_a(r_1 \cdot r_2)$ & $\Rightarrow$ &
+  $\der_a(r_1) \cdot r_2 +
+    \begin{cases}
+      \der_a(r_2) & \text{if } \nullable(r_1),\\
+      \ZERO       & \text{otherwise.}
+    \end{cases}$ \\[6pt]
+  $\der_a(r^\ast)$ & $\Rightarrow$ & $\der_a(r) \cdot r^\ast$\\
+\end{tabular}
+
+%\vspace{0.4em}\hrule\vspace{0.2em}
+\mbox{}
+\rule{\linewidth}{0.4pt}
+
+\textit{Brzozowski’s derivatives}
+\note{Point at the sequence rule; the extra summand is the source of growth when $r_1$ is nullable.}
+\end{frame}
+
+% ------------------ Derivatives Matching Example ------------------
+\begin{frame}{Matching Example}
+\small
+\textbf{Regular expression } $(ab + ba)$ \medskip \textbf{String } \textit{ba}
+\[
+\begin{array}{rcl}
+\der_b\, r
+  &=& \der_b\, (ab + ba) \\
+  &=& \der_b\, (ab) + \der_b\, (ba) \\
+  &=& (\der_b\, a) \cdot b + (\der_b\, b) \cdot a \\
+  &=& \ZERO \cdot b + \ONE \cdot a \\[6pt]
+\der_a\, (\der_b\, r)
+  &=& \der_a\, (\ZERO \cdot b + \ONE \cdot a)\\
+  &=& \der_a\, (\ZERO \cdot b) + \der_a\, (\ONE \cdot a)\\
+  &=& \der_a\, (\ZERO) \cdot b + (\der_a\, (\ONE) \cdot a + \der_a\, a)\\
+  &=& \ZERO \cdot b + (\ZERO \cdot a + \ONE )
+\end{array}
+\]
+
+\note{Walk through the derivatives and finish with the nullable test.}
+\end{frame}
+
+\subsection{Size Explosion}
+% ------------------ Problem with Derivatives ------------------
+\begin{frame}{Size Explosion}
+\small
+\begin{itemize}
+  \item Expression size can grow substantially (especially with Kleene star and sequences and nested constructs).
+  \item Derivatives may cause \textbf{size explosion}—expressions grow rapidly, especially with nested sequences or Kleene stars.
+  \item Simplifications can reduce redundancy but cannot fully prevent size explosion in the worst case.
+  \item Subexpressions cannot always be simplified, such as when identical terms are separated by other expressions or occur at different nesting levels.
+\end{itemize}
+\medskip
+\footnotesize
+\textbf{Regular expression } $ ((a)^* + (aa)^* + (aaa)^* + (aaaa)^* + (aaaaa)^* )^*$  \textbf{String } \textit{$ \underbrace{a \dots a}_n$}
+
+\[
+\begin{array}{rcl}
+\der_a\, r
+  &=& ((a)^* + (a \cdot (aa)^*) + (aa \cdot (aaa)^*) + \dots) \cdot r^* \\
+\der_a(\der_a\, r)
+  &=& ((a)^* + (aa)^* + (a \cdot (aaa)^*) + \dots) \cdot r^* 
+      \;+\; ((a)^* + (a \cdot (aa)^*) + \dots) \cdot r^* \\
+  \multicolumn{3}{c}{\vdots} \\[-0.3em]
+\end{array}
+\]
+
+
+\note{Motivate the marks approach without too much detail.}
+\end{frame}
+
+\section{Marked Approach}
+\subsection{Fischer et al.’s Marked Approach}
+% ------------------ Marks Approach: Fischer et al. ------------------
+\begin{frame}{Fischer et al.’s Marked Approach}
+\small
+\begin{itemize}
+\item Moves marks through the regular expression without modifying it.
+\item Marks indicate the progress of matching; acceptance occurs when
+      a mark reaches a final position.
+\item The structure of the regular expression remains \textbf{unchanged} during matching.
+\item A promising alternative to derivative- and automaton-based approaches,
+      as the regular expression structure remains fixed in size.
+\item Existing works focus on \textbf{matching only}, without value 
+extraction.\footnote{See Fischer et~al.~\cite{Fischer2010} 
+and Asperti et~al.~\cite{Asperti2010}.}
+\end{itemize}
+
+\end{frame}
+
+% ------------------ Marks Example (2x2 layout) ------------------
+\begin{frame}{Shift Example}
+\footnotesize
+\forestset{
+  default preamble={for tree={
+    draw,
+    circle,
+    minimum width=1em,  
+    inner sep=0.2em,      
+    align=left,
+    s sep=1em,          
+    l sep=1.5em           
+  }}
+}
+\textbf{Regular expression } $a \cdot (b \cdot c)$ \textbf{ String } \textit{abc}
+
+\vspace{0.6em}
+
+\begin{columns}[c,onlytextwidth]
+  % Tree 1
+  \begin{column}{0.20\textwidth}
+    \centering
+    \begin{forest} baseline
+      [$\cdot$
+        [$a$]
+        [$\cdot$ [$b$] [$c$]]
+      ]
+    \end{forest}
+  \end{column}
+  % Arrow a
+  \begin{column}{0.05\textwidth}
+    \Large $\xrightarrow{\;a\;}$
+  \end{column}
+
+  % Tree 2
+  \begin{column}{0.20\textwidth}
+    \centering
+    \begin{forest} baseline
+      [$\cdot$
+        [$\Marked{a}$]
+        [$\cdot$ [$b$] [$c$]]
+      ]
+    \end{forest}
+  \end{column}
+
+  % Arrow b
+  \begin{column}{0.05\textwidth}
+    \centering
+    \Large $\xrightarrow{\;b\;}$
+  \end{column}
+
+  % Tree 3
+  \begin{column}{0.20\textwidth}
+    \centering
+    \begin{forest} baseline
+      [$\cdot$
+        [$a$]
+        [$\cdot$ [$\Marked{b}$] [$c$]]
+      ]
+    \end{forest}
+  \end{column}
+
+  % Arrow c
+  \begin{column}{0.05\textwidth}
+    \centering
+   \Large $\xrightarrow{\;c\;}$
+  \end{column}
+
+  % Tree 4
+  \begin{column}{0.20\textwidth}
+    \centering
+    \begin{forest} baseline
+      [$\cdot$
+        [$a$]
+        [$\cdot$ [$b$] [$\Marked{c}$]]
+      ]
+    \end{forest}
+  \end{column}
+\end{columns}
+
+\end{frame}
+
+
+\subsection{Limitations \& Our Direction}
+% ------------------ Limitation + Our Direction ------------------
+\begin{frame}{Limitations \& Our Direction}
+\small
+\begin{itemize}
+  \item Our main aim is to extend the marked approach (currently acceptance only) to support \textbf{POSIX value extraction} and to formally verify its correctness.
+  \item One of our goals is also to handle additional constructors, such as bounded repetition and intersection.
+  \item We extended marks from single-character matching to \textbf{string-carrying marks}, where each mark carries the remaining input suffix.
+  \item The basic mark representation loses valuable information, such as ordering, and cannot directly handle constructors like intersection.
+  \item Extending the mark structure allows this information to be retained, giving better control over ordering and disambiguation.
+  \item Future direction: continue the lexing version and establish formal verification and equivalence with the derivative-based semantics.
+\end{itemize}
+\note{Your work extends this to value extraction (POSIX) and richer constructors.}
+\end{frame}
+
+\section{Our Work}
+\subsection{String-Carrying Marks}
+% ------------------ Example: shifts with String-Carrying Marks ------------------
+\begin{frame}{String-Carrying Marks}
+\small
+\begin{itemize}
+  \item Each mark carries the \textbf{remaining input suffix}.
+  \item Matching begins with an initial mark containing the full input string.
+  \item At each shift, a matching character is stripped from the mark’s string.
+  \item A match occurs when an \textbf{empty mark} is produced, indicating full input consumption.
+\end{itemize}
+
+\note{Explain that string-carrying marks preserve input order and enable extraction of POSIX-consistent values.}
+\end{frame}
+
+
+\subsection{\shifts\ Definition}
+% ------------------ Definition of shifts ------------------
+\begin{frame}{\shifts\ Definition}
+\small
+\centering
+\renewcommand{\arraystretch}{1.6}
+\begin{tabular}{ccl}
+$\shifts(ms, 0)$ & $\Rightarrow$ & $\emptylist$ \\
+$\shifts(ms, 1)$ & $\Rightarrow$ & $\emptylist$ \\
+$\shifts(ms, d)$ & $\Rightarrow$ & $[\, \Marked{s} \mid \Marked{d::s} \in ms \,]$ \\
+$\shifts(ms, r_1 + r_2)$ & $\Rightarrow$ & $\shifts(ms, r_1) \; @ \; \shifts(ms, r_2)$ \\[2pt]
+$\shifts(ms, r_1 \cdot r_2)$ & $\Rightarrow$ &
+$\text{let } ms' = \shifts(ms, r_1) \text{ in}$ \\[2pt]
+\multicolumn{3}{@{\hspace{10mm}}l}{
+$\begin{cases}
+\shifts(ms' @ ms, r_2) @ ms' & \text{if } \nullable(r_1) \land \nullable(r_2),\\
+\shifts(ms' @ ms, r_2)       & \text{if } \nullable(r_1),\\
+\shifts(ms', r_2) @ ms'      & \text{if } \nullable(r_2),\\
+\shifts(ms', r_2)            & \text{otherwise.}
+\end{cases}$}\\[2pt]
+$\shifts(ms, r^{*})$ & $\Rightarrow$ & $\text{let } ms' = \shifts(ms, r) \text{ in}$\\
+&&$\text{if } ms' = \emptylist \text{ then } \emptylist \text{ else } \shifts(ms', r^{*}) @ ms'$
+\end{tabular}
+
+\medskip
+\textit{Each mark carries a remaining input suffix; $ms$ is a list of marks.}
+\end{frame}
+
+% ------------------ Worked example of \shifts ------------------
+\begin{frame}{Matching Example}
+
+\textbf{Regular expression } $(a + (a \cdot c))$ \medskip \textbf{String } \textit{ac}
+
+\begin{enumerate}
+  \item $\bigl|_{[\Marked{ac}]} \;( a + (a \cdot c) )$
+  \item $(\bigl|_{[\Marked{ac}]} a) \;+\; (\bigl|_{[\Marked{ac}]} (a \cdot c))$
+  \item $\bigl(a \;\bigl|_{[\Marked{c}]}\bigr) \;+\; \bigl((a \cdot c)\;\bigl|_{[\Marked_{\emptylist}]}\bigr)$
+  \item $ [{}_{ {}_\Marked{c},{}_\Marked{\emptylist} }]$
+\end{enumerate}
+
+\note{Step through how the input string is gradually consumed and marks become empty.}
+\end{frame}
+
+
+\bibliographystyle{abbrv}
+\bibliography{urules}
+
+\end{document}

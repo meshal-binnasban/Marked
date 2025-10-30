@@ -1,0 +1,11 @@
+\contentsline {section}{\numberline {1}Introduction}{4}{}%
+\contentsline {section}{\numberline {2}Derivatives}{4}{}%
+\contentsline {subsection}{\numberline {2.1}Derivative Extension}{5}{}%
+\contentsline {subsection}{\numberline {2.2}Size Explosion.}{8}{}%
+\contentsline {section}{\numberline {3}Marked Approach}{9}{}%
+\contentsline {subsection}{\numberline {3.1}Motivation for a Marked Approach}{10}{}%
+\contentsline {subsection}{\numberline {3.2}Versions and Implementation}{10}{}%
+\contentsline {subsubsection}{\numberline {3.2.1}Bit-Annotated POINT, version 1}{13}{}%
+\contentsline {subsubsection}{\numberline {3.2.2}Bit-Annotated POINT, version 2}{17}{}%
+\contentsline {subsubsection}{\numberline {3.2.3}Input-Carrying Marks}{17}{}%
+\contentsline {section}{\numberline {4}Future Work}{17}{}%

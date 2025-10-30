@@ -1,4 +1,4 @@
-\begin{thebibliography}{1}
+\begin{thebibliography}{10}
 
 \bibitem{Antimirov1996}
 V.~Antimirov.
@@ -9,6 +9,11 @@ V.~Antimirov.
 A.~Asperti, C.~S. Coen, and E.~Tassi.
 \newblock {R}egular {E}xpressions, au point.
 \newblock {\em arXiv, http://arxiv.org/abs/1010.2604}, 2010.
+
+\bibitem{Brzozowski1964}
+J.~A. Brzozowski.
+\newblock Derivatives of regular expressions.
+\newblock {\em J. ACM}, 11(4):481–494, Oct. 1964.
 
 \bibitem{Fischer2010}
 S.~Fischer, F.~Huch, and T.~Wilke.

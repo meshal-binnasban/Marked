@@ -1,49 +1,50 @@
 This is BibTeX, Version 0.99d (TeX Live 2025/Homebrew)
 Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
 The top-level auxiliary file: ReportV3.aux
+A level-1 auxiliary file: macros.aux
 The style file: abbrv.bst
 Database file #1: urules.bib
 Warning--can't use both author and editor fields in TanAndUrban2023
 Warning--empty publisher in TanAndUrban2023
-You've used 9 entries,
+You've used 10 entries,
             2118 wiz_defined-function locations,
-            565 strings with 5421 characters,
-and the built_in function-call counts, 3498 in all, are:
-= -- 361
-> -- 139
+            576 strings with 5587 characters,
+and the built_in function-call counts, 3804 in all, are:
+= -- 391
+> -- 146
 < -- 5
-+ -- 53
-- -- 44
-* -- 233
-:= -- 547
-add.period$ -- 29
-call.type$ -- 9
-change.case$ -- 47
++ -- 56
+- -- 46
+* -- 258
+:= -- 599
+add.period$ -- 32
+call.type$ -- 10
+change.case$ -- 51
 chr.to.int$ -- 0
-cite$ -- 11
-duplicate$ -- 145
-empty$ -- 277
-format.name$ -- 44
-if$ -- 760
+cite$ -- 12
+duplicate$ -- 156
+empty$ -- 306
+format.name$ -- 46
+if$ -- 823
 int.to.chr$ -- 0
-int.to.str$ -- 9
-missing$ -- 9
-newline$ -- 48
-num.names$ -- 20
-pop$ -- 53
+int.to.str$ -- 10
+missing$ -- 10
+newline$ -- 53
+num.names$ -- 22
+pop$ -- 55
 preamble$ -- 1
-purify$ -- 39
+purify$ -- 42
 quote$ -- 0
-skip$ -- 116
+skip$ -- 122
 stack$ -- 0
-substring$ -- 259
-swap$ -- 50
+substring$ -- 291
+swap$ -- 51
 text.length$ -- 5
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 34
+type$ -- 38
 warning$ -- 2
-while$ -- 37
-width$ -- 10
-write$ -- 102
+while$ -- 40
+width$ -- 12
+write$ -- 113
 (There were 2 warnings)

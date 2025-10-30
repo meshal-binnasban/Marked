@@ -1,0 +1,9 @@
+\beamer@sectionintoc {1}{Introduction}{3}{0}{1}
+\beamer@subsectionintoc {1}{1}{Brzozowski’s Derivatives}{3}{0}{1}
+\beamer@subsectionintoc {1}{2}{Size Explosion}{6}{0}{1}
+\beamer@sectionintoc {2}{Marked Approach}{7}{0}{2}
+\beamer@subsectionintoc {2}{1}{Fischer et al.’s Marked Approach}{7}{0}{2}
+\beamer@subsectionintoc {2}{2}{Limitations \& Our Direction}{9}{0}{2}
+\beamer@sectionintoc {3}{Our Work}{10}{0}{3}
+\beamer@subsectionintoc {3}{1}{String-Carrying Marks}{10}{0}{3}
+\beamer@subsectionintoc {3}{2}{\textit {shifts}\ Definition}{11}{0}{3}

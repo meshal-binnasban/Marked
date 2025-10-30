@@ -153,9 +153,10 @@ def test1() = {
 def testExample() = {
   val r = %( %("a") | %("aa") | %("aaa") | %("aaaa") | %("aaaaa") ) 
 
-  for (i <- 0 to 10_000 by 100) {
+  for (i <- 1 to 2 by 1) {
     val s = "a" * i  //+ "b"         
     println(s"i= $i  bsimp= ${time_needed(10, matcher(r,s)) }")
+    println(s" ${bders_simp(internalise(r),s.toList)}")
   }
 
 }

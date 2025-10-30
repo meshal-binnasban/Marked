@@ -1,0 +1,23 @@
+\begin{thebibliography}{1}
+
+\bibitem{Asperti2010}
+A.~Asperti, C.~S. Coen, and E.~Tassi.
+\newblock {R}egular {E}xpressions, au point.
+\newblock {\em arXiv, http://arxiv.org/abs/1010.2604}, 2010.
+
+\bibitem{Fischer2010}
+S.~Fischer, F.~Huch, and T.~Wilke.
+\newblock {A} {P}lay on {R}egular {E}xpressions: {F}unctional {P}earl.
+\newblock In {\em Proc.~of the 15th ACM SIGPLAN International Conference on Functional Programming (ICFP)}, pages 357--368, 2010.
+
+\bibitem{Might2011}
+M.~Might, D.~Darais, and D.~Spiewak.
+\newblock Parsing with derivatives: A functional pearl.
+\newblock In {\em Proceedings of the 16th ACM SIGPLAN International Conference on Functional Programming (ICFP)}, pages 189--195. ACM, 2011.
+
+\bibitem{Owens2009}
+S.~Owens, J.~Reppy, and A.~Turon.
+\newblock Regular-expression derivatives re-examined.
+\newblock {\em Journal of Functional Programming}, 19(2):173--190, 2009.
+
+\end{thebibliography}

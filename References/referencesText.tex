@@ -1,0 +1,66 @@
+\documentclass[11pt,a4paper]{article}
+
+% ====== Packages ======
+\usepackage{amsmath,amssymb,booktabs}
+\usepackage{enumitem}
+\usepackage[T1]{fontenc}
+\usepackage{microtype}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+
+\setlist[itemize]{noitemsep, topsep=3pt, leftmargin=1.5em}
+
+\begin{document}
+
+\section*{Notes on Cited Works}
+
+\paragraph{Fischer, Huch, \& Wilke (2010) --- \textit{A Play on Regular Expressions: Functional Pearl}}
+\textbf{Gist.} Introduces the \emph{marked} or \emph{pointed} approach: rather than growing expressions via derivatives, marks are propagated through a fixed abstract syntax tree to indicate where matching can continue. The paper is presented playfully as a ``play,'' where regular expressions and strings interact as game participants.\\
+\textbf{Important details.} Marks are placed \emph{after} consuming a symbol (\emph{mark-after-atom}). The algorithm is purely functional, keeps the expression size constant, and still exposes enough structure to reconstruct how a match proceeds.\\
+\textbf{Used in this report.} Re-implemented as the starting point (Appendix~\ref{sec:scala-fischer}); serves as the conceptual foundation for later extensions with bitcodes, \texttt{\textbackslash shift}/\texttt{\textbackslash shifts}, and \texttt{NTIMES} handling.
+
+\paragraph{Asperti, Sacerdoti Coen, \& Tassi (2010) --- \textit{Regular Expressions, au point}}
+\textbf{Gist.} Formalizes pointed regular expressions within a proof-assistant framework, adopting a \emph{mark-before-atom} semantics (points denote the next atoms to be read).\\
+\textbf{Important details.} Although described under McNaughton--Yamada, its operational behavior differs from Fischer's version: marks advance to future atoms rather than marking consumed ones. This distinction affects acceptance and automata correspondence.\\
+\textbf{Used in this report.} Contrasted with Fischer’s \emph{mark-after-atom} version; cited in the motivation section to highlight the dual construction later proven by Nipkow and Traytel.
+
+\paragraph{Brzozowski (1964) --- \textit{Derivatives of Regular Expressions}}
+\textbf{Gist.} Defines the derivative $\partial_a r$ and establishes a recursive procedure for membership testing by iterating derivatives and checking nullability.\\
+\textbf{Important details.} Provides clean algebraic rules for $+$, concatenation, and star, proving that $w\in L(r)$ iff $\varepsilon\in L(\partial_w r)$. The method is elegant but can syntactically expand expressions, motivating later simplifications.\\
+\textbf{Used in this report.} Forms the theoretical baseline for derivative-based matching and the foundation for your comparison to marked and bitcoded approaches.
+
+\paragraph{Antimirov (1996) --- \textit{Partial Derivatives of Regular Expressions and Finite Automaton Constructions}}
+\textbf{Gist.} Extends Brzozowski’s idea to compute \emph{sets} of residuals, yielding NFAs whose states represent all possible continuations after reading a symbol.\\
+\textbf{Important details.} Worst-case growth reaches $O(n^3)$ because (i) the number of distinct partial derivatives can be $O(n)$, (ii) each may contain $O(n)$ summands, and (iii) each summand can have size $O(n)$. Partial derivatives mitigate but do not remove blow-ups.\\
+\textbf{Used in this report.} Cited to illustrate polynomial but unbounded growth, motivating your later focus on constant-shape marked matching and simplification strategies.
+
+\paragraph{Owens, Reppy, \& Turon (2009) --- \textit{Regular-expression derivatives re-examined}}
+\textbf{Gist.} Revisits derivatives from an implementation perspective, emphasizing simplification and sharing to make derivative computation practical.\\
+\textbf{Important details.} Introduces canonicalization for ALTs (ACI laws), neutral/absorbing simplifications for SEQs, and improved nullable propagation. Despite optimizations, nested STAR/SEQ constructs remain problematic.\\
+\textbf{Used in this report.} Serves as evidence of modern interest in derivatives and the precursor to Tan and Urban’s formally verified simplification pipeline.
+
+\paragraph{Sulzmann \& Lu (2014) --- \textit{POSIX Regular Expression Parsing with Derivatives}}
+\textbf{Gist.} Extends derivatives to produce \emph{POSIX} (leftmost-longest) parse values using bitcodes or injections to encode branch and repetition choices.\\
+\textbf{Important details.} Introduces bitcode annotations that track choices during derivative evaluation, allowing later reconstruction of the POSIX value; also notes simplification is essential to avoid growth.\\
+\textbf{Used in this report.} Directly informs your Bit-Annotated Versions~1--2 and the design of \texttt{\textbackslash mkfin}, \texttt{\textbackslash mkeps}, and POSIX value extraction.
+
+\paragraph{Might, Darais, \& Spiewak (2011) --- \textit{Parsing with Derivatives: A Functional Pearl}}
+\textbf{Gist.} Generalizes the derivative concept from regular expressions to context-free grammars, treating parsing as iterative differentiation that constructs parse trees.\\
+\textbf{Important details.} Demonstrates compositional parsing in a functional setting; highlights the need for memoization and ambiguity handling. Extends the reach of derivatives beyond regular languages.\\
+\textbf{Used in this report.} Provides broader theoretical framing; supports the functional motivation for your Scala-based matcher implementations.
+
+\paragraph{Tan \& Urban (2023) --- \textit{POSIX Lexing with Bitcoded Derivatives}}
+\textbf{Gist.} Presents a formally verified, bitcoded-derivative lexing algorithm that guarantees unique POSIX values and finite bounds on derivative growth.\\
+\textbf{Important details.} The simplification pipeline---flattening, duplicate removal, and \texttt{bsimpSEQ}/\texttt{bsimpALTs} plus the language-subsumption (\texttt{LD}) rule---is key to provable boundedness. Their Isabelle/HOL proofs show correctness and uniqueness.\\
+\textbf{Used in this report.} Central reference: informs your simplification reasoning, \texttt{\textbackslash mkfin}/\texttt{\textbackslash mkeps} structure, and comparison to derivative-based growth.
+
+\paragraph{Nipkow \& Traytel (2014) --- \textit{Unified Decision Procedures for Regular Expression Equivalence}}
+\textbf{Gist.} Provides a unified Isabelle/HOL framework covering multiple decision procedures, both derivative-based and marked, enabling direct comparison and correctness proofs.\\
+\textbf{Important details.} Shows that the two marked approaches (Fischer vs.\ Asperti) are dual (\emph{mark-after} vs.\ \emph{mark-before}) and proves quotient relations between their automata. Introduces the \texttt{\textbackslash follow} and \texttt{\textbackslash readF} operators.\\
+\textbf{Used in this report.} Supports your duality claim and justifies your use of \texttt{\textbackslash follow}/\texttt{\textbackslash readF} when discussing the operational difference between marked variants.
+
+\paragraph{Okui \& Suzuki (2013) --- \textit{Disambiguation in Regular Expression Matching via Position Automata with Augmented Transitions}}
+\textbf{Gist.} Proposes an augmented position-automaton construction that enforces the POSIX leftmost-longest rule via priority-encoded transitions.\\
+\textbf{Important details.} Establishes a worst-case complexity of $O(m(n^2 + c))$ (regex size $m$, input length $n$, alphabet size $c$). Demonstrates that disambiguation can be embedded structurally, not handled as a later tie-break.\\
+\textbf{Used in this report.} Provides an external automata-based reference for POSIX ordering and complexity, contextualizing your Version~2 ``generate then order'' approach.
+
+\end{document}

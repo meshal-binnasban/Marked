@@ -1,0 +1,46 @@
+This is BibTeX, Version 0.99d (TeX Live 2025/Homebrew)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: slides.aux
+The style file: abbrv.bst
+Database file #1: urules.bib
+You've used 4 entries,
+            2118 wiz_defined-function locations,
+            525 strings with 4419 characters,
+and the built_in function-call counts, 1633 in all, are:
+= -- 165
+> -- 72
+< -- 2
++ -- 28
+- -- 24
+* -- 109
+:= -- 258
+add.period$ -- 13
+call.type$ -- 4
+change.case$ -- 24
+chr.to.int$ -- 0
+cite$ -- 4
+duplicate$ -- 67
+empty$ -- 127
+format.name$ -- 24
+if$ -- 354
+int.to.chr$ -- 0
+int.to.str$ -- 4
+missing$ -- 4
+newline$ -- 23
+num.names$ -- 8
+pop$ -- 27
+preamble$ -- 1
+purify$ -- 20
+quote$ -- 0
+skip$ -- 53
+stack$ -- 0
+substring$ -- 109
+swap$ -- 24
+text.length$ -- 2
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 16
+warning$ -- 0
+while$ -- 16
+width$ -- 5
+write$ -- 46
