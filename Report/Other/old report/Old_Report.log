@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025/Homebrew) (preloaded format=pdflatex 2025.3.15)  29 OCT 2025 14:27
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025/Homebrew) (preloaded format=pdflatex 2025.3.15)  30 OCT 2025 12:45
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -133,10 +133,10 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 LaTeX Warning: Citation `Sulzmann2014' on page 2 undefined on input line 45.
 
 
-LaTeX Warning: Citation `Fischer2010' on page 2 undefined on input line 46.
+LaTeX Warning: Citation `Fischer2010' on page 2 undefined on input line 47.
 
 
-LaTeX Warning: Citation `Asperti2010' on page 2 undefined on input line 46.
+LaTeX Warning: Citation `Asperti2010' on page 2 undefined on input line 48.
 
 
 
@@ -148,58 +148,58 @@ LaTeX Warning: Citation `Asperti2010' on page 2 undefined on input line 46.
 
 [3]
 
-LaTeX Warning: Citation `Owens2009' on page 4 undefined on input line 65.
+LaTeX Warning: Citation `Owens2009' on page 4 undefined on input line 73.
 
 
-LaTeX Warning: Citation `Might2011' on page 4 undefined on input line 65.
+LaTeX Warning: Citation `Might2011' on page 4 undefined on input line 73.
 
 
-LaTeX Warning: Citation `Sulzmann2014' on page 4 undefined on input line 70.
+LaTeX Warning: Citation `Sulzmann2014' on page 4 undefined on input line 78.
 
 
-LaTeX Warning: Citation `Fischer2010' on page 4 undefined on input line 70.
+LaTeX Warning: Citation `Fischer2010' on page 4 undefined on input line 78.
 
 
-LaTeX Warning: Citation `Asperti2010' on page 4 undefined on input line 70.
+LaTeX Warning: Citation `Asperti2010' on page 4 undefined on input line 78.
 
 
-LaTeX Warning: Citation `Owens2009' on page 4 undefined on input line 80.
+LaTeX Warning: Citation `Owens2009' on page 4 undefined on input line 88.
 
 
-LaTeX Warning: Citation `Might2011' on page 4 undefined on input line 80.
+LaTeX Warning: Citation `Might2011' on page 4 undefined on input line 88.
 
 
-LaTeX Warning: Citation `Brzozowski1964' on page 4 undefined on input line 91.
+LaTeX Warning: Citation `Brzozowski1964' on page 4 undefined on input line 99.
 
 
 
 [4]
 
-LaTeX Warning: Citation `TanAndUrban2023' on page 5 undefined on input line 125.
+LaTeX Warning: Citation `TanAndUrban2023' on page 5 undefined on input line 133.
 
 
-LaTeX Warning: Citation `Sulzmann2014' on page 5 undefined on input line 130.
+LaTeX Warning: Citation `Sulzmann2014' on page 5 undefined on input line 138.
 
 
-LaTeX Warning: Citation `Sulzmann2014' on page 5 undefined on input line 134.
+LaTeX Warning: Citation `Sulzmann2014' on page 5 undefined on input line 142.
 
 
 
 [5]
 
-LaTeX Warning: Citation `Sulzmann2014' on page 6 undefined on input line 138.
+LaTeX Warning: Citation `Sulzmann2014' on page 6 undefined on input line 146.
 
 
-LaTeX Warning: Citation `Sulzmann2014' on page 6 undefined on input line 140.
+LaTeX Warning: Citation `Sulzmann2014' on page 6 undefined on input line 148.
 
 
-LaTeX Warning: Citation `Sulzmann2014' on page 6 undefined on input line 141.
+LaTeX Warning: Citation `Sulzmann2014' on page 6 undefined on input line 149.
 
 
-LaTeX Warning: Citation `Sulzmann2014' on page 6 undefined on input line 151.
+LaTeX Warning: Citation `Sulzmann2014' on page 6 undefined on input line 159.
 
 
-Overfull \hbox (53.0489pt too wide) detected at line 185
+Overfull \hbox (53.0489pt too wide) detected at line 193
 []
  []
 
@@ -207,72 +207,72 @@ Overfull \hbox (53.0489pt too wide) detected at line 185
 
 [6]
 
-LaTeX Warning: Citation `Sulzmann2014' on page 7 undefined on input line 193.
-
-
 LaTeX Warning: Citation `Sulzmann2014' on page 7 undefined on input line 201.
 
 
-LaTeX Warning: Citation `Sulzmann2014' on page 7 undefined on input line 217.
+LaTeX Warning: Citation `Sulzmann2014' on page 7 undefined on input line 209.
+
+
+LaTeX Warning: Citation `Sulzmann2014' on page 7 undefined on input line 225.
 
 
 
 [7]
 
-LaTeX Warning: Citation `TanAndUrban2023' on page 8 undefined on input line 266.
+LaTeX Warning: Citation `TanAndUrban2023' on page 8 undefined on input line 274.
 
 
-LaTeX Warning: Citation `TanAndUrban2023' on page 8 undefined on input line 273.
+LaTeX Warning: Citation `TanAndUrban2023' on page 8 undefined on input line 281.
 
 
 
 [8{/usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc}]
 
-LaTeX Warning: Citation `Antimirov1996' on page 9 undefined on input line 275.
+LaTeX Warning: Citation `Antimirov1996' on page 9 undefined on input line 283.
 
 
-LaTeX Warning: Citation `Antimirov1996' on page 9 undefined on input line 276.
+LaTeX Warning: Citation `Antimirov1996' on page 9 undefined on input line 284.
 
 
-LaTeX Warning: Citation `NipkowTraytel2014' on page 9 undefined on input line 283.
+LaTeX Warning: Citation `NipkowTraytel2014' on page 9 undefined on input line 291.
 
 
-LaTeX Warning: Citation `Fischer2010' on page 9 undefined on input line 284.
-
-
-LaTeX Warning: Citation `Asperti2010' on page 9 undefined on input line 284.
-
-
-LaTeX Warning: Citation `Fischer2010' on page 9 undefined on input line 291.
+LaTeX Warning: Citation `Fischer2010' on page 9 undefined on input line 292.
 
 
 LaTeX Warning: Citation `Asperti2010' on page 9 undefined on input line 292.
 
 
+LaTeX Warning: Citation `Fischer2010' on page 9 undefined on input line 299.
+
+
+LaTeX Warning: Citation `Asperti2010' on page 9 undefined on input line 300.
+
+
 
 [9]
 
-LaTeX Warning: Citation `Fischer2010' on page 10 undefined on input line 313.
+LaTeX Warning: Citation `Fischer2010' on page 10 undefined on input line 321.
 
 
-LaTeX Warning: Citation `Asperti2010' on page 10 undefined on input line 313.
+LaTeX Warning: Citation `Asperti2010' on page 10 undefined on input line 321.
 
 
-LaTeX Warning: Citation `Fischer2010' on page 10 undefined on input line 316.
+LaTeX Warning: Citation `Fischer2010' on page 10 undefined on input line 324.
 
 
-LaTeX Warning: Citation `NipkowTraytel2014' on page 10 undefined on input line 317.
-
-
-LaTeX Warning: Citation `Fischer2010' on page 10 undefined on input line 323.
+LaTeX Warning: Citation `NipkowTraytel2014' on page 10 undefined on input line 325.
 
 
 LaTeX Warning: Citation `Fischer2010' on page 10 undefined on input line 331.
 
 
+LaTeX Warning: Citation `Fischer2010' on page 10 undefined on input line 339.
+
+
 
 [10]
-Overfull \hbox (39.97443pt too wide) detected at line 373
+Overfull \hbox (39.97443pt too wide) detected at line 381
 []
  []
 
@@ -282,10 +282,10 @@ Overfull \hbox (39.97443pt too wide) detected at line 373
 
 [12]
 
-LaTeX Warning: Citation `Sulzmann2014' on page 13 undefined on input line 430.
+LaTeX Warning: Citation `Sulzmann2014' on page 13 undefined on input line 438.
 
 
-Overfull \hbox (163.02837pt too wide) detected at line 469
+Overfull \hbox (163.02837pt too wide) detected at line 477
 []
  []
 
@@ -299,7 +299,7 @@ Overfull \hbox (163.02837pt too wide) detected at line 469
 
 [16]
 LaTeX Font Info:    Font shape `OT1/cmtt/bx/n' in size <12> not available
-(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 567.
+(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 575.
 
 
 [17]
@@ -325,7 +325,7 @@ Here is how much of TeX's memory you used:
  1141 hyphenation exceptions out of 8191
  56i,17n,65p,568b,305s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb></usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb></usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmti12.pfb></usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt12.pfb></usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb></usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/type1/public/cm-super/sfrm1200.pfb>
-Output written on Old_Report.pdf (18 pages, 231447 bytes).
+Output written on Old_Report.pdf (18 pages, 231422 bytes).
 PDF statistics:
  153 PDF objects out of 1000 (max. 8388607)
  96 compressed objects within 1 object stream

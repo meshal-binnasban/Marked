@@ -6,45 +6,45 @@ The style file: abbrv.bst
 Database file #1: urules.bib
 Warning--can't use both author and editor fields in TanAndUrban2023
 Warning--empty publisher in TanAndUrban2023
-You've used 10 entries,
+You've used 9 entries,
             2118 wiz_defined-function locations,
-            576 strings with 5587 characters,
-and the built_in function-call counts, 3804 in all, are:
-= -- 391
-> -- 146
+            568 strings with 5429 characters,
+and the built_in function-call counts, 3505 in all, are:
+= -- 359
+> -- 139
 < -- 5
-+ -- 56
-- -- 46
-* -- 258
-:= -- 599
-add.period$ -- 32
-call.type$ -- 10
-change.case$ -- 51
++ -- 53
+- -- 44
+* -- 236
+:= -- 548
+add.period$ -- 29
+call.type$ -- 9
+change.case$ -- 47
 chr.to.int$ -- 0
-cite$ -- 12
-duplicate$ -- 156
-empty$ -- 306
-format.name$ -- 46
-if$ -- 823
+cite$ -- 11
+duplicate$ -- 145
+empty$ -- 279
+format.name$ -- 44
+if$ -- 762
 int.to.chr$ -- 0
-int.to.str$ -- 10
-missing$ -- 10
-newline$ -- 53
-num.names$ -- 22
-pop$ -- 55
+int.to.str$ -- 9
+missing$ -- 9
+newline$ -- 48
+num.names$ -- 20
+pop$ -- 53
 preamble$ -- 1
-purify$ -- 42
+purify$ -- 39
 quote$ -- 0
-skip$ -- 122
+skip$ -- 116
 stack$ -- 0
-substring$ -- 291
-swap$ -- 51
+substring$ -- 261
+swap$ -- 50
 text.length$ -- 5
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 38
+type$ -- 34
 warning$ -- 2
-while$ -- 40
-width$ -- 12
-write$ -- 113
+while$ -- 36
+width$ -- 10
+write$ -- 102
 (There were 2 warnings)

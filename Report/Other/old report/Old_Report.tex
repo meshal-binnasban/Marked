@@ -36,23 +36,31 @@ Future directions include extending the matcher to additional operators, refinin
 \end{abstract}
 
 \newpage
-
 \section*{Synopsis}
-This research investigates the marked approach to regular expression 
-matching, with the goal of extending it to provide POSIX value extraction.
+This research investigates the marked approach--based method for regular 
+expression matching, with the goal of extending it to provide POSIX value 
+extraction.
 
-Derivative-based methods, though elegant, suffer from severe size explosion and remain sensitive to syntactic form.  
-Sulzmann and Lu~\cite{Sulzmann2014} extended derivatives with bitcodes to record lexing information, but the size problem persists.  
-The marked approach, described in the works of Fischer et al.~\cite{Fischer2010} and Asperti et al.~\cite{Asperti2010}, offers an alternative by propagating marks directly through the expression.  
-These works provide matchers only, without value extraction.  
+Derivative-based methods, though elegant, suffer from size explosion. Sulzmann 
+and Lu~\cite{Sulzmann2014} extended derivatives with bitcodes to record 
+lexing information, but the size explosion persists. The marked approach, 
+described in the works of Fischer et al.~\cite{Fischer2010} and Asperti et 
+al.~\cite{Asperti2010}, offers an alternative by propagating marks directly 
+through the expression. These works provide matchers only, without value 
+extraction.  
 
 Our work explores how the marked approach can be extended to recover POSIX values.  
-We have implemented several versions of the marked algorithm in Scala, making use of bitcoded annotations to track lexing values.  
-Challenges in handling constructs such as sequences and repetitions required refining the algorithm through successive versions, each improving on the last.  
-Large-scale testing against a derivative-based reference matcher has been used to confirm correctness and uncover edge cases.  
+We have implemented several versions of the marked algorithm in Scala, making 
+use of bitcoded annotations to track lexing values. Challenges in handling 
+constructs such as sequences and repetitions required refining the algorithm 
+through successive versions, each improving on the last.  
+Large-scale testing against a derivative-based reference matcher has been used 
+to confirm correctness and uncover edge cases.  
 
-The long-term aim of the project is to establish a marked-based matcher that consistently yields the POSIX-preferred value for all regular expressions, and to formally prove its correctness.  
-Future work also includes extending the matcher to additional operators such as intersection and negation.  
+The long-term aim of the project is to establish a marked approach--based matcher 
+that consistently yields the POSIX value for all regular expressions, and to 
+formally prove its correctness. Future work also includes extending the matcher 
+to additional operators such as intersection and negation.  
 
 \newpage
 

@@ -109,8 +109,10 @@
 \begin{frame}{Size Explosion}
 \small
 \begin{itemize}
-  \item Expression size can grow substantially (especially with Kleene star and sequences and nested constructs).
-  \item Derivatives may cause \textbf{size explosion}—expressions grow rapidly, especially with nested sequences or Kleene stars.
+  \item Expression size can increase as new subexpressions are introduced, 
+      particularly in sequences and Kleene stars.
+  \item This repeated expansion may lead to \textbf{size explosion}, where the 
+      number of derivative expressions grows substantially with input length.
   \item Simplifications can reduce redundancy but cannot fully prevent size explosion in the worst case.
   \item Subexpressions cannot always be simplified, such as when identical terms are separated by other expressions or occur at different nesting levels.
 \end{itemize}
