@@ -137,26 +137,53 @@ def matcher(r: Rexp, s: String): Boolean= s.toList match{
   case c::cs => bnullable(bders_simp(internalise(r),s.toList))
 }
 
+def pp(e: ARexp): String = (e: @unchecked) match {
+  case AZERO                  => "0\n"
+  case AONE(_)                => "1\n"
+  case ACHAR(_, c)            => s"$c\n"
+  case AALTS(_, rs)           => "ALT\n" + pps(rs: _*)
+  case ASEQ(_, r1, r2)        => "SEQ\n" + pps(r1, r2)
+  case ASTAR(_, r)            => "STAR\n" + pps(r)
+  // case ANTIMES(_, r, n)     => s"NTIMES($n)\n" + pps(r)
+}
+
+def pps(es: ARexp*) = indent(es.map(pp))
+
+
+def size(r: ARexp): Int = r match {
+  case AZERO               => 1
+  case AONE(_)             => 1
+  case ACHAR(_, _)         => 1
+  case ASEQ(_, r1, r2)     => 1 + size(r1) + size(r2)
+  case ASTAR(_, r1)        => 1 + size(r1)
+  case AALTS(_, rs)        => 1 + rs.map(size).sum
+  // case ANTIMES(_, r, _)  => 1 + size(r)  // if you re-enable it
+}
+
 @main
 def test1() = {
+  val r = %( %("a") | %("aa") | %("aaa") | %("aaaa") | %("aaaaa") ) 
+  println(s"Original Size=${size(internalise(r))}")
+  for (i <- 1 to 10000 by 100) {
+    val s = "a" * i  //+ "b"         
+    val der=bders_simp(internalise(r),s.toList)
+   // println(pp(der))
+    println(s"i=$i , size= ${size(der)}")
+    //println(s" ${bders_simp(internalise(r),s.toList)}")
+    
+  }
+
+}
+
+@main
+def test2() = {
   println("=====Test====")
   val r = ("a" | "ab") ~ ("c" | "bc")
   val s = "abc"
   println("=string=")
   println(s)
-  println(time_needed(1000, blexer_simp(r,s)))
+  println(time_needed(1, blexer_simp(r,s)))
   
 
 }
 
-@main
-def testExample() = {
-  val r = %( %("a") | %("aa") | %("aaa") | %("aaaa") | %("aaaaa") ) 
-
-  for (i <- 1 to 2 by 1) {
-    val s = "a" * i  //+ "b"         
-    println(s"i= $i  bsimp= ${time_needed(10, matcher(r,s)) }")
-    println(s" ${bders_simp(internalise(r),s.toList)}")
-  }
-
-}
