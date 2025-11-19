@@ -7,8 +7,15 @@
 \usepackage{pgf}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.15}
+\setcounter{topnumber}{5}
+\setcounter{bottomnumber}{5}
+\setcounter{totalnumber}{10}
+\renewcommand{\topfraction}{0.95}
+\renewcommand{\bottomfraction}{0.9}
+\renewcommand{\textfraction}{0.05}
+\renewcommand{\floatpagefraction}{0.8}
 
-\DeclareMathSizes{12}{10}{8}{6}
+%\DeclareMathSizes{12}{10}{8}{6}
 
 \title{Progress Report - 9 Months}
 \author{Meshal Binnasban}
@@ -30,6 +37,33 @@ but not POSIX value extraction—our primary focus.
 Our work developed several versions of the marked algorithm in Scala.
 We have also begun formally proving the correctness of one of our versions.
 \end{abstract}
+\newpage
+\section*{Synopsis}
+This research investigates the marked approach--based method for regular 
+expression matching, with the goal of extending it to provide POSIX value 
+extraction.
+
+Derivative-based methods, though elegant, suffer from size explosion. Sulzmann 
+and Lu~\cite{Sulzmann2014} extended derivatives with bitcodes to record 
+lexing information, but the size explosion persists. The marked approach, 
+described in the works of Fischer et al.~\cite{Fischer2010} and Asperti et 
+al.~\cite{Asperti2010}, offers an alternative by propagating marks directly 
+through the expression. These works provide matchers only, without value 
+extraction.  
+
+Our work explores how the marked approach can be extended to recover POSIX values.  
+We have implemented several versions of the marked algorithm in Scala, making 
+use of bitcoded annotations to track lexing values. Challenges in handling 
+constructs such as sequences and repetitions required refining the algorithm 
+through successive versions, each improving on the last.  
+Large-scale testing against a derivative-based reference matcher has been used 
+to confirm correctness and uncover edge cases.  
+
+The long-term aim of the project is to establish a marked approach--based matcher 
+that consistently yields the POSIX value for all regular expressions, and to 
+formally prove its correctness. Future work also includes extending the matcher 
+to additional operators such as intersection and negation.
+
 
 \newpage
 
@@ -38,6 +72,7 @@ We have also begun formally proving the correctness of one of our versions.
 \newpage
 
 \section{Introduction}
+\subsection{Overview and Motivation}
 The notion of derivatives in regular expressions was introduced by
 Brzozowski in 1964~\cite{Brzozowski1964}, but it was rediscovered in
 the 2000s and gained renewed attention—for example in
@@ -45,12 +80,7 @@ the work of Owens~\cite{Owens2009} and Might~\cite{Might2011}.
 This renewed interest is largely due to the method’s conceptual simplicity 
 and the ease with which it can be implemented in functional programming 
 languages.
-%The notion of derivatives in regular expressions is well established 
-%but has gained renewed attention in the last decade, for example in 
-%the work of Owens~\cite{Owens2009} and Might~\cite{Might2011}. Their 
-%simplicity and compatibility with functional programming have 
-%encouraged further studies, for example the work of Sulzmann and 
-%Lu~\cite{Sulzmann2014}.  
+ 
 However, derivatives suffer from \sizeExplosion, since taking 
 derivatives may increase the size of subexpressions. 
 This means the algorithm has to traverse larger and larger 
@@ -69,7 +99,7 @@ and Asperti et~al.~\cite{Asperti2010}.
 We then present our own work, including several versions of matchers based on
 marks developed during the first nine months.
 
-\section{Background}
+\subsection{Background}
 Regular expressions are a way to describe languages of strings over an alphabet.
 They provide a declarative way to specify such sets of strings. Each regular
 expression $r$ is associated with a language $L(r)$, which is the set of strings
@@ -116,7 +146,7 @@ L(r) = L(a) \cup L(b) = \{a\} \cup \{b\} = \{a, b\}.
 \noindent Similarly, $L(a \cdot b) = \{ab\}$, and $L(a^{*})$ is the set of all strings 
 consisting of zero or more $a$'s.
 \FloatBarrier
-\subsection{Derivatives}
+\section{Derivatives}
 Brzozowski’s derivatives offer an elegant way for regular expression matching 
 (Figure \ref{BrzozowskiDerivative}). What is beautiful about derivatives is that 
 they can be easily implemented in a functional programming language and are 
@@ -211,7 +241,7 @@ Such simplifications are sometimes necessary in the derivative method
 to keep the size manageable, but even with a best effort,
 the size can still grow significantly.
 \FloatBarrier
-\subsubsection{Size Explosion}  
+\subsection{Size Explosion}  
 Although the construction of derivatives is elegant, it may
 duplicate large parts of the expression and increase the size of the regular
 expression in intermediate steps (see Figure~\ref{BrzozowskiDerivative},
@@ -259,28 +289,28 @@ with a small input string of the form $\underbrace{a \dots a}_n$,
 each derivative step introduces subexpressions that are copies of the original,
 as shown in Figure~\ref{derivativeStarsExample}.
 \begin{figure}[ht]
-  
   \begin{center}
     \[
     \begin{array}{rcl}
       \der_a\, r          & = &  \der_a\,( ((a)^{*} + (aa)^{*} + (aaa)^{*} + (aaaa)^{*} + (aaaaa)^{*} )^{*}) \\
                           & = & \der_a\, ((a)^{*} + (aa)^{*} + (aaa)^{*} + (aaaa)^{*} + (aaaaa)^{*} ) \cdot \, r^{*} \\  
                           & = & ((\der_a\, (a)^{*}) + (\der_a\, (aa)^{*})+ (\der_a\,(aaa)^{*}) + \dots ) \cdot  r^{*} \\
-                          & = & ((\der_a\, a \cdot (a)^{*}) + (\der_a\,aa \cdot (aa)^{*}) + (\der_a\,aaa\cdot (aaa)^{*})+ \dots ) \cdot  r^{*} \\
-                          & = & ((\ONE \cdot (a)^{*}) + ((\ONE \cdot a) \cdot (aa)^{*})+ ( (\ONE \cdot aa) \cdot (aaa)^{*}) + \dots ) \cdot  r^{*}\\
+                          & = & ((\der_a\, a \cdot (a)^{*}) + (\der_a\,aa \cdot (aa)^{*}) + (\der_a\,aaa\cdot (aaa)^{*}) \\
+                          &   & \quad +\, \dots ) \cdot  r^{*} \\
+                          & = & ((\ONE \cdot (a)^{*}) + ((\ONE \cdot a) \cdot (aa)^{*})+ ( (\ONE \cdot aa) \cdot (aaa)^{*}) \\
+                          &   &\quad +\, \dots ) \cdot  r^{*}\\
                           & = & ((a)^{*} + (a \cdot (aa)^{*})+ ( aa \cdot (aaa)^{*}) + \dots ) \cdot  r^{*} \\\\
-
-      \der_a\, (\der_a\, r) & = & \der_a\, ((a)^{*} + (a \cdot (aa)^{*})+( aa \cdot (aaa)^{*}) + \dots ) \cdot r^{*} + \der_a\,r^{*} \\
-                            & = & (\ONE \cdot (a)^{*} + (\ONE \cdot (aa)^{*})+ ( (\ONE \cdot a) \cdot (aaa)^{*}) +  \dots ) \cdot r^{*} \,+ \\
-                            &   & \quad ((a)^{*} + (a \cdot (aa)^{*})+ ( aa \cdot (aaa)^{*}) + \dots ) \cdot  r^{*} \\ 
-                            & = & ((a)^{*} + (aa)^{*} + ( a \cdot (aaa)^{*}) + \dots ) \cdot r^{*} \,+ \\
-                            &   & \quad ((a)^{*} + (a \cdot (aa)^{*})+ ( aa \cdot (aaa)^{*}) + \dots ) \cdot  r^{*} \\\\ 
-                            
-                        
-     \der_a\,( \der_a\, (\der_a\, r)) & =           & \der_a\, (((a)^{*} + (aa)^{*}+ ( a \cdot (aaa)^{*}) +  \dots ) \cdot r^{*} \,)+ \\
-                            &             & \quad  \der_a\,(((a)^{*} + (a \cdot (aa)^{*})+ ( aa \cdot (aaa)^{*}) +  \dots ) \cdot  r^{*} )  \\
-                            & =           & (\der_a\, (((a)^{*} + ((aa)^{*})+ ( a \cdot (aaa)^{*}) + \dots ) \cdot r^{*}) \, + \der_a\, r^{*} )+\\
-                            &             & \quad ( \der_a\,(((a)^{*} + (a \cdot (aa)^{*})+( aa \cdot (aaa)^{*}) +\dots ) \cdot  r^{*}) + \der_a\, r^{*})                     
+      \der_a\, (\der_a\, r) & = & \der_a\, ((a)^{*} + (a \cdot (aa)^{*})+( aa \cdot (aaa)^{*}) + \dots ) \cdot r^{*}  \\
+                            &   & \quad +\, \der_a\,r^{*} \\
+                            & = & (\ONE \cdot (a)^{*} + (\ONE \cdot (aa)^{*})+ ( (\ONE \cdot a) \cdot (aaa)^{*}) +  \dots ) \cdot r^{*} \\
+                            &   & \quad +\, ((a)^{*} + (a \cdot (aa)^{*})+ ( aa \cdot (aaa)^{*}) + \dots ) \cdot  r^{*} \\ 
+                            & = & ((a)^{*} + (aa)^{*} + ( a \cdot (aaa)^{*}) + \dots ) \cdot r^{*} \\
+                            &   & \quad +\, ((a)^{*} + (a \cdot (aa)^{*})+ ( aa \cdot (aaa)^{*}) + \dots ) \cdot  r^{*} \\\\        
+     \der_a\,( \der_a\, (\der_a\, r)) & =           & \der_a\, (((a)^{*} + (aa)^{*}+ ( a \cdot (aaa)^{*}) +  \dots ) \cdot r^{*} \,) \\
+                            &             & \quad +\, \der_a\,(((a)^{*} + (a \cdot (aa)^{*})+ ( aa \cdot (aaa)^{*}) +  \dots ) \cdot  r^{*} )  \\
+                            & =           & (\der_a\, (((a)^{*} + ((aa)^{*})+ ( a \cdot (aaa)^{*}) + \dots ) \cdot r^{*}) \\
+                            &              &\quad \, +\, \der_a\, r^{*} )+ ( \der_a\,(((a)^{*} + (a \cdot (aa)^{*})+( aa \cdot (aaa)^{*}) \\
+                            & & \quad +\,\dots ) \cdot  r^{*}) + \der_a\, r^{*})                     
             \end{array}
     \]
     \mbox{}
@@ -349,7 +379,7 @@ there can be linearly many distinct partial derivatives,
 and each derivative can already be quadratic in the size of the
 original expression, resulting in an overall cubic upper bound.
 \FloatBarrier
-\subsubsection{Derivative Extension}
+\subsection{Derivative Extension}
 Sulzmann and Lu~\cite{Sulzmann2014} extend Brzozowski’s derivatives to produce 
 POSIX values in addition to deciding whether a match exists. 
 These values record how the match occurred, for example by showing which part
@@ -525,7 +555,7 @@ expressions, as defined by Sulzmann and Lu~\cite{Sulzmann2014}.}
 \end{figure}
 
 \FloatBarrier
-\subsection{Marked Approach}
+\section{Marked Approach}
 The marked approach is a method for regular expression matching that tracks
 matching progress by inserting and moving marks into the expression.
 As noted by Nipkow and Traytel~\cite{NipkowTraytel2014}, the idea can be traced
@@ -586,7 +616,7 @@ The main transition function is therefore the reverse of the previous one:
 \move\ c\ r\ m = \follow\ m\ (\readF\ c\ r).
 \]
 
-\subsubsection{Motivation for a Marked Approach}
+\subsection{Motivation for a Marked Approach}
 The marked approach offers a promising alternative to
 derivatives for regular expression matching by addressing some of the
 limitations found in the derivative method.
@@ -647,9 +677,10 @@ The second version was developed to address two main issues: the overwriting of
 marks and the absence of a mechanism to order them so as to always produce the
 POSIX value. Initially, we modified the previous version to accumulate all possible
 paths to a match, retaining every bitsequence that could lead to acceptance.
-Through reasoning and testing, we refined it to the point where we are fairly
-confident that it can produce all possible values for a given string and regular
-expression, including the POSIX value. One resulting difficulty was the
+Through reasoning and testing, we refined so that it seems that with every input
+it produces the possbile values that the input can match the regular expression
+%%check here
+One resulting difficulty was the
 proliferation of matches in the \Star\ case, where every possible way of matching
 was generated. Another difficulty, which also existed in the first version, was
 the absence of an ordering for marks during the shifting process. We implemented

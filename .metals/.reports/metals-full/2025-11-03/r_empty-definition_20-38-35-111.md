@@ -1,3 +1,25 @@
+error id: file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/matchers-comparison/re_bitrev.sc:`<none>`.
+file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/matchers-comparison/re_bitrev.sc
+empty definition using pc, found symbol in pc: `<none>`.
+empty definition using semanticdb
+empty definition using fallback
+non-local guesses:
+	 -rexp/ACHAR.
+	 -rexp/ACHAR#
+	 -rexp/ACHAR().
+	 -ARexp.ACHAR.
+	 -ARexp.ACHAR#
+	 -ARexp.ACHAR().
+	 -ACHAR.
+	 -ACHAR#
+	 -ACHAR().
+	 -scala/Predef.ACHAR.
+	 -scala/Predef.ACHAR#
+	 -scala/Predef.ACHAR().
+offset: 4572
+uri: file://<HOME>/Google%20Drive/KCL/Code%20Playground/Marked/matchers-comparison/re_bitrev.sc
+text:
+```scala
 import $file.rexp, rexp._
 import $file.ARexp, ARexp._
 
@@ -137,39 +159,23 @@ def matcher(r: Rexp, s: String): Boolean= s.toList match{
   case c::cs => bnullable(bders_simp(internalise(r),s.toList))
 }
 
-def pp(e: ARexp): String = (e: @unchecked) match {
-  case AZERO                  => "0\n"
-  case AONE(_)                => "1\n"
-  case ACHAR(_, c)            => s"$c\n"
-  case AALTS(_, rs)           => "ALT\n" + pps(rs: _*)
-  case ASEQ(_, r1, r2)        => "SEQ\n" + pps(r1, r2)
-  case ASTAR(_, r)            => "STAR\n" + pps(r)
-  // case ANTIMES(_, r, n)     => s"NTIMES($n)\n" + pps(r)
-}
-
-def pps(es: ARexp*) = indent(es.map(pp))
-
-
-def size(r: ARexp): Int = r match {
-  case AZERO               => 1
-  case AONE(_)             => 1
-  case ACHAR(_, _)         => 1
-  case ASEQ(_, r1, r2)     => 1 + size(r1) + size(r2)
-  case ASTAR(_, r1)        => 1 + size(r1)
-  case AALTS(_, rs)        => 1 + rs.map(size).sum
-  // case ANTIMES(_, r, _)  => 1 + size(r)  // if you re-enable it
+def size(r: ARexp) : Int = r match {
+  case AZERO => 1
+  case AONE => 1
+  case ACH@@AR(_) => 1
+  case AALT(r1, r2) => 1 + size(r1) + size(r2)
+  case ASEQ(r1, r2) => 1 + size(r1) + size(r2)
+  case ASTAR(r) => 1 + size(r)
 }
 
 @main
 def test1() = {
   val r = %( %("a") | %("aa") | %("aaa") | %("aaaa") | %("aaaaa") ) 
-  println(s"Original Size=${size(internalise(r))}")
-  for (i <- 1 to 100 by 1) {
+
+  for (i <- 1 to 2 by 1) {
     val s = "a" * i  //+ "b"         
-    val der=bders_simp(internalise(r),s.toList)
-   // println(pp(der))
-    println(s"i=$i , size= ${size(der)}")
-    //println(s" ${bders_simp(internalise(r),s.toList)}")
+   // println(s"i= $i  bsimp= ${time_needed(1, matcher(r,s)) }")
+    println(s" ${bders_simp(internalise(r),s.toList)}")
     
   }
 
@@ -187,3 +193,10 @@ def test2() = {
 
 }
 
+
+```
+
+
+#### Short summary: 
+
+empty definition using pc, found symbol in pc: `<none>`.
