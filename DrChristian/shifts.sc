@@ -61,12 +61,9 @@ def shifts(ms: Marks, r: Rexp) : Marks =
       }
       case STAR(r) => {
         val ms1 = shifts(ms, r)
-        println(s"ms in star=$ms1")
         if(ms1.isEmpty) Nil
-        else{
-        val msr= ( ms1 ::: shifts(ms1, STAR(r)) )
-        println(s"ms returned= $msr")
-        msr
+        else{ 
+          ( ms1 ::: shifts(ms1, STAR(r)) )
         }
       }
       case NTIMES(r,n) =>

@@ -42,13 +42,7 @@ def shifts(ms: Marks, r: Rexp): Marks = (r: @unchecked) match {
   case ONE  => Set()
   case CHAR(d) =>
     for (m <- ms if m.str != Nil && m.str.head == d) yield m.copy(str = m.str.tail)
-  case ALT(r1, r2) =>
-    //shifts(ms <:+> Lf, r1) ++ shifts(ms <:+> Ri, r2)
-    val p1=shifts(ms <:+>Lf,r1)
-    if(p1.exists(_.str == Nil)) p1
-    else
-        p1 ++ shifts(ms<:+> Ri,r2)
-
+  case ALT(r1, r2) =>shifts(ms <:+> Lf, r1) ++ shifts(ms <:+> Ri, r2)
   case SEQ(r1, r2) =>
   val ms1 = shifts(ms, r1)
   (nullable(r1), nullable(r2)) match {
@@ -64,6 +58,7 @@ def shifts(ms: Marks, r: Rexp): Marks = (r: @unchecked) match {
           else p1 ++ p2 ++ p3
         }
       }
+      
 
     case (true, false) =>
       val p2 = ms1.flatMap(m => shifts(Set(m), r2))

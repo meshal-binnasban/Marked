@@ -241,6 +241,40 @@ def draw(e: Rexp) =
     draw_r(e, "", false)
 
 
+// pretty-printing Rexps
+def implode(ss: Seq[String]) = ss.mkString("\n")
+def explode(s: String) = s.split("\n").toList
+
+def lst(s: String) : String = explode(s) match {
+  case hd :: tl => implode(" └" ++ hd :: tl.map("  " ++ _))
+  case Nil => ""
+}
+
+def mid(s: String) : String = explode(s) match {
+  case hd :: tl => implode(" ├" ++ hd :: tl.map(" │" ++ _))
+  case Nil => ""
+}
+
+def indent(ss: Seq[String]) : String = ss match {
+  case init :+ last => implode(init.map(mid) :+ lst(last))
+  case _ => "" 
+}
+
+def pp(e: Rexp) : String = (e: @unchecked) match { 
+  case ZERO => "0\n"
+  case ONE => s"1 \n"
+  case CHAR(c) => s"$c\n"
+  case ALT(r1, r2) => "ALT\n" ++ pps(r1, r2)
+  case SEQ(r1, r2) => "SEQ\n" ++ pps(r1, r2)
+  case STAR(r) => s"STAR\n" ++ pps(r)
+  case NTIMES(r, n) => s"NTIMES($n)\n" ++ pps(r)
+  case AND(r1, r2) => "AND\n" ++ pps(r1, r2)
+}
+
+def pps(es: Rexp*) = indent(es.map(pp))
+
+
+
 @main 
 def test() = {
       val r = ("a" | "ab") ~ ("c" | "bc")
@@ -249,3 +283,4 @@ def test() = {
       println(s"Final Value= ${lex(r,"abc".toList)}")
 
 }
+
