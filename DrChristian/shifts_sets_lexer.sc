@@ -51,7 +51,7 @@ def shifts(ms: Marks, r: Rexp): Marks = (r: @unchecked) match {
   
   case NTIMES(r,n) =>
     if(n==0) Set()
-    else if(n==1) shifts(ms <::+> List(NxT,EnT),r)
+    else if(n==1) (shifts(ms <::+> List(NxT),r) <:+> EnT)
     else{
       val ms1 = shifts(ms <:+> NxT,r)
       if(ms1== Set()) ms1

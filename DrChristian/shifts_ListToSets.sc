@@ -58,7 +58,7 @@ def shifts(ms: Marks, r: Rexp): Marks =
 
   case NTIMES(r,n) =>
     if(n==0) Nil
-    else if(n==1) shifts(ms<::+>List(NxT,EnT), r).reshuffle
+    else if(n==1) (shifts(ms<::+>List(NxT), r) <:+> EnT).reshuffle
     else{
       val ms1 = shifts(ms<:+>NxT, r).reshuffle
       if(ms1.isEmpty) Nil
@@ -420,8 +420,8 @@ def test23() = {
 @main
 def test24() = {
   println("=====Test====")
-  val br2= %("a") ~ %( "a" ) //~ "b"
-  val s = "a" * 4 //+ "b" //400
+  val br2= %(ZERO) | ( "bc"~("b"|ONE) | NTIMES( %("b") ,1) )
+  val s = "b"  
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 
@@ -431,8 +431,8 @@ def test24() = {
 @main
 def test25() = {
   println("=====Test====")
-  val br2=  AND("a"|"b" , "b") 
-  val s = "b"
+  val br2=  NTIMES("a" | ZERO , 2) 
+  val s = "aa"
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
 

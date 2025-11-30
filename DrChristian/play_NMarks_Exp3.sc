@@ -58,7 +58,7 @@ def shifts(ms: Marks, r: Rexp): Marks =
   case NTIMES(r,n) =>
     if (n == 0) then Nil
     else
-      if (n == 1) shifts(ms<::+>List(NxT,EnT), r).reshuffle
+      if (n == 1) (shifts(ms<::+>List(NxT), r) <:+> EnT).reshuffle
       else{
           val ms1 = shifts(ms<:+>NxT, r).reshuffle
           if(ms1.isEmpty) Nil else{
