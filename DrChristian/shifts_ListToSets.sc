@@ -33,7 +33,7 @@ def shifts(ms: Marks, r: Rexp): Marks =
   case ONE => Nil
   case CHAR(d) => for (m <- ms if m.str != Nil && m.str.head == d) yield m.copy(str = m.str.tail)
   case ALT(r1, r2) =>  
-    Set(((shifts(ms <:+> Lf, r1) ) ::: (shifts(ms <:+> Ri, r2)) ) ).toList
+    ((shifts(ms <:+> Lf, r1) ) ::: (shifts(ms <:+> Ri, r2)) ).toSet.toList
 
   case SEQ(r1,r2) => {
     val ms1 = shifts(ms, r1).reshuffle
@@ -42,18 +42,18 @@ def shifts(ms: Marks, r: Rexp): Marks =
         val r1Consume=(ms1 <::+>mkeps2(r2))
         val r1r2Consume= ms1.flatMap( m => shifts(List(m), r2))
         val r2Consume= shifts((ms <::+> mkeps2(r1)) ,r2)
-        Set(((r1Consume ::: r1r2Consume)  ::: r2Consume)).toList
+        ((r1Consume ::: r1r2Consume)  ::: r2Consume).toSet.toList
         
-      case (true, false) => Set((ms1.flatMap( m => shifts(List(m), r2))   ::: shifts((ms<::+> mkeps2(r1)),r2))).toList
-      case (false, true) => Set(((ms1 <::+>mkeps2(r2)) ::: ms1.flatMap( m => shifts(List(m), r2))) ).toList
-      case (false, false) => Set(ms1.flatMap( m => shifts(List(m), r2))).toList
+      case (true, false) => (ms1.flatMap( m => shifts(List(m), r2))   ::: shifts((ms<::+> mkeps2(r1)),r2)).toSet.toList
+      case (false, true) => ((ms1 <::+>mkeps2(r2)) ::: ms1.flatMap( m => shifts(List(m), r2))).toSet.toList
+      case (false, false) => ms1.flatMap( m => shifts(List(m), r2)).toSet.toList
       } 
   }
   case STAR(r) =>
       val ms1 = shifts((ms<:+>Nx), r).reshuffle
       if(ms1.isEmpty) Nil 
       else{
-        Set(( (ms1 <:+> En) ::: ms1.flatMap( m=> shifts(List(m), STAR(r)))   )).toList
+        ( (ms1 <:+> En) ::: ms1.flatMap( m=> shifts(List(m), STAR(r)))   ).toSet.toList
           }
 
   case NTIMES(r,n) =>
@@ -64,11 +64,11 @@ def shifts(ms: Marks, r: Rexp): Marks =
       if(ms1.isEmpty) Nil
       else
           if(nullable(r))
-          Set((ms1 <:+> EnT) ++ ms1.flatMap(m => shifts(List(m), NTIMES(r,n-1)))).toList
-          else Set(ms1.flatMap(m => shifts(List(m), NTIMES(r,n-1)))).toList
+          (ms1 <:+> EnT) ++ ms1.flatMap(m => shifts(List(m), NTIMES(r,n-1))).toSet.toList
+          else ms1.flatMap(m => shifts(List(m), NTIMES(r,n-1))).toSet.toList
     }
   
-  case AND(r1,r2) => (shifts(ms,r1).intersect(shifts(ms,r2)))    
+  case AND(r1,r2) => (shifts(ms,r1).intersect(shifts(ms,r2))).toSet.toList    
 
 }
 
@@ -96,9 +96,9 @@ extension (ms: List[Mark])
 def matcher(r: Rexp, s: String) : Boolean =
   val im = Mark(bits = List(), str = s.toList)
   val marks = shifts(List(im), r)
-  println(s"-------------End of 1 matcher call-----------\n")
+ /*  println(s"-------------End of 1 matcher call-----------\n")
   marks.foreach(m => println(s"-$m") )
-  println("------------------------")     
+  println("------------------------")     */ 
   marks.exists(_.str == Nil)
 
 def lex(r: Rexp, s: String): Option[Bits] =
