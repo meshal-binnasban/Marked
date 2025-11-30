@@ -22,6 +22,23 @@ def checkP(ms: Set[String], r: Rexp): Boolean = {
   //println(s"shifts=$impl , strips=$spec")
   impl == spec
 }
+
+def checkNTIMES(ms: Set[String], r: Rexp): Boolean = r match {
+  case NTIMES(r,n) if nullable(r) && n>1  =>
+    val impl = shifts(ms, NTIMES(r,n))
+    val spec = strips(language(NTIMES(r,n-1)), strips(language(r),ms)) 
+    ++ strips(language(r), ms)
+    //println(s"shifts=$impl , strips=$spec")
+    impl == spec
+  case NTIMES(r,n) if n>1  =>
+    val impl = shifts(ms, NTIMES(r,n))
+    val spec = strips(language(NTIMES(r,n-1)), strips(language(r),ms)) 
+    //println(s"shifts=$impl , strips=$spec")
+    impl == spec
+  case _ => checkP(ms,r)
+  
+}
+
 @main
 def test1() = {
   val r1 = CHAR('a')
@@ -95,8 +112,8 @@ def testAll() = {
       if (i % 100_000 == 0) { print("*") }
       for (s <- (regenerate.generate_up_to(alphabet)(10)(r).take(9)) if s != "") {
          
-         val checkResult=checkP(Set(s), r)
-
+         //val checkResult=checkP(Set(s), r)
+          val checkResult= checkNTIMES(Set(s), r)
           if (! checkResult) {
             println(s"[${i}]-\n reg: $r \nstr: $s")
             println(s"\n${pp(r)}")

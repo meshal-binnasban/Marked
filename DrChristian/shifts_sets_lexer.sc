@@ -4,16 +4,6 @@ import $file.enumerate, enumerate._
 import $file.regenerate, regenerate._
 import $file.rebit
 
-extension (xs: List[Bits]) {
-  def <*> (ys: List[Bits]): List[Bits] =
-    for (x <- xs; y <- ys) yield x ::: y
-  def <+> (y: Bit): List[Bits] =
-    for (x <- xs) yield x :+ y
-  def <++>(ys: Bits): List[Bits] =
-    xs.map(_ ++ ys)
-  def <::>(y: Bit): List[Bits] =
-    for (x <- xs) yield y :: x
-}
 
 type Marks = Set[Mark]
 
@@ -23,10 +13,7 @@ extension (ms: Marks) {
   def <::+>(bs: Bits): Marks =
     ms.map(m => m.copy(bits = m.bits ::: bs))
 }
-extension (m: Mark) {
-  def <:+>(b: Bit): Mark =
-    m.copy(bits = m.bits :+ b)
-}
+
 
 def mkeps2(r: Rexp) : Bits = r match {
   case ONE => Nil
@@ -42,45 +29,8 @@ def shifts(ms: Marks, r: Rexp): Marks = (r: @unchecked) match {
   case ONE  => Set()
   case CHAR(d) =>
     for (m <- ms if m.str != Nil && m.str.head == d) yield m.copy(str = m.str.tail)
-  case ALT(r1, r2) =>shifts(ms <:+> Lf, r1) ++ shifts(ms <:+> Ri, r2)
-  case SEQ(r1, r2) =>
-  val ms1 = shifts(ms, r1)
-  (nullable(r1), nullable(r2)) match {
-    case (true, true) =>
-      val p1 = ms1 <::+> mkeps2(r2)
-      if (p1.exists(_.str == Nil)) p1
-      else {
-        val p2 = shifts(ms1,r2) //ms1.flatMap(m => shifts(Set(m), r2))
-        if (p2.exists(_.str == Nil)) p1 ++ p2
-        else {
-          val p3 = shifts(ms <::+> mkeps2(r1), r2)
-          if (p3.exists(_.str == Nil)) p1++p2++p3
-          else p1 ++ p2 ++ p3
-        }
-      }
-      
-
-    case (true, false) =>
-      val p2 = ms1.flatMap(m => shifts(Set(m), r2))
-      if (p2.exists(_.str == Nil)) p2
-      else {
-        val p3 = shifts(ms <::+> mkeps2(r1), r2)
-        if (p3.exists(_.str == Nil)) p3 else p2 ++ p3
-      }
-
-    case (false, true) =>
-      val p1 = ms1 <::+> mkeps2(r2)
-      if (p1.exists(_.str == Nil)) p1
-      else {
-        val p2 =shifts(ms1,r2) // ms1.flatMap(m => shifts(Set(m), r2))
-        if (p2.exists(_.str == Nil)) p2 else p1 ++ p2
-      }
-
-    case (false, false) =>
-      shifts(ms1,r2)  
-      //ms1.flatMap(m => shifts(Set(m), r2))
-  }
-  
+  case ALT(r1, r2) =>
+    shifts(ms <:+> Lf, r1) ++ shifts(ms <:+> Ri, r2)
   
   case SEQ(r1, r2) =>
     val ms1 = shifts(ms, r1)
@@ -96,17 +46,20 @@ def shifts(ms: Marks, r: Rexp): Marks = (r: @unchecked) match {
     }
   case STAR(r) =>
     val ms1 = shifts(ms <:+> Nx, r)
-    if (ms1.isEmpty) Set() else (ms1 <:+> En) ++ ms1.flatMap(m => shifts(Set(m), STAR(r)))
-
-  case NTIMES(r0, n) if n == 0 =>
-    ms <:+> EnT
-  case NTIMES(r0, n) =>
-    if ((ms.exists(_.str == Nil) && n != 0) && !nullable(r0)) Set()
-    else {
-      val ms1 = shifts(ms <:+> NxT, r0)
-      if (nullable(r0)) (ms1 <:+> EnT) ++ ms1.flatMap(m => shifts(Set(m), NTIMES(r0, n - 1)))
-      else ms1.flatMap(m => shifts(Set(m), NTIMES(r0, n - 1)))
+    if (ms1.isEmpty) Set() 
+    else (ms1 <:+> En) ++ ms1.flatMap(m => shifts(Set(m), STAR(r)))
+  
+  case NTIMES(r,n) =>
+    if(n==0) Set()
+    else if(n==1) shifts(ms <::+> List(NxT,EnT),r)
+    else{
+      val ms1 = shifts(ms <:+> NxT,r)
+      if(ms1== Set()) ms1
+      else
+          if(nullable(r)) (ms1 <:+> EnT) ++ ms1.flatMap(m => shifts(Set(m), NTIMES(r,n-1)))
+          else ms1.flatMap(m => shifts(Set(m), NTIMES(r,n-1)))
     }
+  
   case AND(r1, r2) =>
     shifts(ms, r1) intersect shifts(ms, r2)
 }
@@ -132,15 +85,20 @@ def lex(r: Rexp, s: String): Option[Bits] =
 def lexer(r: Rexp, s: String) : Option[Val] =
   lex(r, s).map(dec2(r, _))
 
-
+//return all marks
+def lexM(r: Rexp, s: String): Option[Marks] =
+  if matcher(r, s) then
+    if s.toList == Nil then None
+    else Some(shifts(Set(Mark(bits = List(), str = s.toList)), r))
+  else None
 
 
 // 
 @main 
 def test1() = {
   println("=====Test====")
-  val br2= ("a" | "ab") ~ ("c" | "bc")
-  val s = "abc"
+  val br2= %("aa") ~ %( %("a") )
+  val s = "aaaaaa"
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
   println(mat(br2,s))
@@ -204,7 +162,7 @@ def testExamples(): Unit = {
 
       if (marked != deriv) {
         failed += 1
-        
+        println(lexM(r,s))
         println(s"Test ${i + 1} FAILED: $label")
         println(s"Regex:\n${pp(r)}")
         println(s"Input string: $s")

@@ -33,7 +33,7 @@ def shifts(ms: Marks, r: Rexp): Marks =
   case ONE => Nil
   case CHAR(d) => for (m <- ms if m.str != Nil && m.str.head == d) yield m.copy(str = m.str.tail)
   case ALT(r1, r2) =>  
-     ((shifts(ms <:+> Lf, r1) ) ::: (shifts(ms <:+> Ri, r2)) ) 
+    Set(((shifts(ms <:+> Lf, r1) ) ::: (shifts(ms <:+> Ri, r2)) ) ).toList
 
   case SEQ(r1,r2) => {
     val ms1 = shifts(ms, r1).reshuffle
@@ -42,34 +42,34 @@ def shifts(ms: Marks, r: Rexp): Marks =
         val r1Consume=(ms1 <::+>mkeps2(r2))
         val r1r2Consume= ms1.flatMap( m => shifts(List(m), r2))
         val r2Consume= shifts((ms <::+> mkeps2(r1)) ,r2)
-        ((r1Consume ::: r1r2Consume)  ::: r2Consume)
+        Set(((r1Consume ::: r1r2Consume)  ::: r2Consume)).toList
         
-      case (true, false) => (ms1.flatMap( m => shifts(List(m), r2))   ::: shifts((ms<::+> mkeps2(r1)),r2)) 
-      case (false, true) => ((ms1 <::+>mkeps2(r2)) ::: ms1.flatMap( m => shifts(List(m), r2))) 
-      case (false, false) => ms1.flatMap( m => shifts(List(m), r2))
+      case (true, false) => Set((ms1.flatMap( m => shifts(List(m), r2))   ::: shifts((ms<::+> mkeps2(r1)),r2))).toList
+      case (false, true) => Set(((ms1 <::+>mkeps2(r2)) ::: ms1.flatMap( m => shifts(List(m), r2))) ).toList
+      case (false, false) => Set(ms1.flatMap( m => shifts(List(m), r2))).toList
       } 
   }
   case STAR(r) =>
       val ms1 = shifts((ms<:+>Nx), r).reshuffle
       if(ms1.isEmpty) Nil 
       else{
-        ( (ms1 <:+> En) ::: ms1.flatMap( m=> shifts(List(m), STAR(r)))   )
+        Set(( (ms1 <:+> En) ::: ms1.flatMap( m=> shifts(List(m), STAR(r)))   )).toList
           }
+
   case NTIMES(r,n) =>
-    if (n == 0) then Nil
-    else
-      if (n == 1) shifts(ms<::+>List(NxT,EnT), r).reshuffle
-      else{
-          val ms1 = shifts(ms<:+>NxT, r).reshuffle
-          if(ms1.isEmpty) Nil else{
-            if(nullable(r)){
-              ( (ms1<:+> EnT) ::: shifts(ms1,NTIMES(r,n-1)) )
-              }else{
-                (shifts(ms1,NTIMES(r,n-1))   )
-                }
-          }
-      }  
+    if(n==0) Nil
+    else if(n==1) shifts(ms<::+>List(NxT,EnT), r).reshuffle
+    else{
+      val ms1 = shifts(ms<:+>NxT, r).reshuffle
+      if(ms1.isEmpty) Nil
+      else
+          if(nullable(r))
+          Set((ms1 <:+> EnT) ++ ms1.flatMap(m => shifts(List(m), NTIMES(r,n-1)))).toList
+          else Set(ms1.flatMap(m => shifts(List(m), NTIMES(r,n-1)))).toList
+    }
+  
   case AND(r1,r2) => (shifts(ms,r1).intersect(shifts(ms,r2)))    
+
 }
 
 extension (ms: List[Mark])
@@ -517,7 +517,7 @@ def testExamples(): Unit = {
 
       if (marked != deriv) {
         failed += 1
-        
+        println(lexM(r,s))
         println(s"Test ${i + 1} FAILED: $label")
         println(s"Regex:\n${pp(r)}")
         println(s"Input string: $s")
