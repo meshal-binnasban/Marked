@@ -431,11 +431,11 @@ def test24() = {
 @main
 def test25() = {
   println("=====Test====")
-  val br2=  AND("a"|"b" , "b") 
-  val s = "b"
+  val br2=  ( (NTIMES("b",6)| %("b")) ~ (NTIMES("a",27) | "bb") )
+  val s = "bbbbbbbb"
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
-
+  println(lexM(br2,s))
   
   commonTestCode(br2, s)
 }

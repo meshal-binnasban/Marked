@@ -33,7 +33,7 @@ def shifts(ms: Marks, r: Rexp): Marks =
   case ONE => Nil
   case CHAR(d) => for (m <- ms if m.str != Nil && m.str.head == d) yield m.copy(str = m.str.tail)
   case ALT(r1, r2) =>  
-    ((shifts(ms <:+> Lf, r1) ) ::: (shifts(ms <:+> Ri, r2)) ).toSet.toList
+    ((shifts(ms <:+> Lf, r1) ) ::: (shifts(ms <:+> Ri, r2)) ).distinct
 
   case SEQ(r1,r2) => {
     val ms1 = shifts(ms, r1).reshuffle
@@ -42,18 +42,18 @@ def shifts(ms: Marks, r: Rexp): Marks =
         val r1Consume=(ms1 <::+>mkeps2(r2))
         val r1r2Consume= ms1.flatMap( m => shifts(List(m), r2))
         val r2Consume= shifts((ms <::+> mkeps2(r1)) ,r2)
-        ((r1Consume ::: r1r2Consume)  ::: r2Consume).toSet.toList
+        ((r1Consume ::: r1r2Consume)  ::: r2Consume).distinct
         
-      case (true, false) => (ms1.flatMap( m => shifts(List(m), r2))   ::: shifts((ms<::+> mkeps2(r1)),r2)).toSet.toList
-      case (false, true) => ((ms1 <::+>mkeps2(r2)) ::: ms1.flatMap( m => shifts(List(m), r2))).toSet.toList
-      case (false, false) => ms1.flatMap( m => shifts(List(m), r2)).toSet.toList
+      case (true, false) => (ms1.flatMap( m => shifts(List(m), r2))   ::: shifts((ms<::+> mkeps2(r1)),r2)).distinct
+      case (false, true) => ((ms1 <::+>mkeps2(r2)) ::: ms1.flatMap( m => shifts(List(m), r2))).distinct
+      case (false, false) => ms1.flatMap( m => shifts(List(m), r2)).distinct
       } 
   }
   case STAR(r) =>
       val ms1 = shifts((ms<:+>Nx), r).reshuffle
       if(ms1.isEmpty) Nil 
       else{
-        ( (ms1 <:+> En) ::: ms1.flatMap( m=> shifts(List(m), STAR(r)))   ).toSet.toList
+        ( (ms1 <:+> En) ::: ms1.flatMap( m=> shifts(List(m), STAR(r)))   ).distinct
           }
 
   case NTIMES(r,n) =>
@@ -65,10 +65,10 @@ def shifts(ms: Marks, r: Rexp): Marks =
       else
           if(nullable(r))
           (ms1 <:+> EnT) ++ ms1.flatMap(m => shifts(List(m), NTIMES(r,n-1))).toSet.toList
-          else ms1.flatMap(m => shifts(List(m), NTIMES(r,n-1))).toSet.toList
+          else ms1.flatMap(m => shifts(List(m), NTIMES(r,n-1))).distinct
     }
   
-  case AND(r1,r2) => (shifts(ms,r1).intersect(shifts(ms,r2))).toSet.toList    
+  case AND(r1,r2) => (shifts(ms,r1).intersect(shifts(ms,r2))).distinct    
 
 }
 
@@ -431,11 +431,11 @@ def test24() = {
 @main
 def test25() = {
   println("=====Test====")
-  val br2=  NTIMES("a" | ZERO , 2) 
-  val s = "aa"
+  val br2=  ( (NTIMES("b",6)| %("b")) ~ (NTIMES("a",27) | "bb") )
+  val s = "bbbbbbbb"
   println(s"Regex:\n${pp(br2)}\n")
   println(s"=string=\n$s")
-
+  println(lexM(br2,s))
   
   commonTestCode(br2, s)
 }
