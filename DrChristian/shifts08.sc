@@ -83,9 +83,9 @@ def lexer(r: Rexp, s: String): Val = {
 
 @main
 def test1() = {
-  val reg = ("a" | ("aa") )
+  val reg = "a" ~ ("a" | "aa" )
   val s="aa"
-  println(s"$s: ${matcher(reg, s)}  ${mat(reg, s)} ")
+  println(s"$s: r=${pp(reg)}  ${mat(reg, s)} ")
   //println(back(reg,s,(0,1))._1)
   println(lexer(reg,s))
   println(rebit.blexer(reg,s))
@@ -102,7 +102,7 @@ def back(r: Rexp, s: String, p: (Int, Int)): (Val, (Int, Int)) = {
     case CHAR(c) =>
       val (n, m) = p
       if (m > n && m <= s.length && s(m - 1) == c)
-        //println(s"${Chr(c)}");
+       // println(s"${Chr(c)}");
         (Chr(c), (n, m - 1))
       else
         (Invalid, invalid)
@@ -136,19 +136,25 @@ def back(r: Rexp, s: String, p: (Int, Int)): (Val, (Int, Int)) = {
         else {
           val i = p1All._2
           val (v2Empty, _) = back(r2, s, (i, i))
+          
           (Sequ(v1All, v2Empty), p1All)
-        }
+        }//end of cand1
 
       // 2- r1 then r2
       val cand2: (Val, (Int, Int)) = {
-        val (v2, pMid) = back(r2, s, p)
+        val (v1, pMid) = back(r1, s, p)
         if (pMid == invalid) (Invalid, invalid)
         else {
-          val (v1, pPrev) = back(r1, s, pMid)
+          val (v2, pPrev) = back(r2, s, pMid)
+          //println(s"v1=${v1} , pMid=${pMid} , v2=${v2} , pPrev=${pPrev}");
           if (pPrev == invalid) (Invalid, invalid)
-          else (Sequ(v1, v2), pPrev)
+          else 
+            {
+            //println(s"v2=${v2} , pPrev=${pPrev}");
+            (Sequ(v1, v2), pPrev)
+            }
         }
-      }
+      }//end of cand2
 
       // 3) r2 consumed 
       val (v2All, p2All) = back(r2, s, p)
@@ -159,7 +165,7 @@ def back(r: Rexp, s: String, p: (Int, Int)): (Val, (Int, Int)) = {
             val i = p2All._1
             val (v1Empty, _) = back(r1, s, (i, i))
             (Sequ(v1Empty, v2All), p2All)
-          }
+          }//end of cand3
 
       val cands = List(cand1, cand2, cand3)
 
