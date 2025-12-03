@@ -34,7 +34,6 @@ def shifts(ms: Marks, r: Rexp): Marks =
   case CHAR(d) => for (m <- ms if m.str != Nil && m.str.head == d) yield m.copy(str = m.str.tail)
   case ALT(r1, r2) =>  
      ((shifts(ms <:+> Lf, r1) ) ::: (shifts(ms <:+> Ri, r2)) ) 
-
   case SEQ(r1,r2) => {
     val ms1 = shifts(ms, r1).reshuffle
     (nullable(r1), nullable(r2)) match {
@@ -68,7 +67,9 @@ def shifts(ms: Marks, r: Rexp): Marks =
                 (shifts(ms1,NTIMES(r,n-1))   )
                 }
           }
-      }  
+      } 
+
+
   case AND(r1,r2) => (shifts(ms,r1).intersect(shifts(ms,r2)))    
 }
 

@@ -143,12 +143,13 @@ def ders(s: List[Char], r: Rexp) : Rexp = s match {
 // values
 abstract class Val
 case object Empty extends Val
+case object Invalid extends Val
 case class Chr(c: Char) extends Val
 case class Sequ(v1: Val, v2: Val) extends Val
 case class Left(v: Val) extends Val
 case class Right(v: Val) extends Val
 case class Stars(vs: List[Val]) extends Val
-case class Nt(vs: List[Val], n: Int) extends Val // new to testX1.
+case class Nt(vs: List[Val], n: Int) extends Val 
 //case object XXX extends Val
 
 
