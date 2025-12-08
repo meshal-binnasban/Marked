@@ -14,6 +14,9 @@ import $file.enumerate, enumerate._
 import $file.regenerate, regenerate._
 import $file.rebit
 
+def startAtEnd(ms: Marks): Marks =
+  ms.map { case (_, m) => (m, m) }
+
 type Marks = Set[(Int, Int)]
 // shifts function 
 def shifts(ms: Marks, s: String, r: Rexp) : Marks = r match {
@@ -81,117 +84,92 @@ def lexer(r: Rexp, s: String): Val = {
   }
 }
 
-@main
-def test1() = {
-  val reg = "a" ~ ("a" | "aa" )
-  val s="aa"
-  println(s"$s: r=${pp(reg)}  ${mat(reg, s)} ")
-  //println(back(reg,s,(0,1))._1)
-  println(lexer(reg,s))
-  println(rebit.blexer(reg,s))
 
-}
 
 def back(r: Rexp, s: String, p: (Int, Int)): (Val, (Int, Int)) = {
   val invalid = (-1, -1)
-
   r match {
     case ONE =>
       val (n, m) = p
-      if (n == m) (Empty, (n, m)) else (Invalid, invalid)
+      if(n==m) (Empty, (n, m)) else (Invalid, invalid)
+
     case CHAR(c) =>
       val (n, m) = p
-      if (m > n && m <= s.length && s(m - 1) == c)
-       // println(s"${Chr(c)}");
-        (Chr(c), (n, m - 1))
+      if (m == n + 1 && m <= s.length && s(n) == c)
+        (Chr(c), (n, n))
       else
         (Invalid, invalid)
 
     case ALT(r1, r2) =>
       val (vL, pL) = back(r1, s, p)
       val (vR, pR) = back(r2, s, p)
+     
       val m  = p._2
       val dL = if (pL == invalid) -1 else m - pL._2
       val dR = if (pR == invalid) -1 else m - pR._2
-
+      //println(s"ALT: dL=$dL , dR=$dR")
       if (dL < 0 && dR < 0)
         (Invalid, invalid)
       else if (dL > dR)
-        //println(s"${Left(vL)}");
+       // println(s"${Left(vL)}");
         (Left(vL), pL)
       else if (dR > dL)
-        //println(s"${Right(vR)}");
+       // println(s"${Right(vR)}");
         (Right(vR), pR)
       else
-        //println(s"${Left(vL)}");
+       // println(s"${Left(vL)}");
         (Left(vL), pL)
     
     case SEQ(r1, r2) =>
-      val m = p._2
+        val (n, m) = p
 
-      // 1- r1 consumed
-      val (v1All, p1All) = back(r1, s, p)
-      val cand1: (Val, (Int, Int)) =
-        if (p1All == invalid || !nullable(r2)) (Invalid, invalid)
-        else {
-          val i = p1All._2
-          val (v2Empty, _) = back(r2, s, (i, i))
-          
-          (Sequ(v1All, v2Empty), p1All)
-        }//end of cand1
-
-      // 2- r1 then r2
-      val cand2: (Val, (Int, Int)) = {
-        val (v1, pMid) = back(r1, s, p)
-        if (pMid == invalid) (Invalid, invalid)
-        else {
-          val (v2, pPrev) = back(r2, s, pMid)
-          //println(s"v1=${v1} , pMid=${pMid} , v2=${v2} , pPrev=${pPrev}");
-          if (pPrev == invalid) (Invalid, invalid)
-          else 
-            {
-            //println(s"v2=${v2} , pPrev=${pPrev}");
-            (Sequ(v1, v2), pPrev)
+        val splits =
+          (n to m).toList.flatMap { k =>
+            val (v1, p1) = back(r1, s, (n, k))
+            //println(s"v1=${v1} p1=${p1}")
+            if (p1 == invalid) Nil
+            else {
+              val (v2, p2) = back(r2, s, (k, m))
+              if (p2 == invalid) Nil
+              else List((Sequ(v1, v2), p1, k))
             }
+          }
+
+        if (splits.isEmpty) (Invalid, invalid)
+        else {
+         // println(s"SEQ: splits=${splits}")
+          val (bestV, bestP, _) =
+            splits.reduce { case ((vA, pA, kA), (vB, pB, kB)) =>
+              if (kA > kB) (vA, pA, kA) else (vB, pB, kB)
+            }
+          (bestV, bestP)
         }
-      }//end of cand2
-
-      // 3) r2 consumed 
-      val (v2All, p2All) = back(r2, s, p)
-      val cand3: (Val, (Int, Int)) =
-        if (p2All == invalid || !nullable(r1)) (Invalid, invalid)
-        else 
-          {
-            val i = p2All._1
-            val (v1Empty, _) = back(r1, s, (i, i))
-            (Sequ(v1Empty, v2All), p2All)
-          }//end of cand3
-
-      val cands = List(cand1, cand2, cand3)
-
-      def delta(pair: (Int, Int)): Int =
-        if (pair == invalid) -1 else m - pair._2
-
-      val (bestV, bestP) =
-        cands.reduce { case ((vA, pA), (vB, pB)) =>
-          val dA = delta(pA)
-          val dB = delta(pB)
-          if (dA > dB) (vA, pA)
-          else if (dB > dA) (vB, pB)
-          else (vA, pA) 
-        }
-
-      if (bestP == invalid) (Invalid, invalid)
-      else {
-        //println(s"$bestV")
-        (bestV, bestP)
-      }
     
     case _ =>
       (Invalid, invalid)
   }
 }
 
+@main
+def test1() = {
+  val reg = ("a"~ONE) | "ab" 
+  val s="ab"
+  println(s"$s: r=\n${pp(reg)}  ${mat(reg, s)} ")
+  //println(back(reg,s,(0,1))._1)
+  println(lexer(reg,s))
+  println(rebit.blexer(reg,s))
+
+}
+@main
+def test2() = {
+  val reg = (ONE ~ "a") | "aa" 
+  val s="aa"
+  println(s"$s: r=\n${pp(reg)}  ${mat(reg, s)} ")
+  //println(back(reg,s,(0,1))._1)
+  println(lexer(reg,s))
+  println(rebit.blexer(reg,s))
+
+}
 
 @main
 def testall() = {
@@ -207,7 +185,7 @@ def testall() = {
       )
   val alphabet = LazyList('a', 'b')
 
-  for (i <- 0L to 100_000_000L) {
+  for (i <- 0L to 1_000_000_000L) {
     val r = decode(i)
     if (i % 100_000 == 0) { print("*") }
     for (s <- (generate_up_to(alphabet)(20)(r).take(19)) if s != "") {
