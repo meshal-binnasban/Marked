@@ -84,14 +84,14 @@ def lexer(r: Rexp, s: String): Val = {
   }
 }
 
-
-
 def back(r: Rexp, s: String, p: (Int, Int)): (Val, (Int, Int)) = {
   val invalid = (-1, -1)
+  inline def isInvalid(q: (Int, Int)) = q == invalid
+
   r match {
     case ONE =>
       val (n, m) = p
-      if(n==m) (Empty, (n, m)) else (Invalid, invalid)
+      if (n == m) (Empty, p) else (Invalid, invalid)
 
     case CHAR(c) =>
       val (n, m) = p
@@ -103,52 +103,44 @@ def back(r: Rexp, s: String, p: (Int, Int)): (Val, (Int, Int)) = {
     case ALT(r1, r2) =>
       val (vL, pL) = back(r1, s, p)
       val (vR, pR) = back(r2, s, p)
-     
+
       val m  = p._2
-      val dL = if (pL == invalid) -1 else m - pL._2
-      val dR = if (pR == invalid) -1 else m - pR._2
-      //println(s"ALT: dL=$dL , dR=$dR")
-      if (dL < 0 && dR < 0)
-        (Invalid, invalid)
-      else if (dL > dR)
-       // println(s"${Left(vL)}");
-        (Left(vL), pL)
-      else if (dR > dL)
-       // println(s"${Right(vR)}");
-        (Right(vR), pR)
-      else
-       // println(s"${Left(vL)}");
-        (Left(vL), pL)
-    
+      def delta(q: (Int, Int)) =
+        if (isInvalid(q)) -1 else m - q._2
+
+      val dL = delta(pL)
+      val dR = delta(pR)
+
+      if (dL < 0 && dR < 0) (Invalid, invalid)
+      else if (dL > dR)     (Left(vL),  pL)
+      else if (dR > dL)     (Right(vR), pR)
+      else                  (Left(vL),  pL)
+
     case SEQ(r1, r2) =>
-        val (n, m) = p
-
-        val splits =
-          (n to m).toList.flatMap { k =>
-            val (v1, p1) = back(r1, s, (n, k))
-            //println(s"v1=${v1} p1=${p1}")
-            if (p1 == invalid) Nil
-            else {
-              val (v2, p2) = back(r2, s, (k, m))
-              if (p2 == invalid) Nil
-              else List((Sequ(v1, v2), p1, k))
-            }
+      val (n, m) = p
+      val splits =
+        (n to m).flatMap { k =>
+          val (v1, p1) = back(r1, s, (n, k))
+          if (isInvalid(p1)) Nil
+          else {
+            val (v2, p2) = back(r2, s, (k, m))
+            if (isInvalid(p2)) Nil
+            else List((Sequ(v1, v2), p1, k))
           }
-
-        if (splits.isEmpty) (Invalid, invalid)
-        else {
-         // println(s"SEQ: splits=${splits}")
-          val (bestV, bestP, _) =
-            splits.reduce { case ((vA, pA, kA), (vB, pB, kB)) =>
-              if (kA > kB) (vA, pA, kA) else (vB, pB, kB)
-            }
-          (bestV, bestP)
         }
-    
+
+      if (splits.isEmpty) (Invalid, invalid)
+      else {
+        val (bestV, bestP, bestK) = splits.maxBy(_._3)
+        //println(s"bestK=$bestK") 
+        (bestV, bestP)
+      }
+
     case _ =>
       (Invalid, invalid)
   }
 }
+
 
 @main
 def test1() = {
