@@ -258,7 +258,7 @@ def generateSegs(sigma: LazyList[Char])(r: Rexp): Segments = {
         case ZERO           => LazyList()
         case ONE            => LazyList(Cons(Data(LazyList(""))))
         case CHAR(c)        => Cons(Null)#::(Cons(Data(LazyList(c.toString)))#::LazyList())
-        case SEQ(r1, r2)    => concatenate(sigma, gen(r1), gen(r2))
+        case SEQS(r1, r2,id)    => concatenate(sigma, gen(r1), gen(r2))
         case ALT(r1, r2)    => unionSegs(gen(r1))(gen(r2))
         case NOT(r)         => complementSegs(sigma)(gen(r))
         case STAR(r)        => star(gen(r))
@@ -280,7 +280,7 @@ def generate_up_to(sigma: LazyList[Char])(l: Int)(r: Rexp): LazyList[String] =
 @main
 def test() = {
       val alphabet = LazyList('a', 'b')
-      val r = STAR(ALT(CHAR('a'), SEQ(CHAR('b'),CHAR('a'))))
+      val r = STAR(ALT(CHAR('a'), mkSEQS(CHAR('a'), CHAR('b'))))
 
       println(s"regular expression: $r")
 

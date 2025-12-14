@@ -14,25 +14,37 @@ import $file.enumerate, enumerate._
 import $file.regenerate, regenerate._
 import $file.rebit
 
-def startAtEnd(ms: Marks): Marks =
-  ms.map { case (_, m) => (m, m) }
 
-type Marks = Set[(Int, Int)]
+case class Mark(n: Int, m: Int)
+
+type Marks = Set[Mark]
+
+var splits: Map[Int, Set[Int]] = Map.empty
+
+def recordSplit(id: Int, k: Int): Unit =
+  splits = splits.updated(id, splits.getOrElse(id, Set.empty) + k)
+
 // shifts function 
 def shifts(ms: Marks, s: String, r: Rexp) : Marks = r match {
   case ZERO => Set()
   case ONE => Set()
-  case CHAR(c) => for ((n, m) <- ms; if m < s.length && s(m) == c) yield (n, m + 1)
+  case CHAR(c) =>
+     for { Mark(n, m) <- ms if m < s.length && s(m) == c } yield Mark(n, m + 1)
   case ALT(r1, r2) => shifts(ms, s, r1) ++ shifts(ms, s, r2)
-  case SEQ(r1, r2) => {
+  case SEQS(r1, r2, id) =>
     val ms1 = shifts(ms, s, r1)
+    val inR2 = if (nullable(r1)) ms1 ++ ms else ms1
+    inR2.foreach(q => 
+      //println(s"inside split creation, q=$q, q.m=${q.m}, id=$id")
+      recordSplit(id, q.m))
+   // println(s"splits so far: $splits")
     (nullable(r1), nullable(r2)) match {
-      case (true, true) =>  shifts(ms1 ++ ms, s, r2) ++ ms1
-      case (true, false) => shifts(ms1 ++ ms, s, r2) 
-      case (false, true) => shifts(ms1, s, r2) ++ ms1
+      case (true,  true)  => shifts(ms1 ++ ms, s, r2) ++ ms1
+      case (true,  false) => shifts(ms1 ++ ms, s, r2)
+      case (false, true)  => ms1 ++ shifts(ms1, s, r2)
       case (false, false) => shifts(ms1, s, r2)
-    }   
-  }
+    }
+
   case STAR(r) => {
     val ms1 = shifts(ms, s, r)
     if(ms1.isEmpty) Set()  
@@ -53,8 +65,10 @@ def shifts(ms: Marks, s: String, r: Rexp) : Marks = r match {
 }
 
 // the main matching function 
-def mat(r: Rexp, s: String) : Marks = 
-  shifts(Set((0, 0)), s, r)
+def mat(r: Rexp, s: String): Marks = {
+  splits = Map.empty
+  shifts(Set(Mark(0,0)), s, r)
+}
 
 def matcher(r: Rexp, s: String) : Boolean = {
   if (s == "") nullable(r)
@@ -62,102 +76,130 @@ def matcher(r: Rexp, s: String) : Boolean = {
     val ms=mat(r,s)
     mat(r, s).exists(_._2 == s.length)
 }
- 
-def lexer(r: Rexp, s: String): Val = {
-  val invalidPair = (-1, -1)
 
+
+def lexer(r: Rexp, s: String): Val = {
   if (s == "") {
     if (nullable(r)) Empty else Invalid
   } else {
     val ms     = mat(r, s)
-    val finals = ms.filter(_._2 == s.length)
+    val finals = ms.filter(_.m == s.length)
 
     if (finals.isEmpty) Invalid
     else {
-      val best = finals.head          
-      val (v, p0) = back(r, s, best)  
-      if (p0 == invalidPair) Invalid
-      else 
-        //println(s"returned p=$p0")
-        v
+      val best: Mark = finals.head
+      //println(splits)
+      val (v, p0) = back(r, s, best,splits = splits)
+      if (isInvalid(p0)) Invalid else v
     }
   }
 }
 
-def back(r: Rexp, s: String, p: (Int, Int)): (Val, (Int, Int)) = {
-  val invalid = (-1, -1)
-  inline def isInvalid(q: (Int, Int)) = q == invalid
+def isInvalid(q: Mark): Boolean = q.n < 0
 
-  r match {
-    case ONE =>
-      val (n, m) = p
-      if (n == m) (Empty, p) else (Invalid, invalid)
+val invalid = (Invalid, Mark(-1, -1))
 
-    case CHAR(c) =>
-      val (n, m) = p
-      if (m == n + 1 && m <= s.length && s(n) == c)
-        (Chr(c), (n, n))
-      else
-        (Invalid, invalid)
+def back(r: Rexp, s: String, p: Mark, splits: Map[Int, Set[Int]]): (Val, Mark) = r match {
 
-    case ALT(r1, r2) =>
-      val (vL, pL) = back(r1, s, p)
-      val (vR, pR) = back(r2, s, p)
+  case ONE =>
+    val Mark(n, m) = p
+    if (n == m) (Empty, p) else invalid
 
-      val m  = p._2
-      def delta(q: (Int, Int)) =
-        if (isInvalid(q)) -1 else m - q._2
+  case CHAR(c) =>
+    val Mark(n, m) = p
+    if (m == n + 1 && m <= s.length && s(n) == c) (Chr(c), Mark(n, m - 1))
+    else invalid
 
-      val dL = delta(pL)
-      val dR = delta(pR)
+  case ALT(r1, r2) =>
+    val (vL, pL) = back(r1, s, p, splits)
+    val (vR, pR) = back(r2, s, p, splits)
+    val mm = p.m
+    def delta(q: Mark) = if (isInvalid(q)) -1 else mm - q.m
+    val dL = delta(pL)
+    val dR = delta(pR)
+    if (dL < 0 && dR < 0) invalid
+    else if (dL > dR) (Left(vL),  pL)
+    else if (dR > dL) (Right(vR), pR)
+    else              (Left(vL),  pL)
 
-      if (dL < 0 && dR < 0) (Invalid, invalid)
-      else if (dL > dR)     (Left(vL),  pL)
-      else if (dR > dL)     (Right(vR), pR)
-      else                  (Left(vL),  pL)
+  case SEQS(r1, r2, id) if nullable(r1) && !nullable(r2) => invalid
+  case SEQS(r1, r2, id) =>
+    val Mark(n, m) = p
 
-    case SEQ(r1, r2) =>
-      val (n, m) = p
-      val splits =
-        (n to m).flatMap { k =>
-          val (v1, p1) = back(r1, s, (n, k))
-          if (isInvalid(p1)) Nil
-          else {
-            val (v2, p2) = back(r2, s, (k, m))
-            if (isInvalid(p2)) Nil
-            else List((Sequ(v1, v2), p1, k))
-          }
-        }
-
-      if (splits.isEmpty) (Invalid, invalid)
-      else {
-        val (bestV, bestP, bestK) = splits.maxBy(_._3)
-        //println(s"bestK=$bestK") 
-        (bestV, bestP)
+    val r1All =
+      if (!nullable(r2)) invalid
+      else back(r1, s, Mark(n, m), splits) match {
+        case (v1, p1) if !isInvalid(p1) => (Sequ(v1, mkeps(r2)), p1)
+        case _ => invalid
       }
 
-    case _ =>
-      (Invalid, invalid)
-  }
-}
+    val kRange     = splits.getOrElse(id, Set.empty).filter(k => k >= n && k <= m)
+    val kNonEmptyL = if (nullable(r1)) kRange else kRange.filter(_ > n)
+    val kNonEmptyR = if (nullable(r2)) kNonEmptyL else kNonEmptyL.filter(_ < m)
+    
+    val r1r2: (Val, Mark) = kNonEmptyR.toList.sorted(Ordering.Int.reverse).iterator
+    .map { k =>
+          back(r1, s, Mark(n, k), splits) match {
+            case (v1, p1) if !isInvalid(p1) =>
+              back(r2, s, Mark(k, m), splits) match {
+                case (v2, p2) if !isInvalid(p2) => (Sequ(v1, v2), p2)
+                case _ => invalid
+              }
+            case _ => invalid
+          }
+        }
+    .collectFirst { case res if !isInvalid(res._2) => res }
+    .getOrElse(invalid)
 
+  
+
+    val r2All =
+      if (!nullable(r1)) invalid
+      else back(r2, s, Mark(n, m), splits) match {
+        case (v2, p2) if !isInvalid(p2) => (Sequ(mkeps(r1), v2), p2)
+        case _ => invalid
+      }
+
+    (nullable(r1), nullable(r2)) match {
+      case (true,  true)  => if (!isInvalid(r1All._2)) r1All else if (!isInvalid(r1r2._2)) r1r2 else r2All
+      case (true,  false) => if (!isInvalid(r1r2._2)) r1r2 else r2All
+      case (false, true)  => if (!isInvalid(r1All._2)) r1All else r1r2
+      case (false, false) => r1r2
+    }
+
+  case _ => invalid
+}
+def r1r2(r1: Rexp,r2:Rexp, s: String, p: Mark, splits: Map[Int, Set[Int]]): (Val, Mark) ={
+  
+}
 
 @main
 def test1() = {
-  val reg = ("a"~ONE) | "ab" 
-  val s="ab"
+  val reg = ("aa") | ("a"~ (ONE ~ "a")) 
+  val s="aa"
   println(s"$s: r=\n${pp(reg)}  ${mat(reg, s)} ")
-  //println(back(reg,s,(0,1))._1)
+
   println(lexer(reg,s))
   println(rebit.blexer(reg,s))
 
 }
 @main
 def test2() = {
-  val reg = (ONE ~ "a") | "aa" 
+  val reg = (ONE|"a") ~ ("a"~"a")
   val s="aa"
-  println(s"$s: r=\n${pp(reg)}  ${mat(reg, s)} ")
-  //println(back(reg,s,(0,1))._1)
+  println(s"$s: r=\n${pp(reg)}  ")
+
+  println(lexer(reg,s))
+  println(rebit.blexer(reg,s))
+
+}
+
+@main
+def test3() = {
+  val reg = (ONE|"a") ~ ("a"~"aa")
+  val s="aaa"
+  println(s"$s: r=\n${pp(reg)}  ")
+
   println(lexer(reg,s))
   println(rebit.blexer(reg,s))
 
@@ -173,7 +215,7 @@ def testall() = {
         (0, _ => CHAR('c')),
        // (1, cs => STAR(cs(0))),
         (2, cs => ALT(cs(0), cs(1))),
-        (2, cs => SEQ(cs(0), cs(1)))
+        (2, cs => mkSEQS(cs(0), cs(1)))
       )
   val alphabet = LazyList('a', 'b')
 
@@ -190,10 +232,6 @@ def testall() = {
         println(s"vm=$vm vb=$vb")
         System.exit(1)
       }
-
-
-
-
     }
   }
 }
@@ -212,11 +250,11 @@ def mkalts(n: Int) = {
   (for (i <- (1 to n).toList) yield mkstar(i)).reduceLeft(ALT.apply)
 }
 
-def snds(ms: Marks) = ms.map((_, m) => (m, m))
+//def snds(ms: Marks) = ms.map((_, m) => (m, m))
 
-def advance(ms: Marks, subs: Set[String], s: String) : Marks = {
+/* def advance(ms: Marks, subs: Set[String], s: String) : Marks = {
     val ms1 = (for ((n, m) <- ms; ss <- subs;
                 if m + ss.length <= s.length;
                 if s.substring(m, m + ss.length) == ss) yield (n, m + ss.length))
     if (ms1 == Set()) Set() else ms1 ++ advance(ms1, subs, s)            
-}
+} */

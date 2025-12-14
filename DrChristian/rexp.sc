@@ -80,6 +80,7 @@ case object ONE extends Rexp
 case class CHAR(c: Char) extends Rexp
 case class ALT(r1: Rexp, r2: Rexp) extends Rexp
 case class SEQ(r1: Rexp, r2: Rexp) extends Rexp 
+case class SEQS(r1: Rexp, r2: Rexp,id:Int) extends Rexp 
 case class STAR(r: Rexp) extends Rexp 
 case class NTIMES(r: Rexp,n:Int) extends Rexp 
 case class AND(r1: Rexp,r2: Rexp) extends Rexp 
@@ -91,10 +92,19 @@ case class APPOINT(mk: Mark, r: Rexp) extends Rexp // active/passive point
 
 //List[Bits] for file:play_explicit_List.sc
 
-def charlist2rexp(s : List[Char]): Rexp = s match {
-  case Nil => ONE
-  case c::Nil => CHAR(c)
-  case c::s => SEQ(CHAR(c), charlist2rexp(s))
+import java.util.concurrent.atomic.AtomicInteger
+
+val seqId = new AtomicInteger(0)
+
+def freshId(): Int = seqId.getAndIncrement()
+
+def mkSEQS(r1: Rexp, r2: Rexp): Rexp =
+  SEQS(r1, r2, freshId())
+  
+def charlist2rexp(s: List[Char]): Rexp = s match {
+  case Nil      => ONE
+  case c :: Nil => CHAR(c)
+  case c :: cs  => mkSEQS(CHAR(c), charlist2rexp(cs))
 }
 
 // strings are coerced into Rexps
@@ -105,7 +115,7 @@ given Conversion[String, Rexp] = (s => charlist2rexp(s.toList))
 extension (r: Rexp) {
   def | (s: Rexp) = ALT(r, s)
   def % = STAR(r)
-  def ~ (s: Rexp) = SEQ(r, s)
+  def ~ (s: Rexp) = SEQS(r, s, freshId())
 }
 
 def nullable(r: Rexp) : Boolean = r match {
@@ -114,6 +124,7 @@ def nullable(r: Rexp) : Boolean = r match {
   case CHAR(_) => false
   case ALT(r1, r2) => nullable(r1) || nullable(r2)
   case SEQ(r1, r2) => nullable(r1) && nullable(r2)
+  case SEQS(r1, r2,id) => nullable(r1) && nullable(r2)
   case AND(r1, r2) => nullable(r1) && nullable(r2)
   case STAR(_) => true
   case NTIMES(r, n) => n == 0 || nullable(r) 
@@ -159,6 +170,7 @@ def mkeps(r: Rexp) : Val = r match {
   case ALT(r1, r2) =>
     if (nullable(r1)) Left(mkeps(r1)) else Right(mkeps(r2))
   case SEQ(r1, r2) => Sequ(mkeps(r1), mkeps(r2))
+  case SEQS(r1, r2,id) => Sequ(mkeps(r1), mkeps(r2))
   case STAR(r) => Stars(Nil)
   case NTIMES(r, n) => Nt(Nil, 0)
   case AND(r1,r2) => Sequ(mkeps(r1),mkeps(r2))
@@ -233,6 +245,7 @@ def draw_r(e: Rexp, prefix: String, more: Boolean) : String = {
     case CHAR(c) => s"$c"
     case ALT(r1, r2) => s"ALT" ++ draw_rs(List(r1, r2), childPrefix)
     case SEQ(r1, r2) => s"SEQ" ++ draw_rs(List(r1, r2), childPrefix)
+    case SEQS(r1, r2,id) => s"SEQ" ++ draw_rs(List(r1, r2), childPrefix)
     case STAR(r) => s"STAR" ++ draw_r(r, childPrefix, false)
     case NTIMES(r, n) => s"NTIMES($n)" ++ draw_r(r, childPrefix, false) // new to testX1.
   })
@@ -261,12 +274,15 @@ def indent(ss: Seq[String]) : String = ss match {
   case _ => "" 
 }
 
+
+
 def pp(e: Rexp) : String = (e: @unchecked) match { 
   case ZERO => "0\n"
   case ONE => s"1 \n"
   case CHAR(c) => s"$c\n"
   case ALT(r1, r2) => "ALT\n" ++ pps(r1, r2)
   case SEQ(r1, r2) => "SEQ\n" ++ pps(r1, r2)
+  case SEQS(r1, r2,id) => s"SEQS id=$id\n" ++ pps(r1, r2)
   case STAR(r) => s"STAR\n" ++ pps(r)
   case NTIMES(r, n) => s"NTIMES($n)\n" ++ pps(r)
   case AND(r1, r2) => "AND\n" ++ pps(r1, r2)
