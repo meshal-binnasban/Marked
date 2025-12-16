@@ -262,6 +262,7 @@ def generateSegs(sigma: LazyList[Char])(r: Rexp): Segments = {
         case ALT(r1, r2)    => unionSegs(gen(r1))(gen(r2))
         case NOT(r)         => complementSegs(sigma)(gen(r))
         case STAR(r)        => star(gen(r))
+        case STARSS(r, id)  => star(gen(r))
         case NTIMES(r, 0) => LazyList(Cons(Data(LazyList(""))))
         case NTIMES(r, n) => concatenate(sigma, gen(r), gen(NTIMES(r, n - 1)))
     }

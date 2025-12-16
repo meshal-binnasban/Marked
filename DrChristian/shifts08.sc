@@ -44,16 +44,8 @@ def shifts(ms: Marks, s: String, r: Rexp) : Marks = r match {
     }
 
   case STARSS(r, id) =>
-    val ms1 = ms.flatMap { m =>
-      val Mark(_, mStart) = m
-      val next = shifts(Set(m), s, r)
-      next.foreach { q1 =>
-        val Mark(_, mEnd) = q1
-        if (mEnd >= mStart)
-          recordSplit(id, mEnd - mStart)
-          }
-      next
-      }.toSet
+    val ms1 = shifts(ms, s, r)
+    ms1.foreach(q => recordSplit(id, q.m))
 
     if (ms1.isEmpty) Set()
     else ms1 ++ shifts(ms1, s, STARSS(r, id))
@@ -92,7 +84,7 @@ def lexer(r: Rexp, s: String): Val = {
     if (finals.isEmpty) Invalid
     else {
       val best: Mark = finals.head
-      println(splits)
+      //println(splits)
       val (v, p0) = back(r, s, best,splits = splits)
       if (isInvalid(p0)) Invalid else v
     }
@@ -103,7 +95,9 @@ def isInvalid(q: Mark): Boolean = q.n < 0
 
 val invalid = (Invalid, Mark(-1, -1))
 
-def back(r: Rexp, s: String, p: Mark, splits: Map[Int, Set[Int]]): (Val, Mark) = r match {
+def back(r: Rexp, s: String, p: Mark, splits: Map[Int, Set[Int]]): (Val, Mark) = 
+  //println(s"splits=$splits")
+  r match {
 
   case ONE =>
     val Mark(n, m) = p
@@ -115,12 +109,15 @@ def back(r: Rexp, s: String, p: Mark, splits: Map[Int, Set[Int]]): (Val, Mark) =
     else invalid
 
   case ALT(r1, r2) =>
+    //println(s"ALT: p=$p")
     val (vL, pL) = back(r1, s, p, splits)
     val (vR, pR) = back(r2, s, p, splits)
+    //println(s"ALT:  pL=$pL;  pR=$pR")
     val mm = p.m
     def long(q: Mark) = if (isInvalid(q)) -1 else mm - q.m
     val dL = long(pL)
     val dR = long(pR)
+    //println(s"ALT: dL=$dL, dR=$dR")
     if (dL < 0 && dR < 0) invalid
     else if (dL > dR) (Left(vL),  pL)
     else if (dR > dL) (Right(vR), pR)
@@ -139,9 +136,12 @@ def back(r: Rexp, s: String, p: Mark, splits: Map[Int, Set[Int]]): (Val, Mark) =
     
     val r1r2: (Val, Mark) = kSplits.map { 
       k => back(r1, s, Mark(n, k), splits) match {
-            case (v1, p1) if !isInvalid(p1) => 
+            case (v1, p1) if !isInvalid(p1) =>
+              //println(s"SEQS: k=$k, v1=$v1 p1=$p1") 
               back(r2, s, Mark(k, m), splits) match {
-                case (v2, p2) if !isInvalid(p2) => (Sequ(v1, v2), p2)
+                case (v2, p2) if !isInvalid(p2) => 
+                  //println(s"SEQS: k=$k, v1=$v1, v2=$v2")
+                  (Sequ(v1, v2), p1)
                 case _ => invalid
               }
             case _ => invalid
@@ -161,36 +161,57 @@ def back(r: Rexp, s: String, p: Mark, splits: Map[Int, Set[Int]]): (Val, Mark) =
       case (false, false) => r1r2
     }
     
-  case STARSS(r,id) =>
-    val Mark(n, m) = p 
-    val len = m - n
-    if (len == 0) (Stars(Nil), p)
-    else{
-      val amounts =splits.getOrElse(id, Set.empty).filter(_ > 0).toList.sorted(Ordering.Int.reverse)
-      def loop(pos: Int, remaining: Int): (List[Val], Boolean) =
-      if (remaining == 0) (Nil, true)
-      else {
-        val it = amounts.iterator.filter(_ <= remaining)
-        var res: (List[Val], Boolean) = (Nil, false)
-        while (it.hasNext && !res._2) {
-          val d = it.next()
-          val (v1, p1) = back(r, s, Mark(pos, pos + d), splits)
-          if (!isInvalid(p1)) {
-            val (vs, ok) = loop(pos + d, remaining - d)
-            if (ok) res = (v1 :: vs, true)
-          }
+  case STARSS(r, id) =>
+      val Mark(n, m) = p
+
+      def decodeStar(a: Int, b: Int): (Val, Mark) =
+        if (a == b) (Stars(Nil), Mark(a, a))
+        else {
+          val kSplits = splits.getOrElse(id, Set.empty).filter(k => k > a && k <= b)
+              .toList.sorted(Ordering.Int.reverse).iterator
+
+          kSplits.map { k =>
+              back(r, s, Mark(a, k), splits) match {
+                case (v1, p1) if !isInvalid(p1) =>
+                  decodeStar(k, b) match {
+                    case (Stars(vs), pRest) if !isInvalid(pRest) =>
+                      (Stars(v1 :: vs), p1)
+                    case _ => invalid
+                  }
+                case _ => invalid
+              }
+            }
+            .collectFirst { case res if !isInvalid(res._2) => res }
+            .getOrElse(invalid)
         }
-        res
+
+      decodeStar(n, m)
+    /* def decodeStar(a: Int, b: Int): Option[List[Val]] =
+      if (a == b) Some(Nil)
+      else {
+        val kSplits = splits.getOrElse(id, Set.empty).filter(k => k > a && k <= b)
+        .toList.sorted(Ordering.Int.reverse)
+        //println(s"STARSS: a=$a, b=$b, kSplits=$kSplits")
+        kSplits.iterator.map { k =>
+            val (v1, p1) = back(r, s, Mark(a, k), splits)
+            //println(s"STARSS: k=$k, v1=$v1, p1=$p1")
+            if (isInvalid(p1)) None
+            else {
+              decodeStar(k, b) match {
+                case Some(vs) => Some(v1 :: vs)
+                case None     => None
+              }
+            }
+          }
+          .collectFirst { case Some(vs) => vs }
       }
 
-      val (vs, ok) = loop(n, len)
-
-      if (ok) (Stars(vs), Mark(n, n))
-      else invalid
-    }
-    
-
-
+    decodeStar(n, m) match {
+      case Some(vs) => (Stars(vs), Mark(n, n))
+      case None     => invalid
+    } */
+      
+      
   case _ => invalid
 }
 
@@ -214,7 +235,7 @@ def test1() = {
 }
 @main
 def test2() = {
-  val reg = (ONE|"a") ~ ("a"~"a")
+  val reg = ("a"~ ("a"|ONE))
   val s="aa"
   println(s"$s: r=\n${pp(reg)}  ")
 
@@ -245,7 +266,7 @@ def testall() = {
         (0, _ => CHAR('a')),
         (0, _ => CHAR('b')),
         (0, _ => CHAR('c')),
-       // (1, cs => STAR(cs(0))),
+        (1, cs => mkSTARS(cs(0))),
         (2, cs => ALT(cs(0), cs(1))),
         (2, cs => mkSEQS(cs(0), cs(1)))
       )
