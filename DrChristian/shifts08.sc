@@ -151,13 +151,7 @@ def back(r: Rexp, s: String, p: Mark, splits: Map[Int, Set[Int]]): (Val, Mark) =
       //in here, i tried to filter the splits before trying them,
       //the helper filters for example cases if r1 is not nullable,
       //so it the split k must be greater than n indicating some consumption
-      val kSplits =
-        filterSplits(
-          splits.values.flatten.toSet,
-          p,
-          nullable(r1),
-          nullable(r2)
-        )
+      val kSplits = filterSplits(splits.values.flatten.toSet,p, nullable(r1),nullable(r2))
 
       val r1r2: (Val, Mark) =
         kSplits.map { k =>
@@ -275,17 +269,4 @@ def testall() = {
       }
     }
   }
-}
-
-// for measuring time
-def time_needed[T](i: Int, code: => T) = {
-  val start = System.nanoTime()
-  for (_ <- 1 to i) code
-  val end = System.nanoTime()
-  (end - start) / (i * 1.0e9)
-}
-
-def mkstar(n: Int) = STAR("a" * n)
-def mkalts(n: Int) = {
-  (for (i <- (1 to n).toList) yield mkstar(i)).reduceLeft(ALT.apply)
 }
