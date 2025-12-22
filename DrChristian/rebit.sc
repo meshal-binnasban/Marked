@@ -97,9 +97,7 @@ def intern(r: Rexp) : ARexp = r match {
   case ALT(r1, r2) => 
     AALT(Nil, fuse(List(Lf), intern(r1)), fuse(List(Ri), intern(r2)))
   case SEQ(r1, r2) => ASEQ(Nil, intern(r1), intern(r2))
-  case SEQS(r1, r2,id) => ASEQ(Nil, intern(r1), intern(r2))
   case STAR(r) => ASTAR(Nil, intern(r))
-  case STARSS(r,id) => ASTAR(Nil, intern(r))
   case NTIMES(r, n) => ANTIMES(Nil, intern(r),n)
   case AND(r1,r2) => AAND(Nil,intern(r1),intern(r2))
   //case INIT(r1) => intern(r1)
@@ -125,24 +123,13 @@ def decode_aux(r: Rexp, bs: Bits) : (Val, Bits) = ((r, bs): @unchecked) match {
     val (v2, bs2) = decode_aux(r2, bs1)
     (Sequ(v1, v2), bs2)
   }
-  case (SEQS(r1, r2,id), bs) => {
-    val (v1, bs1) = decode_aux(r1, bs)
-    val (v2, bs2) = decode_aux(r2, bs1)
-    (Sequ(v1, v2), bs2)
-  }
+
   case (STAR(r1), Nx::bs) => {
     val (v, bs1) = decode_aux(r1, bs)
     val (Stars(vs), bs2) = (decode_aux(STAR(r1), bs1)  : @unchecked)
     (Stars(v::vs), bs2)
   }
   case (STAR(r), En::bs) => (Stars(Nil), bs)
-
-  case (STARSS(r1,id), Nx::bs) => {
-    val (v, bs1) = decode_aux(r1, bs)
-    val (Stars(vs), bs2) = (decode_aux(STARSS(r1,id), bs1)  : @unchecked)
-    (Stars(v::vs), bs2)
-  }
-  case (STARSS(r,id), En::bs) => (Stars(Nil), bs)
 
   case (NTIMES(r1,n), NxT::bs) => {
     val (v, bs1) = decode_aux(r1, bs)

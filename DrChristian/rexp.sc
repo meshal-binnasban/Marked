@@ -43,35 +43,6 @@ case object En extends Bit {
 
 type Bits = List[Bit]
 
-/* case class Mark(
-  //mark: Boolean,
-  bits: Bits, //List[Bits],
-  str: List[Char]
-  //consumed: List[Char],
-  //originalLength: Int=0
-) {
-  override def toString: String = {
-    s"(str='${str.mkString}', bits=${bits.mkString(",")})"
-    //s"(mark=$mark, bits=$bitsStr, remaining='${str.mkString}', consumed= ${consumed.mkString} , originalLength=$originalLength )"
-  }
-} */
-
-case class Mark(
-  bits: Bits,
-  str: List[Char]
-) {
-  override def toString: String =
-    s"(str='${str.mkString}', bits=${bits.mkString(",")})"
-
-  override def equals(obj: Any): Boolean = obj match {
-    case that: Mark => this.str == that.str
-    case _ => false
-  }
-
-  override def hashCode(): Int =
-    str.hashCode
-}
-
 
 // regular expressions
 abstract class Rexp
@@ -80,35 +51,21 @@ case object ONE extends Rexp
 case class CHAR(c: Char) extends Rexp
 case class ALT(r1: Rexp, r2: Rexp) extends Rexp
 case class SEQ(r1: Rexp, r2: Rexp) extends Rexp 
-case class SEQS(r1: Rexp, r2: Rexp,id:Int) extends Rexp 
 case class STAR(r: Rexp) extends Rexp 
-case class STARSS(r: Rexp, id:Int) extends Rexp 
 case class NTIMES(r: Rexp,n:Int) extends Rexp 
 case class AND(r1: Rexp,r2: Rexp) extends Rexp 
 
 // only used by re-generate to generate non-matching strings
 case class NOT(r: Rexp) extends Rexp 
-case class POINT(mk: Mark, r: Rexp) extends Rexp
-case class APPOINT(mk: Mark, r: Rexp) extends Rexp // active/passive point
+//case class POINT(mk: Mark, r: Rexp) extends Rexp
+//case class APPOINT(mk: Mark, r: Rexp) extends Rexp // active/passive point
 
 //List[Bits] for file:play_explicit_List.sc
 
-import java.util.concurrent.atomic.AtomicInteger
-
-val seqId = new AtomicInteger(0)
-
-def freshId(): Int = seqId.getAndIncrement()
-
-def mkSEQS(r1: Rexp, r2: Rexp): Rexp =
-  SEQS(r1, r2, freshId())
-
-def mkSTARS(r: Rexp): Rexp =
-  STARSS(r, freshId())
-  
 def charlist2rexp(s: List[Char]): Rexp = s match {
   case Nil      => ONE
   case c :: Nil => CHAR(c)
-  case c :: cs  => mkSEQS(CHAR(c), charlist2rexp(cs))
+  case c :: cs  => SEQ(CHAR(c), charlist2rexp(cs))
 }
 
 // strings are coerced into Rexps
@@ -118,8 +75,8 @@ given Conversion[String, Rexp] = (s => charlist2rexp(s.toList))
 
 extension (r: Rexp) {
   def | (s: Rexp) = ALT(r, s)
-  def % = mkSTARS(r)
-  def ~ (s: Rexp) = mkSEQS(r,s)
+  def % = STAR(r)
+  def ~ (s: Rexp) = SEQ(r,s)
 }
 
 def nullable(r: Rexp) : Boolean = r match {
@@ -128,13 +85,9 @@ def nullable(r: Rexp) : Boolean = r match {
   case CHAR(_) => false
   case ALT(r1, r2) => nullable(r1) || nullable(r2)
   case SEQ(r1, r2) => nullable(r1) && nullable(r2)
-  case SEQS(r1, r2,id) => nullable(r1) && nullable(r2)
   case AND(r1, r2) => nullable(r1) && nullable(r2)
   case STAR(_) => true
-  case STARSS(_, _) => true
-  case NTIMES(r, n) => n == 0 || nullable(r) 
-  case POINT(_, r) => nullable(r)
-  
+  case NTIMES(r, n) => n == 0 || nullable(r)   
 }
 
 def der(c: Char, r: Rexp) : Rexp = r match {
@@ -168,16 +121,12 @@ case class Stars(vs: List[Val]) extends Val
 case class Nt(vs: List[Val], n: Int) extends Val 
 //case object XXX extends Val
 
-
-
 def mkeps(r: Rexp) : Val = r match {
   case ONE => Empty
   case ALT(r1, r2) =>
     if (nullable(r1)) Left(mkeps(r1)) else Right(mkeps(r2))
   case SEQ(r1, r2) => Sequ(mkeps(r1), mkeps(r2))
-  case SEQS(r1, r2,id) => Sequ(mkeps(r1), mkeps(r2))
   case STAR(r) => Stars(Nil)
-  case STARSS(r, id) => Stars(Nil)
   case NTIMES(r, n) => Nt(Nil, 0)
   case AND(r1,r2) => Sequ(mkeps(r1),mkeps(r2))
 }
@@ -216,7 +165,6 @@ def lex(r: Rexp, s: List[Char]): Val = s match
     println(s"inj $c → $result")
     result
 
-
 // simplification
 def simp(r: Rexp) : Rexp = r match {
   case ALT(r1, r2) => (simp(r1), simp(r2)) match {
@@ -235,7 +183,6 @@ def simp(r: Rexp) : Rexp = r match {
   case r => r
 }
 
-
 def draw_rs(rs: List[Rexp], prefix: String) : String = {
   val rsi = rs.iterator
   rsi.map(r => draw_r(r, prefix, rsi.hasNext)).mkString
@@ -251,9 +198,7 @@ def draw_r(e: Rexp, prefix: String, more: Boolean) : String = {
     case CHAR(c) => s"$c"
     case ALT(r1, r2) => s"ALT" ++ draw_rs(List(r1, r2), childPrefix)
     case SEQ(r1, r2) => s"SEQ" ++ draw_rs(List(r1, r2), childPrefix)
-    case SEQS(r1, r2,id) => s"SEQ" ++ draw_rs(List(r1, r2), childPrefix)
     case STAR(r) => s"STAR" ++ draw_r(r, childPrefix, false)
-    case STARSS(r,id) => s"STAR id=$id" ++ draw_r(r, childPrefix, false)
     case NTIMES(r, n) => s"NTIMES($n)" ++ draw_r(r, childPrefix, false) // new to testX1.
   })
 }
@@ -289,16 +234,12 @@ def pp(e: Rexp) : String = (e: @unchecked) match {
   case CHAR(c) => s"$c\n"
   case ALT(r1, r2) => "ALT\n" ++ pps(r1, r2)
   case SEQ(r1, r2) => "SEQ\n" ++ pps(r1, r2)
-  case SEQS(r1, r2,id) => s"SEQS id=$id\n" ++ pps(r1, r2)
   case STAR(r) => s"STAR\n" ++ pps(r)
-  case STARSS(r, id) => s"STARS id=$id\n" ++ pps(r)
   case NTIMES(r, n) => s"NTIMES($n)\n" ++ pps(r)
   case AND(r1, r2) => "AND\n" ++ pps(r1, r2)
 }
 
 def pps(es: Rexp*) = indent(es.map(pp))
-
-
 
 @main 
 def test() = {
@@ -309,3 +250,32 @@ def test() = {
 
 }
 
+
+/* case class Mark(
+  //mark: Boolean,
+  bits: Bits, //List[Bits],
+  str: List[Char]
+  //consumed: List[Char],
+  //originalLength: Int=0
+) {
+  override def toString: String = {
+    s"(str='${str.mkString}', bits=${bits.mkString(",")})"
+    //s"(mark=$mark, bits=$bitsStr, remaining='${str.mkString}', consumed= ${consumed.mkString} , originalLength=$originalLength )"
+  }
+} */
+
+/* case class Mark(
+  bits: Bits,
+  str: List[Char]
+) {
+  override def toString: String =
+    s"(str='${str.mkString}', bits=${bits.mkString(",")})"
+
+  override def equals(obj: Any): Boolean = obj match {
+    case that: Mark => this.str == that.str
+    case _ => false
+  }
+
+  override def hashCode(): Int =
+    str.hashCode
+} */
