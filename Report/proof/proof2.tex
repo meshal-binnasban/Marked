@@ -1,0 +1,304 @@
+\documentclass[12pt]{article}
+
+% Basic math packages
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+% Theorem environments
+\newtheorem{lemma}{Lemma}
+
+\begin{document}
+
+%-------------------- Proof of correctness of shifts for r^n --------------------
+\section*{Proof of :$r^n$}
+We want to prove, for every $n \ge 0$ and every set of strings $ms$:
+\[
+P(n, ms) \;:\;\; \mathit{shifts}(ms, r^n) \;=\; \mathit{Strips}(L(r^n))(ms).
+\]
+We consider the following:
+\[
+L(r^0) = \emptyset,\qquad L(r^1) = L(r),\qquad L(r^{n+1}) = L(r) @ L(r^n).
+\]
+
+\section{Case $n = 0$.}
+
+By unfolding the definition:
+\[
+\mathit{shifts}(ms, r^0) = \emptyset.
+\]
+Since $L(r^0) = \emptyset$,
+\[
+\mathit{Strips}(L(r^0))(ms) = \mathit{Strips}(\emptyset)(ms) = \emptyset.
+\]
+Thus
+\[
+\mathit{shifts}(ms, r^0) = \mathit{Strips}(L(r^0))(ms),
+\]
+Therefore $P(0,ms)$ holds.
+
+\section{Case $n = 1$.}
+
+By unfolding the definition:
+\[
+\mathit{shifts}(ms, r^1) = \mathit{shifts}(ms, r).
+\]
+By IH:
+\[
+\mathit{shifts}(ms, r) = \mathit{Strips}(L(r))(ms) = \mathit{Strips}(L(r^1))(ms).
+\]
+Therefore $P(1,ms)$ holds.
+
+\section{Case $n > 1$.}
+
+we split the proof by two cases of $\mathit{shifts}(ms, r)$.
+
+\subsection{$\mathit{shifts}(ms, r) = \emptyset$.}
+\label{caseA}
+By unfolding the definition:
+\[
+\mathit{shifts}(ms, r^n) = \emptyset.
+\]
+Since
+\[
+\mathit{shifts}(ms, r) = \emptyset
+\quad\Rightarrow\quad
+\mathit{Strips}(L(r))(ms)=\emptyset.
+\]
+If $\mathit{Strips}(L(r))(ms)=\emptyset$, then
+\[
+\mathit{Strips}(L(r^n))(ms)=\emptyset.
+\]
+So
+\[
+\mathit{shifts}(ms, r^n) = \emptyset = \mathit{Strips}(L(r^n))(ms),
+\]
+Therefore $P(n,ms)$ holds in Subcase~\ref{caseA}.
+
+\subsection{$\mathit{shifts}(ms, r) \neq \emptyset$.}
+\label{caseB}
+Before unfolding further, introduce repeated stripping:
+\[
+F_r(X) = \mathit{Strips}(L(r))(X)
+\]
+for any set $X$, and define:
+\[
+F_r^1(X)=F_r(X),\qquad F_r^{k+1}(X)=F_r(F_r^k(X)).
+\]
+So:
+\[
+\mathit{shifts}(ms, r) = \mathit{Strips}(L(r))(ms) = F_r(ms).
+\]
+We now have two further cases according to $\mathit{nullable}(r)$.
+
+\subsubsection{$\neg \mathit{nullable}(r)$.}
+\label{subcaseb1}
+by unfolding shifts defintion:
+\[
+\mathit{shifts}(ms, r^n)
+  = \mathit{shifts}\big(\mathit{shifts}(ms, r),\ r^{n-1}\big).
+\]
+By IH: 
+\[
+\mathit{shifts}\big(\mathit{shifts}(ms,r), r^{n-1}\big)
+  = \mathit{Strips}(L(r^{n-1}))\big(\mathit{Strips}(L(r))(ms)\big).
+\]
+Using $\mathit{Strips}(L(r))(ms) = F_r(ms)$, we get
+\[
+\mathit{shifts}(ms, r^n)
+  = \mathit{Strips}(L(r^{n-1}))\big(F_r(ms)\big).
+\]
+By Strips properties:
+with not nullable A, and B
+ \[Strips (A\,@\, B) C= Strips\, B\, (Strips\, A\, C)\]
+\[A=L(r) \texttt{ and } B=L(r^{n-1})  \]
+
+\begin{tabular}{rl}
+    \\
+    $\mathit{Strips}(L(r^n))(ms)=$&$ \mathit{Strips}(L(r) @ L(r^{n-1}))(ms)$\\
+    $=$& $\mathit{Strips}\big(L(r^{n-1}), \mathit{Strips}(L(r), ms)\big)$\\
+    $=$&$\mathit{Strips}(L(r^{n-1}))(F_r(ms)).$\\
+\end{tabular}
+
+So
+\[
+\mathit{shifts}(ms, r^n)
+ = \mathit{Strips}(L(r^n))(ms),
+\]
+Therefore $P(n,ms)$ holds in Subcase~\ref{subcaseb1}.
+
+
+\subsection{$\mathit{nullable}(r)$.}
+\label{subcaseb2}
+By unfolding shifts defintion:
+\[
+\mathit{shifts}(ms, r^n)
+ = \mathit{shifts}(ms,r)\ \cup\ \mathit{shifts}\big(\mathit{shifts}(ms,r),\ r^{n-1}\big),
+\]
+By IH on $\mathit{shifts}(ms,r) = \mathit{Strips}(L(r))(ms)= F_r(ms)$, we get
+\[
+\mathit{shifts}(ms, r^n)
+ = F_r(ms) \ \cup\ \mathit{shifts}\big(F_r(ms),\ r^{n-1}\big).
+\]
+By IH applied to  $n-1$,
+\[
+\mathit{shifts}\big(F_r(ms), r^{n-1}\big)
+  = \mathit{Strips}(L(r^{n-1}))\big(F_r(ms)\big).
+\]
+then the unfolded definition becomes:
+\[
+\mathit{shifts}(ms, r^n)
+ = F_r(ms) \cup \mathit{Strips}(L(r^{n-1}))\big(F_r(ms)\big).
+\]
+
+We now use:
+
+\begin{lemma}[nullable $r^m$]
+\label{lem:nullable-Fr}
+If $\mathit{nullable}(r)$, then for every $m \ge 1$ and every set $X$,
+\[
+\mathit{Strips}(L(r^m))(X)
+ = \bigcup_{k=1}^m F_r^k(X).
+\]
+by induction on $m$, using all nullable concatenation property of Strips. (at end of the file)
+
+\end{lemma}
+
+\medskip
+
+Apply Lemma~\ref{lem:nullable-Fr} with $m = n-1$ and $X = F_r(ms)$:
+\[
+\mathit{Strips}(L(r^{n-1}))(F_r(ms))
+ = \bigcup_{k=1}^{n-1} F_r^k(F_r(ms))
+ = \bigcup_{k=2}^{n} F_r^k(ms).
+\]
+So
+\[
+\mathit{shifts}(ms, r^n)
+ = F_r(ms) \cup \bigcup_{k=2}^{n} F_r^k(ms)
+ = \bigcup_{k=1}^n F_r^k(ms).
+\]
+Applying Lemma~\ref{lem:nullable-Fr} again with $m = n$ and $X = ms$,
+\[
+\mathit{Strips}(L(r^n))(ms)
+ = \bigcup_{k=1}^n F_r^k(ms).
+\]
+So
+\[
+\mathit{shifts}(ms, r^n) = \mathit{Strips}(L(r^n))(ms),
+\]
+Therefore $P(n,ms)$ holds in Subcase~\ref{subcaseb2}.
+
+\medskip
+
+Since all cases $n=0$, $n=1$, and $n>1$ (with subcases) have been included,
+so:
+\[
+\mathit{shifts}(ms, r^n) = \mathit{Strips}(L(r^n))(ms).
+\]
+\newpage
+
+
+
+
+\section{Detailed proof of Lemma~\ref{lem:nullable-Fr}}
+\label{sec:detailed-lemma-proof}
+
+\begin{proof}[Proof of Lemma~\ref{lem:nullable-Fr}]
+By induction on $m$.
+
+\paragraph{Base case $m = 1$.}
+
+Since $L(r^1) = L(r)$, we have
+\[
+  \mathit{Strips}(L(r^1))(X)
+    = \mathit{Strips}(L(r))(X)
+    = F_r(X)
+    = \bigcup_{k=1}^1 F_r^k(X).
+\]
+So the statement holds for $m = 1$.
+
+\paragraph{Induction step.}
+
+Assume for some $m \ge 1$ and all sets $X$,
+\[
+  \mathit{Strips}(L(r^m))(X)
+    = \bigcup_{k=1}^m F_r^k(X).
+\]
+We must show, for all $X$, that:
+\[
+  \mathit{Strips}(L(r^{m+1}))(X)
+    = \bigcup_{k=1}^{m+1} F_r^k(X).
+\]
+recall:
+\[
+  L(r^{m+1}) = L(r) @ L(r^m).
+\]
+
+Since lemma is for $\mathit{nullable}(r)$, so $[] \in L(r)$.
+and for $r^m$ we also have $[] \in L(r^m)$.
+So we may apply the all nullables concatenation properties of Strips with
+$A = L(r)$, $B = L(r^m)$, $C = X$:
+
+\begin{align}
+  \mathit{Strips}(L(r^{m+1}))(X)
+    &= \mathit{Strips}(L(r) @ L(r^m))(X) \notag \\
+    &= \mathit{Strips}(L(r^m), \mathit{Strips}(L(r), X)) \notag \\
+    &\quad \cup\; \mathit{Strips}(L(r), X) \notag \\
+    &\quad \cup\; \mathit{Strips}(L(r^m), X).  \label{eq:strips-concat}
+\end{align}
+
+
+
+By IH of the lemma:
+\[
+  \mathit{Strips}(L(r^m), X)
+    = \bigcup_{k=1}^m F_r^k(X).
+\]
+
+We use  $F_r(X)$ :
+\[
+  \mathit{Strips}(L(r), X) = F_r(X).
+\]
+
+Also, by the IH:
+\[
+\begin{aligned}
+  \mathit{Strips}(L(r^m), \mathit{Strips}(L(r), X))
+    &= \mathit{Strips}(L(r^m), F_r(X)) \\
+    &= \bigcup_{k=1}^m F_r^k(F_r(X)) \\
+    &= \bigcup_{k=1}^m F_r^{k+1}(X) \\
+    &= \bigcup_{j=2}^{m+1} F_r^j(X).
+\end{aligned}
+\]
+
+then (\ref{eq:strips-concat}) becomes:
+\[
+\begin{aligned}
+  \mathit{Strips}(L(r^{m+1}))(X)
+    &= \left( \bigcup_{j=2}^{m+1} F_r^j(X) \right)
+       \cup F_r(X)
+       \cup \left( \bigcup_{k=1}^{m} F_r^k(X) \right).
+\end{aligned}
+\]
+
+Since $F_r(X) = F_r^1(X)$, and already contained in $\bigcup_{k=1}^{m} F_r^k(X)$.
+
+\medskip
+
+The union of $\, \bigcup_{k=1}^{m} F_r^k(X)$ and $\bigcup_{j=2}^{m+1} F_r^j(X)$
+contains the sets $F_r^k(X)$ for $k = 1,2,\dots,m+1$.
+Therefore
+\[
+  \mathit{Strips}(L(r^{m+1}))(X)
+    = \bigcup_{k=1}^{m+1} F_r^k(X).
+\]
+
+This completes the induction step and the proof of the lemma.
+\end{proof}
+
+
+\end{document}

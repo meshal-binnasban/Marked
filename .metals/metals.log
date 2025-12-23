@@ -3094,3 +3094,90 @@ Exception in thread "pool-606-thread-1" java.lang.InterruptedException
 Nov 19, 2025 2:15:59 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
 WARNING: Unmatched cancel notification for request id 1819
 2025.11.19 14:16:00 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/matchers-comparison/re_bitrev.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 16:56:23 INFO  Started: Metals version 1.6.4 in folders '/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked' for client Visual Studio Code 1.106.3.
+2025.12.23 16:56:26 WARN  Using H2 2.4.240 which is newer than the version Flyway has been verified with. The latest verified version of H2 is 2.3.232.
+2025.12.23 16:56:28 INFO  Attempting to connect to the build server...
+2025.12.23 16:56:28 INFO  Found a Bloop server running
+2025.12.23 16:56:29 INFO  tracing is disabled for protocol BSP, to enable tracing of incoming and outgoing JSON messages create an empty file at /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/.metals/bsp.trace.json or /Users/meshalbinnasban/Library/Caches/org.scalameta.metals/bsp.trace.json
+2025.12.23 16:56:29 INFO  Attempting to connect to the build server...
+2025.12.23 16:56:29 INFO  Found a Bloop server running
+2025.12.23 16:56:30 INFO  tracing is disabled for protocol BSP, to enable tracing of incoming and outgoing JSON messages create an empty file at /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/project/.metals/bsp.trace.json or /Users/meshalbinnasban/Library/Caches/org.scalameta.metals/bsp.trace.json
+2025.12.23 16:56:29 INFO  time: Connected to build server in 1.61s
+2025.12.23 16:56:30 INFO  Connected to Build server: Bloop v2.0.17
+2025.12.23 16:56:30 INFO  time: Imported build in 0.38s
+2025.12.23 16:56:50 WARN  Using H2 2.4.240 which is newer than the version Flyway has been verified with. The latest verified version of H2 is 2.3.232.
+2025.12.23 16:57:07 INFO  time: indexed workspace in 36s
+2025.12.23 16:57:07 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc
+2025.12.23 16:57:08 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 17:53:39 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 17:53:39 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 17:53:40 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc
+Dec 23, 2025 5:53:39 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 1
+2025.12.23 17:53:39 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 17:53:40 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 17:53:45 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 17:54:19 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 17:54:31 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 17:54:31 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 17:54:32 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 18:02:40 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 18:02:40 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 18:02:40 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 18:02:43 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc
+2025.12.23 18:02:43 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 18:02:43 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 18:02:48 INFO  empty definition using pc, found symbol in pc: updated. (full report at: "/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/.metals/.reports/metals-full/2025-12-22/r_empty-definition_18-42-12-552.md")
+2025.12.23 18:08:46 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 18:08:46 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 18:08:48 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 18:08:48 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 18:08:49 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc
+2025.12.23 18:08:49 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 18:08:49 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 18:08:51 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 18:08:51 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 18:08:51 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Dec 23, 2025 6:08:59 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 33
+2025.12.23 18:09:01 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Dec 23, 2025 6:09:03 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 34
+Dec 23, 2025 6:09:03 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 35
+2025.12.23 18:09:03 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 18:09:03 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 18:09:04 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc
+2025.12.23 18:09:10 INFO  time: code lens generation in 6.68s
+2025.12.23 18:09:10 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Dec 23, 2025 6:09:10 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 37
+Dec 23, 2025 6:09:10 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 38
+2025.12.23 18:09:10 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 18:09:10 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Dec 23, 2025 6:09:11 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 36
+Dec 23, 2025 6:09:11 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 43
+2025.12.23 18:09:11 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Dec 23, 2025 6:09:11 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 40
+2025.12.23 18:09:11 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc
+2025.12.23 18:09:12 INFO  time: code lens generation in 1.66s
+2025.12.23 18:09:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Dec 23, 2025 6:09:12 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 42
+Dec 23, 2025 6:09:12 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 46
+2025.12.23 18:09:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 18:09:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Dec 23, 2025 6:09:13 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 44
+2025.12.23 18:09:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+Dec 23, 2025 6:09:13 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 45
+2025.12.23 18:09:12 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 18:09:13 WARN  no build target for: /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc
+2025.12.23 18:09:13 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3
+2025.12.23 18:09:20 INFO  no build target found for /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts_map.sc. Using presentation compiler with project's scala-library version: 3.6.3

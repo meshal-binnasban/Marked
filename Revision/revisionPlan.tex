@@ -1,0 +1,249 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[hidelinks]{hyperref}
+\usepackage{enumitem}
+
+\setlist[itemize]{leftmargin=1.5em}
+\setlist[enumerate]{leftmargin=1.5em}
+
+\begin{document}
+
+\title{6-Week Plan: Evaluating, Measuring, and Comparing Algorithms}
+\author{}
+\date{}
+\maketitle
+
+This document outlines a 6-week plan to learn evaluating, measuring, and 
+comparing algorithms, going beyond asymptotic complexity 
+to include empirical behaviour, structural analysis, and how to
+communicate comparisons.
+
+%-----------------------------------------
+\section*{Week 1 --- Foundations of Measuring Algorithms}
+
+\subsection*{Goal}
+Understand what Big-O gives you and what it does not; get a clear feel for
+algorithm growth.
+
+\subsection*{Study}
+
+\begin{itemize}
+  \item \textbf{MIT 6.046J: Design and Analysis of Algorithms}
+    \begin{itemize}
+      \item Course homepage: \\
+      \url{https://ocw.mit.edu/courses/6-046j-design-and-analysis-of-algorithms-spring-2015/}
+      \item Lecture videos (watch Lecture 1 and Lecture 2): \\
+      \url{https://ocw.mit.edu/courses/6-046j-design-and-analysis-of-algorithms-spring-2015/resources/lecture-videos/}
+    \end{itemize}
+
+  \item \textbf{Tim Roughgarden --- Algorithms Illuminated (Part 1)}
+    \begin{itemize}
+      \item Front matter / sample PDF: \\
+      \url{https://assets.cambridge.org/97809992/82984/frontmatter/9780999282984_frontmatter.pdf}
+      \item Skim the chapter that discusses running time vs.\ practical performance and Big-O basics.
+    \end{itemize}
+\end{itemize}
+
+\subsection*{Tiny writing task}
+
+Write a short note for yourself (5--10 sentences):
+\begin{quote}
+  What aspects of an algorithm matter besides asymptotic complexity?
+\end{quote}
+
+%-----------------------------------------
+\section*{Week 2 --- Practical Algorithm Engineering \& Real Engines}
+
+\subsection*{Goal}
+See how real systems people talk about algorithm behaviour and performance.
+
+\subsection*{Study}
+
+\begin{itemize}
+  \item \textbf{Russ Cox --- ``Regular Expression Matching Can Be Simple and Fast''}
+    \begin{itemize}
+      \item Article: \\
+      \url{https://swtch.com/~rsc/regexp/regexp1.html}
+    \end{itemize}
+
+  \item \textbf{Rust regex engine documentation}
+    \begin{itemize}
+      \item Crate documentation: \\
+      \url{https://docs.rs/regex/latest/regex/}
+      \item Crate overview (guarantees, discussion): \\
+      \url{https://crates.io/crates/regex}
+    \end{itemize}
+
+  \item \textbf{Algorithm Engineering / Empirical Slides (Meyer)}
+    \begin{itemize}
+      \item Slides PDF: \\
+      \url{https://people.mpi-inf.mpg.de/~mehlhorn/AlgorithmEngineering/ExternalMemorySlides.pdf}
+    \end{itemize}
+\end{itemize}
+
+\subsection*{Tiny writing task}
+
+Write six bullet points answering:
+\begin{quote}
+  What practical problems do real regex engines face, and how might a marked
+  approach help?
+\end{quote}
+
+%-----------------------------------------
+\section*{Week 3 --- Structure-Driven Behaviour (Your Regex World)}
+
+\subsection*{Goal}
+Understand structurally why algorithms blow up (derivatives vs.\ marks).
+
+\subsection*{Study}
+
+\begin{itemize}
+  \item \textbf{Your own report (ReportV3)}
+    \begin{itemize}
+      \item Re-read the sections on the derivative-based matcher and the marked matcher,
+            focusing on where you discuss size explosion and mark growth.
+    \end{itemize}
+
+  \item \textbf{Sulzmann \& Lu --- POSIX Regular Expression Parsing with Derivatives}
+    \begin{itemize}
+      \item Springer chapter: \\
+      \url{https://link.springer.com/chapter/10.1007/978-3-319-07151-0_13}
+      \item Preprint PDF: \\
+      \url{https://arxiv.org/pdf/1604.06644}
+    \end{itemize}
+\end{itemize}
+
+\subsection*{Tiny writing task}
+
+Create a small table (for yourself) with the columns:
+\begin{center}
+  Construct \quad | \quad Growth in derivatives \quad | \quad Growth in marks
+\end{center}
+Fill it for \texttt{SEQ}, \texttt{STAR}, \texttt{ALT}, and \texttt{NTIMES}, noting what
+structurally causes growth in each representation.
+
+%-----------------------------------------
+\section*{Week 4 --- Statistical and Experimental Thinking}
+
+\subsection*{Goal}
+Move from ``I ran it once'' to systematic empirical evaluation.
+
+\subsection*{Study}
+
+\begin{itemize}
+  \item \textbf{Intro to performance analysis (lecture notes)}
+    \begin{itemize}
+      \item Example notes inspired by Raj Jain: \\
+      \url{https://www.cs.rice.edu/~johnmc/comp528/lecture-notes/Lecture1.pdf}
+    \end{itemize}
+
+  \item \textbf{Raj Jain --- The Art of Computer Systems Performance Analysis}
+    \begin{itemize}
+      \item Book on archive.org: \\
+      \url{https://archive.org/details/artofcomputersys0000jain}
+      \item Skim the early chapters on measurement and experimental design.
+    \end{itemize}
+
+  \item \textbf{(Optional) Methodology of Algorithm Engineering}
+    \begin{itemize}
+      \item arXiv PDF: \\
+      \url{https://arxiv.org/pdf/2310.18979}
+    \end{itemize}
+\end{itemize}
+
+\subsection*{Tiny writing task}
+
+Design a small benchmark for your own matchers and write down:
+\begin{itemize}
+  \item Which regular expressions you will test.
+  \item Which input lengths you will use.
+  \item Which metrics you will record (e.g.\ time, memory, mark count, derivative size).
+\end{itemize}
+
+%-----------------------------------------
+\section*{Week 5 --- Learning from Evaluation Sections in Papers}
+
+\subsection*{Goal}
+Copy the style of evaluation sections from real papers in your area.
+
+\subsection*{Study}
+
+\begin{itemize}
+  \item \textbf{Sulzmann \& Lu --- POSIX Regular Expression Parsing with Derivatives}
+    \begin{itemize}
+      \item Focus on the evaluation / performance discussion: \\
+      \url{https://link.springer.com/chapter/10.1007/978-3-319-07151-0_13}
+    \end{itemize}
+
+  \item \textbf{Tan \& Urban --- POSIX Lexing with Bitcoded Derivatives}
+    \begin{itemize}
+      \item DROPS entry: \\
+      \url{https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ITP.2023.27}
+      \item Direct PDF: \\
+      \url{https://drops.dagstuhl.de/storage/00lipics/lipics-vol268-itp2023/LIPIcs.ITP.2023.27/LIPIcs.ITP.2023.27.pdf}
+    \end{itemize}
+
+  \item \textbf{Urban --- POSIX Lexing with Derivatives of Regular Expressions}
+    \begin{itemize}
+      \item PDF: \\
+      \url{https://urbanchr.github.io/Publications/posix.pdf}
+    \end{itemize}
+
+  \item \textbf{Might, Darais, Spiewak --- Parsing with Derivatives}
+    \begin{itemize}
+      \item PDF: \\
+      \url{https://matt.might.net/papers/might2011derivatives.pdf}
+    \end{itemize}
+\end{itemize}
+
+\subsection*{Tiny writing task}
+
+For each of the above papers, write three bullet points:
+\begin{quote}
+  What do they measure, and how do they explain why the algorithm behaves that way?
+\end{quote}
+
+%-----------------------------------------
+\section*{Week 6 --- Synthesising Theory, Empirics, and Explanation}
+
+\subsection*{Goal}
+Be able to answer viva-style questions such as:
+\begin{quote}
+  Why is your algorithm better here? \\
+  What causes slow behaviour in your approach? \\
+  What evidence supports your claims?
+\end{quote}
+
+\subsection*{Study}
+
+No new resources this week; instead:
+\begin{itemize}
+  \item Review your notes from Weeks 1--5.
+  \item Review your benchmarks and plots.
+  \item Revisit key parts of the papers above as needed.
+\end{itemize}
+
+\subsection*{Final exercises}
+
+\begin{itemize}
+  \item \textbf{Four-component comparison.} For both the derivative-based and
+        marked matchers, write:
+        \begin{itemize}
+          \item Asymptotic complexity (what is known or conjectured).
+          \item Structural behaviour (which regex structures cause trouble).
+          \item Empirical behaviour (what your tests showed).
+          \item Semantic behaviour (POSIX values, determinism, formalisation).
+        \end{itemize}
+
+  \item \textbf{Viva rehearsal.} Practise answering out loud:
+        \begin{itemize}
+          \item How did you compare the two algorithms?
+          \item What do your experiments tell you, and what do they \emph{not} tell you?
+          \item In which cases could your marked approach also be slow, and why?
+        \end{itemize}
+\end{itemize}
+
+\end{document}
