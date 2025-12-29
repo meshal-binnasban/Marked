@@ -339,14 +339,20 @@ def tests() = {
   println(rebit.blexer(reg8, s8))
   println("-"*40)
 
+  val reg9 = (( "a" ~ ONE ) | ( ONE ~ "a" )) ~ %("a") 
+  val s9   = "a"
+  println(s"9- $s9: r=\n${pp(reg9)}  ${mat(reg9, s9)} ")
+  println(lexer(reg9, s9))
+  println(rebit.blexer(reg9, s9))
+  println("-"*40)
 }
 @main
 def test1() = {
-  val reg2 = %("a"|"aa")
-  val s2   = "aaa"
-  println(s"2- $s2: r=\n${pp(reg2)}  ${mat(reg2, s2)} ")
-  println(lexer(reg2, s2))
-  println(rebit.blexer(reg2, s2))
+  val reg9 = (( "a" ~ ONE ) | ( ONE ~ "a" )) ~ %("a") 
+  val s9   = "a"
+  println(s"9- $s9: r=\n${pp(reg9)}  ${mat(reg9, s9)} ")
+  println(lexer(reg9, s9))
+  println(rebit.blexer(reg9, s9))
   println("-"*40)
 
 }
