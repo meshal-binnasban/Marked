@@ -150,7 +150,7 @@ def back(r: Rexp, s: String, p: Mark, splits: Map[Int, Set[Int]]): (Val, Mark) =
 
       //in here, i tried to filter the splits before trying them,
       //the helper filters for example cases if r1 is not nullable,
-      //so it the split k must be greater than n indicating some consumption
+      //so the split k must be greater than n indicating some consumption
       val kSplits = filterSplits(splits.values.flatten.toSet,p, nullable(r1),nullable(r2))
 
       val r1r2: (Val, Mark) =
@@ -188,14 +188,12 @@ def back(r: Rexp, s: String, p: Mark, splits: Map[Int, Set[Int]]): (Val, Mark) =
       def decodeStar(a: Int, b: Int): (Val, Mark) =
         if (a == b) (Stars(Nil), Mark(a, a))
         else {
-          val kSplits =
-            splits.values.flatten
-              .filter(k => k > a && k <= b)
+          val kSplits = splits.values.flatten.filter(k => k > a && k <= b)
               .toList.sorted(Ordering.Int.reverse).iterator
 
           kSplits.map { k =>
-            //start the largest split k and if call from k,b stopping when they are equal
-            //the problem is that it must try all splits to determine the splits that consumes all.
+            //start the largest split k 
+            //the problem is that it will try all splits.
             back(r, s, Mark(a, k), splits) match {
               case (v1, p1) if !isInvalid(p1) =>
                 decodeStar(k, b) match {

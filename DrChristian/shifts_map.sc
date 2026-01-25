@@ -98,7 +98,7 @@ def shifts1(p: Mark, s: String, r: RexpS): Marks = {
             Map(key(q) -> q)
             } else Map.empty
 
-    case ALTS(r1, r2) =>
+    case ALTS(r1, r2,id) =>
         val ms0   = Map(key(p) -> p)
         val left  = shifts(ms0.prefixBit(Lf), s, r1)
         val right = shifts(ms0.prefixBit(Ri), s, r2)
