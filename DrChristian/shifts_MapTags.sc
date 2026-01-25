@@ -8,11 +8,10 @@ import scala.collection.mutable
 
 type Marks = Set[Int]
 
-// trace: (id, end) ----> Map[start --> choice/split]
 val trace = mutable.HashMap.empty[(Int, Int), mutable.HashMap[Int, Int]]
 
-def record(id: Int, end: Int, start: Int, choice: Int): Unit = 
-    trace.getOrElseUpdate((id, end), mutable.HashMap.empty)(start) = choice
+def record(id: Int, m: Int, start: Int, choice: Int): Unit = 
+    trace.getOrElseUpdate((id, m), mutable.HashMap.empty)(start) = choice
 
 def shifts(ms: Marks, s: String, r: RexpS): Marks = r match {
   case ZEROS => Set.empty
@@ -25,159 +24,133 @@ def shifts(ms: Marks, s: String, r: RexpS): Marks = r match {
     }
   
   case ALTS(r1, r2, id) =>
-    ms.flatMap { m =>
-      val out1 = shifts(Set(m), s, r1)
-      val out2 = shifts(Set(m), s, r2)
-      
-      out1.foreach(end => record(id, end, m, 0))
-      out2.foreach(end => record(id, end, m, 1))
-      
-      out1 ++ out2
+    ms.flatMap { start =>
+      val left  = shifts(Set(start), s, r1)
+      val right = shifts(Set(start), s, r2)
+      left.foreach(m => record(id, m, start, 0))
+      right.foreach(m => 
+        if (!left.contains(m)) record(id, m, start, 1)
+      )
+      left ++ right
     }
-  
   case SEQS(r1, r2, id) =>
     val n1 = nullableS(r1)
     val n2 = nullableS(r2)
-    
-    ms.flatMap { m =>
-      val ms1 = shifts(Set(m), s, r1)
-
-      val r1All =
-        if (n2) {
-          ms1.foreach(end => record(id, end, m, end))
-          ms1
-        } else Set.empty[Int]
+    ms.flatMap { start =>
+      val ms1 = shifts(Set(start), s, r1)
       
-      val r1r2 = ms1.flatMap { k =>
-        val ms2 = shifts(Set(k), s, r2)
-        ms2.foreach(end => record(id, end, m, k))
+      // Case 1: r1 consumes, r2 skipped 
+      val skipR2 = if (n2) {
+        ms1.foreach(m => record(id, m, start, m))
+        ms1
+      } else Set.empty
+      
+      // Case 2: Both r1 and r2 consume
+      val both = ms1.flatMap { split =>
+        val ms2 = shifts(Set(split), s, r2)
+        ms2.foreach(m => record(id, m, start, split))
         ms2
       }
       
-      val r2All =
-        if (n1) {
-          val ms2 = shifts(Set(m), s, r2)
-          ms2.foreach(end => record(id, end, m, m))
-          ms2
-        } else Set.empty[Int]
-
-      r1All ++ r1r2 ++ r2All
+      // Case 3: r1 skipped, r2 consumes 
+      val skipR1 = if (n1) {
+        val ms2 = shifts(Set(start), s, r2)
+        ms2.foreach(m => record(id, m, start, start))
+        ms2
+      } else Set.empty
+      
+      skipR2 ++ both ++ skipR1
     }
   
   case STARSS(r1, id) =>
-    ms.flatMap { m =>
-      val ms1 = shifts(Set(m), s, r1)
-      ms1.foreach(end => if (end > m) record(id, end, m, m))
-      
-      if (ms1.isEmpty) Set.empty
-      else ms1 ++ ms1.flatMap(k => shifts(Set(k), s, STARSS(r1, id)))
+    val ms1 = ms.flatMap { start =>
+      val out = shifts(Set(start), s, r1)
+      out.foreach(m => if (m > start) record(id, m, start, start))
+      out
     }
+    
+    if (ms1.isEmpty) Set.empty
+    else ms1 ++ shifts(ms1, s, STARSS(r1, id))
 
   case NTIMESS(r1, n) =>
     if (n == 0) Set.empty
     else if (n == 1) shifts(ms, s, r1)
     else {
-      ms.flatMap { m =>
-        val out1 = shifts(Set(m), s, r1)
-        val ks = out1
-        if (ks.isEmpty) Set.empty
-        else {
-          val rest = ks.flatMap(k => shifts(Set(k), s, NTIMESS(r1, n - 1)))
-          if (nullableS(r1)) out1 ++ rest else rest
-        }
+      val ms1 = shifts(ms, s, r1)
+      if (ms1.isEmpty) Set.empty
+      else {
+        val rest = shifts(ms1, s, NTIMESS(r1, n - 1))
+        if (nullableS(r1)) ms1 ++ rest else rest
       }
     }
 
   case ANDS(r1, r2) =>
-    val a = shifts(ms, s, r1)
-    val b = shifts(ms, s, r2)
-    a.intersect(b)
+    shifts(ms, s, r1).intersect(shifts(ms, s, r2))
 }
 
 def back(r: RexpS, s: String, a: Int, b: Int): Val = r match {
-  case ONES => if (a == b) Empty else Invalid
+  case ONES =>
+    if (a == b) Empty else Invalid
 
   case CHARS(c) =>
     if (b == a + 1 && a >= 0 && b <= s.length && s(a) == c) Chr(c) 
     else Invalid
 
   case ALTS(r1, r2, id) =>
-    trace.get((id, b)) match {
-      case Some(map) => map.get(a) match {
-          case Some(0) =>  back(r1, s, a, b) match {
-                            case Invalid => Invalid
-                            case v => Left(v)
-                           }
-          case Some(1) =>  back(r2, s, a, b) match {
-                            case Invalid => Invalid
-                            case v => Right(v)
-                           }
-          case _ => Invalid
+    trace.get((id, b)).flatMap(_.get(a)) match {
+      case Some(0) => 
+        back(r1, s, a, b) match {
+          case Invalid => Invalid
+          case v => Left(v)
         }
-      case None => Invalid
+      case Some(1) => 
+        back(r2, s, a, b) match {
+          case Invalid => Invalid
+          case v => Right(v)
+        }
+      case _ => Invalid
     }
 
   case SEQS(r1, r2, id) =>
-    trace.get((id, b)) match {
-        case None => Invalid
-        case Some(map) => map.get(a) match {
-                            case Some(k) =>
-                            if (k == b) {
-                            // r2 was skipped 
-                            if (!nullableS(r2)) Invalid
-                            else back(r1, s, a, b) match {
-                                case Invalid => Invalid
-                                case v1 => Sequ(v1, rexps.mkeps(r2))
-                            }
-                            } else if (k == a) {
-                            // r1 was skipped 
-                            if (!nullableS(r1)) Invalid
-                            else back(r2, s, a, b) match {
-                                case Invalid => Invalid
-                                case v2 => Sequ(rexps.mkeps(r1), v2)
-                            }
-                            } else {
-                            // Both consumed, split at k
-                            back(r1, s, a, k) match {
-                                case Invalid => Invalid
-                                case v1 =>
-                                back(r2, s, k, b) match {
-                                    case Invalid => Invalid
-                                    case v2 => Sequ(v1, v2)
-                                }
-                            }
-                            }
-          case None => Invalid
+    trace.get((id, b)).flatMap(_.get(a)) match {
+      case Some(split) if split == b =>
+        back(r1, s, a, b) match {
+          case Invalid => Invalid
+          case v1 => Sequ(v1, rexps.mkeps(r2))
         }
+      
+      case Some(split) if split == a =>
+        back(r2, s, a, b) match {
+          case Invalid => Invalid
+          case v2 => Sequ(rexps.mkeps(r1), v2)
+        }
+      
+      case Some(split) =>
+        (back(r1, s, a, split), back(r2, s, split, b)) match {
+          case (Invalid, _) => Invalid
+          case (_, Invalid) => Invalid
+          case (v1, v2) => Sequ(v1, v2)
+        }
+      
+      case None => Invalid
     }
   
   case STARSS(r1, id) =>
-    def loop(cur: Int): Val =
-      if (cur == a) Stars(Nil)
-      else {
-        trace.get((id, cur)) match {
-          case None => Invalid
-          case Some(map) =>
-            val prevs = map.keys.filter(p => p >= a && p < cur).toList.sorted
-            prevs match {
-              case Nil => Invalid
-              case p :: _ =>
-                back(r1, s, p, cur) match {
-                  case Invalid => Invalid
-                  case v1 =>
-                    loop(p) match {
-                      case Stars(vs) => Stars(v1 :: vs)
-                      case _ => Invalid
-                    }
-                }
-            }
-        }
+    if (a == b) Stars(Nil)
+    else {
+      trace.get((id, b)).map(_.keys.filter(p => p >= a && p < b).toList.sorted) match {
+        case Some(prev :: _) =>
+          (back(r1, s, prev, b), back(STARSS(r1, id), s, a, prev)) match {
+            case (Invalid, _) => Invalid
+            case (_, Invalid) => Invalid
+            case (v1, Stars(vs)) => Stars(v1 :: vs)
+            case _ => Invalid
+          }
+        case _ => Invalid
       }
-    
-    loop(b)
+    }
 
-  case _ =>
-    Invalid
+  case _ => Invalid
 }
 
 
@@ -198,20 +171,20 @@ def isInvalid(v: Val): Boolean = v match {
 def lexer(r: Rexp, s: String): Val = {
   trace.clear()
   val rs = intern(r)
-  val out = shifts(Set(0), s, rs)
-  val accepted = out.contains(s.length)
+  val ms = shifts(Set(0), s, rs)
+  val accepted = ms.contains(s.length)
 
   println(s"RexpS:\n${ppId(rs)}")
   println(s"s=$s")
   println(s"accepted=$accepted")
-  println(s"marks=$out")
-
-  val rows = trace.toList
-    .map { case ((id, m), xs) => (id, m, xs.toList.sorted.mkString("{", ", ", "}")) }
-    .sortBy(x => (x._1, x._2))
-
-  println("trace (id, end) -> ints:")
-  rows.foreach { case (id, m, xs) => println(s"  ($id, $m) -> $xs") }
+  println(s"marks=$ms")
+  
+  println("(id,m) : from -> choice")
+  trace.toList.sortBy { case ((id, m), _) => (id, m) }
+  .foreach { case ((id, m), mp) =>
+        val pairs = mp.toList.map { case (start, choice) => s"$start -> $choice" }.mkString(", ")
+        println(s"($id,$m): $pairs")
+        }
 
   if (!accepted) Invalid
   else {
