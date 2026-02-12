@@ -4,6 +4,7 @@ import $file.rexp, rexp._
 abstract class RexpS
 case object ZEROS extends RexpS
 case object ONES  extends RexpS
+//case class CHARS(c: Char,id:Int) extends RexpS
 case class CHARS(c: Char) extends RexpS
 case class ALTS(r1: RexpS, r2: RexpS, id:Int) extends RexpS
 case class SEQS(r1: RexpS, r2: RexpS, id: Int) extends RexpS
@@ -16,8 +17,8 @@ def intern(r: Rexp): RexpS = internalize(r, 0)._1
 def internalize(r: Rexp, id: Int): (RexpS, Int) = r match {
   case ZERO => (ZEROS, id)
   case ONE  => (ONES, id)
+  //case CHAR(c) => (CHARS(c,id), id + 1)
   case CHAR(c) => (CHARS(c), id)
-
   case ALT(r1, r2) =>
     val myId = id
     val (r1s, id1) = internalize(r1, id + 1)
@@ -48,6 +49,7 @@ def internalize(r: Rexp, id: Int): (RexpS, Int) = r match {
 def nullableS(r: RexpS): Boolean = r match {
   case ZEROS           => false
   case ONES            => true
+  //case CHARS(_,_)        => false
   case CHARS(_)        => false
   case ALTS(r1, r2, _)    => nullableS(r1) || nullableS(r2)
   case SEQS(r1, r2, _) => nullableS(r1) && nullableS(r2)
@@ -79,7 +81,7 @@ def ppp(r: RexpS) : String = (r: @unchecked) match {
   case ZEROS => "0\n"
   case ONES  => "1\n"
   case CHARS(c) => s"$c\n"
-
+ // case CHARS(c,id) => s"$c id=$id\n"
   case ALTS(r1, r2,id) =>
     s"ALT id=$id\n" ++ ppps(r1, r2)
 
