@@ -224,118 +224,43 @@ def lexer(r: Rexp, s: String, debug: Boolean = false): Val = {
 
 
 
-
 @main
-def tests() = {
-  val reg = ("aa") | ("a" ~ (ONE ~ "a"))
-  val s   = "aa"
-  val der=rebit.blexer(reg, s)
-  val mar=lexer(reg, s)
-  println(s"Derivative Value=${der}")
-  println(s"Marks Value=${mar}")
-  println(s"Der==Mar: ${der==mar}")
-  println("-"*40)
+def tests() =
+  def run(reg: Rexp, s: String): Unit =
+    val mar = lexer(reg, s, true)
+    val der = rebit.blexer(reg, s)
+    println(s"\nMarks==Derivatives: ${der == mar}\n")
+    println(s"Marks Value= $mar")
+    println(s"Derivative Value= $der")
+    println("-" * 40)
 
-  val reg2 = %("a"|"aa")
-  val s2   = "aaa"
-  val der2=rebit.blexer(reg2, s2)
-  val mar2=lexer(reg2, s2)
-  println(s"Derivative Value=${der2}")
-  println(s"Marks Value=${mar2}")
-  println(s"Der==Mar: ${der2==mar2}")
-  println("-"*40)
+  val cases: List[(Rexp, String)] = List(
+    ((ONE | "a") ~ ("ab" | "b"),"ab"),
+    ((ONE | "c") ~ (("c" ~ "c") | "c"), "cc"),
+    (("aa") | ("a" ~ (ONE ~ "a")), "aa"),
+    (((ONE ~ "a") | ("a" ~ ONE)), "a"),
+    ((("a" | "b") | "b"), "b"),
+    (("a" | ("ab" | "ba")), "ab"),
+    ((("a" | "ab") ~ ("b" | ONE)), "ab"),
+    ((%(ONE) ~ "a"), "a"),
+    (("a" | %("a")), "a"),
+    ((ONE | %("a")), "a"),
+    (%("a" | "aa"), "aaa"),
+    ((%("a") | %("aa")), "aa"),
+    (((ONE | "a") ~ %("a")), "a"),
+    (((("a" ~ ONE) | (ONE ~ "a")) ~ %("a")), "aaaaaaaaa"),
+    (%("a" | "aa"), "aaa"),
+    ((%("a" | "b") ),"aba"),
+    (("a"|ONE)~ %("a") , ""),
+    ("abc","abc"),
+    ((("a" | ONE) ~ "a") ~ %("a"),"aaa")
 
-  val reg3 = (ONE | %("a"))
-  val s3   = "a"
-  val der3=rebit.blexer(reg3, s3)
-  val mar3=lexer(reg3, s3)
-  println(s"Derivative Value=${der3}")
-  println(s"Marks Value=${mar3}")
-  println(s"Der==Mar: ${der3==mar3}")
-  println("-"*40)
+  )
 
-  val reg4 = ("a"| %("a") )
-  val s4   = "a"
-  val der4=rebit.blexer(reg4, s4)
-  val mar4=lexer(reg4, s4)
-  println(s"Derivative Value=${der4}")
-  println(s"Marks Value=${mar4}")
-  println(s"Der==Mar: ${der4==mar4}")
-  println("-"*40)
-
-  val reg5 = ( %(ONE) ~ ("a") )
-  val s5   = "a"
-  val der5=rebit.blexer(reg5, s5)
-  val mar5=lexer(reg5, s5)
-  println(s"Derivative Value=${der5}")
-  println(s"Marks Value=${mar5}")
-  println(s"Der==Mar: ${der5==mar5}")
-  println("-"*40)
-
-  val reg6 = ( %("a") | %("aa") )
-  val s6   = "aa"
-  val der6=rebit.blexer(reg6, s6)
-  val mar6=lexer(reg6, s6)
-  println(s"Derivative Value=${der6}")
-  println(s"Marks Value=${mar6}")
-  println(s"Der==Mar: ${der6==mar6}")
-  println("-"*40)
-
-  val reg7 = ( ( ONE | "a" ) ~ %("a") )
-  val s7   = "a"
-  val der7=rebit.blexer(reg7, s7)
-  val mar7=lexer(reg7, s7)
-  println(s"Derivative Value=${der7}")
-  println(s"Marks Value=${mar7}")
-  println(s"Der==Mar: ${der7==mar7}")
-  println("-"*40)
-
-  val reg8 = ( ONE ~ "a" ) | ("a" ~ ONE )
-  val s8   = "a"
-  val der8=rebit.blexer(reg8, s8)
-  val mar8=lexer(reg8, s8)
-  println(s"Derivative Value=${der8}")
-  println(s"Marks Value=${mar8}")
-  println(s"Der==Mar: ${der8==mar8}")
-  println("-"*40)
-
-  val reg9 = (( "a" ~ ONE ) | ( ONE ~ "a" )) ~ %("a")
-  val s9   = "a"
-  val der9=rebit.blexer(reg9, s9)
-  val mar9=lexer(reg9, s9)
-  println(s"Derivative Value=${der9}")
-  println(s"Marks Value=${mar9}")
-  println(s"Der==Mar: ${der9==mar9}")
-  println("-"*40)
-
-  val reg10 = ( ("a" | "b") | "b") 
-  val s10   = "b"
-  val der10=rebit.blexer(reg10, s10)
-  val mar10=lexer(reg10, s10)
-  println(s"Derivative Value=${der10}")
-  println(s"Marks Value=${mar10}")
-  println(s"Der==Mar: ${der10==mar10}")
-  println("-"*40)
-
-  val reg11 =  ( "a" | ("ab" | "ba") )
-  val s11   = "ab"
-  val der11=rebit.blexer(reg11, s11)
-  val mar11=lexer(reg11, s11)
-  println(s"Derivative Value=${der11}")
-  println(s"Marks Value=${mar11}")
-  println(s"Der==Mar: ${der11==mar11}")
-  println("-"*40)
-
-  val reg12 =  ( "a" |  "ab" ) ~ ("b" | ONE) 
-  val s12   = "ab"
-  val der12=rebit.blexer(reg12, s12)
-  val mar12=lexer(reg12, s12,true)
-  println(s"Derivative Value=${der12}")
-  println(s"Marks Value=${mar12}")
-  println(s"Der==Mar: ${der12==mar12}")
-  println("-"*40)
-
-
+  cases.zipWithIndex.foreach { case ((reg, s), idx) =>
+  val i = idx + 1
+  println(s"$i-")
+  run(reg, s)
 }
 
 @main

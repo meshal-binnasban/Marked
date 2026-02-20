@@ -199,11 +199,7 @@ def bders (r: ARexp, s: List[Char]) : ARexp = s match {
 def matcher (r: Rexp , s: String ) : Boolean =
   bnullable(bders(intern(r), s.toList))
 
-// unsimplified lexing function (produces a value)
-def blex(r: ARexp, s: List[Char]) : Bits = s match {
-  case Nil => if (bnullable(r)) bmkeps(r) else throw new Exception("Not matched")
-  case c::cs => blex(bder(c, r), cs)
-}
+
 
 def bsimp(r: ARexp): ARexp = r match
   case AALT(bs, r1, r2) => (bsimp(r1), bsimp(r2)) match 
@@ -243,6 +239,20 @@ def lex(r: Rexp, s: List[Char]) : Bits = blex(intern(r), s)
 
 def blexer(r: Rexp, s: String) : Val = 
   decode(r, blex(intern(r), s.toList))
+
+// unsimplified lexing function (produces a value)
+def blex(r: ARexp, s: List[Char]) : Bits = s match {
+  case Nil => if (bnullable(r)) bmkeps(r) else throw new Exception("Not matched")
+  case c::cs => blex(bder(c, r), cs)
+}
+
+def blexS(r: ARexp, s: List[Char]) : Bits = s match
+  case Nil => if bnullable(r) then bmkeps(r) else throw new Exception("Not matched")
+  case c :: cs => blexS(bsimp(bder(c, r)), cs)
+
+def blexerS(r: Rexp, s: String): Val =
+  decode(r, blexS(intern(r), s.toList))
+  
 
 //val reg = ("a" | "ab") ~ ("c" | "bc") 
 /*

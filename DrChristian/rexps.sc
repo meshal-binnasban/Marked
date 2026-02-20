@@ -46,6 +46,7 @@ def internalize(r: Rexp, id: Int): (RexpS, Int) = r match {
     (ANDS(r1s, r2s), id2)
 }
 
+
 def nullableS(r: RexpS): Boolean = r match {
   case ZEROS           => false
   case ONES            => true
@@ -119,3 +120,6 @@ def mkeps(r: RexpS) : Val = r match {
   case NTIMESS(r, n) => Nt(Nil, 0)
   case ANDS(r1,r2) => Sequ(mkeps(r1),mkeps(r2))
 }
+
+
+

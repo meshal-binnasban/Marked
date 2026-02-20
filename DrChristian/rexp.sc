@@ -150,13 +150,7 @@ def inj(r: Rexp, c: Char, v: Val) : Val = (r, v) match {
 } */
 
 def lex(r: Rexp, s: List[Char]): Val = s match
-  case Nil =>
-    if nullable(r) then
-      val rv = mkeps(r)
-      println(s"mkeps → $rv")
-      rv
-    else throw new Exception("lexing error")
-
+  case Nil => if nullable(r) then mkeps(r) else throw new Exception("lexing error")
   case c :: cs =>
     val derivative = der(c, r)
     println(draw(derivative))
