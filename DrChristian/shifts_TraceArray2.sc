@@ -10,9 +10,9 @@ import $ivy.`org.scala-lang.modules::scala-parallel-collections:1.0.4`
 import scala.collection.parallel.CollectionConverters._
 
 sealed trait TraceItem
-case class Alt(a: Int, b: Int, choice: Int) extends TraceItem
-case class Seq(a: Int, b: Int, split: Int) extends TraceItem
-case class Star(b: Int, prev: Int) extends TraceItem
+case class Alt(choice: Int) extends TraceItem
+case class Seq(split: Int) extends TraceItem
+case class Star(prev: Int) extends TraceItem
 
 case class Trace(t: List[TraceItem])
 
@@ -23,6 +23,7 @@ def shift(ms: Marks, trace: Array[Trace], s: String, r: Rexp): (Marks, Array[Tra
   r match {
     case ZERO => (Nil, new Array[Trace](n + 1))
     case ONE => (Nil, new Array[Trace](n + 1))
+
     case CHAR(c) =>
       val outTrace = new Array[Trace](n + 1)
       var mss: List[Int] = Nil
@@ -42,17 +43,11 @@ def shift(ms: Marks, trace: Array[Trace], s: String, r: Rexp): (Marks, Array[Tra
       for (a <- ms) {
         val (ms1, tr1) = shift(List(a), trace, s, r1)
         for (b <- ms1) {
-          if (outTrace(b) == null) {
-            val trb = tr1(b)
-            outTrace(b) = Trace(Alt(a, b, 0) :: trb.t)
-          }
+          if (outTrace(b) == null) outTrace(b) = Trace(Alt(0) :: tr1(b).t)
         }
         val (ms2, tr2) = shift(List(a), trace, s, r2)
         for (b <- ms2) {
-          if (outTrace(b) == null) {
-            val trb = tr2(b)
-            outTrace(b) = Trace(Alt(a, b, 1) :: trb.t)
-          }
+          if (outTrace(b) == null) outTrace(b) = Trace(Alt(1) :: tr2(b).t)
         }
       }
       val mss = (0 to n).toList.filter(i => outTrace(i) != null)
@@ -64,37 +59,31 @@ def shift(ms: Marks, trace: Array[Trace], s: String, r: Rexp): (Marks, Array[Tra
       val n2 = nullable(r2)
       for (start <- ms) {
         val (ms1, tr1) = shift(List(start), trace, s, r1)
+
         if (n2) {
           for (b <- ms1) {
-            if (outTrace(b) == null) {
-              val trb = tr1(b)
-              outTrace(b) = Trace(Seq(start, b, b) :: trb.t)
-            }
+            if (outTrace(b) == null) outTrace(b) = Trace(Seq(b - start) :: tr1(b).t)
           }
         }
+
         for (split <- ms1.reverse) {
           val (ms2, tr2) = shift(List(split), tr1, s, r2)
           for (b <- ms2) {
-            if (outTrace(b) == null) {
-              val trb = tr2(b)
-              outTrace(b) = Trace(Seq(start, b, split) :: trb.t)
-            }
+            if (outTrace(b) == null) outTrace(b) = Trace(Seq(split - start) :: tr2(b).t)
           }
         }
+
         if (n1) {
           val (ms2, tr2) = shift(List(start), trace, s, r2)
           for (b <- ms2) {
-            if (outTrace(b) == null) {
-              val trb = tr2(b)
-              outTrace(b) = Trace(Seq(start, b, start) :: trb.t)
-            }
+            if (outTrace(b) == null) outTrace(b) = Trace(Seq(0) :: tr2(b).t)
           }
         }
       }
       val mss = (0 to n).toList.filter(i => outTrace(i) != null)
       (mss, outTrace)
 
-    case STAR(r1) =>
+    case STAR(r) =>
       def go(ms: List[Int], trace: Array[Trace], seen: Array[Boolean], res: Array[Trace]): Array[Trace] =
         if (ms.isEmpty) res
         else {
@@ -102,9 +91,9 @@ def shift(ms: Marks, trace: Array[Trace], s: String, r: Rexp): (Marks, Array[Tra
           for (start <- ms) {
             if (!seen(start) && trace(start) != null) {
               seen(start) = true
-              val (ms1, tr1) = shift(List(start), trace, s, r1)
+              val (ms1, tr1) = shift(List(start), trace, s, r)
               for (b <- ms1.reverse) {
-                val trb = Trace(Star(b, start) :: tr1(b).t)
+                val trb = Trace(Star(b - start) :: tr1(b).t)
                 if (res(b) == null) res(b) = trb
                 if (nextTrace(b) == null) nextTrace(b) = trb
               }
@@ -116,13 +105,12 @@ def shift(ms: Marks, trace: Array[Trace], s: String, r: Rexp): (Marks, Array[Tra
 
       val seen = new Array[Boolean](n + 1)
       val res  = new Array[Trace](n + 1)
-
       val out = go(ms, trace, seen, res)
       val mss = (0 to n).toList.filter(i => out(i) != null)
       (mss, out)
 
-    case AND(_, _) => throw new RuntimeException("shift: AND not implemented in this version")
-    case NTIMES(_, _) => throw new RuntimeException("shift: NTIMES not implemented in this version")
+    case AND(_, _) => (Nil, new Array[Trace](n + 1))
+    case NTIMES(_, _) => (Nil, new Array[Trace](n + 1))
   }
 }
 
@@ -141,6 +129,57 @@ def matcher(r: Rexp, s: String): Boolean =
       trace(s.length) != null
   }
 
+def back(r: Rexp, s: String, tr: Trace): Val =
+  back_aux(r, s, tr) match {
+    case (v, "", Trace(Nil)) => v
+    case _ => throw new Exception("Not decodable")
+  }
+
+def back_aux(r: Rexp, s: String, tr: Trace): (Val, String, Trace) =
+  ((r: @unchecked)) match {
+    case CHAR(c) if s(0) == c => (Chr(c), s.substring(1), tr)
+
+    case ALT(r1, r2) =>
+      (tr.t: @unchecked) match {
+        case Alt(0) :: rest =>
+          val (v, s1, tr1) = back_aux(r1, s, Trace(rest))
+          (Left(v), s1, tr1)
+        case Alt(1) :: rest =>
+          val (v, s1, tr1) = back_aux(r2, s, Trace(rest))
+          (Right(v), s1, tr1)
+      }
+
+    case SEQ(r1, r2) =>
+      (tr.t: @unchecked) match {
+        case Seq(n) :: rest =>
+          val tr0 = Trace(rest)
+          if (n == s.length) {
+            val (v1, _, tr1) = back_aux(r1, s, tr0)
+            (Sequ(v1, mkeps(r2)), "", tr1)
+          } else if (n == 0) {
+            val (v2, _, tr2) = back_aux(r2, s, tr0)
+            (Sequ(mkeps(r1), v2), "", tr2)
+          } else {
+            val (v2, _, tr2) = back_aux(r2, s.substring(n), tr0)
+            val (v1, _, tr1) = back_aux(r1, s.substring(0, n), tr2)
+            (Sequ(v1, v2), "", tr1)
+          }
+      }
+
+    case STAR(r) =>
+      if (s == "") (Stars(Nil), "", tr)
+      else {
+        (tr.t: @unchecked) match {
+          case Star(n) :: rest =>
+            val k = s.length - n
+            val (v, _, tr1) = back_aux(r, s.substring(k), Trace(rest))
+            val (v0, _, tr2) = back_aux(STAR(r), s.substring(0, k), tr1)
+            v0 match {
+              case Stars(vs) => (Stars(vs :+ v), "", tr2)
+            }
+        }
+      }
+  }
 
 def lexer(r: Rexp, s: String, debug: Boolean = false): Val =
   s match {
@@ -161,7 +200,7 @@ def lexer(r: Rexp, s: String, debug: Boolean = false): Val =
         println(" ")
         println(s"m=0: value= ${if (nullable(r)) mkeps(r) else Invalid}")
         for (m <- ms) {
-          println(s"m=$m: value= ${back(r, s, 0, m, trace(m))._1}")
+          println(s"m=$m: value= ${back(r, s.substring(0, m), trace(m))}")
         }
         println(" ")
       }
@@ -169,70 +208,9 @@ def lexer(r: Rexp, s: String, debug: Boolean = false): Val =
       if (ms.isEmpty) Invalid
       else {
         val b = ms.max
-        back(r, s, 0, b, trace(b))._1
+        back(r, s.substring(0, b), trace(b))
       }
   }
-
-
-def back(r: Rexp, s: String, a: Int, b: Int, tr: Trace): (Val, Trace) =
-  r match {
-    case ZERO => throw new RuntimeException("back: ZERO")
-
-    case ONE =>
-      if (a == b) (Empty, tr)
-      else throw new RuntimeException(s"back: ONE a=$a b=$b")
-
-    case CHAR(c) =>
-      if (b == a + 1 && a >= 0 && b <= s.length && s(a) == c) (Chr(c), tr)
-      else throw new RuntimeException(s"back: CHAR($c) a=$a b=$b")
-
-    case ALT(r1, r2) =>
-      tr.t match {
-        case Alt(aa, bb, 0) :: rest if aa == a && bb == b =>
-          val (v, tr1) = back(r1, s, a, b, Trace(rest))
-          (Left(v), tr1)
-        case Alt(aa, bb, 1) :: rest if aa == a && bb == b =>
-          val (v, tr1) = back(r2, s, a, b, Trace(rest))
-          (Right(v), tr1)
-        case _ => throw new RuntimeException(s"back: ALT a=$a b=$b")
-      }
-
-    case SEQ(r1, r2) =>
-    tr.t match {
-        case Seq(aa, bb, k) :: rest if aa == a && bb == b =>
-        val tr0 = Trace(rest)
-
-        if (k == b) {
-            val (v1, tr1) = back(r1, s, a, b, tr0)
-            (Sequ(v1, mkeps(r2)), tr1)
-        } else if (k == a) {
-            val (v2, tr2) = back(r2, s, a, b, tr0)
-            (Sequ(mkeps(r1), v2), tr2)
-        } else {
-            val (v2, tr2) = back(r2, s, k, b, tr0)
-            val (v1, tr1) = back(r1, s, a, k, tr2)
-            (Sequ(v1, v2), tr1)
-        }
-        case _ => throw new RuntimeException(s"back: SEQ a=$a b=$b")
-    }
-    case STAR(r) =>
-    if (a == b) (Stars(Nil), tr)
-    else {
-        tr.t match {
-        case Star(bb, prev) :: rest if bb == b =>
-            val (v, tr1) = back(r, s, prev, b, Trace(rest))
-            val (v0, tr2) = back(STAR(r), s, a, prev, tr1)
-            v0 match {
-            case Stars(vs) => (Stars(vs :+ v), tr2)
-            case _ => throw new RuntimeException(s"back: expected Stars a=$a b=$prev")
-            }
-        case _ =>throw new RuntimeException(s"back: STAR a=$a b=$b")
-        }
-    }
-    case AND(_, _) => throw new RuntimeException("back: AND not implemented in this version")
-    case NTIMES(_, _) => throw new RuntimeException("back: NTIMES not implemented in this version")
-  }
-
 
 
 @main
@@ -284,10 +262,10 @@ def tests() =
 def test1() =
   val reg = %( %("a") | %("aa") | %("aaa") | %("aaaa") | %("aaaaa") ) 
   val s   = "a" * 1000
-  println(s"Derivative Value=${re_bitrev3.blexer_simp(reg, s)}")
-  println(s"Derivative Time= ${time_needed(100,re_bitrev3.blexer_simp(reg, s))}")
-  println(s"Marks Value=${lexer(reg, s,false)}")
-  println(s"Marks Time= ${time_needed(100,lexer(reg, s,false))}")
+  //println(s"Derivative Value=${re_bitrev3.blexer_simp(reg, s)}")
+  println(s"Derivative Time= ${time_needed(1,re_bitrev3.blexer_simp(reg, s))}")
+  //println(s"Marks Value=${lexer(reg, s,false)}")
+  println(s"Marks Time= ${time_needed(1,lexer(reg, s,false))}")
   println("-" * 40)
 
 @main
