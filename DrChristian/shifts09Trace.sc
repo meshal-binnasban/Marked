@@ -37,15 +37,13 @@ def shifts(ms: Marks, trace: Array[Trace], s: String, r: Rexp): (Marks, Array[Tr
   r match {
     case ZERO => (Nil, new Array[Trace](n + 1))
     case ONE => 
-        for (m <- ms) {trace(m) = Trace(Eps :: trace(m).t)}
-        (ms,trace)
-/*      val outTrace = new Array[Trace](n + 1)
+        val outTrace = new Array[Trace](n + 1)
         var mss: List[Int] = Nil
         for (m <- ms) {
             outTrace(m) = Trace(Eps :: trace(m).t)
             mss = m :: mss
         }
-        (mss.reverse, outTrace) */
+        (mss.reverse, outTrace) 
 
     case CHAR(c) =>  
         val outTrace = new Array[Trace](n + 1)
@@ -56,7 +54,7 @@ def shifts(ms: Marks, trace: Array[Trace], s: String, r: Rexp): (Marks, Array[Tr
             mss= (m+1) :: mss
             }
         }
-        (mss, outTrace) 
+        (mss.reverse, outTrace) 
 
     case ALT(r1, r2) =>
         val outTrace = new Array[Trace](n + 1)
@@ -68,8 +66,11 @@ def shifts(ms: Marks, trace: Array[Trace], s: String, r: Rexp): (Marks, Array[Tr
         }
         val (ms2, tr2) = shifts(ms, trace, s, r2)
         for (b <- ms2) {
-            if (outTrace(b) == null) outTrace(b) = Trace(Alt(1) :: tr2(b).t)
-            mss = insertAsc(b, mss)
+            if (outTrace(b) == null){
+                outTrace(b) = Trace(Alt(1) :: tr2(b).t)
+                mss = insertAsc(b, mss)
+            }
+
         }
         //val mss = (0 to n).toList.filter(i => outTrace(i) != null)
         (mss, outTrace)
@@ -224,7 +225,8 @@ def tests() =
     ((("a" | ("a" ~ "a")) ~ ("a" | ("a" ~ "a"))), "aaa"),
     ((((("a" ~ "a") | "a") ~ ("a" | ("a" ~ "a")))), "aaa"),
     ((("a" | ("a" ~ "a")) ~ ("a" | ("a" ~ "a"))), "aaa"),
-    (((("a" | "c") ~ ("c" ~ "b")) | (((ZERO ~ ONE) ~ ONE))), "acb")
+    (((("a" | "c") ~ ("c" ~ "b")) | (((ZERO ~ ONE) ~ ONE))), "acb"),
+    (ONE| "a" , "a"),
 /*
     (((("b" ~ ONE) | %("b")) ~ %("b" | "c")), "bbc"),
     ((%(ONE) ~ "a"), "a"),
@@ -312,7 +314,7 @@ def test5() =
 @main
 def testall() = {
   given rexp_cdata: CDATA[Rexp] = List(
-    //(0, _ => ONE),
+    (0, _ => ONE),
     (0, _ => ZERO),
     (0, _ => CHAR('a')),
     (0, _ => CHAR('b')),
