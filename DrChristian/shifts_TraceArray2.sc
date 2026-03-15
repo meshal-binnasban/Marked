@@ -270,12 +270,12 @@ def test1() =
 
 @main
 def test2() =
-  val reg = ((("a" | "c") ~ ("c" ~ "b")) | (((ZERO ~ ONE) ~ ONE)))
-  val s   = "acb"
-  println(lexer(reg, s,true))
-  println(s"${re_bitrev3.blexer_simp(reg, s)}= Derivative Value")
-  println(s"Marks Time= ${time_needed(100000,lexer(reg, s,false))}")
-  println(s"Derivative Time= ${time_needed(100000,re_bitrev3.blexer_simp(reg, s))}")
+  val reg = ((("b" ~ ONE) | %("b")) ~ %("b" | "c"))
+  val s   = "bbc"
+  println(s"Derivative Value=${re_bitrev3.blexer_simp(reg, s)}")
+  println(s"Marks Value=${lexer(reg, s,true)}")
+  println(s"Marks Time= ${time_needed(100,lexer(reg, s,false))}")
+  println(s"Derivative Time= ${time_needed(100,re_bitrev3.blexer_simp(reg, s))}")
   println("-" * 40)
 
 @main
