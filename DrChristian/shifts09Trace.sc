@@ -12,7 +12,8 @@ import scala.collection.parallel.CollectionConverters._
 
 sealed trait TraceItem
 case class Alt(choice: Int) extends TraceItem
-case class Star(prev: Int) extends TraceItem
+//case class Star(prev: Int) extends TraceItem
+case class Star(t1: Trace, t2: Trace) extends TraceItem
 case object Eps extends TraceItem
 case class Seq(t1: Trace, t2: Trace) extends TraceItem
 
@@ -85,60 +86,48 @@ def shifts(ms: Marks, trace: Array[Trace], s: String, r: Rexp): (Marks, Array[Tr
     
     case STAR(r) =>
       // final trace for this STAR
-      val outTrace = new Array[Trace](n + 1) 
-
+      val outTrace = new Array[Trace](n + 1)
 
       // record the current recieved trace for zero repetition
       for (m <- ms) {
-        outTrace(m) = trace(m)                 
+        outTrace(m) = trace(m)
       }
 
       // trace array for the next STAR iteration
-      val nextTrace = new Array[Trace](n + 1)  
+      val nextTrace = new Array[Trace](n + 1)
       var ms0: List[Int] = Nil
-
-      for (start <- ms) {
-        // fresh trace for one start mark
-        val traceR = new Array[Trace](n + 1)   
-        traceR(start) = Nil 
-
+      // fresh trace for one start mark
+      for (start <- ms.reverse) {
+        val traceR = new Array[Trace](n + 1)
+        traceR(start) = Nil
         val (ms1, tr1) = shifts(List(start), traceR, s, r)
-
+        // check the difference between produced marks and original ms
         for (b <- ms1.reverse) {
-          // check the difference between produced marks and original ms
           if (!ms.contains(b) && nextTrace(b) == null) {
-            // old STAR trace (trace (start) ) ++ new repetition trace 
-            val trb = trace(start) ::: (Star(b - start) :: tr1(b))   
-            nextTrace(b) = trb
+            // Star(one iteration trace, star trace already built up to start)
+            nextTrace(b) = List(Star(tr1(b), trace(start)))
             ms0 = b :: ms0
           }
         }
       }
+
       //return the current trace and marks if no new marks are produced
       if (ms0.isEmpty) {
         (ms, outTrace)
       } else {
         //shift into the star if new marks are produced
         val (msRec, trRec) = shifts(ms0.reverse, nextTrace, s, STAR(r))
-
         for (b <- msRec) {
           if (outTrace(b) == null) {
-            outTrace(b) = trRec(b)            
+            outTrace(b) = trRec(b)
           }
         }
         ((ms ::: msRec).distinct.sorted, outTrace)
       }
-    
-        
-
-
     case AND(_, _) =>(Nil, new Array[Trace](n + 1)) // not done yet
     case NTIMES(_, _) =>(Nil, new Array[Trace](n + 1))// not done yet
   }
 }  
-
-
-
 
 def mat(r: Rexp, s: String): (Marks, Array[Trace]) = {
   val n = s.length
@@ -172,6 +161,7 @@ def lexer(r: Rexp, s: String, debug: Boolean = false): Val =
           val tr = trace(i)
           if (tr == null) println(s"$i: Empty") else println(s"$i: $tr")
         }
+        println(s"Marks: $ms")
       }
 
       if (trace(s.length) == null) Invalid
@@ -211,15 +201,16 @@ def back_aux(r: Rexp, s: String, tr: Trace): (Val, String, Trace) =
             (Sequ(v1, v2), s2, rest)
         }
     case STAR(r) =>
-      (tr: @unchecked) match {
+       (tr: @unchecked) match {
         case Nil => (Stars(Nil), s, Nil)
-        case Star(n) :: rest =>
-          val (v, _, tr1) = back_aux(r, s.substring(0, n), rest)
-          val (v0, s2, tr2) = back_aux(STAR(r), s.substring(n), tr1)
+        case Star(tr1, tr2) :: rest =>
+          val (v, s1, t1) = back_aux(r, s, tr1)
+          val (v0, s2, t2) = back_aux(STAR(r), s1, tr2)
           v0 match {
-            case Stars(vs) => (Stars(v :: vs), s2, tr2)
+            case Stars(vs) => (Stars(v :: vs), s2, rest)
           }
       }
+      
   }
 
 
@@ -236,6 +227,17 @@ def test1() =
 
 @main
 def test2() =
+  val reg = %("b" | %("a"))
+    //%( ONE | (ONE | "a" ) ) | %("a" | %("b") ) 
+  val s   = "bab"
+  println(s"Marks Value=${lexer(reg, s,true)}")
+  println(s"Marks Time= ${time_needed(5,lexer(reg, s,false))}")
+  println(s"Derivative Value=${re_bitrev3.blexer_simp(reg, s)}")
+  println(s"Derivative Time= ${time_needed(5,re_bitrev3.blexer_simp(reg, s))}")
+  println("-" * 40)
+
+@main
+def test3() =
   val reg = %( %("a") | %("aa") | %("aaa") | %("aaaa") | %("aaaaa") ) 
   val s   = "a" * 1000
   println(s"Marks Value=${lexer(reg, s,true)}")
