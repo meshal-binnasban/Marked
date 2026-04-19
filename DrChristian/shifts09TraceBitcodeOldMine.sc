@@ -9,162 +9,155 @@ import java.util.concurrent.ForkJoinPool
 import $ivy.`org.scala-lang.modules::scala-parallel-collections:1.0.4`
 import scala.collection.parallel.CollectionConverters._
 
-
-sealed trait TraceItem
-case class Alt(choice: Int) extends TraceItem
-//case class Star(prev: Int) extends TraceItem
-case class Star(t1: Trace, t2: Trace) extends TraceItem
-case object Eps extends TraceItem
-case class Seq(t1: Trace, t2: Trace) extends TraceItem
-
-type Trace = List[TraceItem]
-//case class Trace(t: List[TraceItem])
-
+type Trace = List[Int]
 type Marks = List[Int]
 
 def shifts(ms: Marks, trace: Array[Trace], s: String, r: Rexp): (Marks, Array[Trace]) = {
   val n = s.length
   r match {
     case ZERO => (Nil, new Array[Trace](n + 1))
-    case ONE => 
-        val outTrace = new Array[Trace](n + 1)
-        var mss: List[Int] = Nil
-        for (m <- ms) {
-            outTrace(m) = Eps :: trace(m)
-            mss = m :: mss
+    case ONE => (ms, trace)
+    case CHAR(c) =>
+      val outTrace = new Array[Trace](n + 1)
+      var mss: List[Int] = Nil
+      for (m <- ms) {
+        if (m < n && s(m) == c) {
+          outTrace(m + 1) = trace(m)
+          mss = (m + 1) :: mss
         }
-        (mss.reverse, outTrace) 
-
-    case CHAR(c) =>  
-        val outTrace = new Array[Trace](n + 1)
-        var mss: List[Int] = Nil
-        for (m <- ms) {
-            if (m < n && s(m) == c) {
-            outTrace(m+1) = trace(m)
-            mss= (m+1) :: mss
-            }
-        }
-        (mss.reverse, outTrace) 
-
+      }
+      (mss.reverse, outTrace)
     case ALT(r1, r2) =>
       val outTrace = new Array[Trace](n + 1)
       val (ms1, tr1) = shifts(ms, trace, s, r1)
       val (ms2, tr2) = shifts(ms, trace, s, r2)
 
-      //record left first
-      for (b <- ms1) outTrace(b) = Alt(0) :: tr1(b)
-
-      //record right if reached further than left
+      for (b <- ms1) outTrace(b) = 0 :: tr1(b)
       for (b <- ms2) {
         if (outTrace(b) == null) {
-          outTrace(b) = Alt(1) :: tr2(b)
+          outTrace(b) = 1 :: tr2(b)
         }
       }
-      val mss = (ms1 ::: ms2).distinct.sorted
-      (mss, outTrace)
+      ((ms1 ::: ms2).distinct.sorted, outTrace)
 
     case SEQ(r1, r2) =>
-      val outTrace = new Array[Trace](n + 1)
-      var mss: List[Int] = Nil 
+      val outTrace = new Array[Trace](n + 1) // final traces for SEQ
+      var mss: List[Int] = Nil
 
-      val (ms1, tr1) = shifts(ms, trace, s, r1)
-      
-      //fresh trace for r2 to record both traces of r1 (tr1) and r2 (tr2)
+      val (ms1, tr1) = shifts(ms, trace, s, r1) // shift through r1 first
+
       val traceR2 = new Array[Trace](n + 1)
-      //reverse ms1 to shift further marks first.
-      for (m <- ms1.reverse) {
+      for (m <- ms1.reverse) { // try furthest splits first
         traceR2(m) = Nil
         val (ms2, tr2) = shifts(List(m), traceR2, s, r2)
-        traceR2(m) = null
+
         for (b <- ms2) {
-         
-          if (outTrace(b) == null) {
-            outTrace(b) = List(Seq(tr1(m), tr2(b)))
-            mss = b :: mss 
+          if (outTrace(b) == null) { // record first winner at b 
+            outTrace(b) = tr1(m) ++ tr2(b)
+            mss = b :: mss
           }
         }
-        
+        traceR2(m) = null
       }
-      (mss.reverse, outTrace)
-    
+      (mss.sorted, outTrace) // reverse to keep ascending order of marks
 
     case STAR(r) =>
-/*       // final trace for this STAR
-      val outTrace = new Array[Trace](n + 1)
-      // record the current recieved trace for zero repetition
-      for (m <- ms) {
-        outTrace(m) = trace(m)
-      } */
 
-      val outTrace = trace.clone()
+      val outTrace = new Array[Trace](n + 1) // final traces for STAR
+      for (m <- ms) outTrace(m) = trace(m) ++ List(1) // zero repetitions: keep mark and add closing bit 1
 
+      val nextTrace = new Array[Trace](n + 1) // traces for one more iteration
+      var mss: List[Int] = Nil
 
-      // trace array for the next STAR iteration
-      val nextTrace = new Array[Trace](n + 1)
-      var ms0: List[Int] = Nil
+      val traceR = new Array[Trace](n + 1)
 
-      // fresh trace for one start mark
-      val traceR = new Array[Trace](n + 1)      
       for (start <- ms) {
         traceR(start) = Nil
         val (ms1, tr1) = shifts(List(start), traceR, s, r)
-        traceR(start) = null
-        val ms2 = diffSorted(ms1, ms)
 
-        for (b <- ms2.reverse) {
-          if (outTrace(b) == null && nextTrace(b) == null) {
-            // Star(older star trace, new iteration trace)
-            nextTrace(b) = List(Star(trace(start), tr1(b)))
-            ms0 = b :: ms0
+        for (b <- ms1.reverse) {
+          if (outTrace(b) == null && nextTrace(b) == null) { // avoid shifting positions already reached
+            nextTrace(b) = trace(start) ++ (0 :: tr1(b)) // add 0 for a new iteration
+            mss = b :: mss
           }
         }
+        traceR(start) = null
       }
-      
-      //return the current trace and marks if no new marks are produced
-      if (ms0.isEmpty) {
+
+      if (mss.isEmpty) {
         (ms, outTrace)
       } else {
-        //shift into the star if new marks are produced
-        val (msRec, trRec) = shifts(ms0.reverse, nextTrace, s, STAR(r))
-        for (b <- msRec) {
+        val (msStar, trStar) = shifts(mss.reverse, nextTrace, s, STAR(r)) // continue STAR from new marks
+
+        for (b <- msStar) {
           if (outTrace(b) == null) {
-            outTrace(b) = trRec(b)
+            outTrace(b) = trStar(b)
           }
         }
-        //outTrace.indices.filter(i => outTrace(i) != null).toList
-        //(ms ::: msRec).distinct.sorted
-        ((ms ::: msRec).distinct.sorted , outTrace)
+        ((ms ::: msStar).distinct.sorted, outTrace)
       }
 
-    case AND(_, _) =>(Nil, new Array[Trace](n + 1)) // not done yet
-    case NTIMES(_, _) =>(Nil, new Array[Trace](n + 1))// not done yet
+    case AND(_, _) => (Nil, new Array[Trace](n + 1)) // not yet implemented
+    case NTIMES(_, _) => (Nil, new Array[Trace](n + 1))// not yet implemented
   }
-}  
-
-def mat(r: Rexp, s: String): (Marks, Array[Trace]) = {
-  val n = s.length
-  val trace0 = new Array[Trace](n + 1)
-  trace0(0) = Nil
-  shifts(List(0), trace0, s, r)
 }
 
+def back(r: Rexp, s: String, tr: Trace): Val =
+  back_aux(r, s, tr) match {
+    case (v, "", Nil) => v
+    case _ => throw new Exception("Not decodable")
+  }
 
+def back_aux(r: Rexp, s: String, tr: Trace): (Val, String, Trace) =
+  (r: @unchecked) match {
+    case ONE => (Empty, s, tr)
 
-def matcher(r: Rexp, s: String): Boolean =
-  s match {
-    case "" => nullable(r)
-    case _ =>
-      val (_, trace) = mat(r, s)
-      trace(s.length) != null
-  } 
+    case CHAR(c) => (Chr(c), s.substring(1), tr)
 
+    case ALT(r1, r2) =>
+      (tr: @unchecked) match {
+        case 0 :: rest =>
+          val (v, s1, tr1) = back_aux(r1, s, rest)
+          (Left(v), s1, tr1)
+        case 1 :: rest =>
+          val (v, s1, tr1) = back_aux(r2, s, rest)
+          (Right(v), s1, tr1)
+      }
 
-def lexer(r: Rexp, s: String, debug: Boolean = false): Val =
+    case SEQ(r1, r2) =>
+      val (v1, s1, tr1) = back_aux(r1, s, tr)
+      val (v2, s2, tr2) = back_aux(r2, s1, tr1)
+      (Sequ(v1, v2), s2, tr2)
+    
+    case STAR(r1) =>
+      (tr: @unchecked) match {
+        case 1 :: rest => (Stars(Nil), s, rest)
+        case 0 :: rest =>
+          val (v, s1, tr1) = back_aux(r1, s, rest)
+          val (vs, s2, tr2) = back_aux(STAR(r1), s1, tr1)
+          vs match {
+            case Stars(vs1) => (Stars(v :: vs1), s2, tr2)
+          }
+      }
+  }
+
+def mat(r: Rexp, s: String): (Marks, Array[Trace]) = {
+  val trace = new Array[Trace](s.length + 1)
+  trace(0) = Nil
+  shifts(List(0), trace, s, r)
+}
+
+def matcher(r: Rexp, s: String): Boolean = {
+  val (_, trace) = mat(r, s)
+  trace(s.length) != null
+}
+
+def lexer(r: Rexp, s: String, debug: Boolean): Val =
   s match {
     case "" => if (nullable(r)) mkeps(r) else Invalid
 
     case _ =>
-      val (ms,trace) = mat(r, s)
+      val (ms, trace) = mat(r, s)
       if (debug) {
         println(s"Rexp:\n${pp(r)}")
         println(s"s=$s")
@@ -177,68 +170,11 @@ def lexer(r: Rexp, s: String, debug: Boolean = false): Val =
 
 
 
-def back(r: Rexp, s: String, tr: Trace): Val =
-  back_aux(r, s, tr) match {
-    case (v, "", Nil) => v
-    case _ => throw new Exception("Not decodable")
-  }
-
-def back_aux(r: Rexp, s: String, tr: Trace): (Val, String, Trace) =
-  (r: @unchecked) match {
-    case ONE =>
-      (tr: @unchecked) match {
-        case Eps :: rest => (Empty, s, rest)
-      }  
-    case CHAR(c) => (Chr(c), s.substring(1), tr)
-    
-    case ALT(r1, r2) =>
-      (tr: @unchecked) match {
-        case Alt(0) :: rest =>
-          val (v, s1, tr1) = back_aux(r1, s, rest)
-          (Left(v), s1, tr1)
-        case Alt(1) :: rest =>
-          val (v, s1, tr1) = back_aux(r2, s, rest)
-          (Right(v), s1, tr1)
-      } 
-    case SEQ(r1, r2) => 
-        (tr: @unchecked) match {
-            case Seq(tr1, tr2) :: rest =>
-            val (v1, s1, t1) = (back_aux(r1, s, tr1))
-            val (v2, s2, t2) = (back_aux(r2, s1, tr2))
-            (Sequ(v1, v2), s2, rest)
-        }
-    case STAR(r) =>
-       (tr: @unchecked) match {
-        case Nil =>
-          (Stars(Nil), s, Nil)
-        case Star(trOld, trNew) :: rest =>
-          val (v0, s1, t1) = back_aux(STAR(r), s, trOld)
-          val (v, s2, t2) = back_aux(r, s1, trNew)
-          v0 match {
-            case Stars(vs) => (Stars(vs :+ v), s2, rest)
-          }
-      } 
-      
-  }
-
-def diffSorted(xs: List[Int], ys: List[Int]): List[Int] = {
-  @annotation.tailrec
-  def loop(xs: List[Int], ys: List[Int], acc: List[Int]): List[Int] = (xs, ys) match {
-    case (Nil, _) => acc.reverse
-    case (_, Nil) => acc.reverse ::: xs
-    case (x :: xt, y :: yt) =>
-      if (x < y) loop(xt, ys, x :: acc)
-      else if (x > y) loop(xs, yt, acc)
-      else loop(xt, yt, acc)
-  }
-  loop(xs, ys, Nil)
-}
-
 @main
 def test1() =
-  val reg = %("a" | "aa")
-  val s   = "aaa"
-  val marks=lexer(reg, s,false)
+  val reg = ((("a") ~ ("b"|ONE)) ~ ((ONE ~ "b") ~ %("b")))
+  val s   = "abb"
+  val marks=lexer(reg, s,true)
   val der=re_bitrev3.blexer_simp(reg, s)
   println(s"Marks Value=${marks}")
   //println(s"Marks Time= ${time_needed(100,lexer(reg, s,false))}")
@@ -249,39 +185,8 @@ def test1() =
 
 @main
 def test2() =
-  val reg = %("b" | %("a"))
-    //%( ONE | (ONE | "a" ) ) | %("a" | %("b") ) 
-  val s   = "bab"
-  val marks=lexer(reg, s,true)
-  val der=re_bitrev3.blexer_simp(reg, s)
-  println(s"Marks Value=${marks}")
-  println(s"Marks Time= ${time_needed(100,lexer(reg, s,false))}")
-  println(s"Derivative Value=${der}")
-  println(s"Derivative Time= ${time_needed(100,re_bitrev3.blexer_simp(reg, s))}")
-  println(s"Equal Values: ${marks == der}")
-  println("-" * 40)
-
-//% ( % (ONE) ) | ( ( "a" | ZERO ) ~ ( "b" | ZERO ) ) ~ % ( "a" | "b" )
-
-@main
-def test3() =
-  val reg = %( %(ONE) ) | ( ( "a" | ZERO ) ~ ( "b" | ZERO ) ) ~ %( "a" | "b" )
-    //%( ONE | (ONE | "a" ) ) | %("a" | %("b") ) 
-  val s   = "abab"
-  val marks=lexer(reg, s,true)
-  val der=re_bitrev3.blexer_simp(reg, s)
-  println(s"Marks Value=${marks}")
-  println(s"Marks Time= ${time_needed(100,lexer(reg, s,false))}")
-  println(s"Derivative Value=${der}")
-  println(s"Derivative Time= ${time_needed(100,re_bitrev3.blexer_simp(reg, s))}")
-  println(s"Equal Values: ${marks == der}")
-  println("-" * 40)
-
-
-@main
-def test4() =
   val reg = %( %("a") | %("aa") | %("aaa") | %("aaaa") | %("aaaaa") ) 
-  val s   = "a" * 998
+  val s   = "a" * 1000
   val marks=lexer(reg, s,false)
   val der=re_bitrev3.blexer_simp(reg, s)
   println(s"Marks Value=${marks}")
@@ -330,7 +235,7 @@ def testall() = {
         try {
             s = it.next()
             if (s != "") {
-            val vm = lexer(r, s)
+            val vm = lexer(r, s,false)
             val vb = re_bitrev3.blexer_simp(r, s)
             if (vm != vb) {
                 println(s"$r and $s")
@@ -345,7 +250,7 @@ def testall() = {
             println(s"String '${s}':")
             val vb = re_bitrev3.blexer_simp(r, s)
             println(s"Derivative value = ${vb}") 
-            println(s"Marks value      = ${lexer(r, s)}") 
+            println(s"Marks value      = ${lexer(r, s,false)}") 
 
             System.exit(1)
         }
@@ -356,6 +261,7 @@ def testall() = {
   }
 }
 
+//test cases without Star
 @main
 def tests() =
   def run(reg: Rexp, s: String): (Int, Int, Double, Double) =
@@ -421,6 +327,7 @@ def tests() =
   println(s"Average Derivative Time= $avgDerTime")
 
 
+//test cases with Star
 @main
 def testsStar() =
   def run(reg: Rexp, s: String): (Int, Int, Double, Double) =
@@ -496,23 +403,11 @@ def time_needed[T](i: Int, code: => T) = {
   (end - start) / (i * 1.0e9)
 }
 
-def ppTrace(tr: Trace): String = tr match {
-  case Nil => "[]\n"
-  case xs =>
-    "TRACE\n" ++ ppTraces(xs.map {
-      case Eps => "Eps\n"
-      case Alt(0) => "Alt(0)\n"
-      case Alt(1) => "Alt(1)\n"
-      case Alt(n) => s"Alt($n)\n"
-      case Seq(t1, t2) => "Seq\n" ++ ppTraces(ppTrace(t1), ppTrace(t2))
-      case Star(t1, t2) => "Star\n" ++ ppTraces(ppTrace(t1), ppTrace(t2))
-    }*)
-}
-
-def ppTraces(ts: String*): String = indent(ts)
-
-def ppTraceArray(trace: Array[Trace], n: Int): Unit = for (i <- 0 to n) {
+def ppTraceArray(trace: Array[Trace], n: Int): Unit ={
+  println("===== Trace Array =====")
+  for (i <- 0 to n) {
     val tr = trace(i)
     if (tr == null) println(s"$i: Empty")
-    else println(s"$i: $tr \n${ppTrace(tr)}")
+    else println(s"$i: ${tr.mkString("[", ", ", "]")}")
   }
+}

@@ -1,7 +1,7 @@
-PWD /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian
+PWD /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/LaTex
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/web2c/texmf.cnf
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-var/web2c/pdftex/pdflatex.fmt
-INPUT /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/Terms&Conditions.tex
+INPUT /Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/LaTex/Terms&Conditions.tex
 OUTPUT Terms&Conditions.log
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/tex/latex/base/article.cls
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/tex/latex/base/article.cls
@@ -141,15 +141,15 @@ OUTPUT Terms&Conditions.out
 OUTPUT Terms&Conditions.pdf
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/tfm/arabi/arabeyes/aealmohanadb.tfm
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/tfm/arabi/arabeyes/aealmateen.tfm
+INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/tfm/jknappen/ec/ecbx1728.tfm
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/tfm/arabi/arabeyes/aealmohanadb.tfm
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/tfm/arabi/arabeyes/aealmateen.tfm
-INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/map/pdftex/updmap/pdftex.map
-INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/enc/dvips/arabi/ararabeyes.enc
-INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc
-INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/tfm/jknappen/ec/ecrm1728.tfm
-INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/tfm/jknappen/ec/ecbx1728.tfm
-INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/tfm/jknappen/ec/ecrm1440.tfm
 INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/tfm/jknappen/ec/ecbx1440.tfm
+INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/map/pdftex/updmap/pdftex.map
+INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc
+INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/enc/dvips/arabi/ararabeyes.enc
+INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/tfm/jknappen/ec/ecrm1728.tfm
+INPUT /usr/local/Cellar/texlive/20250308_1/share/texmf-dist/fonts/tfm/jknappen/ec/ecrm1440.tfm
 INPUT Terms&Conditions.aux
 INPUT ./Terms&Conditions.out
 INPUT ./Terms&Conditions.out

@@ -63,6 +63,7 @@ def shifts2 (ms: Marks, r: Rexp) : Marks = r match {
     val ms2 = ms1.diff(ms)
     if (ms2 == Set()) ms else ms ++ shifts2(ms2, STAR(r)) 
   }
+
   case NTIMES(r1, n) =>
     if (n == 0) ms 
     else shifts2(shifts2(ms, r1), NTIMES(r1, n - 1))
