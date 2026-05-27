@@ -1,0 +1,8 @@
+{
+  "millVersion": "1.1.6",
+  "javaVersion": "/Users/meshalbinnasban/Library/Caches/Coursier/arc/https/cdn.azul.com/zulu/bin/zulu21.48.15-ca-jdk21.0.10-macosx_x64.tar.gz/zulu21.48.15-ca-jdk21.0.10-macosx_x64",
+  "jvmOpts": [
+    "--enable-native-access=ALL-UNNAMED"
+  ],
+  "millRepositories": []
+}

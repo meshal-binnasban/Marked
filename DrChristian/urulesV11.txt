@@ -1,0 +1,438 @@
+Version 2 of Shifts
+This version returns in the 1-case the whole set of marks as one would expect from the intention behind the shifts-function. In the previous version,
+we did not—instead we deleted the marks at 1 because of non-termination
+issues in the STAR-case. The problem of non-termination is avoided in this
+version by “deleting” all marks that were not shortened (due to inner 1s or
+STARs for example) when recursing under a STAR. The definition of shift
+(version 2) is as follows:
+shifts ms 0
+
+def
+
+=
+
+[]
+
+shifts ms 1
+
+def
+
+=
+
+ms
+
+shifts ms c
+
+def
+
+shifts ms (r1 + r2 )
+
+def
+
+=
+
+[•s | •c::s 2 ms]
+
+shifts ms r1 @ shifts ms r2
+
+shifts ms (r1 · r2 )
+
+def
+
+=
+
+shifts (shifts ms r1 ) r2
+
+shifts ms (r ⇤ )
+
+def
+
+=
+
+let ms0 = (shifts ms r ) ms in
+if ms0 = [] then ms else ms @ shifts ms0 (r ⇤ )
+
+shifts ms (r {n} )
+
+def
+
+if n = 0 then ms else shifts (shifts ms r ) r {n 1}
+
+=
+
+=
+
+The gratifying feature of this definition is in the SEQ-case where the marks
+are just shifted from the first regex to the second (similarly in the NTIMEScase). There is no need for a complex case-distinction involving nullable.
+The interesting point in the STAR-case is that we are generating a set of
+marks by calculating shifts ms r first, but then remove all marks that have
+not changed. If this set is empty, the recursion can be exited. Otherwise we
+recurse further with only the shortened marks. The result is that, like in the
+case of the old shifts, the lexicographic measure consisting of the size of the
+regular expression and the maximum string in the marks is smaller in each
+case. For example, the regular expressions in the SEQ and NTIMES case
+are smaller. In the recursive case of STAR, the second recursive call is only
+involving shortened marks. Therefore the measure gets smaller.1
+The question now is: Is the new shifts correct? For this it seems reasonable to modify the Strips-definition as follows
+Strip A s
+
+def
+
+Strips A B
+
+def
+
+=
+=
+
+{s2 | 9s1 2 A. s = s1 @ s2 }
+S
+
+(Strip A ‘ B)
+
+1 Termination has been established in Isabelle using the lexicographic measure of the size
+
+of the regular expression and the length of the maximum string in the set of marks.
+
+1
+
+The difference is that in Strip we do not require that s1 must be non-empty
+(this was the case in the old definition). This means if A contains the empty
+string, then actually nothing is stripped off from the string s. For example
+for A = {[], a} and s = a we have
+Strip {[], a} a = {[], a}
+
+With the old definition we only return [] because something non-empty
+must be stripped off. But in the new definition also a is included in the
+result, in effect leaving the string a not being shortened.
+The correctness proof proceeds like the old proof. Like before we prove
+P(ms, r ) where the property is:
+set(shifts ms r ) = Strips ( L(r )) (set ms)
+As before the proof cannot proceed by a simple (structural) induction on r,
+because in the Star-case the second shifts-call is with the same regular expression r ⇤ and the induction hypothesis will not apply in this case. Therefore we proceed with the induction with the measure consisting of the size
+of r and the length of the maximal string in ms. We can show that the strings
+in ms always get smaller in each recursive shifts-call. The measure is therefore defined as
+size r + Max (lenght ‘ (set ms))
+(1)
+One small detail is that Max for empty sets is defined as 0. This simplifies
+some parts of the proof where case distinctions are not needed when the set
+is empty.
+Correctness Proof for shifts. We prove P(ms, r ) by induction using the measure shown above. The proof proceeds then by case-analysis over r:
+
+• Case 0: We want to prove P(ms, 0) which is
+
+set(shifts ms 0) = Strips ( L(0)) (set ms)
+
+The left-hand side is [] by the definition of shifts—then set [] = ∆. The
+right-hand side is also ∆ because L(0) = ∆ and then the definition of
+Strips is also empty.
+
+• Case 1: This case is similar to 0, although L(1) = {[]}. Because Strips {[]} A =
+A for any set of A, we have that both sides are equal to set ms.
+• Case c: This case is straightforward as well as Strip and Strips are defined
+to generate exactly the same suffixes as shifts.
+2
+
+• Case r1 + r2 : In this case we use the property that
+
+Strips A ( B [ C ) = Strips A B [ Strips A C
+
+The induction hypotheses in this case are
+P(ms, r1 ) : set(shifts ms r1 ) = Strips ( L r1 ) (set ms)
+P(ms, r2 ) : set(shifts ms r2 ) = Strips ( L r2 ) (set ms)
+They can be generated, because r1 and r2 are smaller than r1 + r2 . We
+need to prove P(ms, r1 + r2 ):
+set(shifts(ms, r1 + r2 )) = Strips ( L(r1 + r2 )) (set ms)
+By definition of shifts and set we have
+set(shifts ms (r1 + r2 )) = set(shifts ms r1 ) [ set(shifts ms r2 )
+for the left-hand side. Applying the induction hypotheses we obtain
+further:
+... = Strips ( L r1 ) (set ms) [ Strip ( L r2 ) (set ms)
+We have to prove that this is equal to Strips ( L(r1 + r2 )) (set ms). For
+this we know that L(r1 + r2 ) = L(r1 ) [ L(r2 ). Putting all together, this
+case is done.
+
+• Case r1 · r2 : The attractive point of the new Strips-definition is that this
+case does not need any case-distinction about nullable. The main
+property of Strips in this case is
+Strips A ( B@C ) = Strips (Strips A B) C
+which holds without any side-conditions. This simplifies this case
+considerably. The two induction hypotheses in this case are
+P(ms, r1 ) :
+set(shifts ms r1 ) = Strips ( L r1 ) (set ms)
+P(shift ms r1 , r2 ) : set(shifts (shifts ms r1 ) r2 ) =
+Strips ( L r2 ) (set (shifts ms r1 ))
+The second one can be generated by noting that r2 is smaller and therefore our lexicographic measure decreases. Then the calculation is as
+follows:
+3
+
+=
+=
+=
+=
+
+set(shifts ms (r1 · r2 ))
+set(shifts (shifts ms r1 ) r2 )
+Strips ( L r2 ) set(shifts ms r1 )
+Strips ( L r2 ) (Strips ( L r1 ) (set ms))
+Strips ( L r1 @ L r2 ) (set ms))
+
+by def of shifts
+by second IH
+by first IH
+by prop of Strips
+
+The last line concludes the proof because L (r1 · r2 ) = L r1 @ L r2 .
+
+• Case r {n} : This is similar to the SEQ-case because we have for any sets A
+and B that
+Strips A{n+1} B = Strips A{n} (Strips A B)
+
+• Case r ⇤ : This is the only interesting case in the correctness proof. According to the definition of shifts we have to distinguish two cases, namely
+shifts(ms, r ) ms = [] and shifts(ms, r ) ms 6= [].
+In the first case, we assume (i ) shifts(ms, r ) = [] and need to prove
+set ms = Strips ( L(r ⇤ )) (set ms)
+Since r is smaller than r ⇤ we can use the induction hypothesis for
+P(ms, r ) to infer
+set(shifts ms r ) = Strips ( L(r )) (set ms)
+By our assumption (i ), we know that the left-hand side is ∆ and therefore we have
+set(shifts ms r ) (set ms) = ∆
+So by IH we have
+Strips ( L r ) (set ms)
+
+(set ms) = ∆
+
+Maybe a little surprisingly from this we can infer that
+Strips ( L(r ⇤ )) (set ms) = set ms
+holds.2 This completes the first case.
+2 We shall give a proof of this below.
+
+4
+
+In the other case where shifts(ms, r ) 6= [], we need to prove
+set(shifts(ms, r ⇤ )) = Strips ( L(r ⇤ )) (set ms)
+Unfolding the definition of shifts gives
+set(shifts ms r ⇤ ) = set ms [ set(shifts (shifts ms r
+
+ms) r ⇤ )
+
+By using the IHs we can transform the right-hand side to
+set ms [ Strips ( L r ⇤ ) (Strips ( L r ) (set ms)
+
+(set ms))
+
+(2)
+
+Again somewhat surprisingly this turns out to be equal to
+Strips ( L r ⇤ ) (set ms)
+which we need to prove.3 This completes the correctness proof.
+
+The proof above hinges on two properties about Strips involving stars,
+which we give now. Their proofs depend on being able to rewrite A⇤ as a
+S
+“big union” of powers, namely A⇤ = n An . For Stripsthe following property holds
+Strips (
+
+[
+
+An ) B =
+
+n
+
+[
+
+(Strips An B)
+
+n
+
+In effect we can do inductions on powers and use the big union to obtain the
+property for star. Lets start with the first lemma we can prove by induction
+Lemma 1. If Strips A B ✓ B then for all n, Strips ( An ) B ✓ B.
+Proof. The proof proceeds by induction on n generalising over A and B.
+The 0 case follows from the assumption. The n + 1-case follows from the
+property that if X ✓ Y then Strips X Z ✓ Strips Y Z.
+This means that also
+if Strips A B ✓ B then Strips ( A⇤ ) B ✓ B
+3 Again we give a proof of this fact below.
+
+5
+
+holds. It is also clear that B ✓ Strips ( A⇤ ) B holds. Therefore we have
+shown that
+if Strips A B
+
+B = ∆, then Strips ( A⇤ ) B = B.
+
+the reason is that Strips A B B = ∆ is equivalent to Strips A B ✓ B. This
+property completes the simple case for the STAR-correctness.
+The more complicated case hinges on the fact that
+Strips ( A⇤ ) B = B [ Strips ( A⇤ ) (Strips A B
+
+B)
+
+(3)
+
+holds. We show this property in two steps. The easy case is the direction
+Strips ( A⇤ ) (Strips A B
+
+B) ✓ Strips ( A⇤ ) B
+
+and B ✓ Strips ( A⇤ ) B. These together give us one direction of the equation.
+The hard directions is
+Strips ( A⇤ ) B ✓ B [ Strips ( A⇤ ) (Strips A B
+
+B)
+
+Lemma 2. Strips ( An ) B ✓ B [ Strips ( A⇤ ) (Strips A B
+
+B)
+
+We show this first for powers by induction on n.
+
+Proof. The n = 0 is straightforward. The n + 1 case is as follows:
+
+=
+✓
+=
+✓
+✓
+
+Strips ( An+1 ) B
+Strips A (Strips ( An ) B)
+Strips A ( B [ Strips ( A⇤ ) (Strips A B B))
+Strips A B [ Strips A (Strips ( A⇤ ) (Strips A B
+Strips A B [ Strips ( A⇤ ) (Strips A B B)
+B [ Strips ( A⇤ ) (Strips A B B)
+
+B))
+
+by IH & prop about ✓
+by (⇤)
+
+The property (⇤) states that
+Strips A (Strips ( A⇤ ) C ) ✓ Strips ( A⇤ ) C
+
+holds, which can be shown using the star-property A⇤ = {[]} [ A⇤ @A.
+With this we obtain both directions of (3), which completes the whole proof.
+
+6
+
+Questions
+• What does the “annotated” version of this algorithm look like and
+does it produce POSIX values?
+• What is the worst-case number of marks that can be generated by
+shifts? What is a good example that exemplifies this (probably quadratic)
+behaviour? Check with Chengsong’s thesis about what is a “bad” example for the bitcodes with simplification work and check whether it
+is better with shifts. Update: The regular expression is
+
+(( a)⇤ + ( aa)⇤ + ( aaa)⇤ + ( aaaa)⇤ + ( aaaaa)⇤ )⇤
+and strings of a’s. A variant is adding a b at the end which makes
+strings of a’s to be not matched (this is a problem for Python for example).
+Follow-On Question: How many marks are generated for this regex?
+It seems to handle better than the older derivative work.
+• Can the marks be read-back to generate derivatives?
+• What is the relation to the closed-from of derivatives from [3]? (I have
+this paper, ask me for it.)
+• What are the cases in shifts for & and the other bounded regexes?
+(The &-case is not as straightforward as hoped—we probably have
+to formulate the algorithm using pointers into a string, rather than
+marks as strings.)
+
+NOT-Regular Expression
+There is a problem with the NOT-regular expression and the shifts algorithm. At the moment I have implemented this case shifts ( NOT r ) ms as
+1) Take the minimal index in ms and calculate the set of integers from
+this minimum up to the end of the string.
+2) Subtract from this set of indices all indices calculated by shifts r ms
+(since we want to recognise the strings that are not recognised by r).
+
+7
+
+It seems to work, but I only tested a few examples. No exhaustive testing
+yet.
+The problem is with the correctness proof, which might hint that there is
+a counter-example to the method above. It would be good if we can reason
+as follows:
+Strips ( L( NOT r )) ms = Strips (UN IV
+
+L(r )) ms
+
+= (Strips (UN IV ) ms)
+
+(Strips ( L(r )) ms)
+
+(4)
+
+We would be essentially done, because Strips (UN IV ) ms, where UN IV is
+the set of all strings, equates to the set of all suffixes of ms. Unfortunately
+the last step does not hold (at least in general). For arbitrary sets of strings,
+say A, B, and C, the following does not hold (ignore the underlines for the
+moment):
+Strips ( A
+|
+{z
+
+LHS
+
+Rather what holds is
+
+Strips ( A B) C
+= (Strips A C )
+
+B) C = (Strips A C )
+}
+| {z }
+RHS1
+
+(Strips B C )
+| {z }
+
+(Strips B C ) [ (Strips ( A
+|
+
+RHS2
+
+B) C \ Strips B C )
+{z
+}
+term
+
+Now the questions is why for example term is empty in our case, or what
+is a reasonable property about term holds. Even in case A = UN IV there
+are counterexamples which make the simple equation to fail. Assume A =
+{ a, b}, B = { a} and C = { a, b}, then
+LHS = Strips {b} { a, b} = {[]}
+RHS1 = Strips { a, b} { a, b} = {[]}
+RHS2 = Strips { a} { a, b} = {[]}
+RHS1 RHS2 = ∆
+In this case term = {[]}. Another counter-example is A = UN IV, B = { a}
+and C = { a, b}:
+LHS = {[], a, b}
+RHS1 = {[], a, b}
+RHS2 = {[]}
+RHS1 RHS2 = { a, b}
+8
+
+Again in this case term = {[]}, but in general the problem is not just the
+empty string.
+There is the following condition for when term is the empty set:
+term = ∆
+iff 8t. (9s 2 A
+
+B. s@t 2 C ) ) (8s2 2 B. s2 @t 62 C )
+
+In this condition, t is a suffix in the “stripped off” result-set; C is the set of
+(input) marks. The condition states that for every string in L( NOT r ) there
+cannot be a string in L(r ) that produces the same suffix.
+
+References
+[1] A. Asperti, C. S. Coen, and E. Tassi. Regular Expressions, au point.
+arXiv, http://arxiv.org/abs/1010.2604, 2010.
+[2] S. Fischer, F. Huch, and T. Wilke. A Play on Regular Expressions: Functional Pearl. In Proc. of the 15th ACM SIGPLAN International Conference
+on Functional Programming (ICFP), pages 357–368, 2010.
+[3] N. Murugesan and O. V. S. Sundaram. Some Properties of Brzozowski
+Derivatives of Regular Expressions. International Journal of Computer
+Trends and Technology, 13(1):29–33, 2014.
+
+9
+
+

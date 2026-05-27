@@ -1,0 +1,383 @@
+{
+  "shifts10Trace.scala:repl": {
+    "shifts10Trace.scala:scalaVersion": {},
+    "shifts10Trace.scala:javaHome": {
+      "mill.javalib.CoursierConfigModule/coursierEnv": {},
+      "shifts10Trace.scala:jvmVersion": {
+        "shifts10Trace.scala:jvmId": {}
+      },
+      "shifts10Trace.scala:jvmIndexVersion": {}
+    },
+    "shifts10Trace.scala:runClasspath": {
+      "shifts10Trace.scala:runClasspath.super.RunModule": {},
+      "shifts10Trace.scala:resolvedRunMvnDeps": {
+        "shifts10Trace.scala:resolvedDepsWarnNonPlatform": {},
+        "shifts10Trace.scala:runMvnDeps": {},
+        "rexp.scala:scalaVersion": {},
+        "rexp.scala:platformSuffix": {},
+        "rexp.scala:mvnDeps": {},
+        "enumerate.scala:scalaVersion": {},
+        "enumerate.scala:platformSuffix": {},
+        "enumerate.scala:mvnDeps": {},
+        "regenerate.scala:scalaVersion": {},
+        "regenerate.scala:platformSuffix": {},
+        "regenerate.scala:mvnDeps": {},
+        "re_bitrev3.scala:scalaVersion": {},
+        "re_bitrev3.scala:platformSuffix": {},
+        "re_bitrev3.scala:mvnDeps": {},
+        "shifts10Trace.scala:mandatoryMvnDeps": {
+          "shifts10Trace.scala:mandatoryMvnDeps.super.scalalib.ScalaModule": {
+            "shifts10Trace.scala:mandatoryMvnDeps.super.javalib.JavaModule": {},
+            "shifts10Trace.scala:scalaLibraryMvnDeps": {}
+          }
+        },
+        "shifts10Trace.scala:mvnDeps": {},
+        "shifts10Trace.scala:compileMvnDeps": {},
+        "shifts10Trace.scala:bomMvnDeps": {},
+        "shifts10Trace.scala:depManagement": {},
+        "shifts10Trace.scala:transitiveCoursierProjects": {
+          "rexp.scala:transitiveCoursierProjects": {},
+          "rexp.scala:mandatoryMvnDeps": {
+            "rexp.scala:mandatoryMvnDeps.super.scalalib.ScalaModule": {
+              "rexp.scala:mandatoryMvnDeps.super.javalib.JavaModule": {},
+              "rexp.scala:scalaLibraryMvnDeps": {}
+            }
+          },
+          "rexp.scala:compileMvnDeps": {},
+          "rexp.scala:runMvnDeps": {},
+          "rexp.scala:bomMvnDeps": {},
+          "rexp.scala:depManagement": {},
+          "enumerate.scala:transitiveCoursierProjects": {},
+          "regenerate.scala:transitiveCoursierProjects": {},
+          "re_bitrev3.scala:transitiveCoursierProjects": {},
+          "enumerate.scala:mandatoryMvnDeps": {
+            "enumerate.scala:mandatoryMvnDeps.super.scalalib.ScalaModule": {
+              "enumerate.scala:mandatoryMvnDeps.super.javalib.JavaModule": {},
+              "enumerate.scala:scalaLibraryMvnDeps": {}
+            }
+          },
+          "enumerate.scala:compileMvnDeps": {},
+          "enumerate.scala:runMvnDeps": {},
+          "enumerate.scala:bomMvnDeps": {},
+          "enumerate.scala:depManagement": {},
+          "regenerate.scala:mandatoryMvnDeps": {
+            "regenerate.scala:mandatoryMvnDeps.super.scalalib.ScalaModule": {
+              "regenerate.scala:mandatoryMvnDeps.super.javalib.JavaModule": {},
+              "regenerate.scala:scalaLibraryMvnDeps": {}
+            }
+          },
+          "regenerate.scala:compileMvnDeps": {},
+          "regenerate.scala:runMvnDeps": {},
+          "regenerate.scala:bomMvnDeps": {},
+          "regenerate.scala:depManagement": {},
+          "re_bitrev3.scala:mandatoryMvnDeps": {
+            "re_bitrev3.scala:mandatoryMvnDeps.super.scalalib.ScalaModule": {
+              "re_bitrev3.scala:mandatoryMvnDeps.super.javalib.JavaModule": {},
+              "re_bitrev3.scala:scalaLibraryMvnDeps": {}
+            }
+          },
+          "re_bitrev3.scala:compileMvnDeps": {},
+          "re_bitrev3.scala:runMvnDeps": {},
+          "re_bitrev3.scala:bomMvnDeps": {},
+          "re_bitrev3.scala:depManagement": {}
+        },
+        "shifts10Trace.scala:artifactTypes": {}
+      },
+      "shifts10Trace.scala:transitiveLocalClasspath": {
+        "rexp.scala:localClasspath": {
+          "rexp.scala:localCompileClasspath": {
+            "rexp.scala:unmanagedClasspath": {},
+            "rexp.scala:unmanagedClasspathExistenceCheck": {},
+            "rexp.scala:compileResources": {}
+          },
+          "rexp.scala:localRunClasspath": {
+            "rexp.scala:localRunClasspath.super.RunModule": {},
+            "rexp.scala:resources": {},
+            "rexp.scala:compile": {
+              "rexp.scala:compile0": {
+                "rexp.scala:javacOptions": {},
+                "rexp.scala:mandatoryJavacOptions": {},
+                "rexp.scala:upstreamCompileOutput": {},
+                "rexp.scala:allSourceFiles": {
+                  "rexp.scala:scriptSource": {}
+                },
+                "rexp.scala:compileClasspath": {
+                  "rexp.scala:resolvedMvnDeps": {
+                    "rexp.scala:resolvedMvnDeps.super.javalib.JavaModule": {
+                      "rexp.scala:resolvedDepsWarnNonPlatform": {},
+                      "rexp.scala:artifactTypes": {}
+                    }
+                  }
+                },
+                "rexp.scala:allScalacOptions": {
+                  "rexp.scala:mandatoryScalacOptions": {},
+                  "rexp.scala:enablePluginScalacOptions": {},
+                  "rexp.scala:scalacOptions": {}
+                },
+                "rexp.scala:scalaCompilerClasspath": {
+                  "rexp.scala:checkGradleModules": {}
+                },
+                "rexp.scala:scalacPluginClasspath": {
+                  "rexp.scala:scalacPluginMvnDeps": {}
+                },
+                "rexp.scala:scalaCompilerBridge": {},
+                "rexp.scala:zincIncrementalCompilation": {},
+                "rexp.scala:zincAuxiliaryClassFileExtensions": {
+                  "rexp.scala:zincAuxiliaryClassFileExtensions.super.javalib.JavaModule": {}
+                },
+                "rexp.scala:javaHome": {
+                  "rexp.scala:jvmVersion": {
+                    "rexp.scala:jvmId": {}
+                  },
+                  "rexp.scala:jvmIndexVersion": {}
+                },
+                "rexp.scala:zincReportCachedProblems": {}
+              },
+              "rexp.scala:asmWorkerClassloader": {
+                "rexp.scala:asmWorkerClasspath": {}
+              },
+              "rexp.scala:syntheticMainargsMainClasses": {}
+            }
+          }
+        },
+        "enumerate.scala:localClasspath": {
+          "enumerate.scala:localCompileClasspath": {
+            "enumerate.scala:unmanagedClasspath": {},
+            "enumerate.scala:unmanagedClasspathExistenceCheck": {},
+            "enumerate.scala:compileResources": {}
+          },
+          "enumerate.scala:localRunClasspath": {
+            "enumerate.scala:localRunClasspath.super.RunModule": {},
+            "enumerate.scala:resources": {},
+            "enumerate.scala:compile": {
+              "enumerate.scala:compile0": {
+                "enumerate.scala:javacOptions": {},
+                "enumerate.scala:mandatoryJavacOptions": {},
+                "enumerate.scala:upstreamCompileOutput": {},
+                "enumerate.scala:allSourceFiles": {
+                  "enumerate.scala:scriptSource": {}
+                },
+                "enumerate.scala:compileClasspath": {
+                  "enumerate.scala:resolvedMvnDeps": {
+                    "enumerate.scala:resolvedMvnDeps.super.javalib.JavaModule": {
+                      "enumerate.scala:resolvedDepsWarnNonPlatform": {},
+                      "enumerate.scala:artifactTypes": {}
+                    }
+                  }
+                },
+                "enumerate.scala:allScalacOptions": {
+                  "enumerate.scala:mandatoryScalacOptions": {},
+                  "enumerate.scala:enablePluginScalacOptions": {},
+                  "enumerate.scala:scalacOptions": {}
+                },
+                "enumerate.scala:scalaCompilerClasspath": {
+                  "enumerate.scala:checkGradleModules": {}
+                },
+                "enumerate.scala:scalacPluginClasspath": {
+                  "enumerate.scala:scalacPluginMvnDeps": {}
+                },
+                "enumerate.scala:scalaCompilerBridge": {},
+                "enumerate.scala:zincIncrementalCompilation": {},
+                "enumerate.scala:zincAuxiliaryClassFileExtensions": {
+                  "enumerate.scala:zincAuxiliaryClassFileExtensions.super.javalib.JavaModule": {}
+                },
+                "enumerate.scala:javaHome": {
+                  "enumerate.scala:jvmVersion": {
+                    "enumerate.scala:jvmId": {}
+                  },
+                  "enumerate.scala:jvmIndexVersion": {}
+                },
+                "enumerate.scala:zincReportCachedProblems": {}
+              },
+              "enumerate.scala:asmWorkerClassloader": {
+                "enumerate.scala:asmWorkerClasspath": {}
+              },
+              "enumerate.scala:syntheticMainargsMainClasses": {}
+            }
+          }
+        },
+        "regenerate.scala:localClasspath": {
+          "regenerate.scala:localCompileClasspath": {
+            "regenerate.scala:unmanagedClasspath": {},
+            "regenerate.scala:unmanagedClasspathExistenceCheck": {},
+            "regenerate.scala:compileResources": {}
+          },
+          "regenerate.scala:localRunClasspath": {
+            "regenerate.scala:localRunClasspath.super.RunModule": {},
+            "regenerate.scala:resources": {},
+            "regenerate.scala:compile": {
+              "regenerate.scala:compile0": {
+                "regenerate.scala:javacOptions": {},
+                "regenerate.scala:mandatoryJavacOptions": {},
+                "regenerate.scala:upstreamCompileOutput": {},
+                "regenerate.scala:allSourceFiles": {
+                  "regenerate.scala:scriptSource": {}
+                },
+                "regenerate.scala:compileClasspath": {
+                  "regenerate.scala:resolvedMvnDeps": {
+                    "regenerate.scala:resolvedMvnDeps.super.javalib.JavaModule": {
+                      "regenerate.scala:resolvedDepsWarnNonPlatform": {},
+                      "regenerate.scala:artifactTypes": {}
+                    }
+                  }
+                },
+                "regenerate.scala:allScalacOptions": {
+                  "regenerate.scala:mandatoryScalacOptions": {},
+                  "regenerate.scala:enablePluginScalacOptions": {},
+                  "regenerate.scala:scalacOptions": {}
+                },
+                "regenerate.scala:scalaCompilerClasspath": {
+                  "regenerate.scala:checkGradleModules": {}
+                },
+                "regenerate.scala:scalacPluginClasspath": {
+                  "regenerate.scala:scalacPluginMvnDeps": {}
+                },
+                "regenerate.scala:scalaCompilerBridge": {},
+                "regenerate.scala:zincIncrementalCompilation": {},
+                "regenerate.scala:zincAuxiliaryClassFileExtensions": {
+                  "regenerate.scala:zincAuxiliaryClassFileExtensions.super.javalib.JavaModule": {}
+                },
+                "regenerate.scala:javaHome": {
+                  "regenerate.scala:jvmVersion": {
+                    "regenerate.scala:jvmId": {}
+                  },
+                  "regenerate.scala:jvmIndexVersion": {}
+                },
+                "regenerate.scala:zincReportCachedProblems": {}
+              },
+              "regenerate.scala:asmWorkerClassloader": {
+                "regenerate.scala:asmWorkerClasspath": {}
+              },
+              "regenerate.scala:syntheticMainargsMainClasses": {}
+            }
+          }
+        },
+        "re_bitrev3.scala:localClasspath": {
+          "re_bitrev3.scala:localCompileClasspath": {
+            "re_bitrev3.scala:unmanagedClasspath": {},
+            "re_bitrev3.scala:unmanagedClasspathExistenceCheck": {},
+            "re_bitrev3.scala:compileResources": {}
+          },
+          "re_bitrev3.scala:localRunClasspath": {
+            "re_bitrev3.scala:localRunClasspath.super.RunModule": {},
+            "re_bitrev3.scala:resources": {},
+            "re_bitrev3.scala:compile": {
+              "re_bitrev3.scala:compile0": {
+                "re_bitrev3.scala:javacOptions": {},
+                "re_bitrev3.scala:mandatoryJavacOptions": {},
+                "re_bitrev3.scala:upstreamCompileOutput": {},
+                "re_bitrev3.scala:allSourceFiles": {
+                  "re_bitrev3.scala:scriptSource": {}
+                },
+                "re_bitrev3.scala:compileClasspath": {
+                  "re_bitrev3.scala:resolvedMvnDeps": {
+                    "re_bitrev3.scala:resolvedMvnDeps.super.javalib.JavaModule": {
+                      "re_bitrev3.scala:resolvedDepsWarnNonPlatform": {},
+                      "re_bitrev3.scala:artifactTypes": {}
+                    }
+                  }
+                },
+                "re_bitrev3.scala:allScalacOptions": {
+                  "re_bitrev3.scala:mandatoryScalacOptions": {},
+                  "re_bitrev3.scala:enablePluginScalacOptions": {},
+                  "re_bitrev3.scala:scalacOptions": {}
+                },
+                "re_bitrev3.scala:scalaCompilerClasspath": {
+                  "re_bitrev3.scala:checkGradleModules": {}
+                },
+                "re_bitrev3.scala:scalacPluginClasspath": {
+                  "re_bitrev3.scala:scalacPluginMvnDeps": {}
+                },
+                "re_bitrev3.scala:scalaCompilerBridge": {},
+                "re_bitrev3.scala:zincIncrementalCompilation": {},
+                "re_bitrev3.scala:zincAuxiliaryClassFileExtensions": {
+                  "re_bitrev3.scala:zincAuxiliaryClassFileExtensions.super.javalib.JavaModule": {}
+                },
+                "re_bitrev3.scala:javaHome": {
+                  "re_bitrev3.scala:jvmVersion": {
+                    "re_bitrev3.scala:jvmId": {}
+                  },
+                  "re_bitrev3.scala:jvmIndexVersion": {}
+                },
+                "re_bitrev3.scala:zincReportCachedProblems": {}
+              },
+              "re_bitrev3.scala:asmWorkerClassloader": {
+                "re_bitrev3.scala:asmWorkerClasspath": {}
+              },
+              "re_bitrev3.scala:syntheticMainargsMainClasses": {}
+            }
+          }
+        }
+      },
+      "shifts10Trace.scala:localClasspath": {
+        "shifts10Trace.scala:localCompileClasspath": {
+          "shifts10Trace.scala:unmanagedClasspath": {},
+          "shifts10Trace.scala:unmanagedClasspathExistenceCheck": {},
+          "shifts10Trace.scala:compileResources": {}
+        },
+        "shifts10Trace.scala:localRunClasspath": {
+          "shifts10Trace.scala:localRunClasspath.super.RunModule": {},
+          "shifts10Trace.scala:resources": {},
+          "shifts10Trace.scala:compile": {
+            "shifts10Trace.scala:compile0": {
+              "mill.javalib.JvmWorkerModule/internalWorker": {
+                "mill.javalib.JvmWorkerModule/repositories": {},
+                "mill.javalib.JvmWorkerModule/checkGradleModules": {},
+                "mill.javalib.JvmWorkerModule/classpath": {},
+                "mill.javalib.JvmWorkerModule/internalWorkerClassLoader": {},
+                "mill.javalib.JvmWorkerModule/zincLogDebug": {},
+                "mill.javalib.JvmWorkerModule/useFileLocks": {}
+              },
+              "shifts10Trace.scala:javacOptions": {},
+              "shifts10Trace.scala:mandatoryJavacOptions": {},
+              "shifts10Trace.scala:upstreamCompileOutput": {},
+              "shifts10Trace.scala:allSourceFiles": {
+                "shifts10Trace.scala:scriptSource": {}
+              },
+              "shifts10Trace.scala:compileClasspath": {
+                "shifts10Trace.scala:resolvedMvnDeps": {
+                  "shifts10Trace.scala:resolvedMvnDeps.super.javalib.JavaModule": {}
+                }
+              },
+              "shifts10Trace.scala:allScalacOptions": {
+                "shifts10Trace.scala:mandatoryScalacOptions": {},
+                "shifts10Trace.scala:enablePluginScalacOptions": {},
+                "shifts10Trace.scala:scalacOptions": {}
+              },
+              "shifts10Trace.scala:scalaCompilerClasspath": {},
+              "shifts10Trace.scala:scalacPluginClasspath": {
+                "shifts10Trace.scala:scalacPluginMvnDeps": {}
+              },
+              "shifts10Trace.scala:scalaCompilerBridge": {},
+              "shifts10Trace.scala:zincIncrementalCompilation": {},
+              "shifts10Trace.scala:zincAuxiliaryClassFileExtensions": {
+                "shifts10Trace.scala:zincAuxiliaryClassFileExtensions.super.javalib.JavaModule": {}
+              },
+              "shifts10Trace.scala:zincReportCachedProblems": {}
+            },
+            "shifts10Trace.scala:asmWorkerClassloader": {
+              "shifts10Trace.scala:asmWorkerClasspath": {}
+            },
+            "shifts10Trace.scala:syntheticMainargsMainClasses": {}
+          }
+        }
+      }
+    },
+    "shifts10Trace.scala:scalaConsoleClasspath": {
+      "shifts10Trace.scala:platformSuffix": {},
+      "rexp.scala:repositories": {},
+      "re_bitrev3.scala:repositories": {},
+      "regenerate.scala:repositories": {},
+      "enumerate.scala:repositories": {},
+      "shifts10Trace.scala:repositories": {},
+      "shifts10Trace.scala:checkGradleModules": {}
+    },
+    "shifts10Trace.scala:forkArgs": {},
+    "shifts10Trace.scala:allForkEnv": {
+      "shifts10Trace.scala:javaHomePathForkEnv": {},
+      "shifts10Trace.scala:forkEnv": {}
+    },
+    "shifts10Trace.scala:consoleScalacOptions": {},
+    "shifts10Trace.scala:forkWorkingDir": {}
+  }
+}

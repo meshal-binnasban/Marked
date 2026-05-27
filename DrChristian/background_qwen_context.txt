@@ -1,0 +1,519 @@
+PROJECT CONTEXT FOR LOCAL QWEN / OLLAMA
+
+This context is for helping with research questions about my PhD work on regular-expression matching using marked expressions / shifts, especially the current shifts2 bitcode-as-trace implementation.
+
+============================================================
+1. PROJECT GOAL
+============================================================
+
+The project studies regular-expression matching based on marks/shifts rather than derivatives.
+
+The long-term goal is not only boolean matching, but producing the POSIX parse value.
+
+The current direction is:
+
+- use the shifts2 matcher idea;
+- carry/store bitcode directly as the trace;
+- use the stored bitcode to decode a parse value later;
+- compare the resulting value against a derivative-based lexer/reference implementation.
+
+Important: older conversations explored structured trace objects such as Seq(...), Alt(...), Star(...), but the current implementation direction is different:
+the trace is directly a bitcode, usually represented as List[Int].
+
+So when I say trace in the current code, I usually mean:
+
+    type Trace = List[Int]
+
+where each Int is a bit in the bitcode.
+
+============================================================
+2. REGULAR EXPRESSIONS
+============================================================
+
+The regular-expression constructors are:
+
+    ZERO
+    ONE
+    CHAR(c)
+    ALT(r1, r2)
+    SEQ(r1, r2)
+    STAR(r)
+    NTIMES(r, n)
+    NOT(r)     // currently experimental / problematic
+
+Usual language semantics:
+
+    L(ZERO)        = empty set
+    L(ONE)         = { epsilon }
+    L(CHAR(c))     = { c }
+    L(ALT(r1,r2))  = L(r1) union L(r2)
+    L(SEQ(r1,r2))  = L(r1) concatenated with L(r2)
+    L(STAR(r))     = L(r)*
+    L(NTIMES(r,n)) = L(r)^n
+    L(NOT(r))      = universal language minus L(r)
+
+============================================================
+3. DERIVATIVES BACKGROUND
+============================================================
+
+Derivative-based matchers are elegant and useful as a reference.
+
+A string is matched by repeatedly taking derivatives and then checking nullable at the end.
+
+Problem:
+derivatives can suffer from size explosion because derivative steps copy and duplicate subexpressions.
+
+Sulzmann and Lu extended derivatives with bitcodes to reconstruct parse values, but derivative-size growth remains an issue.
+
+The marked/shifts approach is attractive because it moves marks through the expression instead of growing the expression.
+
+============================================================
+4. MARKED EXPRESSIONS / SHIFTS BACKGROUND
+============================================================
+
+The marked approach moves marks through a regular expression.
+
+A mark represents a reached position.
+
+In index-based implementations, marks are input indices.
+
+Example:
+
+    regex = SEQ(CHAR('a'), SEQ(CHAR('b'), CHAR('c')))
+    input = "abc"
+
+The mark moves through the expression as the input is consumed.
+
+In the string/suffix semantics, a mark can be understood as a suffix of the input still remaining.
+
+In the index implementation:
+
+    mark 0 means the whole string remains
+    mark 1 means one character has been consumed
+    mark n means the end of the string has been reached
+
+============================================================
+5. SHIFTS2
+============================================================
+
+shifts2 is the newer version of shifts.
+
+The important feature is:
+
+    shifts ms ONE = ms
+
+So ONE returns the whole set of marks, rather than deleting them.
+
+The core shifts2 equations are:
+
+    shifts ms ZERO = empty
+    shifts ms ONE  = ms
+
+    shifts ms CHAR(c)
+      = all m+1 where m in ms, m < input.length, and input(m) == c
+
+    shifts ms ALT(r1,r2)
+      = shifts ms r1 union shifts ms r2
+
+    shifts ms SEQ(r1,r2)
+      = shifts (shifts ms r1) r2
+
+    shifts ms STAR(r)
+      = let ms1 = shifts ms r - ms
+        if ms1 is empty then ms
+        else ms union shifts ms1 STAR(r)
+
+    shifts ms NTIMES(r,n)
+      = if n == 0 then ms
+        else shifts (shifts ms r) NTIMES(r,n-1)
+
+The STAR case removes marks that have not advanced, preventing non-termination caused by nullable expressions.
+
+The correctness target for shifts2 is:
+
+    set(shifts ms r) = Strips(L(r), set(ms))
+
+============================================================
+6. STRIPS SEMANTICS
+============================================================
+
+The Strips semantics is used to reason about shifts.
+
+Definition:
+
+    Strip(A, s) = { s2 | exists s1 in A such that s = s1 @ s2 }
+
+Meaning:
+Strip(A, s) strips a prefix s1 from s, if that prefix is in A, and returns the remaining suffix s2.
+
+Then:
+
+    Strips(A, B) = union of Strip(A, s) for all s in B
+
+Meaning:
+Strips(A, B) strips prefixes in A from all strings in B.
+
+Important intuition:
+
+    Strips(X, C) = remove prefixes from strings in C where the prefix belongs to X.
+
+For shifts2:
+
+    shifts(ms, r) corresponds to Strips(L(r), ms)
+
+where ms is a set of marks/suffixes.
+
+============================================================
+7. CURRENT BITCODE-AS-TRACE IMPLEMENTATION
+============================================================
+
+Current implementation direction:
+
+    type Trace = List[Int]
+    type Marks = List[Int] or Set[Int], depending on version
+
+But the key idea is:
+
+    bitcode is stored directly as trace.
+
+For each reached mark/index, there is a trace/bitcode explaining how that mark was reached.
+
+The trace is usually stored in an array indexed by input position:
+
+    trace(i) = bitcode for reaching index i
+
+A trace entry may be null if the index has not been reached.
+
+The shifts function propagates marks and updates the trace array.
+
+General first-win idea:
+
+    when trace(b) is empty/null, store the bitcode for reaching b;
+    if trace(b) is already filled, usually keep the first one.
+
+The aim is that the first stored bitcode corresponds to the POSIX-preferred parse.
+
+============================================================
+8. BITCODE CONVENTIONS
+============================================================
+
+ALT:
+    0 means left branch
+    1 means right branch
+
+SEQ:
+    traces are passed from r1 into r2.
+    The bitcode accumulated in r1 is carried forward into r2.
+
+STAR:
+    bits indicate repetition structure.
+    The convention follows the usual bitcode idea:
+    one bit marks continuation/entering another iteration,
+    another bit marks termination.
+    In current experimental code, these are represented by Ints in List[Int].
+
+NTIMES:
+    similar to STAR, but for exactly n repetitions.
+    Bits record repetition progress and termination.
+
+Important:
+The trace is not a structured object like Star(old,new) in the current direction.
+It is the bitcode itself.
+
+============================================================
+9. DECODING
+============================================================
+
+After matching, if the final index n is reached, the trace stored at n is taken as the bitcode.
+
+Then a decoder uses:
+
+    original regex r
+    input string s
+    bitcode trace
+
+to reconstruct a parse value.
+
+The expected result should match the derivative-based POSIX value.
+
+The goal is:
+
+    shifts2 + bitcode trace + decoding = POSIX value
+
+============================================================
+10. POSIX GOAL
+============================================================
+
+The parse value should follow POSIX disambiguation.
+
+Main intended priorities:
+
+1. leftmost-longest behaviour;
+2. consume more characters earlier when comparing competing values;
+3. avoid unnecessary empty matches / delayed consumption;
+4. prefer left ALT branch only as a later tie-breaker.
+
+The derivative-based implementation is treated as the reference / oracle for testing.
+
+============================================================
+11. STAR CASE IN CURRENT TRACE CODE
+============================================================
+
+In the STAR case, code often uses two arrays/guards:
+
+    starOutTrace(b) == null
+    nextStarTrace(b) == null
+
+Intuition:
+
+    starOutTrace(b) == null
+      means first-win trace for STAR globally.
+
+    nextStarTrace(b) == null
+      means first-win trace inside one STAR iteration / one recursive step.
+
+In previous debugging, removing nextStarTrace(b) == null produced wrong values.
+Therefore nextStarTrace is important for correctness of produced bitcodes, not only performance.
+
+Removing starOutTrace(b) == null may still preserve matching semantics in some cases but causes useless re-shifting from marks already reached by STAR globally.
+
+============================================================
+12. NOT OPERATOR ISSUE
+============================================================
+
+The NOT case is experimental and currently problematic.
+
+One attempted implementation:
+
+    case NOT(r) =>
+      val rn = Range(ms.min, s.length + 1).toSet
+      rn.diff(shifts2(ms, r))
+
+Meaning:
+take all marks from min(ms) to the end of the string, then subtract the marks reached by r.
+
+This works only in some simple cases.
+
+The problem:
+subtraction is done globally over marks, but the correctness of NOT depends on the start mark.
+
+A mark can be removed because it is reached by r from one start, even though it should be kept because it is reached by NOT(r) from another start.
+
+============================================================
+13. NOT COUNTEREXAMPLE
+============================================================
+
+Counterexample:
+
+    SEQ(ALT(ONE, "a"), NOT("a"))
+
+Input:
+
+    "aa"
+
+Step 1: r1 = ALT(ONE, "a")
+
+From start 0:
+
+    ONE gives 0
+    "a" gives 1
+
+So after r1:
+
+    ms = {0,1}
+
+Step 2: r2 = NOT("a")
+
+Current implementation takes all marks from min(ms)=0:
+
+    {0,1,2}
+
+Then compute marks from matching "a" from ms={0,1}:
+
+    from 0, "a" reaches 1
+    from 1, "a" reaches 2
+
+So:
+
+    shifts2({0,1}, "a") = {1,2}
+
+Current NOT result:
+
+    {0,1,2} - {1,2} = {0}
+
+Therefore the algorithm fails to accept "aa".
+
+Why this is wrong:
+
+    mark 2 is removed globally.
+
+But mark 2 should be valid from NOT("a") starting at 0, because:
+
+    from mark 0, consuming "aa" is allowed by NOT("a")
+    since "aa" is not equal to "a"
+
+At the same time:
+
+    from mark 1, consuming "a" reaches mark 2 by r = "a"
+
+So the same mark 2 has two origins:
+
+    from r at start 1
+    from NOT(r) at start 0
+
+The algorithm does not distinguish these origins and removes mark 2 incorrectly.
+
+Conclusion:
+
+    NOT cannot be implemented by global endpoint subtraction only.
+    It needs per-start/context-sensitive information.
+
+============================================================
+14. STRIPS EXPLANATION OF NOT FAILURE
+============================================================
+
+For NOT, we would like:
+
+    Strips(A - B, C) = Strips(A, C) - Strips(B, C)
+
+where:
+    A = universal language
+    B = L(r)
+    C = input marks
+
+But this equality is false in general.
+
+The correct relationship is:
+
+    Strips(A - B, C)
+      =
+    (Strips(A, C) - Strips(B, C)) union term
+
+where:
+
+    term = Strips(A - B, C) intersect Strips(B, C)
+
+Meaning of term:
+results/suffixes that can be produced both by:
+    - stripping a prefix not in B
+    - stripping a prefix in B
+
+Intuition:
+subtraction removes all suffixes produced by B,
+but some of those suffixes are also valid results from A-B.
+The term is the part wrongly removed by naive subtraction.
+
+Condition for term to be empty:
+
+    for every result suffix t,
+    if t is produced by NOT(r),
+    then t must not also be produced by r.
+
+In the counterexample, this condition fails.
+
+============================================================
+15. CURRENT RESEARCH TASKS
+============================================================
+
+Current tasks from supervisor:
+
+1. Look at two marks / two strings and understand the condition for NOT.
+   We have shown the counterexample where the same mark is produced by both r and NOT(r).
+
+2. Add NOT and test it.
+   Use the current shifts2 implementation and test the observed counterexample.
+
+3. Try common/global array approach.
+   Marks may be treated as pairs:
+
+       (index, trace)
+
+   where index is the current mark and trace is the bitcode for reaching it.
+
+   A common/global array stores the first-winning bitcode at each index.
+
+4. Work on the report.
+
+5. Use Mill instead of Ammonite.
+
+============================================================
+16. MILL / SCALA SETUP
+============================================================
+
+Current Scala environment:
+
+    Scala 3
+    Mill
+
+Run:
+
+    mill shifts10.scala:repl
+
+In the REPL, import:
+
+    import Rexp._
+
+Then test examples like:
+
+    ALT("a","a")
+    matcher(SEQ(ALT(ONE, "a"), NOT("a")), "aa")
+
+Files:
+    rexp.scala
+    enumerate.scala
+    regenerate.scala
+    shifts10.scala
+
+Important Mill header style used by supervisor:
+
+    //| scalaVersion: 3.8.3
+    //| scalacOptions: ["-deprecation", "-feature"]
+    //| mvnDeps:
+    //|   - org.scala-lang:scala3-library_3:3.8.3
+    //| moduleDeps:
+    //|   - rexp.scala
+    //|   - enumerate.scala
+    //|   - regenerate.scala
+
+============================================================
+17. IMPORTANT CAUTIONS FOR THE MODEL
+============================================================
+
+Do not assume old structured trace design is current.
+
+Current trace = bitcode stored directly as List[Int].
+
+Do not propose replacing bitcode trace with structured trace unless explicitly asked.
+
+Preserve existing function names and code structure unless asked.
+
+When suggesting code:
+    - use neat Scala formatting;
+    - avoid comments in code unless requested;
+    - keep changes minimal;
+    - prefer algorithmic fixes, not hot fixes.
+
+When discussing NOT:
+    - distinguish global subtraction from per-start subtraction;
+    - remember the counterexample on "aa";
+    - remember that same endpoint/mark can have different origins.
+
+When discussing STAR:
+    - distinguish starOutTrace and nextStarTrace;
+    - nextStarTrace is important for first-win inside one STAR step;
+    - starOutTrace is first-win for STAR globally.
+
+============================================================
+18. QUESTIONS TO ASK THIS MODEL
+============================================================
+
+Useful prompts after loading this context:
+
+1. Explain why NOT fails in shifts2 using the "aa" counterexample.
+2. Suggest a start-sensitive NOT implementation.
+3. How can marks as (index, trace) help with NOT?
+4. Does a global trace array lose information for NOT?
+5. Explain the STAR case with bitcode traces.
+6. How can I test shifts2 against the derivative baseline?
+7. What invariant should the bitcode trace array satisfy?
+8. What would a proof statement for bitcode-carrying shifts2 look like?

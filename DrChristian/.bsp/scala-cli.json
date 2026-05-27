@@ -1,0 +1,20 @@
+{
+  "name": "scala-cli",
+  "argv": [
+    "/usr/local/bin/scala-cli",
+    "bsp",
+    "--json-options",
+    "/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/.scala-build/ide-options-v2.json",
+    "--json-launcher-options",
+    "/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/.scala-build/ide-launcher-options.json",
+    "--envs-file",
+    "/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/.scala-build/ide-envs.json",
+    "/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts10Trace.scala"
+  ],
+  "version": "1.6.2",
+  "bspVersion": "2.1.1",
+  "languages": [
+    "scala",
+    "java"
+  ]
+}

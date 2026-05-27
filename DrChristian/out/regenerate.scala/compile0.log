@@ -1,0 +1,120 @@
+compiling 1 Scala source to out/regenerate.scala/compile0.dest/classes ...
+[[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[0m:[33m290[0m:[33m472[0m
+[0m[33mtype[0m [36mmain[0m = mainargs.[32mmain[0m; [33mprivate[0m [33mdef[0m regenerate_scala_millScriptMainSelf = [33mthis[0m; [33mobject[0m [33mMillScriptMain_regenerate_scala[0m { [33mdef[0m main(args: [33mArray[0m[[33mString[0m]): [33mUnit[0m = [33mthis[0m.getClass.getMethods.find(m => m.getName == [32m"main"[0m && m.getParameters.map(_.getType) == [33mSeq[0m(classOf[[33mArray[0m[[33mString[0m]]) && m.getReturnType == classOf[[33mUnit[0m]) [33mmatch[0m{ [33mcase[0m [33mSome[0m(m) => m.invoke(regenerate_scala_millScriptMainSelf, args); [33mcase[0m [33mNone[0m => mainargs.[33mParser[0m(regenerate_scala_millScriptMainSelf).runOrExit(args) }}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       [33m^[0m
+[33mmethod[0m [32mcopyArrayToImmutableIndexedSeq[0m in [33mclass[0m [32mLowPriorityImplicits2[0m is deprecated since 2.13.0: implicit conversions from Array to immutable.IndexedSeq are implemented by copying; use `toIndexedSeq` explicitly if you want to copy, or use the more efficient non-copying ArraySeq.unsafeWrapArray
+
+[[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[0m:[33m13[0m:[33m82[0m
+[0m[33mdef[0m [36mmerge[0m[[36mA[0m]([36mxs[0m: [32mLazyList[0m[[32mA[0m], [36mys[0m: [32mLazyList[0m[[32mA[0m])(using [32mOrdering[0m[[32mA[0m]): [32mLazyList[0m[[32mA[0m] = (xs, ys) [33mmatch[0m {
+                                                                                 [33m^^^^^^^^[0m
+[33mmatch[0m may not be exhaustive.
+
+It would fail on pattern case: (LazyList(_, _*), LazyList(_, _*))
+
+
+[[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[0m:[33m23[0m:[33m82[0m
+[0m[33mdef[0m [36minter[0m[[36mA[0m]([36mxs[0m: [32mLazyList[0m[[32mA[0m], [36mys[0m: [32mLazyList[0m[[32mA[0m])(using [32mOrdering[0m[[32mA[0m]): [32mLazyList[0m[[32mA[0m] = (xs, ys) [33mmatch[0m {
+                                                                                 [33m^^^^^^^^[0m
+[33mmatch[0m may not be exhaustive.
+
+It would fail on pattern case: (LazyList(_, _*), LazyList(_, _*))
+
+
+[[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[0m:[33m32[0m:[33m81[0m
+[0m[33mdef[0m [36mdiff[0m[[36mA[0m]([36mxs[0m: [32mLazyList[0m[[32mA[0m], [36mys[0m: [32mLazyList[0m[[32mA[0m])(using [32mOrdering[0m[[32mA[0m]): [32mLazyList[0m[[32mA[0m] = (xs, ys) [33mmatch[0m {
+                                                                                [33m^^^^^^^^[0m
+[33mmatch[0m may not be exhaustive.
+
+It would fail on pattern case: (LazyList(_, _*), LazyList(_, _*))
+
+
+[[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[0m:[33m53[0m:[33m40[0m
+[0m[33mdef[0m [36munion1[0m([36mxs[0m: [32mLang[0m, [36mys[0m: [32mLang[0m): [32mLang[0m = (xs, ys) [33mmatch[0m {
+                                       [33m^^^^^^^^[0m
+[33mmatch[0m may not be exhaustive.
+
+It would fail on pattern case: (_, _)
+
+
+[[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[0m:[33m61[0m:[33m40[0m
+[0m[33mdef[0m [36minter1[0m([36mxs[0m: [32mLang[0m, [36mys[0m: [32mLang[0m): [32mLang[0m = (xs, ys) [33mmatch[0m {
+                                       [33m^^^^^^^^[0m
+[33mmatch[0m may not be exhaustive.
+
+It would fail on pattern case: (_, _)
+
+
+[[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[0m:[33m69[0m:[33m39[0m
+[0m[33mdef[0m [36mdiff1[0m([36mxs[0m: [32mLang[0m, [36mys[0m: [32mLang[0m): [32mLang[0m = (xs, ys) [33mmatch[0m {
+                                      [33m^^^^^^^^[0m
+[33mmatch[0m may not be exhaustive.
+
+It would fail on pattern case: (_, _)
+
+
+[[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[0m:[33m77[0m:[33m44[0m
+[0m[33mdef[0m [36mconcatLang[0m([36mxs[0m: [32mLang[0m, [36mys[0m: [32mLang[0m): [32mLang[0m = (xs, ys) [33mmatch[0m {
+                                           [33m^^^^^^^^[0m
+[33mmatch[0m may not be exhaustive.
+
+It would fail on pattern case: (_, _)
+
+
+[[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[0m:[33m101[0m:[33m55[0m
+[0m[33mdef[0m [36munionSegs[0m([36mxs[0m: [32mSegments[0m)([36mys[0m: [32mSegments[0m): [32mSegments[0m = (xs, ys) [33mmatch[0m {
+                                                      [33m^^^^^^^^[0m
+[33mmatch[0m may not be exhaustive.
+
+It would fail on pattern case: (LazyList(_, _*), LazyList(_, _*))
+
+
+[[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[0m:[33m109[0m:[33m55[0m
+[0m[33mdef[0m [36minterSegs[0m([36mxs[0m: [32mSegments[0m)([36mys[0m: [32mSegments[0m): [32mSegments[0m = (xs, ys) [33mmatch[0m {
+                                                      [33m^^^^^^^^[0m
+[33mmatch[0m may not be exhaustive.
+
+It would fail on pattern case: (LazyList(_, _*), LazyList(_, _*))
+
+
+[[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[0m:[33m117[0m:[33m54[0m
+[0m[33mdef[0m [36mdiffSegs[0m([36mxs[0m: [32mSegments[0m)([36mys[0m: [32mSegments[0m): [32mSegments[0m = (xs, ys) [33mmatch[0m {
+                                                     [33m^^^^^^^^[0m
+[33mmatch[0m may not be exhaustive.
+
+It would fail on pattern case: (LazyList(_, _*), LazyList(_, _*))
+
+
+[[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[0m:[33m147[0m:[33m48[0m
+[0m: ([33mLang[0m, [33mSegments[0m, [33mOption[0m[[33mInt[0m], [33mOption[0m[[33mInt[0m]) = (a, segs, b, c) [33mmatch[0m {
+                                               [33m^^^^^^^^^^^^^^^[0m
+[33mmatch[0m may not be exhaustive.
+
+It would fail on pattern case: (_, LazyList(_, _*), None, _)
+
+
+[[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[0m:[33m214[0m:[33m76[0m
+[0m[33mdef[0m [36mconcatWithSegments[0m([36mxs[0m: [32mSegments[0m, [36mys[0m: [32mLazyList[0m[[32mLang[0m]): [32mLazyList[0m[[32mLang[0m] = (xs, ys) [33mmatch[0m {
+                                                                           [33m^^^^^^^^[0m
+[33mmatch[0m may not be exhaustive.
+
+It would fail on pattern case: (LazyList(_, _*), LazyList(_, _*))
+
+
+[[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[0m:[33m221[0m:[33m77[0m
+[0m[33mdef[0m [36mconcatWithSegments1[0m([36mys[0m: [32mLazyList[0m[[32mLang[0m], [36mxs[0m: [32mSegments[0m): [32mLazyList[0m[[32mLang[0m] = (ys, xs) [33mmatch[0m {
+                                                                            [33m^^^^^^^^[0m
+[33mmatch[0m may not be exhaustive.
+
+It would fail on pattern case: (LazyList(_, _*), LazyList(_, _*))
+
+
+[[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[0m:[33m253[0m:[33m34[0m
+[0m    [33mdef[0m [36mgen[0m([36mr[0m: [32mRexp[0m): [32mSegments[0m = r [33mmatch[0m {
+                                 [33m^[0m
+[33mmatch[0m may not be exhaustive.
+
+It would fail on pattern case: Rexp.NTIMES(_, _), Rexp.OPTIONAL(_), Rexp.AND(_, _)
+
+
+[[33mwarn[39m] 15 warnings found
+done compiling

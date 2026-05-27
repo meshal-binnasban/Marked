@@ -1,0 +1,11 @@
+{
+    "value": [
+        "org.scala-lang:scala3-library_3:3.8.3",
+        "org.scala-lang.modules::scala-parallel-collections:1.2.0"
+    ],
+    "valueHash": -370392500,
+    "inputsHash": 1877352288,
+    "millVersion": "1.1.6",
+    "millJvmVersion": "21.0.10",
+    "classLoaderSigHash": 220474415
+}

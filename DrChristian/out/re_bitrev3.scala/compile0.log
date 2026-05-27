@@ -1,0 +1,32 @@
+compiling 1 Scala source to out/re_bitrev3.scala/compile0.dest/classes ...
+[[33mwarn[39m] [33mout/re_bitrev3.scala/allSourceFiles.dest/re_bitrev3.scala[0m:[33m282[0m:[33m472[0m
+[0m[33mtype[0m [36mmain[0m = mainargs.[32mmain[0m; [33mprivate[0m [33mdef[0m re_bitrev3_scala_millScriptMainSelf = [33mthis[0m; [33mobject[0m [33mMillScriptMain_re_bitrev3_scala[0m { [33mdef[0m main(args: [33mArray[0m[[33mString[0m]): [33mUnit[0m = [33mthis[0m.getClass.getMethods.find(m => m.getName == [32m"main"[0m && m.getParameters.map(_.getType) == [33mSeq[0m(classOf[[33mArray[0m[[33mString[0m]]) && m.getReturnType == classOf[[33mUnit[0m]) [33mmatch[0m{ [33mcase[0m [33mSome[0m(m) => m.invoke(re_bitrev3_scala_millScriptMainSelf, args); [33mcase[0m [33mNone[0m => mainargs.[33mParser[0m(re_bitrev3_scala_millScriptMainSelf).runOrExit(args) }}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       [33m^[0m
+[33mmethod[0m [32mcopyArrayToImmutableIndexedSeq[0m in [33mclass[0m [32mLowPriorityImplicits2[0m is deprecated since 2.13.0: implicit conversions from Array to immutable.IndexedSeq are implemented by copying; use `toIndexedSeq` explicitly if you want to copy, or use the more efficient non-copying ArraySeq.unsafeWrapArray
+
+[[33mwarn[39m] [33mout/re_bitrev3.scala/allSourceFiles.dest/re_bitrev3.scala[0m:[33m61[0m:[33m35[0m
+[0m[33mdef[0m [36minternalise[0m([36mr[0m: [32mRexp[0m): [32mARexp[0m = r [33mmatch[0m {
+                                  [33m^[0m
+[33mmatch[0m may not be exhaustive.
+
+It would fail on pattern case: Rexp.AND(_, _)
+
+
+[[33mwarn[39m] [33mout/re_bitrev3.scala/allSourceFiles.dest/re_bitrev3.scala[0m:[33m98[0m:[33m30[0m
+[0m[33mdef[0m [36mbmkeps[0m([36mr[0m: [32mARexp[0m): [32mBits[0m = r [33mmatch[0m {
+                             [33m^[0m
+[33mmatch[0m may not be exhaustive.
+
+It would fail on pattern case: AZERO, ARexp.ACHAR(_, _), ARexp.AALTS(_: List, Nil)
+
+
+[[33mwarn[39m] [33mout/re_bitrev3.scala/allSourceFiles.dest/re_bitrev3.scala[0m:[33m224[0m:[33m26[0m
+[0m[33mdef[0m [36msize[0m([36mr[0m: [32mRexp[0m): [32mInt[0m = r [33mmatch[0m {
+                         [33m^[0m
+[33mmatch[0m may not be exhaustive.
+
+It would fail on pattern case: Rexp.AND(_, _)
+
+
+[[33mwarn[39m] four warnings found
+done compiling

@@ -1,0 +1,10 @@
+{
+    "value": {
+        "PATH": "/Users/meshalbinnasban/Library/Caches/Coursier/arc/https/cdn.azul.com/zulu/bin/zulu21.48.15-ca-jdk21.0.10-macosx_x64.tar.gz/zulu21.48.15-ca-jdk21.0.10-macosx_x64/zulu-21.jdk/Contents/Home/bin:/Users/meshalbinnasban/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand:/Users/meshalbinnasban/Library/Application Support/Code/User/globalStorage/github.copilot-chat/copilotCli:/usr/local/opt/openjdk@17/bin:/Library/Frameworks/Python.framework/Versions/3.9/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/opt/X11/bin:/Library/Apple/usr/bin:/Library/TeX/texbin:/usr/local/share/dotnet:~/.dotnet/tools:/Library/Frameworks/Mono.framework/Versions/Current/Commands:/Users/meshalbinnasban/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand:/Users/meshalbinnasban/Library/Application Support/Code/User/globalStorage/github.copilot-chat/copilotCli:/Users/meshalbinnasban/anaconda3/bin:/Users/meshalbinnasban/anaconda3/condabin:/Users/meshalbinnasban/.vscode/extensions/vscjava.vscode-java-debug-0.59.0/bundled/scripts/noConfigScripts:/Users/meshalbinnasban/.vscode/extensions/ms-python.debugpy-2025.6.0-darwin-arm64/bundled/scripts/noConfigScripts:/Users/meshalbinnasban/Library/Android/sdk/build-tools/23.0.1:/Users/meshalbinnasban/Library/Android/sdk/build-tools/23"
+    },
+    "valueHash": -2124096900,
+    "inputsHash": -1975594699,
+    "millVersion": "1.1.6",
+    "millJvmVersion": "21.0.10",
+    "classLoaderSigHash": 220474415
+}

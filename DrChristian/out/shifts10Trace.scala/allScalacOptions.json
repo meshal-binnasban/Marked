@@ -1,0 +1,12 @@
+{
+    "value": [
+        "-deprecation",
+        "-feature",
+        "-language:implicitConversions"
+    ],
+    "valueHash": -137738429,
+    "inputsHash": -292512654,
+    "millVersion": "1.1.6",
+    "millJvmVersion": "21.0.10",
+    "classLoaderSigHash": 220474415
+}
