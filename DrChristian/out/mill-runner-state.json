@@ -1,6 +1,46 @@
 {
-    "workerCache": {},
-    "evalWatched": [],
+    "workerCache": {
+        "shifts10TracePure.scala:asmWorkerClassloader": {
+            "identityHashCode": 595037875,
+            "inputHash": 1986786739
+        },
+        "Generators.scala:asmWorkerClassloader": {
+            "identityHashCode": 520901459,
+            "inputHash": 1803675761
+        },
+        "mill.javalib.JvmWorkerModule/internalWorkerClassLoader": {
+            "identityHashCode": 1134716762,
+            "inputHash": 1235125048
+        },
+        "re_bitrev3.scala:asmWorkerClassloader": {
+            "identityHashCode": 1980875964,
+            "inputHash": 1986786739
+        },
+        "regenerate.scala:asmWorkerClassloader": {
+            "identityHashCode": 1770839771,
+            "inputHash": 1986786739
+        },
+        "rexp.scala:asmWorkerClassloader": {
+            "identityHashCode": 342335090,
+            "inputHash": 1986786739
+        },
+        "enumerate.scala:asmWorkerClassloader": {
+            "identityHashCode": 1143972627,
+            "inputHash": 1986786739
+        },
+        "mill.javalib.JvmWorkerModule/internalWorker": {
+            "identityHashCode": 1021557518,
+            "inputHash": -548602083
+        }
+    },
+    "evalWatched": [
+        "/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/enumerate.scala",
+        "/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/re_bitrev3.scala",
+        "/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/shifts10TracePure.scala",
+        "/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/rexp.scala",
+        "/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/regenerate.scala",
+        "/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/Generators.scala"
+    ],
     "moduleWatched": [],
     "classLoaderIdentity": null,
     "runClasspath": [],

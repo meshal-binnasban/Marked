@@ -1,10 +1,10 @@
 {
     "value": {
         "analysisFile": "/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/out/re_bitrev3.scala/compile0.dest/zinc",
-        "classes": "ref:v0:48d752eb:/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/out/re_bitrev3.scala/compile.dest/classes"
+        "classes": "ref:v0:1b05bcf5:/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/out/re_bitrev3.scala/compile.dest/classes"
     },
-    "valueHash": 544077154,
-    "inputsHash": -930018564,
+    "valueHash": 509853143,
+    "inputsHash": 791954051,
     "millVersion": "1.1.6",
     "millJvmVersion": "21.0.10",
     "classLoaderSigHash": 220474415

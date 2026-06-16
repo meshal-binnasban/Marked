@@ -1,5 +1,5 @@
 compiling 1 Scala source to out/rexp.scala/compile0.dest/classes ...
-[[33mwarn[39m] [33mout/rexp.scala/allSourceFiles.dest/rexp.scala[0m:[33m189[0m:[33m38[0m
+[[33mwarn[39m] [33mout/rexp.scala/allSourceFiles.dest/rexp.scala[0m:[33m193[0m:[33m38[0m
 [0m    [33mval[0m ([33mStars[0m(vs), bs2) = decode_aux(STAR(r), bs1)
                                      [33m^^^^^^^^^^^^^^[0m
 pattern's type Val.Stars is more specialized than the right hand side expression's type Val
@@ -8,7 +8,7 @@ If the narrowing is intentional, this can be communicated by adding `.runtimeChe
 which may result in a MatchError at runtime.
 This patch can be rewritten automatically under -rewrite -source 3.8-migration.
 
-[[33mwarn[39m] [33mout/rexp.scala/allSourceFiles.dest/rexp.scala[0m:[33m194[0m:[33m38[0m
+[[33mwarn[39m] [33mout/rexp.scala/allSourceFiles.dest/rexp.scala[0m:[33m198[0m:[33m38[0m
 [0m    [33mval[0m ([33mNt[0m(vs, _), bs2) = decode_aux(NTIMES(r, n - [32m1[0m), bs1)
                                      [33m^^^^^^^^^^^^^^^^^^^^^^^[0m
 pattern's type Val.Nt is more specialized than the right hand side expression's type Val
@@ -17,12 +17,12 @@ If the narrowing is intentional, this can be communicated by adding `.runtimeChe
 which may result in a MatchError at runtime.
 This patch can be rewritten automatically under -rewrite -source 3.8-migration.
 
-[[33mwarn[39m] [33mout/rexp.scala/allSourceFiles.dest/rexp.scala[0m:[33m208[0m:[33m448[0m
+[[33mwarn[39m] [33mout/rexp.scala/allSourceFiles.dest/rexp.scala[0m:[33m212[0m:[33m448[0m
 [0m[33mtype[0m [36mmain[0m = mainargs.[32mmain[0m; [33mprivate[0m [33mdef[0m rexp_scala_millScriptMainSelf = [33mthis[0m; [33mobject[0m [33mMillScriptMain_rexp_scala[0m { [33mdef[0m main(args: [33mArray[0m[[33mString[0m]): [33mUnit[0m = [33mthis[0m.getClass.getMethods.find(m => m.getName == [32m"main"[0m && m.getParameters.map(_.getType) == [33mSeq[0m(classOf[[33mArray[0m[[33mString[0m]]) && m.getReturnType == classOf[[33mUnit[0m]) [33mmatch[0m{ [33mcase[0m [33mSome[0m(m) => m.invoke(rexp_scala_millScriptMainSelf, args); [33mcase[0m [33mNone[0m => mainargs.[33mParser[0m(rexp_scala_millScriptMainSelf).runOrExit(args) }}
                                                                                                                                                                                                                                                                                                                                                                                                                                                                [33m^[0m
 [33mmethod[0m [32mcopyArrayToImmutableIndexedSeq[0m in [33mclass[0m [32mLowPriorityImplicits2[0m is deprecated since 2.13.0: implicit conversions from Array to immutable.IndexedSeq are implemented by copying; use `toIndexedSeq` explicitly if you want to copy, or use the more efficient non-copying ArraySeq.unsafeWrapArray
 
-[[33mwarn[39m] [33mout/rexp.scala/allSourceFiles.dest/rexp.scala[0m:[33m79[0m:[33m35[0m
+[[33mwarn[39m] [33mout/rexp.scala/allSourceFiles.dest/rexp.scala[0m:[33m83[0m:[33m35[0m
 [0m[33mdef[0m [36mnullable[0m([36mr[0m: [32mRexp[0m) : [32mBoolean[0m = r [33mmatch[0m {
                                   [33m^[0m
 [33mmatch[0m may not be exhaustive.
@@ -30,7 +30,7 @@ This patch can be rewritten automatically under -rewrite -source 3.8-migration.
 It would fail on pattern case: Rexp.AND(_, _)
 
 
-[[33mwarn[39m] [33mout/rexp.scala/allSourceFiles.dest/rexp.scala[0m:[33m91[0m:[33m28[0m
+[[33mwarn[39m] [33mout/rexp.scala/allSourceFiles.dest/rexp.scala[0m:[33m95[0m:[33m28[0m
 [0m[33mdef[0m [36mmkeps[0m([36mr[0m: [32mRexp[0m) : [32mVal[0m = r [33mmatch[0m {
                            [33m^[0m
 [33mmatch[0m may not be exhaustive.
@@ -38,7 +38,7 @@ It would fail on pattern case: Rexp.AND(_, _)
 It would fail on pattern case: ZERO, Rexp.CHAR(_), Rexp.AND(_, _)
 
 
-[[33mwarn[39m] [33mout/rexp.scala/allSourceFiles.dest/rexp.scala[0m:[33m103[0m:[33m32[0m
+[[33mwarn[39m] [33mout/rexp.scala/allSourceFiles.dest/rexp.scala[0m:[33m107[0m:[33m32[0m
 [0m[33mdef[0m [36mmkepsBits[0m([36mr[0m: [32mRexp[0m): [32mBits[0m = r [33mmatch[0m {
                                [33m^[0m
 [33mmatch[0m may not be exhaustive.
@@ -46,12 +46,12 @@ It would fail on pattern case: ZERO, Rexp.CHAR(_), Rexp.AND(_, _)
 It would fail on pattern case: ZERO, Rexp.CHAR(_), Rexp.AND(_, _)
 
 
-[[33mwarn[39m] [33mout/rexp.scala/allSourceFiles.dest/rexp.scala[0m:[33m113[0m:[33m8[0m
+[[33mwarn[39m] [33mout/rexp.scala/allSourceFiles.dest/rexp.scala[0m:[33m117[0m:[33m8[0m
 [0m  [33mcase[0m NOT(r) => [33mNil[0m
        [33m^^^^^^[0m
 Unreachable case
 
-[[33mwarn[39m] [33mout/rexp.scala/allSourceFiles.dest/rexp.scala[0m:[33m116[0m:[33m36[0m
+[[33mwarn[39m] [33mout/rexp.scala/allSourceFiles.dest/rexp.scala[0m:[33m120[0m:[33m36[0m
 [0m[33mdef[0m [36mder[0m([36mc[0m: [32mChar[0m, [36mr[0m: [32mRexp[0m) : [32mRexp[0m = r [33mmatch[0m {
                                    [33m^[0m
 [33mmatch[0m may not be exhaustive.
@@ -59,13 +59,13 @@ Unreachable case
 It would fail on pattern case: Rexp.AND(_, _), Rexp.NOT(_)
 
 
-[[33mwarn[39m] [33mout/rexp.scala/allSourceFiles.dest/rexp.scala[0m:[33m174[0m:[33m50[0m
+[[33mwarn[39m] [33mout/rexp.scala/allSourceFiles.dest/rexp.scala[0m:[33m178[0m:[33m50[0m
 [0m[33mdef[0m [36mdecode_aux[0m([36mr[0m: [32mRexp[0m, [36mbs[0m: [32mBits[0m): ([32mVal[0m, [32mBits[0m) = (r, bs) [33mmatch[0m {
                                                  [33m^^^^^^^[0m
 [33mmatch[0m may not be exhaustive.
 
-It would fail on pattern case: (ZERO, _: List), (Rexp.ALT(_, _), Nil), (Rexp.STAR(_), Nil), (Rexp.NTIMES(_, _), Nil), (Rexp.OPTIONAL(_), _: List), (Rexp.AND(_, _), _: List)
-
+It would fail on pattern case: (ZERO, _: List), (Rexp.ALT(_, _), List(Ss, _*)), (Rexp.ALT(_, _), List(Zz, _*)), (Rexp.ALT(_, _), Nil), (Rexp.STAR(_), List(Z, _*)), (Rexp.STAR(_), List(S, _*))
+(More unmatched cases are elided)
 
 [[33mwarn[39m] 9 warnings found
 done compiling

@@ -1,7 +1,7 @@
 {
     "value": {
         "worker": "regenerate.scala:asmWorkerClassloader",
-        "toString": "mill.api.daemon.MillURLClassLoader@4b4e91c5",
+        "toString": "mill.api.daemon.MillURLClassLoader@ea34976",
         "inputsHash": 1986786739
     },
     "valueHash": 1986786739,

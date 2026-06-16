@@ -17,10 +17,14 @@ import scala.language.implicitConversions
 enum Bit {
   case Z
   case S
+  case Ss
+  case Zz
 
   override def toString = this match {
-    case Z => "0"
-    case S => "1"
+    case Z => "L"
+    case S => "R"
+    case Ss => "1"
+    case Zz => "0"
   }
 }
 
@@ -104,7 +108,7 @@ def mkepsBits(r: Rexp): Bits = r match {
   case ONE => Nil
   case ALT(r1, r2) => if (nullable(r1)) Bit.Z :: mkepsBits(r1) else Bit.S :: mkepsBits(r2)
   case SEQ(r1, r2) => mkepsBits(r1) ::: mkepsBits(r2)
-  case STAR(r) => List(Bit.S)
+  case STAR(r) => List(Bit.Ss)
   case NTIMES(r, n) =>
     if (n == 0) List(Bit.S)
     else Bit.Z :: (mkepsBits(r) ::: mkepsBits(NTIMES(r, n - 1)))
@@ -184,11 +188,11 @@ def decode_aux(r: Rexp, bs: Bits): (Val, Bits) = (r, bs) match {
     val (v1, bs1) = decode_aux(r1, bs)
     val (v2, bs2) = decode_aux(r2, bs1)
     (Sequ(v1, v2), bs2)
-  case (STAR(r), Bit.Z :: bs) =>
+  case (STAR(r), Bit.Zz :: bs) =>
     val (v, bs1) = decode_aux(r, bs)
     val (Stars(vs), bs2) = decode_aux(STAR(r), bs1)
     (Stars(v :: vs), bs2)
-  case (STAR(_), Bit.S :: bs) => (Stars(Nil), bs)
+  case (STAR(_), Bit.Ss :: bs) => (Stars(Nil), bs)
   case (NTIMES(r, n), Bit.Z :: bs) =>
     val (v, bs1) = decode_aux(r, bs)
     val (Nt(vs, _), bs2) = decode_aux(NTIMES(r, n - 1), bs1)

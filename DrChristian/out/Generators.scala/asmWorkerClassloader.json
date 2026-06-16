@@ -1,0 +1,12 @@
+{
+    "value": {
+        "worker": "Generators.scala:asmWorkerClassloader",
+        "toString": "mill.api.daemon.MillURLClassLoader@2221a972",
+        "inputsHash": 1803675761
+    },
+    "valueHash": 1803675761,
+    "inputsHash": 1803675761,
+    "millVersion": "1.1.6",
+    "millJvmVersion": "21.0.10",
+    "classLoaderSigHash": 220474415
+}

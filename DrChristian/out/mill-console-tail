@@ -1,203 +1,48 @@
-[33mmill shifts10Trace.scala:repl[39m[0K
-[0J[9999D[1A[33mmill shifts10Trace.scala:repl[39m[0K
-resolve] [33mresolve shifts10Trace.scala:repl[39m[0K
-[0J[9999D[2A[33mmill shifts10Trace.scala:repl[39m 1s[0K
-resolve] [33mresolve shifts10Trace.scala:repl[39m[0K
-[0J[9999D[2A000/285] [33mmill shifts10Trace.scala:repl[39m 1s[0K
-resolve] [33mresolve shifts10Trace.scala:repl[39m[0K
-[0J[9999D[2A132/285] [33mmill shifts10Trace.scala:repl[39m 1s[0K
-051] [33mshifts10Trace.scala:artifactTypes[39m[0K
-[0J[9999D[2A189/285] [33mmill shifts10Trace.scala:repl[39m 1s[0K
-051] [33mshifts10Trace.scala:artifactTypes[39m[0K
-185] [33mrexp.scala:asmWorkerClasspath[39m[0K
-186] [33mrexp.scala:scalaCompilerBridge[39m[0K
-193] [33menumerate.scala:asmWorkerClasspath[39m[0K
-194] [33menumerate.scala:scalaCompilerBridge[39m[0K
-195] [33mre_bitrev3.scala:asmWorkerClasspath[39m[0K
-196] [33mregenerate.scala:asmWorkerClasspath[39m[0K
-197] [33mregenerate.scala:scalaCompilerBridge[39m[0K
-[0J[9999D[9A189/285] [33mmill shifts10Trace.scala:repl[39m 1s[0K
-170] [33mmill.javalib.JvmWorkerModule/classpath[39m[0K
-185] [33mrexp.scala:asmWorkerClasspath[39m[0K
-186] [33mrexp.scala:scalaCompilerBridge[39m[0K
-193] [33menumerate.scala:asmWorkerClasspath[39m[0K
-194] [33menumerate.scala:scalaCompilerBridge[39m[0K
-195] [33mre_bitrev3.scala:asmWorkerClasspath[39m[0K
-196] [33mregenerate.scala:asmWorkerClasspath[39m[0K
-197] [33mregenerate.scala:scalaCompilerBridge[39m[0K
-[0J[9999D[9A189/285] [33mmill shifts10Trace.scala:repl[39m 2s[0K
-170] [33mmill.javalib.JvmWorkerModule/classpath[39m[0K
-185] [33mrexp.scala:asmWorkerClasspath[39m[0K
-186] [33mrexp.scala:scalaCompilerBridge[39m[0K
-193] [33menumerate.scala:asmWorkerClasspath[39m[0K
-194] [33menumerate.scala:scalaCompilerBridge[39m[0K
-195] [33mre_bitrev3.scala:asmWorkerClasspath[39m[0K
-196] [33mregenerate.scala:asmWorkerClasspath[39m[0K
-197] [33mregenerate.scala:scalaCompilerBridge[39m[0K
-[0J[9999D[9A189/285] [33mmill shifts10Trace.scala:repl[39m 2s[0K
-170] [33mmill.javalib.JvmWorkerModule/classpath[39m 1s[0K
-185] [33mrexp.scala:asmWorkerClasspath[39m 1s[0K
-186] [33mrexp.scala:scalaCompilerBridge[39m 1s[0K
-193] [33menumerate.scala:asmWorkerClasspath[39m 1s[0K
-194] [33menumerate.scala:scalaCompilerBridge[39m 1s[0K
-195] [33mre_bitrev3.scala:asmWorkerClasspath[39m 1s[0K
-196] [33mregenerate.scala:asmWorkerClasspath[39m 1s[0K
-197] [33mregenerate.scala:scalaCompilerBridge[39m 1s[0K
-[0J[9999D[9A192/285] [33mmill shifts10Trace.scala:repl[39m 2s[0K
-170] [33mmill.javalib.JvmWorkerModule/classpath[39m 1s[0K
-185] [33mrexp.scala:asmWorkerClasspath[39m 1s[0K
-193] [33menumerate.scala:asmWorkerClasspath[39m 1s[0K
-195] [33mre_bitrev3.scala:asmWorkerClasspath[39m 1s[0K
-196] [33mregenerate.scala:asmWorkerClasspath[39m 1s[0K
-197] [33mregenerate.scala:scalaCompilerBridge[39m 1s[0K
-194] [33menumerate.scala:scalaCompilerBridge[39m 1s[0K
-186] [33mrexp.scala:scalaCompilerBridge[39m 1s[0K
-[0J[9999D[9A197/285] [33mmill shifts10Trace.scala:repl[39m 2s[0K
-170] [33mmill.javalib.JvmWorkerModule/classpath[39m 1s[0K
-185] [33mrexp.scala:asmWorkerClasspath[39m 1s[0K
-193] [33menumerate.scala:asmWorkerClasspath[39m 1s[0K
-195] [33mre_bitrev3.scala:asmWorkerClasspath[39m 1s[0K
-196] [33mregenerate.scala:asmWorkerClasspath[39m 1s[0K
-194] [33menumerate.scala:scalaCompilerBridge[39m 1s[0K
-186] [33mrexp.scala:scalaCompilerBridge[39m 1s[0K
-197] [33mregenerate.scala:scalaCompilerBridge[39m 1s[0K
-[0J[9999D[9A199/285] [33mmill shifts10Trace.scala:repl[39m 3s[0K
-170] [33mmill.javalib.JvmWorkerModule/classpath[39m 1s[0K
-185] [33mrexp.scala:asmWorkerClasspath[39m 1s[0K
-193] [33menumerate.scala:asmWorkerClasspath[39m 1s[0K
-195] [33mre_bitrev3.scala:asmWorkerClasspath[39m 1s[0K
-196] [33mregenerate.scala:asmWorkerClasspath[39m 1s[0K
-202] [33mre_bitrev3.scala:scalaCompilerBridge[39m[0K
-197] [33mregenerate.scala:scalaCompilerBridge[39m 1s[0K
-207] [33mre_bitrev3.scala:scalaCompilerClasspath[39m[0K
-[0J[9999D[9A205/285] [33mmill shifts10Trace.scala:repl[39m 3s[0K
-170] [33mmill.javalib.JvmWorkerModule/classpath[39m 1s[0K
-185] [33mrexp.scala:asmWorkerClasspath[39m 1s[0K
-193] [33menumerate.scala:asmWorkerClasspath[39m 1s[0K
-195] [33mre_bitrev3.scala:asmWorkerClasspath[39m 1s[0K
-196] [33mregenerate.scala:asmWorkerClasspath[39m 1s[0K
-207] [33mre_bitrev3.scala:scalaCompilerClasspath[39m[0K
-209] [33mregenerate.scala:scalaCompilerClasspath[39m[0K
-202] [33mre_bitrev3.scala:scalaCompilerBridge[39m[0K
-[0J[9999D[9A209/285] [33mmill shifts10Trace.scala:repl[39m 3s[0K
-170] [33mmill.javalib.JvmWorkerModule/classpath[39m 2s[0K
-185] [33mrexp.scala:asmWorkerClasspath[39m 2s[0K
-193] [33menumerate.scala:asmWorkerClasspath[39m 2s[0K
-195] [33mre_bitrev3.scala:asmWorkerClasspath[39m 2s[0K
-196] [33mregenerate.scala:asmWorkerClasspath[39m 1s[0K
-207] [33mre_bitrev3.scala:scalaCompilerClasspath[39m[0K
-202] [33mre_bitrev3.scala:scalaCompilerBridge[39m[0K
-209] [33mregenerate.scala:scalaCompilerClasspath[39m[0K
-[0J[9999D[9A209/285] [33mmill shifts10Trace.scala:repl[39m 3s[0K
-170] [33mmill.javalib.JvmWorkerModule/classpath[39m 2s[0K
-185] [33mrexp.scala:asmWorkerClasspath[39m 2s[0K
-193] [33menumerate.scala:asmWorkerClasspath[39m 2s[0K
-195] [33mre_bitrev3.scala:asmWorkerClasspath[39m 2s[0K
-196] [33mregenerate.scala:asmWorkerClasspath[39m 2s[0K
-207] [33mre_bitrev3.scala:scalaCompilerClasspath[39m[0K
-216] [33mshifts10Trace.scala:scalaConsoleClasspath[39m[0K
-209] [33mregenerate.scala:scalaCompilerClasspath[39m[0K
-[0J[9999D[9A209/285] [33mmill shifts10Trace.scala:repl[39m 3s[0K
-170] [33mmill.javalib.JvmWorkerModule/classpath[39m 2s[0K
-185] [33mrexp.scala:asmWorkerClasspath[39m 2s[0K
-193] [33menumerate.scala:asmWorkerClasspath[39m 2s[0K
-195] [33mre_bitrev3.scala:asmWorkerClasspath[39m 2s[0K
-196] [33mregenerate.scala:asmWorkerClasspath[39m 2s[0K
-215] [33mshifts10Trace.scala:asmWorkerClasspath[39m[0K
-216] [33mshifts10Trace.scala:scalaConsoleClasspath[39m[0K
-209] [33mregenerate.scala:scalaCompilerClasspath[39m[0K
-[0J[9999D[9A223/285] [33mmill shifts10Trace.scala:repl[39m 3s[0K
-170] [33mmill.javalib.JvmWorkerModule/classpath[39m 2s[0K
-215] [33mshifts10Trace.scala:asmWorkerClasspath[39m[0K
-216] [33mshifts10Trace.scala:scalaConsoleClasspath[39m[0K
-217] [33mshifts10Trace.scala:scalaCompilerBridge[39m[0K
-196] [33mregenerate.scala:asmWorkerClasspath[39m 2s[0K
-185] [33mrexp.scala:asmWorkerClasspath[39m 2s[0K
-193] [33menumerate.scala:asmWorkerClasspath[39m 2s[0K
-195] [33mre_bitrev3.scala:asmWorkerClasspath[39m 2s[0K
-[0J[9999D[9A231/285] [33mmill shifts10Trace.scala:repl[39m 4s[0K
-170] [33mmill.javalib.JvmWorkerModule/classpath[39m 2s[0K
-215] [33mshifts10Trace.scala:asmWorkerClasspath[39m[0K
-230] [33mrexp.scala:resolvedMvnDeps.super.javalib.JavaModule[39m[0K
-231] [33mregenerate.scala:asmWorkerClassloader[39m[0K
-232] [33mrexp.scala:asmWorkerClassloader[39m[0K
-233] [33menumerate.scala:asmWorkerClassloader[39m[0K
-234] [33mre_bitrev3.scala:asmWorkerClassloader[39m[0K
-235] [33mre_bitrev3.scala:resolvedMvnDeps.super.javalib.JavaModule[39m[0K
-[0J[9999D[9A231/285] [33mmill shifts10Trace.scala:repl[39m 4s[0K
-170] [33mmill.javalib.JvmWorkerModule/classpath[39m 3s[0K
-215] [33mshifts10Trace.scala:asmWorkerClasspath[39m 1s[0K
-230] [33mrexp.scala:resolvedMvnDeps.super.javalib.JavaModule[39m[0K
-234] [33mre_bitrev3.scala:asmWorkerClassloader[39m[0K
-235] [33mre_bitrev3.scala:resolvedMvnDeps.super.javalib.JavaModule[39m[0K
-232] [33mrexp.scala:asmWorkerClassloader[39m[0K
-233] [33menumerate.scala:asmWorkerClassloader[39m[0K
-231] [33mregenerate.scala:asmWorkerClassloader[39m[0K
-[0J[9999D[9A232/285] [33mmill shifts10Trace.scala:repl[39m 4s[0K
-170] [33mmill.javalib.JvmWorkerModule/classpath[39m 3s[0K
-215] [33mshifts10Trace.scala:asmWorkerClasspath[39m 1s[0K
-235] [33mre_bitrev3.scala:resolvedMvnDeps.super.javalib.JavaModule[39m[0K
-236] [33mregenerate.scala:resolvedMvnDeps.super.javalib.JavaModule[39m[0K
-237] [33menumerate.scala:resolvedMvnDeps.super.javalib.JavaModule[39m[0K
-238] [33mshifts10Trace.scala:transitiveCoursierProjects[39m[0K
-230] [33mrexp.scala:resolvedMvnDeps.super.javalib.JavaModule[39m[0K
+[33mmill shifts10TracePure.scala:repl[39m[0K
+[0J[9999D[1A006/338] [33mmill shifts10TracePure.scala:repl[39m[0K
+005] [33mrexp.scala:scalaVersion[39m[0K
+[0J[9999D[2A118/338] [33mmill shifts10TracePure.scala:repl[39m[0K
+005] [33mrexp.scala:scalaVersion[39m[0K
+[0J[9999D[2A271/338] [33mmill shifts10TracePure.scala:repl[39m 1s[0K
+193] [33mre_bitrev3.scala:allSourceFiles[39m[0K
+196] [33menumerate.scala:allSourceFiles[39m[0K
+190] [33mregenerate.scala:allSourceFiles[39m[0K
+198] [33mGenerators.scala:allSourceFiles[39m[0K
+194] [33mrexp.scala:allSourceFiles[39m[0K
+199] [33mshifts10TracePure.sca[39m...[33miliaryClassFileExtensions[39m[0K
+195] [33menumerate.scala:zincAuxiliaryClassFileExtensions[39m[0K
+204] [33mre_bitrev3.scala:mand[39m...[33muper.scalalib.ScalaModule[39m[0K
+[0J[9999D[9A331/338] [33mmill shifts10TracePure.scala:repl[39m 1s[0K
+326] [33mshifts10TracePure.scala:transitiveLocalClasspath[39m[0K
+292] [33mshifts10TracePure.sca[39m...[33mransitiveCoursierProjects[39m[0K
+198] [33mGenerators.scala:allSourceFiles[39m[0K
+330] [33mshifts10TracePure.scala:compileClasspath[39m[0K
+200] [33mshifts10TracePure.scala:allSourceFiles[39m[0K
+204] [33mre_bitrev3.scala:mand[39m...[33muper.scalalib.ScalaModule[39m[0K
 [0K
-[0J[9999D[9A234/285] [33mmill shifts10Trace.scala:repl[39m 4s[0K
-170] [33mmill.javalib.JvmWorkerModule/classpath[39m 3s[0K
-215] [33mshifts10Trace.scala:asmWorkerClasspath[39m 1s[0K
-235] [33mre_bitrev3.scala:resolvedMvnDeps.super.javalib.JavaModule[39m[0K
-236] [33mregenerate.scala:resolvedMvnDeps.super.javalib.JavaModule[39m[0K
-237] [33menumerate.scala:resolvedMvnDeps.super.javalib.JavaModule[39m[0K
-238] [33mshifts10Trace.scala:transitiveCoursierProjects[39m[0K
-230] [33mrexp.scala:resolvedMvnDeps.super.javalib.JavaModule[39m 1s[0K
-240] [33mrexp.scala:compileClasspath[39m[0K
-[0J[9999D[9A236/285] [33mmill shifts10Trace.scala:repl[39m 4s[0K
-215] [33mshifts10Trace.scala:asmWorkerClasspath[39m 1s[0K
-235] [33mre_bitrev3.scala:resolvedMvnDeps.super.javalib.JavaModule[39m[0K
-236] [33mregenerate.scala:resolvedMvnDeps.super.javalib.JavaModule[39m[0K
-237] [33menumerate.scala:resolvedMvnDeps.super.javalib.JavaModule[39m[0K
-240] [33mrexp.scala:compileClasspath[39m[0K
-241] [33mshifts10Trace.scala:resolvedMvnDeps.super.javalib.JavaModule[39m[0K
-238] [33mshifts10Trace.scala:transitiveCoursierProjects[39m[0K
-170] [33mmill.javalib.JvmWorkerModule/classpath[39m 3s[0K
-[0J[9999D[9A246/285] [33mmill shifts10Trace.scala:repl[39m 4s[0K
-215] [33mshifts10Trace.scala:asmWorkerClasspath[39m 1s[0K
-238] [33mshifts10Trace.scala:transitiveCoursierProjects[39m[0K
-170] [33mmill.javalib.JvmWorkerModule/classpath[39m 3s[0K
-244] [33mmill.javalib.JvmWorkerModule/internalWorker[39m[0K
-237] [33menumerate.scala:resolvedMvnDeps.super.javalib.JavaModule[39m[0K
-236] [33mregenerate.scala:resolvedMvnDeps.super.javalib.JavaModule[39m[0K
-241] [33mshifts10Trace.scala:resolvedMvnDeps.super.javalib.JavaModule[39m[0K
-235] [33mre_bitrev3.scala:resolvedMvnDeps.super.javalib.JavaModule[39m 1s[0K
-[0J[9999D[9A249/285] [33mmill shifts10Trace.scala:repl[39m 4s[0K
-170] [33mmill.javalib.JvmWorkerModule/classpath[39m 3s[0K
-244] [33mmill.javalib.JvmWorkerModule/internalWorker[39m[0K
-237] [33menumerate.scala:resolvedMvnDeps.super.javalib.JavaModule[39m[0K
-236] [33mregenerate.scala:resolvedMvnDeps.super.javalib.JavaModule[39m[0K
-241] [33mshifts10Trace.scala:resolvedMvnDeps.super.javalib.JavaModule[39m[0K
-235] [33mre_bitrev3.scala:resolvedMvnDeps.super.javalib.JavaModule[39m 1s[0K
-215] [33mshifts10Trace.scala:asmWorkerClasspath[39m 1s[0K
-238] [33mshifts10Trace.scala:transitiveCoursierProjects[39m[0K
-[0J[9999D[9A249/285] [33mmill shifts10Trace.scala:repl[39m 5s[0K
-244] [33mmill.javalib.JvmWorkerModule/internalWorker[39m[0K
-241] [33mshifts10Trace.scala:resolvedMvnDeps.super.javalib.JavaModule[39m[0K
-235] [33mre_bitrev3.scala:resolvedMvnDeps.super.javalib.JavaModule[39m 1s[0K
-215] [33mshifts10Trace.scala:asmWorkerClasspath[39m 1s[0K
-250] [33mrexp.scala:compile0[39m[0K
+[0K
+[0J[9999D[9A[34m332] shifts10TracePure.scala:compile0[39m[0K
+[34m332][39m compiling 1 Scala source to out/shifts10TracePure.scala/compile0.dest/classes ...[0K
+331/338] [33mmill shifts10TracePure.scala:repl[39m 1s[0K
+326] [33mshifts10TracePure.scala:transitiveLocalClasspath[39m[0K
+292] [33mshifts10TracePure.sca[39m...[33mransitiveCoursierProjects[39m[0K
+198] [33mGenerators.scala:allSourceFiles[39m[0K
+330] [33mshifts10TracePure.scala:compileClasspath[39m[0K
+200] [33mshifts10TracePure.scala:allSourceFiles[39m[0K
+204] [33mre_bitrev3.scala:mand[39m...[33muper.scalalib.ScalaModule[39m[0K
+[0K
+[0K
+[0J[9999D[9A331/338] [33mmill shifts10TracePure.scala:repl[39m 1s[0K
+326] [33mshifts10TracePure.scala:transitiveLocalClasspath[39m[0K
+292] [33mshifts10TracePure.sca[39m...[33mransitiveCoursierProjects[39m[0K
+330] [33mshifts10TracePure.scala:compileClasspath[39m[0K
+200] [33mshifts10TracePure.scala:allSourceFiles[39m[0K
+332] [33mshifts10TracePure.scala:compile0[39m[0K
 [0K
 [0K
 [0K
-[0J[9999D[9A249/285] [33mmill shifts10Trace.scala:repl[39m 5s[0K
-244] [33mmill.javalib.JvmWorkerModule/internalWorker[39m[0K
-250] [33mrexp.scala:compile0[39m[0K
-[0K
-[0K
-[0K
-[0K
-[0K
-[0K
-[0J[9999D[9A249/285] [33mmill shifts10Trace.scala:repl[39m 5s[0K
-250] [33mrexp.scala:compile0[39m[0K
+[0J[9999D[9A331/338] [33mmill shifts10TracePure.scala:repl[39m 1s[0K
+332] [33mshifts10TracePure.scala:compile0[39m[0K
 [0K
 [0K
 [0K
@@ -205,9 +50,8 @@ resolve] [33mresolve shifts10Trace.scala:repl[39m[0K
 [0K
 [0K
 [0K
-[0J[9999D[9A[34m250] rexp.scala:compile0[39m compiling 1 Scala source to out/rexp.scala/compile0.dest/classes ...[0K
-249/285] [33mmill shifts10Trace.scala:repl[39m 5s[0K
-250] [33mrexp.scala:compile0[39m[0K
+[0J[9999D[9A331/338] [33mmill shifts10TracePure.scala:repl[39m 2s[0K
+332] [33mshifts10TracePure.scala:compile0[39m[0K
 [0K
 [0K
 [0K
@@ -215,8 +59,8 @@ resolve] [33mresolve shifts10Trace.scala:repl[39m[0K
 [0K
 [0K
 [0K
-[0J[9999D[9A249/285] [33mmill shifts10Trace.scala:repl[39m 6s[0K
-250] [33mrexp.scala:compile0[39m 1s[0K
+[0J[9999D[9A331/338] [33mmill shifts10TracePure.scala:repl[39m 2s[0K
+332] [33mshifts10TracePure.scala:compile0[39m 1s[0K
 [0K
 [0K
 [0K
@@ -224,615 +68,37 @@ resolve] [33mresolve shifts10Trace.scala:repl[39m[0K
 [0K
 [0K
 [0K
-[0J[9999D[9A249/285] [33mmill shifts10Trace.scala:repl[39m 6s[0K
-250] [33mrexp.scala:compile0[39m 1s[0K
+[0J[9999D[9A331/338] [33mmill shifts10TracePure.scala:repl[39m 3s[0K
+332] [33mshifts10TracePure.scala:compile0[39m 1s[0K
 [0K
 [0K
 [0K
 [0K
 [0K
 [0K
-[0J[9999D[8A249/285] [33mmill shifts10Trace.scala:repl[39m 6s[0K
-250] [33mrexp.scala:compile0[39m 1s[0K
+[0K
+[0J[9999D[9A331/338] [33mmill shifts10TracePure.scala:repl[39m 3s[0K
+332] [33mshifts10TracePure.scala:compile0[39m 1s[0K
 [0K
 [0K
-[0J[9999D[4A249/285] [33mmill shifts10Trace.scala:repl[39m 6s[0K
-250] [33mrexp.scala:compile0[39m 2s[0K
-[0J[9999D[2A249/285] [33mmill shifts10Trace.scala:repl[39m 7s[0K
-250] [33mrexp.scala:compile0[39m 2s[0K
-[0J[9999D[2A249/285] [33mmill shifts10Trace.scala:repl[39m 8s[0K
-250] [33mrexp.scala:compile0[39m 3s[0K
-[0J[9999D[2A249/285] [33mmill shifts10Trace.scala:repl[39m 8s[0K
-250] [33mrexp.scala:compile0[39m 4s[0K
-[0J[9999D[2A249/285] [33mmill shifts10Trace.scala:repl[39m 9s[0K
-250] [33mrexp.scala:compile0[39m 4s[0K
-[0J[9999D[2A249/285] [33mmill shifts10Trace.scala:repl[39m 9s[0K
-250] [33mrexp.scala:compile0[39m 5s[0K
-[0J[9999D[2A249/285] [33mmill shifts10Trace.scala:repl[39m 10s[0K
-250] [33mrexp.scala:compile0[39m 5s[0K
-[0J[9999D[2A249/285] [33mmill shifts10Trace.scala:repl[39m 10s[0K
-250] [33mrexp.scala:compile0[39m 6s[0K
-[0J[9999D[2A249/285] [33mmill shifts10Trace.scala:repl[39m 11s[0K
-250] [33mrexp.scala:compile0[39m 6s[0K
-[0J[9999D[2A[34m250][39m [[33mwarn[39m] [33mout/rexp.scala/allSourceFiles.dest/rexp.scala[39m:[33m189[39m:[33m38[39m[0K
-[34m250][39m     [33mval[39m ([33mStars[39m(vs), bs2) = decode_aux(STAR(r), bs1)[0K
-[34m250][39m                                      [33m^^^^^^^^^^^^^^[39m[0K
-[34m250][39m pattern's type Val.Stars is more specialized than the right hand side expression's type Val[0K
-[34m250][39m [0K
-[34m250][39m If the narrowing is intentional, this can be communicated by adding `.runtimeChecked` after the expression,[0K
-[34m250][39m which may result in a MatchError at runtime.[0K
-[34m250][39m This patch can be rewritten automatically under -rewrite -source 3.8-migration.[0K
-[34m250][39m [0K
-249/285] [33mmill shifts10Trace.scala:repl[39m 11s[0K
-250] [33mrexp.scala:compile0[39m 6s[0K
-[0J[9999D[2A[34m250][39m [[33mwarn[39m] [33mout/rexp.scala/allSourceFiles.dest/rexp.scala[39m:[33m194[39m:[33m38[39m[0K
-249/285] [33mmill shifts10Trace.scala:repl[39m 11s[0K
-250] [33mrexp.scala:compile0[39m 6s[0K
-[0J[9999D[2A[34m250][39m     [33mval[39m ([33mNt[39m(vs, _), bs2) = decode_aux(NTIMES(r, n - [32m1[39m), bs1)[0K
-[34m250][39m                                      [33m^^^^^^^^^^^^^^^^^^^^^^^[39m[0K
-[34m250][39m pattern's type Val.Nt is more specialized than the right hand side expression's type Val[0K
-[34m250][39m [0K
-[34m250][39m If the narrowing is intentional, this can be communicated by adding `.runtimeChecked` after the expression,[0K
-[34m250][39m which may result in a MatchError at runtime.[0K
-[34m250][39m This patch can be rewritten automatically under -rewrite -source 3.8-migration.[0K
-[34m250][39m [0K
-249/285] [33mmill shifts10Trace.scala:repl[39m 11s[0K
-250] [33mrexp.scala:compile0[39m 6s[0K
-[0J[9999D[2A249/285] [33mmill shifts10Trace.scala:repl[39m 11s[0K
-250] [33mrexp.scala:compile0[39m 7s[0K
-[0J[9999D[2A249/285] [33mmill shifts10Trace.scala:repl[39m 12s[0K
-250] [33mrexp.scala:compile0[39m 7s[0K
-[0J[9999D[2A249/285] [33mmill shifts10Trace.scala:repl[39m 12s[0K
-250] [33mrexp.scala:compile0[39m 8s[0K
-[0J[9999D[2A249/285] [33mmill shifts10Trace.scala:repl[39m 13s[0K
-250] [33mrexp.scala:compile0[39m 8s[0K
-[0J[9999D[2A[34m250][39m [[33mwarn[39m] [33mout/rexp.scala/allSourceFiles.dest/rexp.scala[39m:[33m208[39m:[33m448[39m[0K
-[34m250][39m [33mtype[39m [36mmain[39m = mainargs.[32mmain[39m; [33mprivate[39m [33mdef[39m rexp_scala_millScriptMainSelf = [33mthis[39m; [33mobject[39m [33mMillScriptMain_rexp_scala[39m { [33mdef[39m main(args: [33mArray[39m[[33mString[39m]): [33mUnit[39m = [33mthis[39m.getClass.getMethods.find(m => m.getName == [32m"main"[39m && m.getParameters.map(_.getType) == [33mSeq[39m(classOf[[33mArray[39m[[33mString[39m]]) && m.getReturnType == classOf[[33mUnit[39m]) [33mmatch[39m{ [33mcase[39m [33mSome[39m(m) => m.invoke(rexp_scala_millScriptMainSelf, args); [33mcase[39m [33mNone[39m => mainargs.[33mParser[39m(rexp_scala_millScriptMainSelf).runOrExit(args) }}[0K
-[34m250][39m                                                                                                                                                                                                                                                                                                                                                                                                                                                                [33m^[39m[0K
-[34m250][39m [33mmethod[39m [32mcopyArrayToImmutableIndexedSeq[39m in [33mclass[39m [32mLowPriorityImplicits2[39m is deprecated since 2.13.0: implicit conversions from Array to immutable.IndexedSeq are implemented by copying; use `toIndexedSeq` explicitly if you want to copy, or use the more efficient non-copying ArraySeq.unsafeWrapArray[0K
-[34m250][39m [0K
-249/285] [33mmill shifts10Trace.scala:repl[39m 13s[0K
-250] [33mrexp.scala:compile0[39m 8s[0K
-[0J[9999D[2A[34m250][39m [[33mwarn[39m] [33mout/rexp.scala/allSourceFiles.dest/rexp.scala[39m:[33m79[39m:[33m35[39m[0K
-[34m250][39m [33mdef[39m [36mnullable[39m([36mr[39m: [32mRexp[39m) : [32mBoolean[39m = r [33mmatch[39m {[0K
-[34m250][39m                                   [33m^[39m[0K
-[34m250][39m [33mmatch[39m may not be exhaustive.[0K
-[34m250][39m [0K
-[34m250][39m It would fail on pattern case: Rexp.AND(_, _)[0K
-[34m250][39m [0K
-[34m250][39m [0K
-249/285] [33mmill shifts10Trace.scala:repl[39m 13s[0K
-250] [33mrexp.scala:compile0[39m 8s[0K
-[0J[9999D[2A[34m250][39m [[33mwarn[39m] [33mout/rexp.scala/allSourceFiles.dest/rexp.scala[39m:[33m91[39m:[33m28[39m[0K
-[34m250][39m [33mdef[39m [36mmkeps[39m([36mr[39m: [32mRexp[39m) : [32mVal[39m = r [33mmatch[39m {[0K
-[34m250][39m                            [33m^[39m[0K
-[34m250][39m [33mmatch[39m may not be exhaustive.[0K
-[34m250][39m [0K
-[34m250][39m It would fail on pattern case: ZERO, Rexp.CHAR(_), Rexp.AND(_, _)[0K
-[34m250][39m [0K
-[34m250][39m [0K
-249/285] [33mmill shifts10Trace.scala:repl[39m 13s[0K
-250] [33mrexp.scala:compile0[39m 8s[0K
-[0J[9999D[2A249/285] [33mmill shifts10Trace.scala:repl[39m 13s[0K
-250] [33mrexp.scala:compile0[39m 9s[0K
-[0J[9999D[2A[34m250][39m [[33mwarn[39m] [33mout/rexp.scala/allSourceFiles.dest/rexp.scala[39m:[33m103[39m:[33m32[39m[0K
-[34m250][39m [33mdef[39m [36mmkepsBits[39m([36mr[39m: [32mRexp[39m): [32mBits[39m = r [33mmatch[39m {[0K
-[34m250][39m                                [33m^[39m[0K
-[34m250][39m [33mmatch[39m may not be exhaustive.[0K
-[34m250][39m [0K
-[34m250][39m It would fail on pattern case: ZERO, Rexp.CHAR(_), Rexp.AND(_, _)[0K
-[34m250][39m [0K
-[34m250][39m [0K
-249/285] [33mmill shifts10Trace.scala:repl[39m 13s[0K
-250] [33mrexp.scala:compile0[39m 9s[0K
-[0J[9999D[2A[34m250][39m [[33mwarn[39m] [33mout/rexp.scala/allSourceFiles.dest/rexp.scala[39m:[33m113[39m:[33m8[39m[0K
-[34m250][39m   [33mcase[39m NOT(r) => [33mNil[39m[0K
-[34m250][39m        [33m^^^^^^[39m[0K
-[34m250][39m Unreachable case[0K
-[34m250][39m [0K
-249/285] [33mmill shifts10Trace.scala:repl[39m 13s[0K
-250] [33mrexp.scala:compile0[39m 9s[0K
-[0J[9999D[2A[34m250][39m [[33mwarn[39m] [33mout/rexp.scala/allSourceFiles.dest/rexp.scala[39m:[33m116[39m:[33m36[39m[0K
-[34m250][39m [33mdef[39m [36mder[39m([36mc[39m: [32mChar[39m, [36mr[39m: [32mRexp[39m) : [32mRexp[39m = r [33mmatch[39m {[0K
-[34m250][39m                                    [33m^[39m[0K
-[34m250][39m [33mmatch[39m may not be exhaustive.[0K
-[34m250][39m [0K
-[34m250][39m It would fail on pattern case: Rexp.AND(_, _), Rexp.NOT(_)[0K
-[34m250][39m [0K
-[34m250][39m [0K
-249/285] [33mmill shifts10Trace.scala:repl[39m 13s[0K
-250] [33mrexp.scala:compile0[39m 9s[0K
-[0J[9999D[2A249/285] [33mmill shifts10Trace.scala:repl[39m 14s[0K
-250] [33mrexp.scala:compile0[39m 9s[0K
-[0J[9999D[2A[34m250][39m [[33mwarn[39m] [33mout/rexp.scala/allSourceFiles.dest/rexp.scala[39m:[33m174[39m:[33m50[39m[0K
-[34m250][39m [33mdef[39m [36mdecode_aux[39m([36mr[39m: [32mRexp[39m, [36mbs[39m: [32mBits[39m): ([32mVal[39m, [32mBits[39m) = (r, bs) [33mmatch[39m {[0K
-[34m250][39m                                                  [33m^^^^^^^[39m[0K
-[34m250][39m [33mmatch[39m may not be exhaustive.[0K
-[34m250][39m [0K
-[34m250][39m It would fail on pattern case: (ZERO, _: List), (Rexp.ALT(_, _), Nil), (Rexp.STAR(_), Nil), (Rexp.NTIMES(_, _), Nil), (Rexp.OPTIONAL(_), _: List), (Rexp.AND(_, _), _: List)[0K
-[34m250][39m [0K
-[34m250][39m [0K
-249/285] [33mmill shifts10Trace.scala:repl[39m 14s[0K
-250] [33mrexp.scala:compile0[39m 9s[0K
-[0J[9999D[2A249/285] [33mmill shifts10Trace.scala:repl[39m 14s[0K
-250] [33mrexp.scala:compile0[39m 10s[0K
-[0J[9999D[2A249/285] [33mmill shifts10Trace.scala:repl[39m 15s[0K
-250] [33mrexp.scala:compile0[39m 10s[0K
-[0J[9999D[2A249/285] [33mmill shifts10Trace.scala:repl[39m 15s[0K
-250] [33mrexp.scala:compile0[39m 11s[0K
-[0J[9999D[2A249/285] [33mmill shifts10Trace.scala:repl[39m 16s[0K
-250] [33mrexp.scala:compile0[39m 11s[0K
-[0J[9999D[2A249/285] [33mmill shifts10Trace.scala:repl[39m 17s[0K
-250] [33mrexp.scala:compile0[39m 12s[0K
-[0J[9999D[2A[34m250][39m [[33mwarn[39m] 9 warnings found[0K
-249/285] [33mmill shifts10Trace.scala:repl[39m 17s[0K
-250] [33mrexp.scala:compile0[39m 12s[0K
-[0J[9999D[2A[34m250][39m done compiling[0K
-249/285] [33mmill shifts10Trace.scala:repl[39m 17s[0K
-250] [33mrexp.scala:compile0[39m 12s[0K
-[0J[9999D[2A249/285] [33mmill shifts10Trace.scala:repl[39m 17s[0K
-250] [33mrexp.scala:compile0[39m 13s[0K
-[0J[9999D[2A250/285] [33mmill shifts10Trace.scala:repl[39m 18s[0K
-250] [33mrexp.scala:compile0[39m 13s[0K
-[0J[9999D[2A260/285] [33mmill shifts10Trace.scala:repl[39m 18s[0K
-250] [33mrexp.scala:compile0[39m 13s[0K
-[0J[9999D[2A[34m263] regenerate.scala:compile0[39m[0K
-[34m263][39m compiling 1 Scala source to out/regenerate.scala/compile0.dest/classes ...[0K
-260/285] [33mmill shifts10Trace.scala:repl[39m 18s[0K
-250] [33mrexp.scala:compile0[39m 13s[0K
-[0J[9999D[2A[34m261] enumerate.scala:compile0[39m[0K
-[34m261][39m compiling 1 Scala source to out/enumerate.scala/compile0.dest/classes ...[0K
-260/285] [33mmill shifts10Trace.scala:repl[39m 18s[0K
-250] [33mrexp.scala:compile0[39m 13s[0K
-[0J[9999D[2A[34m262] re_bitrev3.scala:compile0[39m[0K
-[34m262][39m compiling 1 Scala source to out/re_bitrev3.scala/compile0.dest/classes ...[0K
-260/285] [33mmill shifts10Trace.scala:repl[39m 18s[0K
-250] [33mrexp.scala:compile0[39m 13s[0K
-[0J[9999D[2A260/285] [33mmill shifts10Trace.scala:repl[39m 18s[0K
-261] [33menumerate.scala:compile0[39m[0K
-[0J[9999D[2A260/285] [33mmill shifts10Trace.scala:repl[39m 18s[0K
-261] [33menumerate.scala:compile0[39m[0K
-262] [33mre_bitrev3.scala:compile0[39m[0K
-263] [33mregenerate.scala:compile0[39m[0K
-[0J[9999D[4A260/285] [33mmill shifts10Trace.scala:repl[39m 19s[0K
-261] [33menumerate.scala:compile0[39m[0K
-262] [33mre_bitrev3.scala:compile0[39m[0K
-263] [33mregenerate.scala:compile0[39m[0K
-[0J[9999D[4A260/285] [33mmill shifts10Trace.scala:repl[39m 19s[0K
-261] [33menumerate.scala:compile0[39m 1s[0K
-262] [33mre_bitrev3.scala:compile0[39m 1s[0K
-263] [33mregenerate.scala:compile0[39m 1s[0K
-[0J[9999D[4A260/285] [33mmill shifts10Trace.scala:repl[39m 20s[0K
-261] [33menumerate.scala:compile0[39m 1s[0K
-262] [33mre_bitrev3.scala:compile0[39m 1s[0K
-263] [33mregenerate.scala:compile0[39m 1s[0K
-[0J[9999D[4A260/285] [33mmill shifts10Trace.scala:repl[39m 20s[0K
-261] [33menumerate.scala:compile0[39m 2s[0K
-262] [33mre_bitrev3.scala:compile0[39m 2s[0K
-263] [33mregenerate.scala:compile0[39m 2s[0K
-[0J[9999D[4A260/285] [33mmill shifts10Trace.scala:repl[39m 21s[0K
-261] [33menumerate.scala:compile0[39m 2s[0K
-262] [33mre_bitrev3.scala:compile0[39m 2s[0K
-263] [33mregenerate.scala:compile0[39m 2s[0K
-[0J[9999D[4A260/285] [33mmill shifts10Trace.scala:repl[39m 21s[0K
-261] [33menumerate.scala:compile0[39m 3s[0K
-262] [33mre_bitrev3.scala:compile0[39m 3s[0K
-263] [33mregenerate.scala:compile0[39m 3s[0K
-[0J[9999D[4A260/285] [33mmill shifts10Trace.scala:repl[39m 22s[0K
-261] [33menumerate.scala:compile0[39m 3s[0K
-262] [33mre_bitrev3.scala:compile0[39m 3s[0K
-263] [33mregenerate.scala:compile0[39m 3s[0K
-[0J[9999D[4A260/285] [33mmill shifts10Trace.scala:repl[39m 22s[0K
-261] [33menumerate.scala:compile0[39m 4s[0K
-262] [33mre_bitrev3.scala:compile0[39m 4s[0K
-263] [33mregenerate.scala:compile0[39m 4s[0K
-[0J[9999D[4A260/285] [33mmill shifts10Trace.scala:repl[39m 23s[0K
-261] [33menumerate.scala:compile0[39m 4s[0K
-262] [33mre_bitrev3.scala:compile0[39m 4s[0K
-263] [33mregenerate.scala:compile0[39m 4s[0K
-[0J[9999D[4A[34m261][39m [[33mwarn[39m] [33mout/enumerate.scala/allSourceFiles.dest/enumerate.scala[39m:[33m195[39m:[33m468[39m[0K
-260/285] [33mmill shifts10Trace.scala:repl[39m 23s[0K
-261] [33menumerate.scala:compile0[39m 4s[0K
-262] [33mre_bitrev3.scala:compile0[39m 4s[0K
-263] [33mregenerate.scala:compile0[39m 4s[0K
-[0J[9999D[4A[34m261][39m [33mtype[39m [36mmain[39m = mainargs.[32mmain[39m; [33mprivate[39m [33mdef[39m enumerate_scala_millScriptMainSelf = [33mthis[39m; [33mobject[39m [33mMillScriptMain_enumerate_scala[39m { [33mdef[39m main(args: [33mArray[39m[[33mString[39m]): [33mUnit[39m = [33mthis[39m.getClass.getMethods.find(m => m.getName == [32m"main"[39m && m.getParameters.map(_.getType) == [33mSeq[39m(classOf[[33mArray[39m[[33mString[39m]]) && m.getReturnType == classOf[[33mUnit[39m]) [33mmatch[39m{ [33mcase[39m [33mSome[39m(m) => m.invoke(enumerate_scala_millScriptMainSelf, args); [33mcase[39m [33mNone[39m => mainargs.[33mParser[39m(enumerate_scala_millScriptMainSelf).runOrExit(args) }}[0K
-[34m261][39m                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    [33m^[39m[0K
-[34m261][39m [33mmethod[39m [32mcopyArrayToImmutableIndexedSeq[39m in [33mclass[39m [32mLowPriorityImplicits2[39m is deprecated since 2.13.0: implicit conversions from Array to immutable.IndexedSeq are implemented by copying; use `toIndexedSeq` explicitly if you want to copy, or use the more efficient non-copying ArraySeq.unsafeWrapArray[0K
-[34m261][39m [0K
-260/285] [33mmill shifts10Trace.scala:repl[39m 23s[0K
-261] [33menumerate.scala:compile0[39m 4s[0K
-262] [33mre_bitrev3.scala:compile0[39m 4s[0K
-263] [33mregenerate.scala:compile0[39m 4s[0K
-[0J[9999D[4A260/285] [33mmill shifts10Trace.scala:repl[39m 23s[0K
-261] [33menumerate.scala:compile0[39m 5s[0K
-262] [33mre_bitrev3.scala:compile0[39m 5s[0K
-263] [33mregenerate.scala:compile0[39m 5s[0K
-[0J[9999D[4A260/285] [33mmill shifts10Trace.scala:repl[39m 24s[0K
-261] [33menumerate.scala:compile0[39m 5s[0K
-262] [33mre_bitrev3.scala:compile0[39m 5s[0K
-263] [33mregenerate.scala:compile0[39m 5s[0K
-[0J[9999D[4A260/285] [33mmill shifts10Trace.scala:repl[39m 24s[0K
-261] [33menumerate.scala:compile0[39m 6s[0K
-262] [33mre_bitrev3.scala:compile0[39m 6s[0K
-263] [33mregenerate.scala:compile0[39m 6s[0K
-[0J[9999D[4A260/285] [33mmill shifts10Trace.scala:repl[39m 25s[0K
-261] [33menumerate.scala:compile0[39m 6s[0K
-262] [33mre_bitrev3.scala:compile0[39m 6s[0K
-263] [33mregenerate.scala:compile0[39m 6s[0K
-[0J[9999D[4A260/285] [33mmill shifts10Trace.scala:repl[39m 25s[0K
-261] [33menumerate.scala:compile0[39m 7s[0K
-262] [33mre_bitrev3.scala:compile0[39m 7s[0K
-263] [33mregenerate.scala:compile0[39m 7s[0K
-[0J[9999D[4A[34m262][39m [[33mwarn[39m] [33mout/re_bitrev3.scala/allSourceFiles.dest/re_bitrev3.scala[39m:[33m282[39m:[33m472[39m[0K
-[34m262][39m [33mtype[39m [36mmain[39m = mainargs.[32mmain[39m; [33mprivate[39m [33mdef[39m re_bitrev3_scala_millScriptMainSelf = [33mthis[39m; [33mobject[39m [33mMillScriptMain_re_bitrev3_scala[39m { [33mdef[39m main(args: [33mArray[39m[[33mString[39m]): [33mUnit[39m = [33mthis[39m.getClass.getMethods.find(m => m.getName == [32m"main"[39m && m.getParameters.map(_.getType) == [33mSeq[39m(classOf[[33mArray[39m[[33mString[39m]]) && m.getReturnType == classOf[[33mUnit[39m]) [33mmatch[39m{ [33mcase[39m [33mSome[39m(m) => m.invoke(re_bitrev3_scala_millScriptMainSelf, args); [33mcase[39m [33mNone[39m => mainargs.[33mParser[39m(re_bitrev3_scala_millScriptMainSelf).runOrExit(args) }}[0K
-[34m262][39m                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        [33m^[39m[0K
-[34m262][39m [33mmethod[39m [32mcopyArrayToImmutableIndexedSeq[39m in [33mclass[39m [32mLowPriorityImplicits2[39m is deprecated since 2.13.0: implicit conversions from Array to immutable.IndexedSeq are implemented by copying; use `toIndexedSeq` explicitly if you want to copy, or use the more efficient non-copying ArraySeq.unsafeWrapArray[0K
-[34m262][39m [0K
-[34m263][39m [[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[39m:[33m290[39m:[33m472[39m[0K
-[34m263][39m [33mtype[39m [36mmain[39m = mainargs.[32mmain[39m; [33mprivate[39m [33mdef[39m regenerate_scala_millScriptMainSelf = [33mthis[39m; [33mobject[39m [33mMillScriptMain_regenerate_scala[39m { [33mdef[39m main(args: [33mArray[39m[[33mString[39m]): [33mUnit[39m = [33mthis[39m.getClass.getMethods.find(m => m.getName == [32m"main"[39m && m.getParameters.map(_.getType) == [33mSeq[39m(classOf[[33mArray[39m[[33mString[39m]]) && m.getReturnType == classOf[[33mUnit[39m]) [33mmatch[39m{ [33mcase[39m [33mSome[39m(m) => m.invoke(regenerate_scala_millScriptMainSelf, args); [33mcase[39m [33mNone[39m => mainargs.[33mParser[39m(regenerate_scala_millScriptMainSelf).runOrExit(args) }}[0K
-[34m263][39m                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        [33m^[39m[0K
-[34m263][39m [33mmethod[39m [32mcopyArrayToImmutableIndexedSeq[39m in [33mclass[39m [32mLowPriorityImplicits2[39m is deprecated since 2.13.0: implicit conversions from Array to immutable.IndexedSeq are implemented by copying; use `toIndexedSeq` explicitly if you want to copy, or use the more efficient non-copying ArraySeq.unsafeWrapArray[0K
-[34m263][39m [0K
-260/285] [33mmill shifts10Trace.scala:repl[39m 25s[0K
-261] [33menumerate.scala:compile0[39m 7s[0K
-262] [33mre_bitrev3.scala:compile0[39m 7s[0K
-263] [33mregenerate.scala:compile0[39m 7s[0K
-[0J[9999D[4A260/285] [33mmill shifts10Trace.scala:repl[39m 26s[0K
-261] [33menumerate.scala:compile0[39m 7s[0K
-262] [33mre_bitrev3.scala:compile0[39m 7s[0K
-263] [33mregenerate.scala:compile0[39m 7s[0K
-[0J[9999D[4A[34m262][39m [[33mwarn[39m] [33mout/re_bitrev3.scala/allSourceFiles.dest/re_bitrev3.scala[39m:[33m61[39m:[33m35[39m[0K
-[34m262][39m [33mdef[39m [36minternalise[39m([36mr[39m: [32mRexp[39m): [32mARexp[39m = r [33mmatch[39m {[0K
-[34m262][39m                                   [33m^[39m[0K
-[34m262][39m [33mmatch[39m may not be exhaustive.[0K
-[34m262][39m [0K
-[34m262][39m It would fail on pattern case: Rexp.AND(_, _)[0K
-[34m262][39m [0K
-[34m262][39m [0K
-[34m263][39m [[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[39m:[33m13[39m:[33m82[39m[0K
-[34m263][39m [33mdef[39m [36mmerge[39m[[36mA[39m]([36mxs[39m: [32mLazyList[39m[[32mA[39m], [36mys[39m: [32mLazyList[39m[[32mA[39m])(using [32mOrdering[39m[[32mA[39m]): [32mLazyList[39m[[32mA[39m] = (xs, ys) [33mmatch[39m {[0K
-[34m263][39m                                                                                  [33m^^^^^^^^[39m[0K
-[34m263][39m [33mmatch[39m may not be exhaustive.[0K
-[34m263][39m [0K
-[34m263][39m It would fail on pattern case: (LazyList(_, _*), LazyList(_, _*))[0K
-[34m263][39m [0K
-[34m263][39m [0K
-260/285] [33mmill shifts10Trace.scala:repl[39m 26s[0K
-261] [33menumerate.scala:compile0[39m 7s[0K
-262] [33mre_bitrev3.scala:compile0[39m 7s[0K
-263] [33mregenerate.scala:compile0[39m 7s[0K
-[0J[9999D[4A[34m263][39m [[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[39m:[33m23[39m:[33m82[39m[0K
-[34m263][39m [33mdef[39m [36minter[39m[[36mA[39m]([36mxs[39m: [32mLazyList[39m[[32mA[39m], [36mys[39m: [32mLazyList[39m[[32mA[39m])(using [32mOrdering[39m[[32mA[39m]): [32mLazyList[39m[[32mA[39m] = (xs, ys) [33mmatch[39m {[0K
-[34m263][39m                                                                                  [33m^^^^^^^^[39m[0K
-[34m263][39m [33mmatch[39m may not be exhaustive.[0K
-[34m263][39m [0K
-[34m263][39m It would fail on pattern case: (LazyList(_, _*), LazyList(_, _*))[0K
-[34m263][39m [0K
-[34m263][39m [0K
-260/285] [33mmill shifts10Trace.scala:repl[39m 26s[0K
-261] [33menumerate.scala:compile0[39m 7s[0K
-262] [33mre_bitrev3.scala:compile0[39m 7s[0K
-263] [33mregenerate.scala:compile0[39m 7s[0K
-[0J[9999D[4A[34m263][39m [[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[39m:[33m32[39m:[33m81[39m[0K
-[34m263][39m [33mdef[39m [36mdiff[39m[[36mA[39m]([36mxs[39m: [32mLazyList[39m[[32mA[39m], [36mys[39m: [32mLazyList[39m[[32mA[39m])(using [32mOrdering[39m[[32mA[39m]): [32mLazyList[39m[[32mA[39m] = (xs, ys) [33mmatch[39m {[0K
-[34m263][39m                                                                                 [33m^^^^^^^^[39m[0K
-[34m263][39m [33mmatch[39m may not be exhaustive.[0K
-[34m263][39m [0K
-[34m263][39m It would fail on pattern case: (LazyList(_, _*), LazyList(_, _*))[0K
-[34m263][39m [0K
-[34m263][39m [0K
-260/285] [33mmill shifts10Trace.scala:repl[39m 26s[0K
-261] [33menumerate.scala:compile0[39m 7s[0K
-262] [33mre_bitrev3.scala:compile0[39m 7s[0K
-263] [33mregenerate.scala:compile0[39m 7s[0K
-[0J[9999D[4A[34m262][39m [[33mwarn[39m] [33mout/re_bitrev3.scala/allSourceFiles.dest/re_bitrev3.scala[39m:[33m98[39m:[33m30[39m[0K
-[34m262][39m [33mdef[39m [36mbmkeps[39m([36mr[39m: [32mARexp[39m): [32mBits[39m = r [33mmatch[39m {[0K
-[34m262][39m                              [33m^[39m[0K
-[34m262][39m [33mmatch[39m may not be exhaustive.[0K
-[34m262][39m [0K
-[34m262][39m It would fail on pattern case: AZERO, ARexp.ACHAR(_, _), ARexp.AALTS(_: List, Nil)[0K
-[34m262][39m [0K
-[34m262][39m [0K
-260/285] [33mmill shifts10Trace.scala:repl[39m 26s[0K
-261] [33menumerate.scala:compile0[39m 7s[0K
-262] [33mre_bitrev3.scala:compile0[39m 7s[0K
-263] [33mregenerate.scala:compile0[39m 7s[0K
-[0J[9999D[4A260/285] [33mmill shifts10Trace.scala:repl[39m 26s[0K
-261] [33menumerate.scala:compile0[39m 8s[0K
-262] [33mre_bitrev3.scala:compile0[39m 8s[0K
-263] [33mregenerate.scala:compile0[39m 8s[0K
-[0J[9999D[4A[34m263][39m [[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[39m:[33m53[39m:[33m40[39m[0K
-[34m263][39m [33mdef[39m [36munion1[39m([36mxs[39m: [32mLang[39m, [36mys[39m: [32mLang[39m): [32mLang[39m = (xs, ys) [33mmatch[39m {[0K
-[34m263][39m                                        [33m^^^^^^^^[39m[0K
-[34m263][39m [33mmatch[39m may not be exhaustive.[0K
-[34m263][39m [0K
-[34m263][39m It would fail on pattern case: (_, _)[0K
-[34m263][39m [0K
-[34m263][39m [0K
-260/285] [33mmill shifts10Trace.scala:repl[39m 26s[0K
-261] [33menumerate.scala:compile0[39m 8s[0K
-262] [33mre_bitrev3.scala:compile0[39m 8s[0K
-263] [33mregenerate.scala:compile0[39m 8s[0K
-[0J[9999D[4A[34m261][39m [[33mwarn[39m] one warning found[0K
-260/285] [33mmill shifts10Trace.scala:repl[39m 26s[0K
-261] [33menumerate.scala:compile0[39m 8s[0K
-262] [33mre_bitrev3.scala:compile0[39m 8s[0K
-263] [33mregenerate.scala:compile0[39m 8s[0K
-[0J[9999D[4A[34m263][39m [[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[39m:[33m61[39m:[33m40[39m[0K
-[34m263][39m [33mdef[39m [36minter1[39m([36mxs[39m: [32mLang[39m, [36mys[39m: [32mLang[39m): [32mLang[39m = (xs, ys) [33mmatch[39m {[0K
-[34m263][39m                                        [33m^^^^^^^^[39m[0K
-[34m263][39m [33mmatch[39m may not be exhaustive.[0K
-[34m263][39m [0K
-[34m263][39m It would fail on pattern case: (_, _)[0K
-[34m263][39m [0K
-[34m263][39m [0K
-260/285] [33mmill shifts10Trace.scala:repl[39m 26s[0K
-261] [33menumerate.scala:compile0[39m 8s[0K
-262] [33mre_bitrev3.scala:compile0[39m 8s[0K
-263] [33mregenerate.scala:compile0[39m 8s[0K
-[0J[9999D[4A[34m261][39m done compiling[0K
-260/285] [33mmill shifts10Trace.scala:repl[39m 26s[0K
-261] [33menumerate.scala:compile0[39m 8s[0K
-262] [33mre_bitrev3.scala:compile0[39m 8s[0K
-263] [33mregenerate.scala:compile0[39m 8s[0K
-[0J[9999D[4A[34m263][39m [[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[39m:[33m69[39m:[33m39[39m[0K
-[34m263][39m [33mdef[39m [36mdiff1[39m([36mxs[39m: [32mLang[39m, [36mys[39m: [32mLang[39m): [32mLang[39m = (xs, ys) [33mmatch[39m {[0K
-[34m263][39m                                       [33m^^^^^^^^[39m[0K
-[34m263][39m [33mmatch[39m may not be exhaustive.[0K
-[34m263][39m [0K
-[34m263][39m It would fail on pattern case: (_, _)[0K
-[34m263][39m [0K
-[34m263][39m [0K
-260/285] [33mmill shifts10Trace.scala:repl[39m 26s[0K
-261] [33menumerate.scala:compile0[39m 8s[0K
-262] [33mre_bitrev3.scala:compile0[39m 8s[0K
-263] [33mregenerate.scala:compile0[39m 8s[0K
-[0J[9999D[4A[34m263][39m [[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[39m:[33m77[39m:[33m44[39m[0K
-[34m263][39m [33mdef[39m [36mconcatLang[39m([36mxs[39m: [32mLang[39m, [36mys[39m: [32mLang[39m): [32mLang[39m = (xs, ys) [33mmatch[39m {[0K
-[34m263][39m                                            [33m^^^^^^^^[39m[0K
-[34m263][39m [33mmatch[39m may not be exhaustive.[0K
-[34m263][39m [0K
-[34m263][39m It would fail on pattern case: (_, _)[0K
-[34m263][39m [0K
-[34m263][39m [0K
-260/285] [33mmill shifts10Trace.scala:repl[39m 26s[0K
-261] [33menumerate.scala:compile0[39m 8s[0K
-262] [33mre_bitrev3.scala:compile0[39m 8s[0K
-263] [33mregenerate.scala:compile0[39m 8s[0K
-[0J[9999D[4A[34m263][39m [[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[39m:[33m101[39m:[33m55[39m[0K
-[34m263][39m [33mdef[39m [36munionSegs[39m([36mxs[39m: [32mSegments[39m)([36mys[39m: [32mSegments[39m): [32mSegments[39m = (xs, ys) [33mmatch[39m {[0K
-[34m263][39m                                                       [33m^^^^^^^^[39m[0K
-[34m263][39m [33mmatch[39m may not be exhaustive.[0K
-[34m263][39m [0K
-[34m263][39m It would fail on pattern case: (LazyList(_, _*), LazyList(_, _*))[0K
-[34m263][39m [0K
-[34m263][39m [0K
-260/285] [33mmill shifts10Trace.scala:repl[39m 26s[0K
-261] [33menumerate.scala:compile0[39m 8s[0K
-262] [33mre_bitrev3.scala:compile0[39m 8s[0K
-263] [33mregenerate.scala:compile0[39m 8s[0K
-[0J[9999D[4A[34m263][39m [[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[39m:[33m109[39m:[33m55[39m[0K
-[34m263][39m [33mdef[39m [36minterSegs[39m([36mxs[39m: [32mSegments[39m)([36mys[39m: [32mSegments[39m): [32mSegments[39m = (xs, ys) [33mmatch[39m {[0K
-[34m263][39m                                                       [33m^^^^^^^^[39m[0K
-[34m263][39m [33mmatch[39m may not be exhaustive.[0K
-[34m263][39m [0K
-[34m263][39m It would fail on pattern case: (LazyList(_, _*), LazyList(_, _*))[0K
-[34m263][39m [0K
-[34m263][39m [0K
-260/285] [33mmill shifts10Trace.scala:repl[39m 26s[0K
-261] [33menumerate.scala:compile0[39m 8s[0K
-262] [33mre_bitrev3.scala:compile0[39m 8s[0K
-263] [33mregenerate.scala:compile0[39m 8s[0K
-[0J[9999D[4A[34m262][39m [[33mwarn[39m] [33mout/re_bitrev3.scala/allSourceFiles.dest/re_bitrev3.scala[39m:[33m224[39m:[33m26[39m[0K
-[34m262][39m [33mdef[39m [36msize[39m([36mr[39m: [32mRexp[39m): [32mInt[39m = r [33mmatch[39m {[0K
-[34m262][39m                          [33m^[39m[0K
-[34m262][39m [33mmatch[39m may not be exhaustive.[0K
-[34m262][39m [0K
-[34m262][39m It would fail on pattern case: Rexp.AND(_, _)[0K
-[34m262][39m [0K
-[34m262][39m [0K
-260/285] [33mmill shifts10Trace.scala:repl[39m 26s[0K
-261] [33menumerate.scala:compile0[39m 8s[0K
-262] [33mre_bitrev3.scala:compile0[39m 8s[0K
-263] [33mregenerate.scala:compile0[39m 8s[0K
-[0J[9999D[4A261/285] [33mmill shifts10Trace.scala:repl[39m 26s[0K
-262] [33mre_bitrev3.scala:compile0[39m 8s[0K
-263] [33mregenerate.scala:compile0[39m 8s[0K
-261] [33menumerate.scala:compile0[39m 8s[0K
-[0J[9999D[4A[34m263][39m [[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[39m:[33m117[39m:[33m54[39m[0K
-[34m263][39m [33mdef[39m [36mdiffSegs[39m([36mxs[39m: [32mSegments[39m)([36mys[39m: [32mSegments[39m): [32mSegments[39m = (xs, ys) [33mmatch[39m {[0K
-[34m263][39m                                                      [33m^^^^^^^^[39m[0K
-[34m263][39m [33mmatch[39m may not be exhaustive.[0K
-[34m263][39m [0K
-[34m263][39m It would fail on pattern case: (LazyList(_, _*), LazyList(_, _*))[0K
-[34m263][39m [0K
-[34m263][39m [0K
-261/285] [33mmill shifts10Trace.scala:repl[39m 26s[0K
-262] [33mre_bitrev3.scala:compile0[39m 8s[0K
-263] [33mregenerate.scala:compile0[39m 8s[0K
-261] [33menumerate.scala:compile0[39m 8s[0K
-[0J[9999D[4A[34m263][39m [[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[39m:[33m147[39m:[33m48[39m[0K
-[34m263][39m : ([33mLang[39m, [33mSegments[39m, [33mOption[39m[[33mInt[39m], [33mOption[39m[[33mInt[39m]) = (a, segs, b, c) [33mmatch[39m {[0K
-[34m263][39m                                                [33m^^^^^^^^^^^^^^^[39m[0K
-[34m263][39m [33mmatch[39m may not be exhaustive.[0K
-[34m263][39m [0K
-[34m263][39m It would fail on pattern case: (_, LazyList(_, _*), None, _)[0K
-[34m263][39m [0K
-[34m263][39m [0K
-261/285] [33mmill shifts10Trace.scala:repl[39m 26s[0K
-262] [33mre_bitrev3.scala:compile0[39m 8s[0K
-263] [33mregenerate.scala:compile0[39m 8s[0K
-261] [33menumerate.scala:compile0[39m 8s[0K
-[0J[9999D[4A[34m263][39m [[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[39m:[33m214[39m:[33m76[39m[0K
-[34m263][39m [33mdef[39m [36mconcatWithSegments[39m([36mxs[39m: [32mSegments[39m, [36mys[39m: [32mLazyList[39m[[32mLang[39m]): [32mLazyList[39m[[32mLang[39m] = (xs, ys) [33mmatch[39m {[0K
-[34m263][39m                                                                            [33m^^^^^^^^[39m[0K
-[34m263][39m [33mmatch[39m may not be exhaustive.[0K
-[34m263][39m [0K
-[34m263][39m It would fail on pattern case: (LazyList(_, _*), LazyList(_, _*))[0K
-[34m263][39m [0K
-[34m263][39m [0K
-261/285] [33mmill shifts10Trace.scala:repl[39m 26s[0K
-262] [33mre_bitrev3.scala:compile0[39m 8s[0K
-263] [33mregenerate.scala:compile0[39m 8s[0K
-261] [33menumerate.scala:compile0[39m 8s[0K
-[0J[9999D[4A[34m263][39m [[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[39m:[33m221[39m:[33m77[39m[0K
-[34m263][39m [33mdef[39m [36mconcatWithSegments1[39m([36mys[39m: [32mLazyList[39m[[32mLang[39m], [36mxs[39m: [32mSegments[39m): [32mLazyList[39m[[32mLang[39m] = (ys, xs) [33mmatch[39m {[0K
-[34m263][39m                                                                             [33m^^^^^^^^[39m[0K
-[34m263][39m [33mmatch[39m may not be exhaustive.[0K
-[34m263][39m [0K
-[34m263][39m It would fail on pattern case: (LazyList(_, _*), LazyList(_, _*))[0K
-[34m263][39m [0K
-[34m263][39m [0K
-261/285] [33mmill shifts10Trace.scala:repl[39m 26s[0K
-262] [33mre_bitrev3.scala:compile0[39m 8s[0K
-263] [33mregenerate.scala:compile0[39m 8s[0K
-261] [33menumerate.scala:compile0[39m 8s[0K
-[0J[9999D[4A265/285] [33mmill shifts10Trace.scala:repl[39m 27s[0K
-262] [33mre_bitrev3.scala:compile0[39m 8s[0K
-263] [33mregenerate.scala:compile0[39m 8s[0K
-265] [33menumerate.scala:compile[39m[0K
-[0J[9999D[4A[34m263][39m [[33mwarn[39m] [33mout/regenerate.scala/allSourceFiles.dest/regenerate.scala[39m:[33m253[39m:[33m34[39m[0K
-[34m263][39m     [33mdef[39m [36mgen[39m([36mr[39m: [32mRexp[39m): [32mSegments[39m = r [33mmatch[39m {[0K
-[34m263][39m                                  [33m^[39m[0K
-[34m263][39m [33mmatch[39m may not be exhaustive.[0K
-[34m263][39m [0K
-[34m263][39m It would fail on pattern case: Rexp.NTIMES(_, _), Rexp.OPTIONAL(_), Rexp.AND(_, _)[0K
-[34m263][39m [0K
-[34m263][39m [0K
-265/285] [33mmill shifts10Trace.scala:repl[39m 27s[0K
-262] [33mre_bitrev3.scala:compile0[39m 8s[0K
-263] [33mregenerate.scala:compile0[39m 8s[0K
-265] [33menumerate.scala:compile[39m[0K
-[0J[9999D[4A265/285] [33mmill shifts10Trace.scala:repl[39m 27s[0K
-262] [33mre_bitrev3.scala:compile0[39m 9s[0K
-263] [33mregenerate.scala:compile0[39m 9s[0K
-[0K
-[0J[9999D[4A265/285] [33mmill shifts10Trace.scala:repl[39m 28s[0K
-262] [33mre_bitrev3.scala:compile0[39m 9s[0K
-263] [33mregenerate.scala:compile0[39m 9s[0K
-[0K
-[0J[9999D[4A[34m263][39m [[33mwarn[39m] 15 warnings found[0K
-265/285] [33mmill shifts10Trace.scala:repl[39m 28s[0K
-262] [33mre_bitrev3.scala:compile0[39m 9s[0K
-263] [33mregenerate.scala:compile0[39m 9s[0K
-[0K
-[0J[9999D[4A[34m263][39m done compiling[0K
-265/285] [33mmill shifts10Trace.scala:repl[39m 28s[0K
-262] [33mre_bitrev3.scala:compile0[39m 9s[0K
-263] [33mregenerate.scala:compile0[39m 9s[0K
-[0K
-[0J[9999D[4A265/285] [33mmill shifts10Trace.scala:repl[39m 28s[0K
-262] [33mre_bitrev3.scala:compile0[39m 10s[0K
-263] [33mregenerate.scala:compile0[39m 10s[0K
-[0K
-[0J[9999D[4A[34m262][39m [[33mwarn[39m] four warnings found[0K
-265/285] [33mmill shifts10Trace.scala:repl[39m 28s[0K
-262] [33mre_bitrev3.scala:compile0[39m 10s[0K
-263] [33mregenerate.scala:compile0[39m 10s[0K
-[0K
-[0J[9999D[4A[34m262][39m done compiling[0K
-265/285] [33mmill shifts10Trace.scala:repl[39m 28s[0K
-262] [33mre_bitrev3.scala:compile0[39m 10s[0K
-263] [33mregenerate.scala:compile0[39m 10s[0K
-[0K
-[0J[9999D[4A267/285] [33mmill shifts10Trace.scala:repl[39m 28s[0K
-263] [33mregenerate.scala:compile0[39m 10s[0K
-262] [33mre_bitrev3.scala:compile0[39m 10s[0K
-[0K
-[0J[9999D[4A278/285] [33mmill shifts10Trace.scala:repl[39m 28s[0K
-263] [33mregenerate.scala:compile0[39m 10s[0K
-262] [33mre_bitrev3.scala:compile0[39m 10s[0K
-270] [33mre_bitrev3.scala:compile[39m[0K
-[0J[9999D[4A[34m279] shifts10Trace.scala:compile0[39m[0K
-[34m279][39m compiling 1 Scala source to out/shifts10Trace.scala/compile0.dest/classes ...[0K
-278/285] [33mmill shifts10Trace.scala:repl[39m 28s[0K
-263] [33mregenerate.scala:compile0[39m 10s[0K
-262] [33mre_bitrev3.scala:compile0[39m 10s[0K
-270] [33mre_bitrev3.scala:compile[39m[0K
-[0J[9999D[4A278/285] [33mmill shifts10Trace.scala:repl[39m 28s[0K
-270] [33mre_bitrev3.scala:compile[39m[0K
 [0K
 [0K
-[0J[9999D[4A278/285] [33mmill shifts10Trace.scala:repl[39m 28s[0K
-279] [33mshifts10Trace.scala:compile0[39m[0K
-[0K
-[0K
-[0J[9999D[4A278/285] [33mmill shifts10Trace.scala:repl[39m 29s[0K
-279] [33mshifts10Trace.scala:compile0[39m[0K
-[0K
-[0K
-[0J[9999D[4A278/285] [33mmill shifts10Trace.scala:repl[39m 29s[0K
-279] [33mshifts10Trace.scala:compile0[39m 1s[0K
-[0K
-[0K
-[0J[9999D[4A278/285] [33mmill shifts10Trace.scala:repl[39m 30s[0K
-279] [33mshifts10Trace.scala:compile0[39m 1s[0K
-[0K
-[0K
-[0J[9999D[4A278/285] [33mmill shifts10Trace.scala:repl[39m 30s[0K
-279] [33mshifts10Trace.scala:compile0[39m 1s[0K
-[0J[9999D[2A278/285] [33mmill shifts10Trace.scala:repl[39m 30s[0K
-279] [33mshifts10Trace.scala:compile0[39m 2s[0K
-[0J[9999D[2A[34m279][39m [[33mwarn[39m] [33mout/shifts10Trace.scala/allSourceFiles.dest/shifts10Trace.scala[39m:[33m605[39m:[33m484[39m[0K
-[34m279][39m [33mtype[39m [36mmain[39m = mainargs.[32mmain[39m; [33mprivate[39m [33mdef[39m shifts10Trace_scala_millScriptMainSelf = [33mthis[39m; [33mobject[39m [33mMillScriptMain_shifts10Trace_scala[39m { [33mdef[39m main(args: [33mArray[39m[[33mString[39m]): [33mUnit[39m = [33mthis[39m.getClass.getMethods.find(m => m.getName == [32m"main"[39m && m.getParameters.map(_.getType) == [33mSeq[39m(classOf[[33mArray[39m[[33mString[39m]]) && m.getReturnType == classOf[[33mUnit[39m]) [33mmatch[39m{ [33mcase[39m [33mSome[39m(m) => m.invoke(shifts10Trace_scala_millScriptMainSelf, args); [33mcase[39m [33mNone[39m => mainargs.[33mParser[39m(shifts10Trace_scala_millScriptMainSelf).runOrExit(args) }}[0K
-[34m279][39m                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    [33m^[39m[0K
-[34m279][39m [33mmethod[39m [32mcopyArrayToImmutableIndexedSeq[39m in [33mclass[39m [32mLowPriorityImplicits2[39m is deprecated since 2.13.0: implicit conversions from Array to immutable.IndexedSeq are implemented by copying; use `toIndexedSeq` explicitly if you want to copy, or use the more efficient non-copying ArraySeq.unsafeWrapArray[0K
-[34m279][39m [0K
-278/285] [33mmill shifts10Trace.scala:repl[39m 30s[0K
-279] [33mshifts10Trace.scala:compile0[39m 2s[0K
-[0J[9999D[2A[34m279][39m [[33mwarn[39m] [33mout/shifts10Trace.scala/allSourceFiles.dest/shifts10Trace.scala[39m:[33m32[39m:[33m5[39m[0K
-[34m279][39m     r [33mmatch[39m {[0K
-[34m279][39m     [33m^[39m[0K
-[34m279][39m [33mmatch[39m may not be exhaustive.[0K
-[34m279][39m [0K
-[34m279][39m It would fail on pattern case: Rexp.OPTIONAL(_), Rexp.AND(_, _)[0K
-[34m279][39m [0K
-[34m279][39m [0K
-278/285] [33mmill shifts10Trace.scala:repl[39m 30s[0K
-279] [33mshifts10Trace.scala:compile0[39m 2s[0K
-[0J[9999D[2A[34m279][39m [[33mwarn[39m] [33mout/shifts10Trace.scala/allSourceFiles.dest/shifts10Trace.scala[39m:[33m380[39m:[33m5[39m[0K
-[34m279][39m     r [33mmatch[39m {[0K
-[34m279][39m     [33m^[39m[0K
-[34m279][39m [33mmatch[39m may not be exhaustive.[0K
-[34m279][39m [0K
-[34m279][39m It would fail on pattern case: Rexp.OPTIONAL(_), Rexp.AND(_, _)[0K
-[34m279][39m [0K
-[34m279][39m [0K
-278/285] [33mmill shifts10Trace.scala:repl[39m 30s[0K
-279] [33mshifts10Trace.scala:compile0[39m 2s[0K
-[0J[9999D[2A[34m279][39m [[33mwarn[39m] [33mout/shifts10Trace.scala/allSourceFiles.dest/shifts10Trace.scala[39m:[33m402[39m:[33m12[39m[0K
-[34m279][39m       [33mcase[39m STAR(r) =>[0K
-[34m279][39m            [33m^^^^^^^[39m[0K
-[34m279][39m Unreachable case[0K
-[34m279][39m [0K
-278/285] [33mmill shifts10Trace.scala:repl[39m 30s[0K
-279] [33mshifts10Trace.scala:compile0[39m 2s[0K
-[0J[9999D[2A[34m279][39m [[33mwarn[39m] [33mout/shifts10Trace.scala/allSourceFiles.dest/shifts10Trace.scala[39m:[33m450[39m:[33m5[39m[0K
-[34m279][39m     r [33mmatch[39m {[0K
-[34m279][39m     [33m^[39m[0K
-[34m279][39m [33mmatch[39m may not be exhaustive.[0K
-[34m279][39m [0K
-[34m279][39m It would fail on pattern case: Rexp.OPTIONAL(_), Rexp.AND(_, _)[0K
-[34m279][39m [0K
-[34m279][39m [0K
-278/285] [33mmill shifts10Trace.scala:repl[39m 30s[0K
-279] [33mshifts10Trace.scala:compile0[39m 2s[0K
-[0J[9999D[2A278/285] [33mmill shifts10Trace.scala:repl[39m 31s[0K
-279] [33mshifts10Trace.scala:compile0[39m 2s[0K
-[0J[9999D[2A278/285] [33mmill shifts10Trace.scala:repl[39m 31s[0K
-279] [33mshifts10Trace.scala:compile0[39m 3s[0K
-[0J[9999D[2A[34m279][39m [[33mwarn[39m] 5 warnings found[0K
-278/285] [33mmill shifts10Trace.scala:repl[39m 31s[0K
-279] [33mshifts10Trace.scala:compile0[39m 3s[0K
-[0J[9999D[2A[34m279][39m done compiling[0K
-278/285] [33mmill shifts10Trace.scala:repl[39m 31s[0K
-279] [33mshifts10Trace.scala:compile0[39m 3s[0K
-[0J[9999D[2A279/285] [33mmill shifts10Trace.scala:repl[39m 31s[0K
-279] [33mshifts10Trace.scala:compile0[39m 3s[0K
-[0J[9999D[2A[34m285] shifts10Trace.scala:repl[39m[0K
-279/285] [33mmill shifts10Trace.scala:repl[39m 31s[0K
-279] [33mshifts10Trace.scala:compile0[39m 3s[0K
-[0J[9999D[2A[0J285/285, [31m1 failing[39m] [33mmill shifts10Trace.scala:repl[39m 440606s[0K
-285] [33mshifts10Trace.scala:repl[39m 440574s[0K
-[0J[9999D[2A285/285, [31m1 FAILED[39m] [33mmill shifts10Trace.scala:repl[39m 440607s[0K
+[0J[9999D[6A331/338] [33mmill shifts10TracePure.scala:repl[39m 3s[0K
+332] [33mshifts10TracePure.scala:compile0[39m 2s[0K
+[0J[9999D[2A331/338] [33mmill shifts10TracePure.scala:repl[39m 4s[0K
+332] [33mshifts10TracePure.scala:compile0[39m 2s[0K
+[0J[9999D[2A331/338] [33mmill shifts10TracePure.scala:repl[39m 4s[0K
+332] [33mshifts10TracePure.scala:compile0[39m 3s[0K
+[0J[9999D[2A[34m332][39m done compiling[0K
+331/338] [33mmill shifts10TracePure.scala:repl[39m 4s[0K
+332] [33mshifts10TracePure.scala:compile0[39m 3s[0K
+[0J[9999D[2A337/338] [33mmill shifts10TracePure.scala:repl[39m 4s[0K
+332] [33mshifts10TracePure.scala:compile0[39m 3s[0K
+[0J[9999D[2A[34m338] shifts10TracePure.scala:repl[39m[0K
+337/338] [33mmill shifts10TracePure.scala:repl[39m 4s[0K
+332] [33mshifts10TracePure.scala:compile0[39m 3s[0K
+[0J[9999D[2A[0J337/338] [33mmill shifts10TracePure.scala:repl[39m 404s[0K
+338] [33mshifts10TracePure.scala:repl[39m 399s[0K
+[0J[9999D[2A338/338, [32mSUCCESS[39m] [33mmill shifts10T[39m...[33mure.scala:repl[39m 404s[0K
+[0J[9999D[1A338/338, [32mSUCCESS[39m] mill shifts10T...ure.scala:repl 404s[0K
 [0J

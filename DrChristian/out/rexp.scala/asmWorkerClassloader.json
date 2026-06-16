@@ -1,7 +1,7 @@
 {
     "value": {
         "worker": "rexp.scala:asmWorkerClassloader",
-        "toString": "mill.api.daemon.MillURLClassLoader@4dd9aeb9",
+        "toString": "mill.api.daemon.MillURLClassLoader@251ae546",
         "inputsHash": 1986786739
     },
     "valueHash": 1986786739,

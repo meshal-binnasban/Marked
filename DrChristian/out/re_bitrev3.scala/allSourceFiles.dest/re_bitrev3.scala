@@ -101,7 +101,7 @@ def bmkeps(r: ARexp): Bits = r match {
   case AALTS(bs, r :: rs) =>
     if (bnullable(r)) bmkeps(r) ++ bs else bmkeps(AALTS(bs, rs))
   case ASEQ(bs, r1, r2) => bmkeps(r2) ++ bmkeps(r1) ++ bs
-  case ASTAR(bs, _) => S :: bs
+  case ASTAR(bs, _) => Ss :: bs
   case AOPTIONAL(bs, _) => Z :: bs
   case ANOT(bs, _) => bs
   case ANTIMES(bs, _, 0) => S :: bs
@@ -116,7 +116,7 @@ def bder(c: Char, r: ARexp): ARexp = r match {
   case ASEQ(bs, r1, r2) =>
     if (bnullable(r1)) AALT(bs, ASEQ(Nil, bder(c, r1), r2), fuse(bmkeps(r1), bder(c, r2)))
     else ASEQ(bs, bder(c, r1), r2)
-  case ASTAR(bs, r) => ASEQ(Z :: bs, bder(c, r), ASTAR(Nil, r))
+  case ASTAR(bs, r) => ASEQ(Zz :: bs, bder(c, r), ASTAR(Nil, r))
   case AOPTIONAL(bs, r) => fuse(S :: bs, bder(c, r))
   case ANOT(bs, r) => ANOT(bs, bder(c, r))
   case ANTIMES(bs, r, n) =>
@@ -135,7 +135,7 @@ def blex(r: ARexp, s: List[Char]): Bits = s match {
 }
 
 def blexer(r: Rexp, s: String): Val =
-  decode(r, blex(internalise(r), s.toList))
+  decode(r, blex(internalise(r), s.toList).reverse)
 
 def derMatcher(r: Rexp, s: String): Boolean =
   bnullable(bders_simp(internalise(r), s.toList))
@@ -273,10 +273,10 @@ def pretty(v: Val): String = v match {
     s"Nt(${pretty_list(vss2)},$n)"
 }
 
-def time_needed[T](n: Int, code: => T) = {
+/* def time_needed[T](n: Int, code: => T) = {
   val start = System.nanoTime()
   for (i <- 0 until n) code
   val end = System.nanoTime()
   (end - start) / (n * 1.0e9)
-}
+} */
 type main = mainargs.main; private def re_bitrev3_scala_millScriptMainSelf = this; object MillScriptMain_re_bitrev3_scala { def main(args: Array[String]): Unit = this.getClass.getMethods.find(m => m.getName == "main" && m.getParameters.map(_.getType) == Seq(classOf[Array[String]]) && m.getReturnType == classOf[Unit]) match{ case Some(m) => m.invoke(re_bitrev3_scala_millScriptMainSelf, args); case None => mainargs.Parser(re_bitrev3_scala_millScriptMainSelf).runOrExit(args) }}

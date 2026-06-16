@@ -1,3 +1,19 @@
 {
-  "clean": {}
+  "shifts10TracePure.scala:scriptSource": {
+    "shifts10TracePure.scala:allSourceFiles": {
+      "shifts10TracePure.scala:compile0": {
+        "shifts10TracePure.scala:compile": {
+          "shifts10TracePure.scala:localRunClasspath": {
+            "shifts10TracePure.scala:localClasspath": {
+              "shifts10TracePure.scala:runClasspath": {
+                "shifts10TracePure.scala:repl": {}
+              }
+            }
+          }
+        },
+        "shifts10TracePure.scala:syntheticMainargsMainClasses": {}
+      },
+      "shifts10TracePure.scala:zincIncrementalCompilation": {}
+    }
+  }
 }
