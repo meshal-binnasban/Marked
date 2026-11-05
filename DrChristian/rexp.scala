@@ -202,8 +202,17 @@ def decode_aux(r: Rexp, bs: Bits): (Val, Bits) = (r, bs) match {
   case (NOT(r), bs) => (NotV(r), bs)
 }
 
-def decode(r: Rexp, bs: Bits): Val =
+def decodeValue(r: Rexp, bs: Bits): Val =
   decode_aux(r, bs) match {
     case (v, Nil) => v
     case _ => throw new Exception("Not decodable")
   }
+
+def size_rexp(r: Rexp) : Int = r match {
+  case ZERO => 1
+  case ONE => 1
+  case CHAR(_) => 1
+  case ALT(r1, r2) => 1 +  size_rexp(r1) + size_rexp(r2)
+  case SEQ(r1, r2) => 1 +  size_rexp(r1) + size_rexp(r2)
+  case STAR(r1) => 1 +  size_rexp(r1)
+}

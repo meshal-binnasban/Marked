@@ -133,7 +133,7 @@ object PushGen {
 // Demonstration / tests — mirroring the examples from the article.
 // ===========================================================================
 
-@main 
+
 def demo(): Unit = {
   
   import PushGen.*

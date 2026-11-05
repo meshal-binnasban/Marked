@@ -135,7 +135,7 @@ def blex(r: ARexp, s: List[Char]): Bits = s match {
 }
 
 def blexer(r: Rexp, s: String): Val =
-  decode(r, blex(internalise(r), s.toList).reverse)
+  decodeValue(r, blex(internalise(r), s.toList).reverse)
 
 def derMatcher(r: Rexp, s: String): Boolean =
   bnullable(bders_simp(internalise(r), s.toList))
@@ -207,7 +207,7 @@ def blex_simp(r: ARexp, s: List[Char]): Bits = s match {
 }
 
 def blexer_simp(r: Rexp, s: String): Val =
-  decode(r, blex_simp(internalise(r), s.toList).reverse)
+  decodeValue(r, blex_simp(internalise(r), s.toList).reverse)
 
 def flatten(v: Val): String = v match {
   case Empty => ""

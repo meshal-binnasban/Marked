@@ -1,15 +1,20 @@
 {
     "value": [
+        "ref:v0:c984eca8:/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/out/Generators.scala",
         "ref:v0:c984eca8:/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/out/clean.json",
-        "ref:v0:c984eca8:/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/out/enumerate.scala",
+        "ref:v0:c984eca8:/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/out/enumpar.scala",
         "ref:v0:c984eca8:/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/out/mill.javalib.CoursierConfigModule",
         "ref:v0:c984eca8:/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/out/mill.javalib.JvmWorkerModule",
         "ref:v0:c984eca8:/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/out/re_bitrev3.scala",
         "ref:v0:c984eca8:/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/out/regenerate.scala",
         "ref:v0:c984eca8:/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/out/rexp.scala",
-        "ref:v0:c984eca8:/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/out/shifts10TracePure.scala"
+        "ref:v0:c984eca8:/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/out/shifts09B.scala",
+        "ref:v0:c984eca8:/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/out/shifts09Bi.scala",
+        "ref:v0:c984eca8:/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/out/shifts09Bidir.scala",
+        "ref:v0:c984eca8:/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/out/shifts09MK.scala",
+        "ref:v0:c984eca8:/Users/meshalbinnasban/Google Drive/KCL/Code Playground/Marked/DrChristian/out/shifts09MKPair.scala"
     ],
-    "valueHash": -236434988,
+    "valueHash": -74181516,
     "inputsHash": 518755391,
     "millVersion": "1.1.6",
     "millJvmVersion": "21.0.10",

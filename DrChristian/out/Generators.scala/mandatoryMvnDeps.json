@@ -7,8 +7,8 @@
         "com.lihaoyi::requests:0.9.3",
         "com.lihaoyi::mainargs:0.7.8"
     ],
-    "valueHash": -478370572,
-    "inputsHash": 2082067988,
+    "valueHash": 1137148556,
+    "inputsHash": -1026068094,
     "millVersion": "1.1.6",
     "millJvmVersion": "21.0.10",
     "classLoaderSigHash": 220474415

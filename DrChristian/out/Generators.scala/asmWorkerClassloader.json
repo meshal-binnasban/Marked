@@ -1,7 +1,7 @@
 {
     "value": {
         "worker": "Generators.scala:asmWorkerClassloader",
-        "toString": "mill.api.daemon.MillURLClassLoader@2221a972",
+        "toString": "mill.api.daemon.MillURLClassLoader@352f364b",
         "inputsHash": 1803675761
     },
     "valueHash": 1803675761,

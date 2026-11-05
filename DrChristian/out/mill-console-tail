@@ -1,104 +1,41 @@
-[33mmill shifts10TracePure.scala:repl[39m[0K
-[0J[9999D[1A006/338] [33mmill shifts10TracePure.scala:repl[39m[0K
-005] [33mrexp.scala:scalaVersion[39m[0K
-[0J[9999D[2A118/338] [33mmill shifts10TracePure.scala:repl[39m[0K
-005] [33mrexp.scala:scalaVersion[39m[0K
-[0J[9999D[2A271/338] [33mmill shifts10TracePure.scala:repl[39m 1s[0K
-193] [33mre_bitrev3.scala:allSourceFiles[39m[0K
-196] [33menumerate.scala:allSourceFiles[39m[0K
-190] [33mregenerate.scala:allSourceFiles[39m[0K
-198] [33mGenerators.scala:allSourceFiles[39m[0K
-194] [33mrexp.scala:allSourceFiles[39m[0K
-199] [33mshifts10TracePure.sca[39m...[33miliaryClassFileExtensions[39m[0K
-195] [33menumerate.scala:zincAuxiliaryClassFileExtensions[39m[0K
-204] [33mre_bitrev3.scala:mand[39m...[33muper.scalalib.ScalaModule[39m[0K
-[0J[9999D[9A331/338] [33mmill shifts10TracePure.scala:repl[39m 1s[0K
-326] [33mshifts10TracePure.scala:transitiveLocalClasspath[39m[0K
-292] [33mshifts10TracePure.sca[39m...[33mransitiveCoursierProjects[39m[0K
-198] [33mGenerators.scala:allSourceFiles[39m[0K
-330] [33mshifts10TracePure.scala:compileClasspath[39m[0K
-200] [33mshifts10TracePure.scala:allSourceFiles[39m[0K
-204] [33mre_bitrev3.scala:mand[39m...[33muper.scalalib.ScalaModule[39m[0K
+[33mmill ShiftsBack.scala:repl[39m[0K
+[0J[9999D[1A009/338] [33mmill ShiftsBack.scala:repl[39m[0K
+003] [33mrexp.scala:mvnDeps[39m[0K
+[0J[9999D[2A306/338] [33mmill ShiftsBack.scala:repl[39m[0K
+003] [33mrexp.scala:mvnDeps[39m[0K
+[0J[9999D[2A[34m332] ShiftsBack.scala:compile0[39m[0K
+[34m332][39m compiling 1 Scala source to out/ShiftsBack.scala/compile0.dest/classes ...[0K
+306/338] [33mmill ShiftsBack.scala:repl[39m[0K
+003] [33mrexp.scala:mvnDeps[39m[0K
+[0J[9999D[2A331/338] [33mmill ShiftsBack.scala:repl[39m[0K
+003] [33mrexp.scala:mvnDeps[39m[0K
+[0J[9999D[2A331/338] [33mmill ShiftsBack.scala:repl[39m[0K
+332] [33mShiftsBack.scala:compile0[39m[0K
 [0K
+[0J[9999D[3A331/338] [33mmill ShiftsBack.scala:repl[39m 1s[0K
+332] [33mShiftsBack.scala:compile0[39m[0K
 [0K
-[0J[9999D[9A[34m332] shifts10TracePure.scala:compile0[39m[0K
-[34m332][39m compiling 1 Scala source to out/shifts10TracePure.scala/compile0.dest/classes ...[0K
-331/338] [33mmill shifts10TracePure.scala:repl[39m 1s[0K
-326] [33mshifts10TracePure.scala:transitiveLocalClasspath[39m[0K
-292] [33mshifts10TracePure.sca[39m...[33mransitiveCoursierProjects[39m[0K
-198] [33mGenerators.scala:allSourceFiles[39m[0K
-330] [33mshifts10TracePure.scala:compileClasspath[39m[0K
-200] [33mshifts10TracePure.scala:allSourceFiles[39m[0K
-204] [33mre_bitrev3.scala:mand[39m...[33muper.scalalib.ScalaModule[39m[0K
+[0J[9999D[3A331/338] [33mmill ShiftsBack.scala:repl[39m 1s[0K
+332] [33mShiftsBack.scala:compile0[39m 1s[0K
 [0K
+[0J[9999D[3A331/338] [33mmill ShiftsBack.scala:repl[39m 2s[0K
+332] [33mShiftsBack.scala:compile0[39m 1s[0K
 [0K
-[0J[9999D[9A331/338] [33mmill shifts10TracePure.scala:repl[39m 1s[0K
-326] [33mshifts10TracePure.scala:transitiveLocalClasspath[39m[0K
-292] [33mshifts10TracePure.sca[39m...[33mransitiveCoursierProjects[39m[0K
-330] [33mshifts10TracePure.scala:compileClasspath[39m[0K
-200] [33mshifts10TracePure.scala:allSourceFiles[39m[0K
-332] [33mshifts10TracePure.scala:compile0[39m[0K
-[0K
-[0K
-[0K
-[0J[9999D[9A331/338] [33mmill shifts10TracePure.scala:repl[39m 1s[0K
-332] [33mshifts10TracePure.scala:compile0[39m[0K
-[0K
-[0K
-[0K
-[0K
-[0K
-[0K
-[0K
-[0J[9999D[9A331/338] [33mmill shifts10TracePure.scala:repl[39m 2s[0K
-332] [33mshifts10TracePure.scala:compile0[39m[0K
-[0K
-[0K
-[0K
-[0K
-[0K
-[0K
-[0K
-[0J[9999D[9A331/338] [33mmill shifts10TracePure.scala:repl[39m 2s[0K
-332] [33mshifts10TracePure.scala:compile0[39m 1s[0K
-[0K
-[0K
-[0K
-[0K
-[0K
-[0K
-[0K
-[0J[9999D[9A331/338] [33mmill shifts10TracePure.scala:repl[39m 3s[0K
-332] [33mshifts10TracePure.scala:compile0[39m 1s[0K
-[0K
-[0K
-[0K
-[0K
-[0K
-[0K
-[0K
-[0J[9999D[9A331/338] [33mmill shifts10TracePure.scala:repl[39m 3s[0K
-332] [33mshifts10TracePure.scala:compile0[39m 1s[0K
-[0K
-[0K
-[0K
-[0K
-[0J[9999D[6A331/338] [33mmill shifts10TracePure.scala:repl[39m 3s[0K
-332] [33mshifts10TracePure.scala:compile0[39m 2s[0K
-[0J[9999D[2A331/338] [33mmill shifts10TracePure.scala:repl[39m 4s[0K
-332] [33mshifts10TracePure.scala:compile0[39m 2s[0K
-[0J[9999D[2A331/338] [33mmill shifts10TracePure.scala:repl[39m 4s[0K
-332] [33mshifts10TracePure.scala:compile0[39m 3s[0K
+[0J[9999D[3A331/338] [33mmill ShiftsBack.scala:repl[39m 2s[0K
+332] [33mShiftsBack.scala:compile0[39m 1s[0K
+[0J[9999D[2A331/338] [33mmill ShiftsBack.scala:repl[39m 2s[0K
+332] [33mShiftsBack.scala:compile0[39m 2s[0K
 [0J[9999D[2A[34m332][39m done compiling[0K
-331/338] [33mmill shifts10TracePure.scala:repl[39m 4s[0K
-332] [33mshifts10TracePure.scala:compile0[39m 3s[0K
-[0J[9999D[2A337/338] [33mmill shifts10TracePure.scala:repl[39m 4s[0K
-332] [33mshifts10TracePure.scala:compile0[39m 3s[0K
-[0J[9999D[2A[34m338] shifts10TracePure.scala:repl[39m[0K
-337/338] [33mmill shifts10TracePure.scala:repl[39m 4s[0K
-332] [33mshifts10TracePure.scala:compile0[39m 3s[0K
-[0J[9999D[2A[0J337/338] [33mmill shifts10TracePure.scala:repl[39m 404s[0K
-338] [33mshifts10TracePure.scala:repl[39m 399s[0K
-[0J[9999D[2A338/338, [32mSUCCESS[39m] [33mmill shifts10T[39m...[33mure.scala:repl[39m 404s[0K
-[0J[9999D[1A338/338, [32mSUCCESS[39m] mill shifts10T...ure.scala:repl 404s[0K
+331/338] [33mmill ShiftsBack.scala:repl[39m 2s[0K
+332] [33mShiftsBack.scala:compile0[39m 2s[0K
+[0J[9999D[2A331/338] [33mmill ShiftsBack.scala:repl[39m 3s[0K
+332] [33mShiftsBack.scala:compile0[39m 2s[0K
+[0J[9999D[2A332/338] [33mmill ShiftsBack.scala:repl[39m 3s[0K
+332] [33mShiftsBack.scala:compile0[39m 2s[0K
+[0J[9999D[2A[34m338] ShiftsBack.scala:repl[39m[0K
+332/338] [33mmill ShiftsBack.scala:repl[39m 3s[0K
+332] [33mShiftsBack.scala:compile0[39m 2s[0K
+[0J[9999D[2A[0J337/338] [33mmill ShiftsBack.scala:repl[39m 8s[0K
+338] [33mShiftsBack.scala:repl[39m 5s[0K
+[0J[9999D[2A338/338, [32mSUCCESS[39m] mill ShiftsBack.scala:repl 8s[0K
 [0J

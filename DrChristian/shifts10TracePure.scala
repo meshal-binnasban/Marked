@@ -662,7 +662,12 @@ def mat4(r: Rexp, s: String): Array[(Boolean, List[Trace])] = {
             }
         ms3
 
-      case SEQ(r1, r2) => shifts2(shifts2(ms, r1, false), r2, flag)
+      case SEQ(r1, r2) =>
+        //keep r1 traces in a temp array? then join at r2 after shifting empty list to r2??
+        val ms1 = shifts2(ms, r1, false).map {case (m, trace) => (m, SeqD :: trace)}
+        shifts2(ms1, r2, flag)
+      //case SEQ(r1, r2) => shifts2(shifts2(ms, r1, false), r2, flag)
+
       case STAR(r) =>
         val ms0 = ms.map { case (m, trace) => (m, StarTT(false) :: trace) } //zero repitions, false= 1 in bitcode
         val ms1 = shifts2(ms0, r, false).filterNot { case (m, _) => ms.exists(_._1 == m) }
@@ -849,5 +854,18 @@ def testall(maxRegexes: Int): Unit = {
   }
   println(s"No mismatches found in the first $i regexes.")
 }
+
 @main def runTestAll(maxRegexes: Int): Unit =
   testall(maxRegexes)
+
+
+/* matback(){
+
+  backShifts(){
+
+    r match {
+      case seq => backshifts(r2) => smallest
+                  backShifts(r1) => largest
+    }
+  }
+} */
